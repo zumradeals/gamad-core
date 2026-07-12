@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+use Gamad\Core\IdentityRegistry\Application\AtomicIdentityPersister;
+use Gamad\Core\IdentityRegistry\Application\Command\RegisterIdentityHandler;
+use Gamad\Core\IdentityRegistry\Application\IdentityLifecycleService;
+use Gamad\Core\IdentityRegistry\Http\IdentityHttpController;
+use Gamad\Core\IdentityRegistry\Http\IdentityRoutes;
+use Gamad\Core\IdentityRegistry\Infrastructure\Http\PostgreSqlIdempotencyRepository;
+use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityRepository;
+use Gamad\Core\Shared\Application\DomainEventCollector;
 use Gamad\Core\Shared\Application\HealthSummaryQueryService;
 use Gamad\Core\Shared\Application\ReplayDeadLetterHandler;
 use Gamad\Core\Shared\Http\AdministrativeHttpKernel;
@@ -18,8 +26,10 @@ use Gamad\Core\Shared\Infrastructure\Http\CachedRemoteJwksProvider;
 use Gamad\Core\Shared\Infrastructure\Http\EnvironmentTokenVerifier;
 use Gamad\Core\Shared\Infrastructure\Http\OidcRs256TokenVerifier;
 use Gamad\Core\Shared\Infrastructure\Http\PostgreSqlRateLimiter;
+use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlDeadLetterRepository;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxDashboardRepository;
+use Gamad\Core\Shared\Infrastructure\Persistence\PdoTransactionManager;
 use Gamad\Core\Shared\Infrastructure\Security\EnvironmentAuthorizationService;
 use PDO;
 use RuntimeException;
@@ -66,7 +76,7 @@ if ($issuer !== '' || $audience !== '' || $jwksUri !== '') {
 }
 
 $deadLetters = new PostgreSqlDeadLetterRepository($connection);
-$controller = new AdministrativeRuntimeController(
+$administrativeController = new AdministrativeRuntimeController(
     health: new HealthSummaryQueryService(
         new PostgreSqlWorkerStatusRepository($connection),
         (int) (getenv('GAMAD_WORKER_STALE_SECONDS') ?: 45),
@@ -78,7 +88,25 @@ $controller = new AdministrativeRuntimeController(
         new EnvironmentAuthorizationService($permissions),
     ),
 );
-$routes = AdministrativeRoutes::forController($controller);
+
+$identityRepository = new PostgreSqlIdentityRepository($connection);
+$identityPersister = new AtomicIdentityPersister(
+    identities: $identityRepository,
+    outbox: new PostgreSqlOutboxRepository($connection),
+    events: new DomainEventCollector(),
+    transactions: new PdoTransactionManager($connection),
+);
+$identityController = new IdentityHttpController(
+    register: new RegisterIdentityHandler($identityRepository, $identityPersister),
+    identities: $identityRepository,
+    lifecycle: new IdentityLifecycleService($identityRepository, $identityPersister),
+    idempotency: new PostgreSqlIdempotencyRepository($connection),
+);
+
+$routes = array_merge(
+    AdministrativeRoutes::forController($administrativeController),
+    IdentityRoutes::forController($identityController),
+);
 $kernel = new AdministrativeHttpKernel(
     validator: new OpenApiRequestValidator($routes),
     responseValidator: new OpenApiResponseValidator(),
