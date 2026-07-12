@@ -84,17 +84,19 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
     private function kernel(): AdministrativeHttpKernel
     {
         $repository = new PostgreSqlIdentityRepository($this->connection);
+        $transactions = new PdoTransactionManager($this->connection);
         $persister = new AtomicIdentityPersister(
             $repository,
             new PostgreSqlOutboxRepository($this->connection),
             new DomainEventCollector(),
-            new PdoTransactionManager($this->connection),
+            $transactions,
         );
         $controller = new IdentityHttpController(
             new RegisterIdentityHandler($repository, $persister),
             $repository,
             new IdentityLifecycleService($repository, $persister),
             new PostgreSqlIdempotencyRepository($this->connection),
+            $transactions,
         );
 
         return new AdministrativeHttpKernel(
