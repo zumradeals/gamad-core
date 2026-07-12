@@ -31,6 +31,13 @@ services:
       GAMAD_OUTBOX_LOCK_SECONDS: 60
       GAMAD_OUTBOX_POLL_MS: 1000
       GAMAD_HEARTBEAT_SECONDS: 15
+      GAMAD_WORKER_STALE_SECONDS: 45
+    healthcheck:
+      test: ["CMD", "php", "bin/worker-health", "readiness"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     restart: unless-stopped
 
 volumes:
