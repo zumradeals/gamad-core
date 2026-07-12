@@ -25,7 +25,9 @@
     "test": "phpunit",
     "worker:outbox": "php bin/outbox-worker",
     "worker:health": "php bin/worker-health readiness",
+    "health:summary": "php bin/health-summary",
     "outbox:dashboard": "php bin/outbox-dashboard",
+    "outbox:dead-letters": "php bin/outbox-dead-letters",
     "outbox:replay": "php bin/outbox-replay"
   },
   "config": {
