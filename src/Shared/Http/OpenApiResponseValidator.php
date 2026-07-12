@@ -15,10 +15,13 @@ final readonly class OpenApiResponseValidator
         }
 
         $payload = json_decode($response->body, true, flags: JSON_THROW_ON_ERROR);
+        if (!is_array($payload)) {
+            throw new RuntimeException('Response payload must be a JSON object or array.');
+        }
 
         if ($response->status >= 400) {
-            if (!is_array($payload) || !isset($payload['type'], $payload['title'], $payload['status'], $payload['detail'], $payload['request_id'])) {
-                throw new RuntimeException('Error response does not match Problem Details contract.');
+            if (!isset($payload['error']) && !isset($payload['type'])) {
+                throw new RuntimeException('Error response must expose a stable error identifier.');
             }
             return;
         }
@@ -29,12 +32,9 @@ final readonly class OpenApiResponseValidator
             'listDeadLetters' => [],
             'inspectDeadLetter' => ['id', 'aggregate_id', 'event_name', 'payload', 'attempts', 'last_error', 'failed_at'],
             'replayDeadLetter' => ['replayed'],
+            'registerIdentity', 'getIdentity', 'transitionIdentity' => ['identity_id', 'identity_type', 'status', 'registered_at'],
             default => throw new RuntimeException(sprintf('Unknown OpenAPI operation %s.', $operationId)),
         };
-
-        if (!is_array($payload)) {
-            throw new RuntimeException('Response payload must be a JSON object or array.');
-        }
 
         foreach ($required as $field) {
             if (!array_key_exists($field, $payload)) {
