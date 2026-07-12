@@ -23,6 +23,7 @@
   },
   "scripts": {
     "test": "phpunit",
+    "admin:serve": "php -S 0.0.0.0:8080 -t public public/index.php",
     "worker:outbox": "php bin/outbox-worker",
     "worker:health": "php bin/worker-health readiness",
     "health:summary": "php bin/health-summary",
