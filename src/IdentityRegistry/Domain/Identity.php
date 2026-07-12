@@ -8,8 +8,9 @@ use DateTimeImmutable;
 use DomainException;
 use Gamad\Core\IdentityRegistry\Domain\Event\IdentityRegistered;
 use Gamad\Core\Shared\Domain\DomainEvent;
+use Gamad\Core\Shared\Domain\RecordsDomainEvents;
 
-final class Identity
+final class Identity implements RecordsDomainEvents
 {
     /** @var list<DomainEvent> */
     private array $recordedEvents = [];
@@ -88,11 +89,21 @@ final class Identity
         $this->status = IdentityStatus::Suspended;
     }
 
+    public function recordedEvents(): array
+    {
+        return $this->recordedEvents;
+    }
+
+    public function clearRecordedEvents(): void
+    {
+        $this->recordedEvents = [];
+    }
+
     /** @return list<DomainEvent> */
     public function releaseEvents(): array
     {
-        $events = $this->recordedEvents;
-        $this->recordedEvents = [];
+        $events = $this->recordedEvents();
+        $this->clearRecordedEvents();
 
         return $events;
     }
