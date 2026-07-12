@@ -1,0 +1,37 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxDashboardRepository;
+use PDO;
+use RuntimeException;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$required = static function (string $name): string {
+    $value = getenv($name);
+    if ($value === false || $value === '') {
+        throw new RuntimeException(sprintf('Environment variable %s is required.', $name));
+    }
+
+    return $value;
+};
+
+$connection = new PDO(
+    $required('GAMAD_PG_DSN'),
+    getenv('GAMAD_PG_USER') ?: null,
+    getenv('GAMAD_PG_PASSWORD') ?: null,
+    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+);
+
+$dashboard = (new PostgreSqlOutboxDashboardRepository($connection))->snapshot();
+
+fwrite(STDOUT, json_encode([
+    'pending' => $dashboard->pending,
+    'locked' => $dashboard->locked,
+    'published' => $dashboard->published,
+    'dead_letters' => $dashboard->deadLetters,
+    'oldest_pending_at' => $dashboard->oldestPendingAt,
+    'last_published_at' => $dashboard->lastPublishedAt,
+], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT) . PHP_EOL);
