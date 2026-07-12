@@ -26,9 +26,9 @@ use Gamad\Core\Shared\Infrastructure\Http\CachedRemoteJwksProvider;
 use Gamad\Core\Shared\Infrastructure\Http\EnvironmentTokenVerifier;
 use Gamad\Core\Shared\Infrastructure\Http\OidcRs256TokenVerifier;
 use Gamad\Core\Shared\Infrastructure\Http\PostgreSqlRateLimiter;
-use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlDeadLetterRepository;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxDashboardRepository;
+use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Infrastructure\Persistence\PdoTransactionManager;
 use Gamad\Core\Shared\Infrastructure\Security\EnvironmentAuthorizationService;
 use PDO;
@@ -90,17 +90,19 @@ $administrativeController = new AdministrativeRuntimeController(
 );
 
 $identityRepository = new PostgreSqlIdentityRepository($connection);
+$transactionManager = new PdoTransactionManager($connection);
 $identityPersister = new AtomicIdentityPersister(
     identities: $identityRepository,
     outbox: new PostgreSqlOutboxRepository($connection),
     events: new DomainEventCollector(),
-    transactions: new PdoTransactionManager($connection),
+    transactions: $transactionManager,
 );
 $identityController = new IdentityHttpController(
     register: new RegisterIdentityHandler($identityRepository, $identityPersister),
     identities: $identityRepository,
     lifecycle: new IdentityLifecycleService($identityRepository, $identityPersister),
     idempotency: new PostgreSqlIdempotencyRepository($connection),
+    transactions: $transactionManager,
 );
 
 $routes = array_merge(
