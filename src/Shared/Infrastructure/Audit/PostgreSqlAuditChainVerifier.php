@@ -6,6 +6,7 @@ namespace Gamad\Core\Shared\Infrastructure\Audit;
 
 use DateTimeImmutable;
 use Gamad\Core\Shared\Audit\AuditChainVerificationResult;
+use Gamad\Core\Shared\Audit\CanonicalJson;
 use PDO;
 
 final readonly class PostgreSqlAuditChainVerifier
@@ -25,7 +26,7 @@ final readonly class PostgreSqlAuditChainVerifier
 
         foreach ($rows as $row) {
             $context = json_decode((string) $row['context'], true, flags: JSON_THROW_ON_ERROR);
-            $contextJson = json_encode($context, JSON_THROW_ON_ERROR);
+            $contextJson = CanonicalJson::encode($context);
             $canonical = implode('|', [
                 $previousHash,
                 (string) $row['actor_id'],
