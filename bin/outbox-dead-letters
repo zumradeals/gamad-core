@@ -1,0 +1,51 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlDeadLetterRepository;
+use PDO;
+use RuntimeException;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$dsn = getenv('GAMAD_PG_DSN');
+if ($dsn === false || $dsn === '') {
+    throw new RuntimeException('Environment variable GAMAD_PG_DSN is required.');
+}
+
+$connection = new PDO(
+    $dsn,
+    getenv('GAMAD_PG_USER') ?: null,
+    getenv('GAMAD_PG_PASSWORD') ?: null,
+    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+);
+$repository = new PostgreSqlDeadLetterRepository($connection);
+$messageId = $argv[1] ?? null;
+
+if ($messageId !== null && $messageId !== '') {
+    $message = $repository->find($messageId);
+    fwrite(STDOUT, json_encode($message === null ? null : [
+        'id' => $message->id,
+        'aggregate_id' => $message->aggregateId,
+        'event_name' => $message->eventName,
+        'payload' => $message->payload,
+        'attempts' => $message->attempts,
+        'last_error' => $message->lastError,
+        'failed_at' => $message->failedAt->format(DATE_ATOM),
+    ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT) . PHP_EOL);
+    exit($message === null ? 2 : 0);
+}
+
+$limit = max(1, min(500, (int) (getenv('GAMAD_DEAD_LETTER_LIMIT') ?: 100)));
+$offset = max(0, (int) (getenv('GAMAD_DEAD_LETTER_OFFSET') ?: 0));
+$messages = $repository->list($limit, $offset);
+
+fwrite(STDOUT, json_encode(array_map(static fn ($message): array => [
+    'id' => $message->id,
+    'aggregate_id' => $message->aggregateId,
+    'event_name' => $message->eventName,
+    'attempts' => $message->attempts,
+    'last_error' => $message->lastError,
+    'failed_at' => $message->failedAt->format(DATE_ATOM),
+], $messages), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT) . PHP_EOL);
