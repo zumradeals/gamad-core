@@ -1,0 +1,36 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlDeadLetterRepository;
+use PDO;
+use RuntimeException;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$messageId = $argv[1] ?? null;
+if ($messageId === null || $messageId === '') {
+    throw new RuntimeException('Usage: php bin/outbox-replay <message-id>');
+}
+
+$dsn = getenv('GAMAD_PG_DSN');
+if ($dsn === false || $dsn === '') {
+    throw new RuntimeException('Environment variable GAMAD_PG_DSN is required.');
+}
+
+$connection = new PDO(
+    $dsn,
+    getenv('GAMAD_PG_USER') ?: null,
+    getenv('GAMAD_PG_PASSWORD') ?: null,
+    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+);
+
+$replayed = (new PostgreSqlDeadLetterRepository($connection))->replay($messageId);
+
+fwrite(STDOUT, json_encode([
+    'message_id' => $messageId,
+    'replayed' => $replayed,
+], JSON_THROW_ON_ERROR) . PHP_EOL);
+
+exit($replayed ? 0 : 2);
