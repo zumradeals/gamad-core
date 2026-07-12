@@ -38,7 +38,7 @@ final readonly class OutboxPublisher
                 ++$published;
             } catch (Throwable $exception) {
                 $attempts = $message->attempts + 1;
-                $error = mb_substr($exception->getMessage(), 0, 4000);
+                $error = substr($exception->getMessage(), 0, 4000);
 
                 if ($this->retryPolicy->mustDeadLetter($attempts)) {
                     $this->outbox->moveToDeadLetter($message, $error, $now);
