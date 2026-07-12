@@ -1,0 +1,85 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Gamad\Core\Shared\Infrastructure\Health\PostgreSqlHeartbeatRepository;
+use Gamad\Core\Shared\Infrastructure\Messaging\JsonLineEventBus;
+use Gamad\Core\Shared\Infrastructure\Observability\JsonLineLogger;
+use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
+use Gamad\Core\Shared\Outbox\OutboxPublisher;
+use Gamad\Core\Shared\Outbox\RetryPolicy;
+use Gamad\Core\Shared\Runtime\OutboxWorker;
+use PDO;
+use RuntimeException;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$required = static function (string $name): string {
+    $value = getenv($name);
+    if ($value === false || $value === '') {
+        throw new RuntimeException(sprintf('Environment variable %s is required.', $name));
+    }
+
+    return $value;
+};
+
+$integer = static function (string $name, int $default, int $minimum = 1): int {
+    $value = getenv($name);
+    if ($value === false || $value === '') {
+        return $default;
+    }
+
+    $parsed = filter_var($value, FILTER_VALIDATE_INT);
+    if ($parsed === false || $parsed < $minimum) {
+        throw new RuntimeException(sprintf('Environment variable %s must be an integer >= %d.', $name, $minimum));
+    }
+
+    return $parsed;
+};
+
+$workerId = getenv('GAMAD_WORKER_ID') ?: sprintf('outbox-%s-%d', gethostname() ?: 'host', getmypid());
+$eventBusDriver = getenv('GAMAD_EVENT_BUS') ?: 'stdout';
+
+if ($eventBusDriver !== 'stdout') {
+    throw new RuntimeException('Only GAMAD_EVENT_BUS=stdout is available in the current reference runtime.');
+}
+
+$connection = new PDO(
+    $required('GAMAD_PG_DSN'),
+    getenv('GAMAD_PG_USER') ?: null,
+    getenv('GAMAD_PG_PASSWORD') ?: null,
+    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+);
+
+$logger = new JsonLineLogger(STDERR);
+$publisher = new OutboxPublisher(
+    outbox: new PostgreSqlOutboxRepository($connection),
+    eventBus: new JsonLineEventBus(STDOUT),
+    retryPolicy: new RetryPolicy(
+        maxAttempts: $integer('GAMAD_OUTBOX_MAX_ATTEMPTS', 5),
+        baseDelaySeconds: $integer('GAMAD_OUTBOX_BASE_RETRY_SECONDS', 5),
+        maxDelaySeconds: $integer('GAMAD_OUTBOX_MAX_RETRY_SECONDS', 300),
+    ),
+    workerId: $workerId,
+    batchSize: $integer('GAMAD_OUTBOX_BATCH_SIZE', 100),
+    lockSeconds: $integer('GAMAD_OUTBOX_LOCK_SECONDS', 60),
+);
+$worker = new OutboxWorker(
+    publisher: $publisher,
+    heartbeats: new PostgreSqlHeartbeatRepository($connection),
+    logger: $logger,
+    workerId: $workerId,
+    pollIntervalMilliseconds: $integer('GAMAD_OUTBOX_POLL_MS', 1000),
+    heartbeatIntervalSeconds: $integer('GAMAD_HEARTBEAT_SECONDS', 15),
+);
+
+if (function_exists('pcntl_async_signals') && function_exists('pcntl_signal')) {
+    pcntl_async_signals(true);
+    pcntl_signal(SIGTERM, static fn () => $worker->requestStop());
+    pcntl_signal(SIGINT, static fn () => $worker->requestStop());
+} else {
+    $logger->info('graceful_signal_handlers_unavailable', ['worker_id' => $workerId]);
+}
+
+exit($worker->run());
