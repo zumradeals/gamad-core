@@ -48,8 +48,8 @@ final class PostgreSqlOutboxPublisherWorkerTest extends TestCase
             aggregateId: 'GAM-PER-900100',
             eventName: 'identity.registered.v1',
             payload: ['identity_id' => 'GAM-PER-900100'],
-            occurredAt: new DateTimeImmutable('2026-07-12T12:00:00+00:00'),
-            recordedAt: new DateTimeImmutable('2026-07-12T12:00:00+00:00'),
+            occurredAt: new DateTimeImmutable('2000-01-01T00:00:00+00:00'),
+            recordedAt: new DateTimeImmutable('2000-01-01T00:00:00+00:00'),
         ));
         $bus = new RecordingEventBus();
         $publisher = new OutboxPublisher(
@@ -59,7 +59,7 @@ final class PostgreSqlOutboxPublisherWorkerTest extends TestCase
             workerId: 'integration-worker-1',
         );
 
-        $report = $publisher->publishPending(new DateTimeImmutable('2026-07-12T12:01:00+00:00'));
+        $report = $publisher->publishPending(new DateTimeImmutable('2000-01-01T00:01:00+00:00'));
 
         self::assertSame(1, $report->published);
         self::assertCount(1, $bus->published);
@@ -81,8 +81,8 @@ final class PostgreSqlOutboxPublisherWorkerTest extends TestCase
             aggregateId: 'GAM-ORG-900100',
             eventName: 'identity.registered.v1',
             payload: ['identity_id' => 'GAM-ORG-900100'],
-            occurredAt: new DateTimeImmutable('2026-07-12T12:00:00+00:00'),
-            recordedAt: new DateTimeImmutable('2026-07-12T12:00:00+00:00'),
+            occurredAt: new DateTimeImmutable('2000-01-01T00:00:00+00:00'),
+            recordedAt: new DateTimeImmutable('2000-01-01T00:00:00+00:00'),
         ));
 
         $firstClaim = $repository->claimPending(
