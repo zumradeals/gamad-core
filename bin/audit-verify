@@ -3,6 +3,7 @@
 
 declare(strict_types=1);
 
+use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAuditChainVerifier;
 use PDO;
 use RuntimeException;
 
@@ -19,42 +20,13 @@ $connection = new PDO(
     getenv('GAMAD_PG_PASSWORD') ?: null,
     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
 );
-$rows = $connection->query(
-    'SELECT id, actor_id, action, target, status_code, occurred_at, context, previous_hash, record_hash FROM administrative_audit ORDER BY id'
-)->fetchAll(PDO::FETCH_ASSOC);
-
-$previousHash = str_repeat('0', 64);
-$verified = 0;
-
-foreach ($rows as $row) {
-    $context = json_decode((string) $row['context'], true, flags: JSON_THROW_ON_ERROR);
-    $contextJson = json_encode($context, JSON_THROW_ON_ERROR);
-    $canonical = implode('|', [
-        $previousHash,
-        (string) $row['actor_id'],
-        (string) $row['action'],
-        (string) $row['target'],
-        (string) $row['status_code'],
-        (new DateTimeImmutable((string) $row['occurred_at']))->format(DATE_ATOM),
-        $contextJson,
-    ]);
-    $calculated = hash('sha256', $canonical);
-
-    if (!hash_equals($previousHash, (string) $row['previous_hash']) || !hash_equals($calculated, (string) $row['record_hash'])) {
-        fwrite(STDOUT, json_encode([
-            'valid' => false,
-            'failed_record_id' => (int) $row['id'],
-            'verified_records' => $verified,
-        ], JSON_THROW_ON_ERROR) . PHP_EOL);
-        exit(1);
-    }
-
-    $previousHash = (string) $row['record_hash'];
-    ++$verified;
-}
+$result = (new PostgreSqlAuditChainVerifier($connection))->verify();
 
 fwrite(STDOUT, json_encode([
-    'valid' => true,
-    'verified_records' => $verified,
-    'head_hash' => $previousHash,
+    'valid' => $result->valid,
+    'verified_records' => $result->verifiedRecords,
+    'head_hash' => $result->headHash,
+    'failed_record_id' => $result->failedRecordId,
 ], JSON_THROW_ON_ERROR) . PHP_EOL);
+
+exit($result->valid ? 0 : 1);
