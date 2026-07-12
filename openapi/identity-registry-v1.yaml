@@ -1,0 +1,81 @@
+openapi: 3.1.0
+info:
+  title: GAMAD Core Identity Registry API
+  version: 1.0.0-alpha
+paths:
+  /identities:
+    post:
+      operationId: registerIdentity
+      security: [{ bearerAuth: [core.identity.register] }]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 128 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identity_id, identity_type]
+              additionalProperties: false
+              properties:
+                identity_id: { type: string, pattern: '^GAM-[A-Z]{3}-[0-9]{6,}$' }
+                identity_type:
+                  type: string
+                  enum: [person, organization, application, service, agent, device, resource]
+      responses:
+        '201':
+          description: Identity registered
+          content: { application/json: { schema: { $ref: '#/components/schemas/Identity' } } }
+        '409': { description: Identity or idempotency conflict }
+  /identities/{identityId}:
+    get:
+      operationId: getIdentity
+      security: [{ bearerAuth: [core.identity.read] }]
+      parameters:
+        - in: path
+          name: identityId
+          required: true
+          schema: { type: string, pattern: '^GAM-[A-Z]{3}-[0-9]{6,}$' }
+      responses:
+        '200': { description: Identity, content: { application/json: { schema: { $ref: '#/components/schemas/Identity' } } } }
+        '404': { description: Not found }
+  /identities/{identityId}/{transition}:
+    post:
+      operationId: transitionIdentity
+      security: [{ bearerAuth: [core.identity.lifecycle.manage] }]
+      parameters:
+        - in: path
+          name: identityId
+          required: true
+          schema: { type: string, pattern: '^GAM-[A-Z]{3}-[0-9]{6,}$' }
+        - in: path
+          name: transition
+          required: true
+          schema: { type: string, enum: [activate, suspend, archive, revoke] }
+      responses:
+        '200': { description: Updated identity, content: { application/json: { schema: { $ref: '#/components/schemas/Identity' } } } }
+        '404': { description: Not found }
+        '409': { description: Invalid lifecycle transition }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth/token
+          scopes:
+            core.identity.register: Register identities
+            core.identity.read: Read identities
+            core.identity.lifecycle.manage: Manage identity lifecycle
+  schemas:
+    Identity:
+      type: object
+      required: [identity_id, identity_type, status, registered_at]
+      properties:
+        identity_id: { type: string }
+        identity_type: { type: string }
+        status: { type: string }
+        registered_at: { type: string, format: date-time }
