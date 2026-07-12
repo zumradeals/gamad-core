@@ -1,0 +1,142 @@
+openapi: 3.1.0
+info:
+  title: GAMAD Core Administrative Runtime API
+  version: 1.0.0-alpha
+  description: Contract-only administrative surface for runtime supervision. No transport implementation is implied by this file.
+paths:
+  /admin/runtime/health:
+    get:
+      operationId: getRuntimeHealthSummary
+      security:
+        - bearerAuth: [core.runtime.health.read]
+      responses:
+        '200':
+          description: Runtime health summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthSummary'
+  /admin/runtime/outbox:
+    get:
+      operationId: getOutboxDashboard
+      security:
+        - bearerAuth: [core.outbox.dashboard.read]
+      responses:
+        '200':
+          description: Outbox operational snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboxDashboard'
+  /admin/runtime/dead-letters:
+    get:
+      operationId: listDeadLetters
+      security:
+        - bearerAuth: [core.outbox.dead_letter.read]
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Dead-letter list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeadLetter'
+  /admin/runtime/dead-letters/{messageId}:
+    get:
+      operationId: inspectDeadLetter
+      security:
+        - bearerAuth: [core.outbox.dead_letter.read]
+      parameters:
+        - in: path
+          name: messageId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Dead-letter detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeadLetter'
+        '404':
+          description: Dead-letter not found
+  /admin/runtime/dead-letters/{messageId}/replay:
+    post:
+      operationId: replayDeadLetter
+      security:
+        - bearerAuth: [core.outbox.dead_letter.replay]
+      parameters:
+        - in: path
+          name: messageId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '202':
+          description: Replay accepted
+        '403':
+          description: Actor not authorized
+        '404':
+          description: Dead-letter not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth/token
+          scopes:
+            core.runtime.health.read: Read runtime health
+            core.outbox.dashboard.read: Read outbox dashboard
+            core.outbox.dead_letter.read: Read dead letters
+            core.outbox.dead_letter.replay: Replay dead letters
+  schemas:
+    WorkerStatus:
+      type: object
+      required: [worker_id, live, ready, stale, last_seen_at]
+      properties:
+        worker_id: { type: string }
+        live: { type: boolean }
+        ready: { type: boolean }
+        stale: { type: boolean }
+        last_seen_at: { type: string, format: date-time }
+        metadata: { type: object, additionalProperties: true }
+    HealthSummary:
+      type: object
+      required: [healthy, live_workers, ready_workers, stale_workers, workers]
+      properties:
+        healthy: { type: boolean }
+        live_workers: { type: integer, minimum: 0 }
+        ready_workers: { type: integer, minimum: 0 }
+        stale_workers: { type: integer, minimum: 0 }
+        workers:
+          type: array
+          items: { $ref: '#/components/schemas/WorkerStatus' }
+    OutboxDashboard:
+      type: object
+      required: [pending, locked, published, dead_letters]
+      properties:
+        pending: { type: integer, minimum: 0 }
+        locked: { type: integer, minimum: 0 }
+        published: { type: integer, minimum: 0 }
+        dead_letters: { type: integer, minimum: 0 }
+        oldest_pending_at: { type: [string, 'null'], format: date-time }
+        last_published_at: { type: [string, 'null'], format: date-time }
+    DeadLetter:
+      type: object
+      required: [id, aggregate_id, event_name, payload, attempts, last_error, failed_at]
+      properties:
+        id: { type: string, format: uuid }
+        aggregate_id: { type: string }
+        event_name: { type: string }
+        payload: { type: object, additionalProperties: true }
+        attempts: { type: integer, minimum: 1 }
+        last_error: { type: string }
+        failed_at: { type: string, format: date-time }
