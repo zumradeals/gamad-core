@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: gamad
+      POSTGRES_USER: gamad
+      POSTGRES_PASSWORD: gamad
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gamad -d gamad"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "5432:5432"
+    volumes:
+      - gamad_pgdata:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+
+  outbox-worker:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GAMAD_PG_DSN: pgsql:host=postgres;port=5432;dbname=gamad
+      GAMAD_PG_USER: gamad
+      GAMAD_PG_PASSWORD: gamad
+      GAMAD_EVENT_BUS: stdout
+      GAMAD_WORKER_ID: docker-outbox-1
+      GAMAD_OUTBOX_BATCH_SIZE: 100
+      GAMAD_OUTBOX_LOCK_SECONDS: 60
+      GAMAD_OUTBOX_POLL_MS: 1000
+      GAMAD_HEARTBEAT_SECONDS: 15
+    restart: unless-stopped
+
+volumes:
+  gamad_pgdata:
