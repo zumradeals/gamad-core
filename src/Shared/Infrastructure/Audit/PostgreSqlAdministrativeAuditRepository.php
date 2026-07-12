@@ -6,6 +6,7 @@ namespace Gamad\Core\Shared\Infrastructure\Audit;
 
 use DateTimeImmutable;
 use Gamad\Core\Shared\Audit\AdministrativeAuditRepository;
+use Gamad\Core\Shared\Audit\CanonicalJson;
 use PDO;
 
 final readonly class PostgreSqlAdministrativeAuditRepository implements AdministrativeAuditRepository
@@ -25,7 +26,7 @@ final readonly class PostgreSqlAdministrativeAuditRepository implements Administ
         $previousHash = (string) ($this->connection->query(
             'SELECT record_hash FROM administrative_audit ORDER BY id DESC LIMIT 1'
         )->fetchColumn() ?: str_repeat('0', 64));
-        $contextJson = json_encode($context, JSON_THROW_ON_ERROR);
+        $contextJson = CanonicalJson::encode($context);
         $canonical = implode('|', [
             $previousHash,
             $actorId,
