@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 use Gamad\Core\Shared\Infrastructure\Health\PostgreSqlHeartbeatRepository;
 use Gamad\Core\Shared\Infrastructure\Messaging\JsonLineEventBus;
+use Gamad\Core\Shared\Infrastructure\Metrics\PostgreSqlMetricsCollector;
 use Gamad\Core\Shared\Infrastructure\Observability\JsonLineLogger;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Outbox\OutboxPublisher;
@@ -69,6 +70,7 @@ $worker = new OutboxWorker(
     publisher: $publisher,
     heartbeats: new PostgreSqlHeartbeatRepository($connection),
     logger: $logger,
+    metrics: new PostgreSqlMetricsCollector($connection),
     workerId: $workerId,
     pollIntervalMilliseconds: $integer('GAMAD_OUTBOX_POLL_MS', 1000),
     heartbeatIntervalSeconds: $integer('GAMAD_HEARTBEAT_SECONDS', 15),
