@@ -3,15 +3,23 @@
 
 declare(strict_types=1);
 
+use Gamad\Core\Shared\Application\ReplayDeadLetterHandler;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlDeadLetterRepository;
+use Gamad\Core\Shared\Infrastructure\Security\EnvironmentAuthorizationService;
 use PDO;
 use RuntimeException;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 $messageId = $argv[1] ?? null;
+$actorId = getenv('GAMAD_ACTOR_ID') ?: '';
+$permissionsJson = getenv('GAMAD_ADMIN_PERMISSIONS_JSON') ?: '{}';
+
 if ($messageId === null || $messageId === '') {
     throw new RuntimeException('Usage: php bin/outbox-replay <message-id>');
+}
+if ($actorId === '') {
+    throw new RuntimeException('Environment variable GAMAD_ACTOR_ID is required.');
 }
 
 $dsn = getenv('GAMAD_PG_DSN');
@@ -26,9 +34,13 @@ $connection = new PDO(
     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
 );
 
-$replayed = (new PostgreSqlDeadLetterRepository($connection))->replay($messageId);
+$replayed = (new ReplayDeadLetterHandler(
+    new PostgreSqlDeadLetterRepository($connection),
+    EnvironmentAuthorizationService::fromJson($permissionsJson),
+))->replay($actorId, $messageId);
 
 fwrite(STDOUT, json_encode([
+    'actor_id' => $actorId,
     'message_id' => $messageId,
     'replayed' => $replayed,
 ], JSON_THROW_ON_ERROR) . PHP_EOL);
