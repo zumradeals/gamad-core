@@ -27,4 +27,17 @@ final readonly class IdentityRegistered implements DomainEvent
     {
         return 'identity.registered.v1';
     }
+
+    public function aggregateId(): string
+    {
+        return (string) $this->identityId;
+    }
+
+    public function payload(): array
+    {
+        return [
+            'identity_id' => (string) $this->identityId,
+            'identity_type' => $this->identityType->value,
+        ];
+    }
 }
