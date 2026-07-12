@@ -14,8 +14,10 @@ use Gamad\Core\Shared\Http\ScopeAuthorizationMiddleware;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
 use Gamad\Core\Shared\Infrastructure\Health\PostgreSqlWorkerStatusRepository;
 use Gamad\Core\Shared\Infrastructure\Http\BearerTokenAuthenticationAdapter;
+use Gamad\Core\Shared\Infrastructure\Http\CachedRemoteJwksProvider;
 use Gamad\Core\Shared\Infrastructure\Http\EnvironmentTokenVerifier;
-use Gamad\Core\Shared\Infrastructure\Http\InMemoryRateLimiter;
+use Gamad\Core\Shared\Infrastructure\Http\OidcRs256TokenVerifier;
+use Gamad\Core\Shared\Infrastructure\Http\PostgreSqlRateLimiter;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlDeadLetterRepository;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxDashboardRepository;
 use Gamad\Core\Shared\Infrastructure\Security\EnvironmentAuthorizationService;
@@ -29,22 +31,40 @@ if ($dsn === false || $dsn === '') {
     throw new RuntimeException('Environment variable GAMAD_PG_DSN is required.');
 }
 
-$tokensJson = getenv('GAMAD_ADMIN_TOKENS_JSON') ?: '{}';
-$tokens = json_decode($tokensJson, true, flags: JSON_THROW_ON_ERROR);
-$tokens = is_array($tokens) ? $tokens : [];
-$permissionsByActor = [];
-foreach ($tokens as $token) {
-    if (is_array($token) && isset($token['actor_id'], $token['scopes']) && is_array($token['scopes'])) {
-        $permissionsByActor[(string) $token['actor_id']] = array_values(array_map('strval', $token['scopes']));
-    }
-}
-
 $connection = new PDO(
     $dsn,
     getenv('GAMAD_PG_USER') ?: null,
     getenv('GAMAD_PG_PASSWORD') ?: null,
     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
 );
+
+$permissionsJson = getenv('GAMAD_ADMIN_PERMISSIONS_JSON') ?: '{}';
+$permissions = json_decode($permissionsJson, true, flags: JSON_THROW_ON_ERROR);
+$permissions = is_array($permissions) ? $permissions : [];
+
+$issuer = getenv('GAMAD_OIDC_ISSUER') ?: '';
+$audience = getenv('GAMAD_OIDC_AUDIENCE') ?: '';
+$jwksUri = getenv('GAMAD_OIDC_JWKS_URI') ?: '';
+
+if ($issuer !== '' || $audience !== '' || $jwksUri !== '') {
+    if ($issuer === '' || $audience === '' || $jwksUri === '') {
+        throw new RuntimeException('GAMAD_OIDC_ISSUER, GAMAD_OIDC_AUDIENCE and GAMAD_OIDC_JWKS_URI must be configured together.');
+    }
+
+    $tokenVerifier = new OidcRs256TokenVerifier(
+        jwks: new CachedRemoteJwksProvider(
+            jwksUri: $jwksUri,
+            cacheFile: getenv('GAMAD_OIDC_JWKS_CACHE_FILE') ?: dirname(__DIR__) . '/var/cache/jwks.json',
+            ttlSeconds: (int) (getenv('GAMAD_OIDC_JWKS_TTL_SECONDS') ?: 3600),
+        ),
+        issuer: $issuer,
+        audience: $audience,
+        clockSkewSeconds: (int) (getenv('GAMAD_OIDC_CLOCK_SKEW_SECONDS') ?: 60),
+    );
+} else {
+    $tokenVerifier = EnvironmentTokenVerifier::fromJson(getenv('GAMAD_ADMIN_TOKENS_JSON') ?: '{}');
+}
+
 $deadLetters = new PostgreSqlDeadLetterRepository($connection);
 $controller = new AdministrativeRuntimeController(
     health: new HealthSummaryQueryService(
@@ -55,16 +75,16 @@ $controller = new AdministrativeRuntimeController(
     deadLetters: $deadLetters,
     replay: new ReplayDeadLetterHandler(
         $deadLetters,
-        new EnvironmentAuthorizationService($permissionsByActor),
+        new EnvironmentAuthorizationService($permissions),
     ),
 );
 $routes = AdministrativeRoutes::forController($controller);
 $kernel = new AdministrativeHttpKernel(
     validator: new OpenApiRequestValidator($routes),
     responseValidator: new OpenApiResponseValidator(),
-    authentication: new BearerTokenAuthenticationAdapter(EnvironmentTokenVerifier::fromJson($tokensJson)),
+    authentication: new BearerTokenAuthenticationAdapter($tokenVerifier),
     authorization: new ScopeAuthorizationMiddleware(),
-    rateLimiter: new InMemoryRateLimiter(),
+    rateLimiter: new PostgreSqlRateLimiter($connection),
     audit: new PostgreSqlAdministrativeAuditRepository($connection),
     rateLimit: (int) (getenv('GAMAD_ADMIN_RATE_LIMIT') ?: 120),
     rateWindowSeconds: (int) (getenv('GAMAD_ADMIN_RATE_WINDOW_SECONDS') ?: 60),
