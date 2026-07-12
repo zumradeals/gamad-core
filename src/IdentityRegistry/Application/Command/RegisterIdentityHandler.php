@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Gamad\Core\IdentityRegistry\Application\Command;
 
+use Gamad\Core\IdentityRegistry\Application\AtomicIdentityPersister;
 use Gamad\Core\IdentityRegistry\Application\Exception\IdentityAlreadyExists;
 use Gamad\Core\IdentityRegistry\Domain\Identity;
 use Gamad\Core\IdentityRegistry\Domain\IdentityRepository;
 
 final readonly class RegisterIdentityHandler
 {
-    public function __construct(private IdentityRepository $repository)
-    {
+    public function __construct(
+        private IdentityRepository $repository,
+        private AtomicIdentityPersister $persister,
+    ) {
     }
 
     public function __invoke(RegisterIdentity $command): Identity
@@ -26,7 +29,7 @@ final readonly class RegisterIdentityHandler
             registeredAt: $command->registeredAt,
         );
 
-        $this->repository->save($identity);
+        $this->persister->persist($identity);
 
         return $identity;
     }
