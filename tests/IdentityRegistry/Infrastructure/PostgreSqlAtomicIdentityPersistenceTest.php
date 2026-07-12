@@ -15,6 +15,7 @@ use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Infrastructure\Persistence\PdoTransactionManager;
 use Gamad\Core\Shared\Outbox\OutboxMessage;
 use Gamad\Core\Shared\Outbox\OutboxRepository;
+use Gamad\Core\Shared\Outbox\PendingOutboxMessage;
 use PDO;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -40,10 +41,12 @@ final class PostgreSqlAtomicIdentityPersistenceTest extends TestCase
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
 
+        $this->connection->exec('DROP TABLE IF EXISTS outbox_dead_letters');
         $this->connection->exec('DROP TABLE IF EXISTS outbox_messages');
         $this->connection->exec('DROP TABLE IF EXISTS identities');
         $this->connection->exec((string) file_get_contents(__DIR__ . '/../../../database/migrations/001_create_identities.sql'));
         $this->connection->exec((string) file_get_contents(__DIR__ . '/../../../database/migrations/002_create_outbox_messages.sql'));
+        $this->connection->exec((string) file_get_contents(__DIR__ . '/../../../database/migrations/003_add_outbox_delivery_lifecycle.sql'));
     }
 
     public function test_identity_and_event_are_committed_in_the_same_transaction(): void
@@ -76,6 +79,23 @@ final class PostgreSqlAtomicIdentityPersistenceTest extends TestCase
             public function append(OutboxMessage $message): void
             {
                 throw new RuntimeException('Simulated outbox failure.');
+            }
+
+            public function claimPending(int $limit, string $workerId, DateTimeImmutable $lockedUntil): array
+            {
+                return [];
+            }
+
+            public function markPublished(string $messageId, DateTimeImmutable $publishedAt): void
+            {
+            }
+
+            public function markFailed(string $messageId, int $attempts, string $error, DateTimeImmutable $availableAt): void
+            {
+            }
+
+            public function moveToDeadLetter(PendingOutboxMessage $message, string $error, DateTimeImmutable $failedAt): void
+            {
             }
         };
         $persister = new AtomicIdentityPersister(
