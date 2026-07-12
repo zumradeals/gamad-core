@@ -19,33 +19,24 @@ final readonly class Request
         public string $body = '',
         public array $pathParameters = [],
         public ?AuthenticatedActor $actor = null,
+        public ?string $requestId = null,
+        public ?string $correlationId = null,
     ) {
     }
 
     public function withPathParameters(array $parameters): self
     {
-        return new self(
-            $this->method,
-            $this->path,
-            $this->headers,
-            $this->query,
-            $this->body,
-            $parameters,
-            $this->actor,
-        );
+        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $parameters, $this->actor, $this->requestId, $this->correlationId);
     }
 
     public function withActor(AuthenticatedActor $actor): self
     {
-        return new self(
-            $this->method,
-            $this->path,
-            $this->headers,
-            $this->query,
-            $this->body,
-            $this->pathParameters,
-            $actor,
-        );
+        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $this->pathParameters, $actor, $this->requestId, $this->correlationId);
+    }
+
+    public function withIdentifiers(string $requestId, string $correlationId): self
+    {
+        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $this->pathParameters, $this->actor, $requestId, $correlationId);
     }
 
     public function header(string $name): ?string
