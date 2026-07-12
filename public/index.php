@@ -8,11 +8,14 @@ use Gamad\Core\Shared\Http\AdministrativeHttpKernel;
 use Gamad\Core\Shared\Http\AdministrativeRoutes;
 use Gamad\Core\Shared\Http\AdministrativeRuntimeController;
 use Gamad\Core\Shared\Http\OpenApiRequestValidator;
+use Gamad\Core\Shared\Http\OpenApiResponseValidator;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\ScopeAuthorizationMiddleware;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
 use Gamad\Core\Shared\Infrastructure\Health\PostgreSqlWorkerStatusRepository;
-use Gamad\Core\Shared\Infrastructure\Http\EnvironmentBearerAuthenticationAdapter;
+use Gamad\Core\Shared\Infrastructure\Http\BearerTokenAuthenticationAdapter;
+use Gamad\Core\Shared\Infrastructure\Http\EnvironmentTokenVerifier;
+use Gamad\Core\Shared\Infrastructure\Http\InMemoryRateLimiter;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlDeadLetterRepository;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxDashboardRepository;
 use Gamad\Core\Shared\Infrastructure\Security\EnvironmentAuthorizationService;
@@ -58,9 +61,13 @@ $controller = new AdministrativeRuntimeController(
 $routes = AdministrativeRoutes::forController($controller);
 $kernel = new AdministrativeHttpKernel(
     validator: new OpenApiRequestValidator($routes),
-    authentication: EnvironmentBearerAuthenticationAdapter::fromJson($tokensJson),
+    responseValidator: new OpenApiResponseValidator(),
+    authentication: new BearerTokenAuthenticationAdapter(EnvironmentTokenVerifier::fromJson($tokensJson)),
     authorization: new ScopeAuthorizationMiddleware(),
+    rateLimiter: new InMemoryRateLimiter(),
     audit: new PostgreSqlAdministrativeAuditRepository($connection),
+    rateLimit: (int) (getenv('GAMAD_ADMIN_RATE_LIMIT') ?: 120),
+    rateWindowSeconds: (int) (getenv('GAMAD_ADMIN_RATE_WINDOW_SECONDS') ?: 60),
 );
 
 $headers = [];
