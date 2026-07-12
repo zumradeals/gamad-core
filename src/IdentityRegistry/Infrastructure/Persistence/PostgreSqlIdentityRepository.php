@@ -25,9 +25,7 @@ final readonly class PostgreSqlIdentityRepository implements IdentityRepository
             INSERT INTO identities (id, type, status, registered_at)
             VALUES (:id, :type, :status, :registered_at)
             ON CONFLICT (id) DO UPDATE SET
-                type = EXCLUDED.type,
-                status = EXCLUDED.status,
-                registered_at = EXCLUDED.registered_at
+                status = EXCLUDED.status
             SQL
         );
 
