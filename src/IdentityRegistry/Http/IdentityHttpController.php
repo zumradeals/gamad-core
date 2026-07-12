@@ -14,6 +14,7 @@ use Gamad\Core\IdentityRegistry\Domain\Identity;
 use Gamad\Core\IdentityRegistry\Domain\IdentityId;
 use Gamad\Core\IdentityRegistry\Domain\IdentityRepository;
 use Gamad\Core\IdentityRegistry\Domain\IdentityStatus;
+use Gamad\Core\Shared\Application\TransactionManager;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\Response;
 use InvalidArgumentException;
@@ -25,6 +26,7 @@ final readonly class IdentityHttpController
         private IdentityRepository $identities,
         private IdentityLifecycleService $lifecycle,
         private IdempotencyRepository $idempotency,
+        private TransactionManager $transactions,
     ) {}
 
     public function register(Request $request): Response
@@ -32,30 +34,32 @@ final readonly class IdentityHttpController
         $dto = RegisterIdentityRequest::from($request->body, $request->header('Idempotency-Key'));
         $actorId = $request->actor?->actorId ?? '';
         $requestHash = hash('sha256', $request->body);
-        $stored = $this->idempotency->find($actorId, $dto->idempotencyKey);
 
-        if ($stored !== null) {
-            if (!hash_equals($stored['request_hash'], $requestHash)) {
-                return Response::json(409, ['error' => 'idempotency_key_reused_with_different_request']);
+        return $this->transactions->transactional(function () use ($dto, $actorId, $requestHash): Response {
+            $stored = $this->idempotency->find($actorId, $dto->idempotencyKey);
+            if ($stored !== null) {
+                if (!hash_equals($stored['request_hash'], $requestHash)) {
+                    return Response::json(409, ['error' => 'idempotency_key_reused_with_different_request']);
+                }
+
+                return new Response($stored['status'], $stored['response']);
             }
 
-            return new Response($stored['status'], $stored['response']);
-        }
+            try {
+                $identity = ($this->register)(new RegisterIdentity(
+                    identityId: $dto->identityId,
+                    identityType: $dto->identityType,
+                    registeredAt: new DateTimeImmutable(),
+                ));
+            } catch (IdentityAlreadyExists) {
+                return Response::json(409, ['error' => 'identity_already_exists']);
+            }
 
-        try {
-            $identity = ($this->register)(new RegisterIdentity(
-                identityId: $dto->identityId,
-                identityType: $dto->identityType,
-                registeredAt: new DateTimeImmutable(),
-            ));
-        } catch (IdentityAlreadyExists) {
-            return Response::json(409, ['error' => 'identity_already_exists']);
-        }
+            $response = Response::json(201, $this->serialize($identity));
+            $this->idempotency->store($actorId, $dto->idempotencyKey, $requestHash, 201, $response->body);
 
-        $response = Response::json(201, $this->serialize($identity));
-        $this->idempotency->store($actorId, $dto->idempotencyKey, $requestHash, 201, $response->body);
-
-        return $response;
+            return $response;
+        });
     }
 
     public function get(Request $request): Response
