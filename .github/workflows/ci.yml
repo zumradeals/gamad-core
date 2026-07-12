@@ -30,7 +30,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_pgsql
+          extensions: pdo_pgsql, openssl
           coverage: none
 
       - uses: ramsey/composer-install@v3
@@ -44,3 +44,66 @@ jobs:
 
       - name: Validate container build
         run: docker build -t gamad-core-worker:ci .
+
+  security-validation:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: gamad_security
+          POSTGRES_USER: gamad
+          POSTGRES_PASSWORD: gamad
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U gamad -d gamad_security"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, openssl
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+
+      - name: Initialize security validation database
+        env:
+          PGPASSWORD: gamad
+        run: |
+          for migration in database/migrations/*.sql; do
+            psql -h 127.0.0.1 -p 5433 -U gamad -d gamad_security -v ON_ERROR_STOP=1 -f "$migration"
+          done
+
+      - name: Run OIDC and deployment smoke test
+        env:
+          GAMAD_TEST_PG_DSN: pgsql:host=127.0.0.1;port=5433;dbname=gamad_security
+          GAMAD_TEST_PG_USER: gamad
+          GAMAD_TEST_PG_PASSWORD: gamad
+        run: sh tools/security-smoke.sh
+
+      - name: Verify administrative audit chain
+        env:
+          GAMAD_PG_DSN: pgsql:host=127.0.0.1;port=5433;dbname=gamad_security
+          GAMAD_PG_USER: gamad
+          GAMAD_PG_PASSWORD: gamad
+        run: composer audit:verify
+
+      - name: Validate production deployment profile
+        env:
+          GAMAD_CORE_IMAGE: gamad-core:ci
+          GAMAD_PG_DSN: pgsql:host=postgres;port=5432;dbname=gamad
+          GAMAD_PG_USER: gamad
+          GAMAD_PG_PASSWORD: gamad
+          GAMAD_OIDC_ISSUER: https://identity.example.test
+          GAMAD_OIDC_AUDIENCE: gamad-admin
+          GAMAD_OIDC_JWKS_URI: https://identity.example.test/.well-known/jwks.json
+          GAMAD_HEALTHCHECK_TOKEN: ci-token
+        run: docker compose -f deploy/admin-api.production.yml config >/dev/null
