@@ -45,6 +45,20 @@ final class Identity
         return $identity;
     }
 
+    public static function reconstitute(
+        IdentityId $id,
+        IdentityType $type,
+        IdentityStatus $status,
+        DateTimeImmutable $registeredAt,
+    ): self {
+        return new self(
+            id: $id,
+            type: $type,
+            status: $status,
+            registeredAt: $registeredAt,
+        );
+    }
+
     public function id(): IdentityId
     {
         return $this->id;
