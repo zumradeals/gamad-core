@@ -22,7 +22,8 @@
     }
   },
   "scripts": {
-    "test": "phpunit"
+    "test": "phpunit",
+    "worker:outbox": "php bin/outbox-worker"
   },
   "config": {
     "sort-packages": true,
