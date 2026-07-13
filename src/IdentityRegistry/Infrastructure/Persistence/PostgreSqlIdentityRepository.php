@@ -7,6 +7,7 @@ namespace Gamad\Core\IdentityRegistry\Infrastructure\Persistence;
 use DateTimeImmutable;
 use Gamad\Core\IdentityRegistry\Domain\Identity;
 use Gamad\Core\IdentityRegistry\Domain\IdentityId;
+use Gamad\Core\IdentityRegistry\Domain\IdentityInternalId;
 use Gamad\Core\IdentityRegistry\Domain\IdentityRepository;
 use Gamad\Core\IdentityRegistry\Domain\IdentityStatus;
 use Gamad\Core\IdentityRegistry\Domain\IdentityType;
@@ -14,22 +15,21 @@ use PDO;
 
 final readonly class PostgreSqlIdentityRepository implements IdentityRepository
 {
-    public function __construct(private PDO $connection)
-    {
-    }
+    public function __construct(private PDO $connection) {}
 
     public function save(Identity $identity): void
     {
         $statement = $this->connection->prepare(
             <<<'SQL'
-            INSERT INTO identities (id, type, status, registered_at)
-            VALUES (:id, :type, :status, :registered_at)
+            INSERT INTO identities (internal_id, id, type, status, registered_at)
+            VALUES (:internal_id, :id, :type, :status, :registered_at)
             ON CONFLICT (id) DO UPDATE SET
                 status = EXCLUDED.status
             SQL
         );
 
         $statement->execute([
+            'internal_id' => (string) $identity->internalId(),
             'id' => (string) $identity->id(),
             'type' => $identity->type()->value,
             'status' => $identity->status()->value,
@@ -40,10 +40,9 @@ final readonly class PostgreSqlIdentityRepository implements IdentityRepository
     public function findById(IdentityId $identityId): ?Identity
     {
         $statement = $this->connection->prepare(
-            'SELECT id, type, status, registered_at FROM identities WHERE id = :id'
+            'SELECT internal_id, id, type, status, registered_at FROM identities WHERE id = :id'
         );
         $statement->execute(['id' => (string) $identityId]);
-
         $row = $statement->fetch(PDO::FETCH_ASSOC);
 
         if ($row === false) {
@@ -51,6 +50,7 @@ final readonly class PostgreSqlIdentityRepository implements IdentityRepository
         }
 
         return Identity::reconstitute(
+            internalId: new IdentityInternalId((string) $row['internal_id']),
             id: new IdentityId((string) $row['id']),
             type: IdentityType::from((string) $row['type']),
             status: IdentityStatus::from((string) $row['status']),
@@ -60,9 +60,7 @@ final readonly class PostgreSqlIdentityRepository implements IdentityRepository
 
     public function exists(IdentityId $identityId): bool
     {
-        $statement = $this->connection->prepare(
-            'SELECT EXISTS(SELECT 1 FROM identities WHERE id = :id)'
-        );
+        $statement = $this->connection->prepare('SELECT EXISTS(SELECT 1 FROM identities WHERE id = :id)');
         $statement->execute(['id' => (string) $identityId]);
 
         return (bool) $statement->fetchColumn();
