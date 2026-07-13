@@ -149,6 +149,24 @@ Cette conséquence est traitée par ADR-0017, adopté conjointement à ce docume
 
 ---
 
+## Annexe A — Registre des realms
+
+Conformément au processus de gouvernance §5.1, chaque création de realm est enregistrée ici avec ses réponses aux cinq questions de légitimation.
+
+### Realm `GAT`
+
+| Question | Réponse |
+|---|---|
+| Structure porteuse | GAMAD Technologie, créée par GAMAD SAS |
+| Juridiction(s) | Côte d'Ivoire (Abidjan) |
+| Légitimité au regard d'IDENTITY-001 §15-16 | Validée — GAMAD Technologie est une structure GAMAD reconnue, opérant le Core numérique conformément à sa mission technique |
+| Candidat futur à la fédération | Oui, de principe — aucune fédération active à ce jour |
+| Responsable de gouvernance | Orchestrateur de GAMAD (Zakaria Le SOUFI) |
+
+Date d'attribution : 2026-07-13. Realm fondateur — première instance du GAMAD Core mise en service.
+
+---
+
 ## 8. Déclaration finale
 
 GAMAD ne construit pas un empire numérique unique. Il construit un modèle que chaque structure légitime peut porter chez elle, souverainement, dans le respect des lois de son territoire, sans jamais perdre son lien avec les autres realms qui partagent la même origine et la même idéologie fondatrice.
