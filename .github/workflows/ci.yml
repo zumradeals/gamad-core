@@ -35,12 +35,21 @@ jobs:
 
       - uses: ramsey/composer-install@v3
 
-      - name: Run test suite
+      - name: Validate Composer manifest
+        run: composer validate --strict
+
+      - name: Lint PHP sources
+        run: find src tests public bin tools -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run unit tests
+        run: composer test -- --exclude-group integration
+
+      - name: Run PostgreSQL integration tests
         env:
           GAMAD_TEST_PG_DSN: pgsql:host=127.0.0.1;port=5432;dbname=gamad_test
           GAMAD_TEST_PG_USER: gamad
           GAMAD_TEST_PG_PASSWORD: gamad
-        run: composer test
+        run: composer test -- --group integration
 
       - name: Validate container build
         run: docker build -t gamad-core-worker:ci .
