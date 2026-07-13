@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Gamad\Core\IdentityRegistry\Http;
 
-use Gamad\Core\IdentityRegistry\Domain\IdentityId;
 use Gamad\Core\IdentityRegistry\Domain\IdentityType;
 use InvalidArgumentException;
+use ValueError;
 
 final readonly class RegisterIdentityRequest
 {
     public function __construct(
-        public IdentityId $identityId,
         public IdentityType $identityType,
         public string $idempotencyKey,
     ) {}
@@ -23,17 +22,19 @@ final readonly class RegisterIdentityRequest
         }
 
         $payload = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
-        if (!is_array($payload) || array_diff(array_keys($payload), ['identity_id', 'identity_type']) !== []) {
+        if (!is_array($payload) || array_diff(array_keys($payload), ['identity_type']) !== []) {
             throw new InvalidArgumentException('Request body contains unsupported fields.');
         }
-        if (!isset($payload['identity_id'], $payload['identity_type']) || !is_string($payload['identity_id']) || !is_string($payload['identity_type'])) {
-            throw new InvalidArgumentException('identity_id and identity_type are required strings.');
+        if (!isset($payload['identity_type']) || !is_string($payload['identity_type'])) {
+            throw new InvalidArgumentException('identity_type is required and must be a string.');
         }
 
-        return new self(
-            new IdentityId($payload['identity_id']),
-            IdentityType::from($payload['identity_type']),
-            $idempotencyKey,
-        );
+        try {
+            $type = IdentityType::from($payload['identity_type']);
+        } catch (ValueError) {
+            throw new InvalidArgumentException('identity_type is not supported.');
+        }
+
+        return new self($type, $idempotencyKey);
     }
 }
