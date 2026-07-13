@@ -14,6 +14,7 @@ use Gamad\Core\Shared\Http\OpenApiResponseValidator;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\ScopeAuthorizationMiddleware;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
+use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAuditChainVerifier;
 use Gamad\Core\Shared\Infrastructure\Health\PostgreSqlWorkerStatusRepository;
 use Gamad\Core\Shared\Infrastructure\Http\BearerTokenAuthenticationAdapter;
 use Gamad\Core\Shared\Infrastructure\Http\EnvironmentTokenVerifier;
@@ -89,11 +90,50 @@ final class PostgreSqlAdministrativeHttpEndToEndTest extends TestCase
         }
     }
 
+    public function test_authorized_audit_verify_request_reports_a_valid_chain(): void
+    {
+        $kernel = $this->kernel();
+        $kernel->handle(new Request('GET', '/admin/runtime/health', [
+            'Authorization' => 'Bearer integration-token',
+        ]));
+
+        $response = $kernel->handle(new Request('GET', '/admin/runtime/audit/verify', [
+            'Authorization' => 'Bearer integration-token',
+        ]));
+
+        self::assertSame(200, $response->status);
+        $body = json_decode($response->body, true, flags: JSON_THROW_ON_ERROR);
+        self::assertTrue($body['valid']);
+        self::assertGreaterThan(0, $body['verified_count']);
+        self::assertNull($body['failed_record_id']);
+    }
+
+    public function test_audit_verify_reports_a_broken_chain(): void
+    {
+        $kernel = $this->kernel();
+        $kernel->handle(new Request('GET', '/admin/runtime/health', [
+            'Authorization' => 'Bearer integration-token',
+        ]));
+        $this->connection->exec('ALTER TABLE administrative_audit DISABLE TRIGGER ALL');
+        $this->connection->exec("UPDATE administrative_audit SET record_hash = repeat('0', 64)");
+        $this->connection->exec('ALTER TABLE administrative_audit ENABLE TRIGGER ALL');
+
+        $response = $kernel->handle(new Request('GET', '/admin/runtime/audit/verify', [
+            'Authorization' => 'Bearer integration-token',
+        ]));
+
+        self::assertSame(200, $response->status);
+        $body = json_decode($response->body, true, flags: JSON_THROW_ON_ERROR);
+        self::assertFalse($body['valid']);
+        self::assertNotNull($body['failed_record_id']);
+    }
+
     private function kernel(): AdministrativeHttpKernel
     {
         $scopes = [
             'core.runtime.health.read',
             'core.outbox.dashboard.read',
+            'core.audit.verify.read',
             'core.outbox.dead_letter.read',
             'core.outbox.dead_letter.replay',
         ];
@@ -106,6 +146,7 @@ final class PostgreSqlAdministrativeHttpEndToEndTest extends TestCase
                 $deadLetters,
                 new EnvironmentAuthorizationService(['GAM-PER-000001' => $scopes]),
             ),
+            new PostgreSqlAuditChainVerifier($this->connection),
         );
         $routes = AdministrativeRoutes::forController($controller);
         $tokens = json_encode([

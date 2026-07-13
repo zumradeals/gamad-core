@@ -6,6 +6,7 @@ namespace Gamad\Core\Shared\Http;
 
 use Gamad\Core\Shared\Application\HealthSummaryQueryService;
 use Gamad\Core\Shared\Application\ReplayDeadLetterHandler;
+use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAuditChainVerifier;
 use Gamad\Core\Shared\Outbox\DeadLetterRepository;
 use Gamad\Core\Shared\Outbox\OutboxDashboardRepository;
 
@@ -16,6 +17,7 @@ final readonly class AdministrativeRuntimeController
         private OutboxDashboardRepository $dashboard,
         private DeadLetterRepository $deadLetters,
         private ReplayDeadLetterHandler $replay,
+        private PostgreSqlAuditChainVerifier $auditVerifier,
     ) {
     }
 
@@ -50,6 +52,17 @@ final readonly class AdministrativeRuntimeController
             'dead_letters' => $snapshot->deadLetters,
             'oldest_pending_at' => $snapshot->oldestPendingAt,
             'last_published_at' => $snapshot->lastPublishedAt,
+        ]);
+    }
+
+    public function verifyAudit(Request $request): Response
+    {
+        $result = $this->auditVerifier->verify();
+
+        return Response::json(200, [
+            'valid' => $result->valid,
+            'verified_count' => $result->verifiedRecords,
+            'failed_record_id' => $result->failedRecordId,
         ]);
     }
 

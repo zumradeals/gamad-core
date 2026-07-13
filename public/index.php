@@ -22,6 +22,7 @@ use Gamad\Core\Shared\Http\OpenApiResponseValidator;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\ScopeAuthorizationMiddleware;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
+use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAuditChainVerifier;
 use Gamad\Core\Shared\Infrastructure\Health\PostgreSqlWorkerStatusRepository;
 use Gamad\Core\Shared\Infrastructure\Http\BearerTokenAuthenticationAdapter;
 use Gamad\Core\Shared\Infrastructure\Http\CachedRemoteJwksProvider;
@@ -83,6 +84,7 @@ $administrativeController = new AdministrativeRuntimeController(
     dashboard: new PostgreSqlOutboxDashboardRepository($connection),
     deadLetters: $deadLetters,
     replay: new ReplayDeadLetterHandler($deadLetters, new EnvironmentAuthorizationService($permissions)),
+    auditVerifier: new PostgreSqlAuditChainVerifier($connection),
 );
 
 $identityRepository = new PostgreSqlIdentityRepository($connection);

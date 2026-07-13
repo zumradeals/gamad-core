@@ -57,5 +57,15 @@ services:
       - "8080:8080"
     restart: unless-stopped
 
+  console:
+    build: ./console
+    depends_on:
+      - admin-api
+    environment:
+      GAMAD_CORE_API_BASE_URL: http://admin-api:8080
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
 volumes:
   gamad_pgdata:

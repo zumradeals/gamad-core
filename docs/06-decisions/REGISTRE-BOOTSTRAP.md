@@ -22,6 +22,7 @@ Chaque route d'écriture — et, par prudence, chaque route exposée — ajouté
 |---|---|---|
 | `GET /admin/runtime/health` | `core.runtime.health.read` | Shared (Admin Runtime) |
 | `GET /admin/runtime/outbox` | `core.outbox.dashboard.read` | Shared (Admin Runtime) |
+| `GET /admin/runtime/audit/verify` | `core.audit.verify.read` | Shared (Admin Runtime) |
 | `GET /admin/runtime/dead-letters` | `core.outbox.dead_letter.read` | Shared (Admin Runtime) |
 | `GET /admin/runtime/dead-letters/{messageId}` | `core.outbox.dead_letter.read` | Shared (Admin Runtime) |
 | `POST /admin/runtime/dead-letters/{messageId}/replay` | `core.outbox.dead_letter.replay` | Shared (Admin Runtime) |

@@ -28,6 +28,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OutboxDashboard'
+  /admin/runtime/audit/verify:
+    get:
+      operationId: verifyAuditChain
+      security:
+        - bearerAuth: [core.audit.verify.read]
+      responses:
+        '200':
+          description: Audit chain verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditVerification'
   /admin/runtime/dead-letters:
     get:
       operationId: listDeadLetters
@@ -97,6 +109,7 @@ components:
             core.outbox.dashboard.read: Read outbox dashboard
             core.outbox.dead_letter.read: Read dead letters
             core.outbox.dead_letter.replay: Replay dead letters
+            core.audit.verify.read: Read audit chain verification result
   schemas:
     WorkerStatus:
       type: object
@@ -129,6 +142,13 @@ components:
         dead_letters: { type: integer, minimum: 0 }
         oldest_pending_at: { type: [string, 'null'], format: date-time }
         last_published_at: { type: [string, 'null'], format: date-time }
+    AuditVerification:
+      type: object
+      required: [valid, verified_count]
+      properties:
+        valid: { type: boolean }
+        verified_count: { type: integer, minimum: 0 }
+        failed_record_id: { type: [integer, 'null'] }
     DeadLetter:
       type: object
       required: [id, aggregate_id, event_name, payload, attempts, last_error, failed_at]

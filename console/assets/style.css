@@ -1,0 +1,247 @@
+/*
+ * DIRECTIVE-002 Partie B — palette provisoire, technique, non institutionnelle.
+ * Aucune valeur de couleur ou de typographie n'est officiellement fixée pour
+ * GAMAD (IDENTITY-001 §12-13). Cette charte reprend la palette déjà verrouillée
+ * sur IKOMA OPS, en attente d'IDENTITY-002 / IDENTITY-003. Ne pas y voir une
+ * identité de marque : c'est un instrument de pilotage interne, pas un produit.
+ */
+
+:root {
+    --gamad-primary: #2B7DE9;
+    --gamad-accent: #F5C518;
+    --gamad-success: #1E8E5A;
+    --gamad-danger: #B3261E;
+    --gamad-bg: #F7F8FA;
+    --gamad-surface: #FFFFFF;
+    --gamad-text: #1A1D21;
+    --gamad-text-muted: #5B6470;
+    --gamad-border: #DCE1E7;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", "Inter", "Noto Sans", sans-serif;
+    background: var(--gamad-bg);
+    color: var(--gamad-text);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+a {
+    color: var(--gamad-primary);
+}
+
+.console-header {
+    background: var(--gamad-surface);
+    border-bottom: 1px solid var(--gamad-border);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.console-header .brand {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.console-header .brand small {
+    display: block;
+    font-weight: 400;
+    color: var(--gamad-text-muted);
+    font-size: 0.75rem;
+}
+
+.console-nav {
+    display: flex;
+    gap: 1.25rem;
+    font-size: 0.9rem;
+}
+
+.console-nav a {
+    color: var(--gamad-text);
+    text-decoration: none;
+}
+
+.console-nav a:hover {
+    color: var(--gamad-primary);
+}
+
+main {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.card {
+    background: var(--gamad-surface);
+    border: 1px solid var(--gamad-border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+}
+
+.card h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gamad-text-muted);
+}
+
+.card .value {
+    font-size: 1.6rem;
+    font-weight: 600;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-success { background: rgba(30, 142, 90, 0.12); color: var(--gamad-success); }
+.badge-danger { background: rgba(179, 38, 30, 0.12); color: var(--gamad-danger); }
+.badge-neutral { background: rgba(91, 100, 112, 0.12); color: var(--gamad-text-muted); }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--gamad-surface);
+    border: 1px solid var(--gamad-border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+th, td {
+    text-align: left;
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--gamad-border);
+    font-size: 0.9rem;
+}
+
+th {
+    background: #F0F2F5;
+    font-weight: 600;
+    color: var(--gamad-text-muted);
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+.form-field {
+    margin-bottom: 1rem;
+}
+
+.form-field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    font-size: 0.85rem;
+}
+
+input[type="text"], input[type="password"], select, textarea {
+    width: 100%;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--gamad-border);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: var(--gamad-surface);
+    color: var(--gamad-text);
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-primary { background: var(--gamad-primary); color: #fff; }
+.btn-danger { background: var(--gamad-danger); color: #fff; }
+.btn-neutral { background: var(--gamad-surface); color: var(--gamad-text); border-color: var(--gamad-border); }
+
+.btn + .btn { margin-left: 0.5rem; }
+
+.flash {
+    padding: 0.65rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.flash-error { background: rgba(179, 38, 30, 0.08); color: var(--gamad-danger); border: 1px solid rgba(179, 38, 30, 0.25); }
+.flash-success { background: rgba(30, 142, 90, 0.08); color: var(--gamad-success); border: 1px solid rgba(30, 142, 90, 0.25); }
+
+.login-shell {
+    max-width: 380px;
+    margin: 4rem auto;
+    background: var(--gamad-surface);
+    border: 1px solid var(--gamad-border);
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.login-shell h1 {
+    font-size: 1.1rem;
+    margin-top: 0;
+}
+
+.meta {
+    color: var(--gamad-text-muted);
+    font-size: 0.8rem;
+}
+
+.confirm-box {
+    background: var(--gamad-surface);
+    border: 1px solid var(--gamad-border);
+    border-radius: 6px;
+    padding: 1.25rem;
+    max-width: 480px;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.75rem;
+}
+
+.filters {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    align-items: flex-end;
+}
+
+.filters .form-field {
+    margin-bottom: 0;
+}
+
+pre.payload {
+    background: #F0F2F5;
+    padding: 0.75rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.8rem;
+}

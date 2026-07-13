@@ -15,11 +15,13 @@ final class OpenApiAdministrativeContractTest extends TestCase
         foreach ([
             'getRuntimeHealthSummary',
             'getOutboxDashboard',
+            'verifyAuditChain',
             'listDeadLetters',
             'inspectDeadLetter',
             'replayDeadLetter',
             'core.runtime.health.read',
             'core.outbox.dashboard.read',
+            'core.audit.verify.read',
             'core.outbox.dead_letter.read',
             'core.outbox.dead_letter.replay',
         ] as $required) {

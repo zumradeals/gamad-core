@@ -29,6 +29,7 @@ final readonly class OpenApiResponseValidator
         $required = match ($operationId) {
             'getRuntimeHealthSummary' => ['healthy', 'live_workers', 'ready_workers', 'stale_workers', 'workers'],
             'getOutboxDashboard' => ['pending', 'locked', 'published', 'dead_letters'],
+            'verifyAuditChain' => ['valid', 'verified_count'],
             'listDeadLetters' => [],
             'inspectDeadLetter' => ['id', 'aggregate_id', 'event_name', 'payload', 'attempts', 'last_error', 'failed_at'],
             'replayDeadLetter' => ['replayed'],
