@@ -10,7 +10,9 @@ use Gamad\Core\IdentityRegistry\Application\IdentityLifecycleService;
 use Gamad\Core\IdentityRegistry\Http\IdentityHttpController;
 use Gamad\Core\IdentityRegistry\Http\IdentityRoutes;
 use Gamad\Core\IdentityRegistry\Infrastructure\Http\PostgreSqlIdempotencyRepository;
+use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityIdentifierAuthority;
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityRepository;
+use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
 use Gamad\Core\Shared\Application\DomainEventCollector;
 use Gamad\Core\Shared\Http\AdministrativeHttpKernel;
 use Gamad\Core\Shared\Http\AuthenticatedActor;
@@ -21,6 +23,7 @@ use Gamad\Core\Shared\Http\RateLimiter;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\ScopeAuthorizationMiddleware;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
+use Gamad\Core\Shared\Infrastructure\Metrics\PostgreSqlMetricsCollector;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Infrastructure\Persistence\PdoTransactionManager;
 use PDO;
@@ -46,39 +49,47 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
 
-        foreach (['identity_idempotency', 'administrative_audit', 'rate_limit_buckets', 'outbox_dead_letters', 'outbox_messages', 'identities'] as $table) {
+        foreach (['identity_identifier_sequences', 'identity_idempotency', 'administrative_audit', 'operational_metrics', 'rate_limit_buckets', 'outbox_dead_letters', 'outbox_messages', 'identities'] as $table) {
             $this->connection->exec('DROP TABLE IF EXISTS ' . $table . ' CASCADE');
         }
 
-        foreach ([1, 2, 3, 6, 7, 8, 9] as $number) {
+        foreach ([1, 2, 3, 5, 6, 7, 8, 9, 10] as $number) {
             $files = glob(__DIR__ . '/../../../database/migrations/' . sprintf('%03d', $number) . '_*.sql');
             self::assertNotEmpty($files);
             $this->connection->exec((string) file_get_contents($files[0]));
         }
     }
 
-    public function test_registration_is_idempotent_queryable_audited_and_lifecycle_managed(): void
+    public function test_authoritative_registration_bulk_search_and_lifecycle(): void
     {
         $kernel = $this->kernel();
-        $body = json_encode([
-            'identity_id' => 'GAM-PER-700001',
-            'identity_type' => 'person',
-        ], JSON_THROW_ON_ERROR);
-        $headers = ['Idempotency-Key' => 'register-person-700001'];
+        $singleBody = json_encode(['identity_type' => 'person'], JSON_THROW_ON_ERROR);
+        $singleHeaders = ['Idempotency-Key' => 'register-person-one'];
 
-        $created = $kernel->handle(new Request('POST', '/identities', $headers, body: $body));
-        $replayed = $kernel->handle(new Request('POST', '/identities', $headers, body: $body));
-        $read = $kernel->handle(new Request('GET', '/identities/GAM-PER-700001'));
-        $suspended = $kernel->handle(new Request('POST', '/identities/GAM-PER-700001/suspend'));
+        $created = $kernel->handle(new Request('POST', '/identities', $singleHeaders, body: $singleBody));
+        $replayed = $kernel->handle(new Request('POST', '/identities', $singleHeaders, body: $singleBody));
+        $bulk = $kernel->handle(new Request('POST', '/identities/bulk', ['Idempotency-Key' => 'bulk-organizations'], body: json_encode([
+            'items' => [
+                ['identity_type' => 'organization'],
+                ['identity_type' => 'organization'],
+            ],
+        ], JSON_THROW_ON_ERROR)));
+        $createdPayload = json_decode($created->body, true, flags: JSON_THROW_ON_ERROR);
+        $publicId = $createdPayload['identity_id'];
+        $read = $kernel->handle(new Request('GET', '/identities/' . $publicId));
+        $search = $kernel->handle(new Request('GET', '/identities', query: ['type' => 'organization', 'limit' => '1']));
+        $suspended = $kernel->handle(new Request('POST', '/identities/' . $publicId . '/suspend'));
 
-        self::assertSame(201, $created->status);
+        self::assertSame('GAM-PER-000001', $publicId);
         self::assertSame($created->body, $replayed->body);
+        self::assertSame(201, $bulk->status);
         self::assertSame(200, $read->status);
+        self::assertNotNull(json_decode($search->body, true, flags: JSON_THROW_ON_ERROR)['next_cursor']);
         self::assertSame('suspended', json_decode($suspended->body, true, flags: JSON_THROW_ON_ERROR)['status']);
-        self::assertSame(1, (int) $this->connection->query('SELECT COUNT(*) FROM identities')->fetchColumn());
-        self::assertSame(1, (int) $this->connection->query('SELECT COUNT(*) FROM identity_idempotency')->fetchColumn());
-        self::assertSame(2, (int) $this->connection->query('SELECT COUNT(*) FROM outbox_messages')->fetchColumn());
-        self::assertSame(4, (int) $this->connection->query('SELECT COUNT(*) FROM administrative_audit')->fetchColumn());
+        self::assertSame(3, (int) $this->connection->query('SELECT COUNT(*) FROM identities')->fetchColumn());
+        self::assertSame(3, (int) $this->connection->query('SELECT COUNT(DISTINCT internal_id) FROM identities')->fetchColumn());
+        self::assertSame(4, (int) $this->connection->query('SELECT COUNT(*) FROM outbox_messages')->fetchColumn());
+        self::assertSame(3.0, (float) $this->connection->query("SELECT value FROM operational_metrics WHERE name = 'gamad_identity_registered_total'")->fetchColumn());
     }
 
     private function kernel(): AdministrativeHttpKernel
@@ -92,7 +103,13 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
             $transactions,
         );
         $controller = new IdentityHttpController(
-            new RegisterIdentityHandler($repository, $persister),
+            new RegisterIdentityHandler(
+                new PostgreSqlIdentityIdentifierAuthority($this->connection),
+                new AllowConfiguredIdentityTypesPolicy(),
+                $persister,
+                new PostgreSqlMetricsCollector($this->connection),
+            ),
+            $repository,
             $repository,
             new IdentityLifecycleService($repository, $persister),
             new PostgreSqlIdempotencyRepository($this->connection),
