@@ -6,6 +6,9 @@ namespace Gamad\Core\Shared\Infrastructure\Security;
 
 use Gamad\Core\Shared\Security\AuthorizationService;
 
+/**
+ * @see docs/06-decisions/ADR-0011-authorization-bootstrap-provisoire.md — mécanisme provisoire, non représentatif du futur Access Control.
+ */
 final readonly class EnvironmentAuthorizationService implements AuthorizationService
 {
     /** @param array<string, list<string>> $permissionsByActor */
