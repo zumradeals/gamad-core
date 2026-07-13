@@ -41,18 +41,15 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
         if ($dsn === false || $dsn === '') {
             self::markTestSkipped('Set GAMAD_TEST_PG_DSN to run PostgreSQL integration tests.');
         }
-
         $this->connection = new PDO(
             $dsn,
             getenv('GAMAD_TEST_PG_USER') ?: null,
             getenv('GAMAD_TEST_PG_PASSWORD') ?: null,
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
         );
-
         foreach (['identity_identifier_sequences', 'identity_idempotency', 'administrative_audit', 'operational_metrics', 'rate_limit_buckets', 'outbox_dead_letters', 'outbox_messages', 'identities'] as $table) {
             $this->connection->exec('DROP TABLE IF EXISTS ' . $table . ' CASCADE');
         }
-
         foreach ([1, 2, 3, 5, 6, 7, 8, 9, 10] as $number) {
             $files = glob(__DIR__ . '/../../../database/migrations/' . sprintf('%03d', $number) . '_*.sql');
             self::assertNotEmpty($files);
@@ -69,10 +66,7 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
         $created = $kernel->handle(new Request('POST', '/identities', $singleHeaders, body: $singleBody));
         $replayed = $kernel->handle(new Request('POST', '/identities', $singleHeaders, body: $singleBody));
         $bulk = $kernel->handle(new Request('POST', '/identities/bulk', ['Idempotency-Key' => 'bulk-organizations'], body: json_encode([
-            'items' => [
-                ['identity_type' => 'organization'],
-                ['identity_type' => 'organization'],
-            ],
+            'items' => [['identity_type' => 'organization'], ['identity_type' => 'organization']],
         ], JSON_THROW_ON_ERROR)));
         $createdPayload = json_decode($created->body, true, flags: JSON_THROW_ON_ERROR);
         $publicId = $createdPayload['identity_id'];
@@ -89,7 +83,7 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
         self::assertSame(3, (int) $this->connection->query('SELECT COUNT(*) FROM identities')->fetchColumn());
         self::assertSame(3, (int) $this->connection->query('SELECT COUNT(DISTINCT internal_id) FROM identities')->fetchColumn());
         self::assertSame(4, (int) $this->connection->query('SELECT COUNT(*) FROM outbox_messages')->fetchColumn());
-        self::assertSame(3.0, (float) $this->connection->query("SELECT value FROM operational_metrics WHERE name = 'gamad_identity_registered_total'")->fetchColumn());
+        self::assertSame(3.0, (float) $this->connection->query("SELECT SUM(value) FROM operational_metrics WHERE name = 'gamad_identity_registered_total'")->fetchColumn());
     }
 
     private function kernel(): AdministrativeHttpKernel
