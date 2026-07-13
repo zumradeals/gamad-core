@@ -33,6 +33,8 @@ final readonly class OpenApiResponseValidator
             'inspectDeadLetter' => ['id', 'aggregate_id', 'event_name', 'payload', 'attempts', 'last_error', 'failed_at'],
             'replayDeadLetter' => ['replayed'],
             'registerIdentity', 'getIdentity', 'transitionIdentity' => ['identity_id', 'identity_type', 'status', 'registered_at'],
+            'bulkRegisterIdentities' => ['items', 'count'],
+            'searchIdentities' => ['items', 'next_cursor'],
             default => throw new RuntimeException(sprintf('Unknown OpenAPI operation %s.', $operationId)),
         };
 
