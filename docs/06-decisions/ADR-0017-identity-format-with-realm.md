@@ -33,7 +33,7 @@ Le realm actuellement en service (Abidjan, staging) a déjà émis des identité
 GAM-{REALM}-{TYPE}-{NUMERO}
 ```
 
-Exemple : `GAM-<REALM>-PER-000001`.
+Exemple : `GAM-GAT-PER-000001`.
 
 Motif de validation :
 
@@ -47,7 +47,7 @@ Motif de validation :
 - Attribué une seule fois, de façon définitive, à la création du realm — conformément à GENESIS-008 §5.1.
 - Choisi par la structure porteuse et validé par l'autorité de gouvernance compétente, jamais généré automatiquement ou improvisé au moment du déploiement technique.
 - Le code de realm identifie la structure porteuse, jamais un pays ou une zone géographique, conformément à GENESIS-008 §2.2.
-- **Le code de realm de l'instance actuellement en service reste à attribuer formellement par l'Orchestrateur avant toute exécution de la Tâche 2 ci-dessous.** Cette Directive ne préjuge d'aucune valeur.
+- **Le code de realm de l'instance actuellement en service est attribué : `GAT`.** Structure porteuse : GAMAD Technologie (créée par GAMAD SAS). Attribution validée par l'Orchestrateur le 2026-07-13, conformément à GENESIS-008 §5.1.
 
 ### 3. Implémentation
 
