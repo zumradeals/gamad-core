@@ -17,25 +17,36 @@ final class Identity implements RecordsDomainEvents
     private array $recordedEvents = [];
 
     private function __construct(
+        private readonly IdentityInternalId $internalId,
         private readonly IdentityId $id,
         private readonly IdentityType $type,
         private IdentityStatus $status,
         private readonly DateTimeImmutable $registeredAt,
     ) {}
 
-    public static function register(IdentityId $id, IdentityType $type, ?DateTimeImmutable $registeredAt = null): self
-    {
+    public static function register(
+        IdentityInternalId $internalId,
+        IdentityId $id,
+        IdentityType $type,
+        ?DateTimeImmutable $registeredAt = null,
+    ): self {
         $registeredAt ??= new DateTimeImmutable();
-        $identity = new self($id, $type, IdentityStatus::Active, $registeredAt);
+        $identity = new self($internalId, $id, $type, IdentityStatus::Active, $registeredAt);
         $identity->recordedEvents[] = new IdentityRegistered($id, $type, $registeredAt);
         return $identity;
     }
 
-    public static function reconstitute(IdentityId $id, IdentityType $type, IdentityStatus $status, DateTimeImmutable $registeredAt): self
-    {
-        return new self($id, $type, $status, $registeredAt);
+    public static function reconstitute(
+        IdentityInternalId $internalId,
+        IdentityId $id,
+        IdentityType $type,
+        IdentityStatus $status,
+        DateTimeImmutable $registeredAt,
+    ): self {
+        return new self($internalId, $id, $type, $status, $registeredAt);
     }
 
+    public function internalId(): IdentityInternalId { return $this->internalId; }
     public function id(): IdentityId { return $this->id; }
     public function type(): IdentityType { return $this->type; }
     public function status(): IdentityStatus { return $this->status; }
@@ -47,8 +58,7 @@ final class Identity implements RecordsDomainEvents
             IdentityStatus::Draft => [IdentityStatus::Active, IdentityStatus::Archived],
             IdentityStatus::Active => [IdentityStatus::Suspended, IdentityStatus::Archived, IdentityStatus::Revoked],
             IdentityStatus::Suspended => [IdentityStatus::Active, IdentityStatus::Archived, IdentityStatus::Revoked],
-            IdentityStatus::Archived => [],
-            IdentityStatus::Revoked => [],
+            IdentityStatus::Archived, IdentityStatus::Revoked => [],
         };
 
         if (!in_array($target, $allowed, true)) {
