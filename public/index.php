@@ -8,7 +8,9 @@ use Gamad\Core\IdentityRegistry\Application\IdentityLifecycleService;
 use Gamad\Core\IdentityRegistry\Http\IdentityHttpController;
 use Gamad\Core\IdentityRegistry\Http\IdentityRoutes;
 use Gamad\Core\IdentityRegistry\Infrastructure\Http\PostgreSqlIdempotencyRepository;
+use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityIdentifierAuthority;
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityRepository;
+use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
 use Gamad\Core\Shared\Application\DomainEventCollector;
 use Gamad\Core\Shared\Application\HealthSummaryQueryService;
 use Gamad\Core\Shared\Application\ReplayDeadLetterHandler;
@@ -26,6 +28,7 @@ use Gamad\Core\Shared\Infrastructure\Http\CachedRemoteJwksProvider;
 use Gamad\Core\Shared\Infrastructure\Http\EnvironmentTokenVerifier;
 use Gamad\Core\Shared\Infrastructure\Http\OidcRs256TokenVerifier;
 use Gamad\Core\Shared\Infrastructure\Http\PostgreSqlRateLimiter;
+use Gamad\Core\Shared\Infrastructure\Metrics\PostgreSqlMetricsCollector;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlDeadLetterRepository;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxDashboardRepository;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
@@ -60,7 +63,6 @@ if ($issuer !== '' || $audience !== '' || $jwksUri !== '') {
     if ($issuer === '' || $audience === '' || $jwksUri === '') {
         throw new RuntimeException('GAMAD_OIDC_ISSUER, GAMAD_OIDC_AUDIENCE and GAMAD_OIDC_JWKS_URI must be configured together.');
     }
-
     $tokenVerifier = new OidcRs256TokenVerifier(
         jwks: new CachedRemoteJwksProvider(
             jwksUri: $jwksUri,
@@ -77,16 +79,10 @@ if ($issuer !== '' || $audience !== '' || $jwksUri !== '') {
 
 $deadLetters = new PostgreSqlDeadLetterRepository($connection);
 $administrativeController = new AdministrativeRuntimeController(
-    health: new HealthSummaryQueryService(
-        new PostgreSqlWorkerStatusRepository($connection),
-        (int) (getenv('GAMAD_WORKER_STALE_SECONDS') ?: 45),
-    ),
+    health: new HealthSummaryQueryService(new PostgreSqlWorkerStatusRepository($connection), (int) (getenv('GAMAD_WORKER_STALE_SECONDS') ?: 45)),
     dashboard: new PostgreSqlOutboxDashboardRepository($connection),
     deadLetters: $deadLetters,
-    replay: new ReplayDeadLetterHandler(
-        $deadLetters,
-        new EnvironmentAuthorizationService($permissions),
-    ),
+    replay: new ReplayDeadLetterHandler($deadLetters, new EnvironmentAuthorizationService($permissions)),
 );
 
 $identityRepository = new PostgreSqlIdentityRepository($connection);
@@ -97,9 +93,16 @@ $identityPersister = new AtomicIdentityPersister(
     events: new DomainEventCollector(),
     transactions: $transactionManager,
 );
+$registerIdentity = new RegisterIdentityHandler(
+    identifiers: new PostgreSqlIdentityIdentifierAuthority($connection),
+    policy: new AllowConfiguredIdentityTypesPolicy(),
+    persister: $identityPersister,
+    metrics: new PostgreSqlMetricsCollector($connection),
+);
 $identityController = new IdentityHttpController(
-    register: new RegisterIdentityHandler($identityRepository, $identityPersister),
+    register: $registerIdentity,
     identities: $identityRepository,
+    search: $identityRepository,
     lifecycle: new IdentityLifecycleService($identityRepository, $identityPersister),
     idempotency: new PostgreSqlIdempotencyRepository($connection),
     transactions: $transactionManager,
