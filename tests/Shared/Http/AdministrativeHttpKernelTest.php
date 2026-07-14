@@ -33,7 +33,7 @@ final class AdministrativeHttpKernelTest extends TestCase
     public function test_it_rejects_missing_scope_and_records_audit(): void
     {
         $audit = new InMemoryAdministrativeAuditRepository();
-        $response = $this->kernel(new AuthenticatedActor('GAM-PER-000001', []), [], $audit)
+        $response = $this->kernel(new AuthenticatedActor('GAM-GAT-PER-000001', []), [], $audit)
             ->handle(new Request('GET', '/admin/runtime/health'));
 
         self::assertSame(403, $response->status);
@@ -44,7 +44,7 @@ final class AdministrativeHttpKernelTest extends TestCase
     public function test_it_serves_authorized_route_validates_response_and_propagates_ids(): void
     {
         $scope = 'core.runtime.health.read';
-        $response = $this->kernel(new AuthenticatedActor('GAM-PER-000001', [$scope]), [$scope])
+        $response = $this->kernel(new AuthenticatedActor('GAM-GAT-PER-000001', [$scope]), [$scope])
             ->handle(new Request('GET', '/admin/runtime/health', [
                 'X-Request-ID' => 'request-123',
                 'X-Correlation-ID' => 'correlation-456',
@@ -58,7 +58,7 @@ final class AdministrativeHttpKernelTest extends TestCase
     public function test_it_applies_rate_limiting(): void
     {
         $scope = 'core.runtime.health.read';
-        $kernel = $this->kernel(new AuthenticatedActor('GAM-PER-000001', [$scope]), [$scope], rateLimiter: new DenyRateLimiter());
+        $kernel = $this->kernel(new AuthenticatedActor('GAM-GAT-PER-000001', [$scope]), [$scope], rateLimiter: new DenyRateLimiter());
 
         self::assertSame(429, $kernel->handle(new Request('GET', '/admin/runtime/health'))->status);
     }

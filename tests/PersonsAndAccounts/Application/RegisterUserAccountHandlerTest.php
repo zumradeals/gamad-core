@@ -25,21 +25,21 @@ final class RegisterUserAccountHandlerTest extends TestCase
 {
     public function test_it_creates_an_active_account_for_an_existing_person(): void
     {
-        [$handler] = $this->handlerWithRegisteredPerson('GAM-PER-000001');
+        [$handler] = $this->handlerWithRegisteredPerson('GAM-GAT-PER-000001');
 
-        $account = $handler(new RegisterUserAccount('GAM-PER-000001'));
+        $account = $handler(new RegisterUserAccount('GAM-GAT-PER-000001'));
 
         self::assertSame(UserAccountStatus::Active, $account->status());
     }
 
     public function test_it_rejects_a_second_account_for_the_same_person(): void
     {
-        [$handler] = $this->handlerWithRegisteredPerson('GAM-PER-000001');
-        $handler(new RegisterUserAccount('GAM-PER-000001'));
+        [$handler] = $this->handlerWithRegisteredPerson('GAM-GAT-PER-000001');
+        $handler(new RegisterUserAccount('GAM-GAT-PER-000001'));
 
         $this->expectException(UserAccountAlreadyExists::class);
 
-        $handler(new RegisterUserAccount('GAM-PER-000001'));
+        $handler(new RegisterUserAccount('GAM-GAT-PER-000001'));
     }
 
     public function test_it_rejects_an_account_for_a_person_that_does_not_exist(): void
@@ -55,7 +55,7 @@ final class RegisterUserAccountHandlerTest extends TestCase
 
         $this->expectException(PersonNotFound::class);
 
-        $handler(new RegisterUserAccount('GAM-PER-999999'));
+        $handler(new RegisterUserAccount('GAM-GAT-PER-999999'));
     }
 
     /** @return array{0: RegisterUserAccountHandler, 1: InMemoryUserAccountRepository} */

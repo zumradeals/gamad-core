@@ -36,12 +36,12 @@ final class PostgreSqlIdentityIdentifierAuthorityConcurrencyTest extends TestCas
         $allocated = [];
         for ($attempt = 0; $attempt < 200; ++$attempt) {
             $authority = new PostgreSqlIdentityIdentifierAuthority($connections[$attempt % count($connections)]);
-            $allocated[] = (string) $authority->allocate(IdentityType::Person)->publicId;
+            $allocated[] = (string) $authority->allocate(IdentityType::Person, 'GAT')->publicId;
         }
 
         self::assertCount(200, array_unique($allocated));
-        self::assertSame('GAM-PER-000001', $allocated[0]);
-        self::assertSame('GAM-PER-000200', $allocated[199]);
+        self::assertSame('GAM-GAT-PER-000001', $allocated[0]);
+        self::assertSame('GAM-GAT-PER-000200', $allocated[199]);
         self::assertSame(
             200,
             (int) $connections[0]->query("SELECT last_value FROM identity_identifier_sequences WHERE identity_type = 'person'")->fetchColumn(),

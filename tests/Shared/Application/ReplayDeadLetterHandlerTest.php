@@ -27,7 +27,7 @@ final class ReplayDeadLetterHandlerTest extends TestCase
         $handler = new ReplayDeadLetterHandler($repository, $authorization);
 
         $this->expectException(RuntimeException::class);
-        $handler->replay('GAM-PER-000001', '11111111-1111-4111-8111-111111111111');
+        $handler->replay('GAM-GAT-PER-000001', '11111111-1111-4111-8111-111111111111');
     }
 
     public function test_it_replays_for_an_authorized_actor(): void
@@ -45,7 +45,7 @@ final class ReplayDeadLetterHandlerTest extends TestCase
         };
 
         self::assertTrue((new ReplayDeadLetterHandler($repository, $authorization))->replay(
-            'GAM-PER-000001',
+            'GAM-GAT-PER-000001',
             '11111111-1111-4111-8111-111111111111',
         ));
     }

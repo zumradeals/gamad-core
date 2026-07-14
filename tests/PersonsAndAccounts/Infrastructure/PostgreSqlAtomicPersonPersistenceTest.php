@@ -47,7 +47,7 @@ final class PostgreSqlAtomicPersonPersistenceTest extends TestCase
         $this->connection->exec('DROP TABLE IF EXISTS outbox_messages CASCADE');
         $this->connection->exec('DROP TABLE IF EXISTS identities CASCADE');
 
-        foreach ([1, 2, 3, 11, 12, 13, 14] as $number) {
+        foreach ([1, 2, 3, 11, 12, 13, 14, 15, 16] as $number) {
             $files = glob(__DIR__ . '/../../../database/migrations/' . sprintf('%03d', $number) . '_*.sql');
             self::assertNotEmpty($files);
             $this->connection->exec((string) file_get_contents($files[0]));
@@ -55,7 +55,7 @@ final class PostgreSqlAtomicPersonPersistenceTest extends TestCase
 
         $this->connection->prepare(
             'INSERT INTO identities (id, type, status, registered_at) VALUES (:id, :type, :status, :registered_at)'
-        )->execute(['id' => 'GAM-PER-900001', 'type' => 'person', 'status' => 'active', 'registered_at' => (new DateTimeImmutable())->format(DATE_ATOM)]);
+        )->execute(['id' => 'GAM-GAT-PER-900001', 'type' => 'person', 'status' => 'active', 'registered_at' => (new DateTimeImmutable())->format(DATE_ATOM)]);
     }
 
     public function test_person_and_event_are_committed_in_the_same_transaction(): void
@@ -66,7 +66,7 @@ final class PostgreSqlAtomicPersonPersistenceTest extends TestCase
             events: new DomainEventCollector(),
             transactions: new PdoTransactionManager($this->connection),
         );
-        $person = Person::register(new PersonId('GAM-PER-900001'), 'Amina Traoré');
+        $person = Person::register(new PersonId('GAM-GAT-PER-900001'), 'Amina Traoré');
 
         $persister->persist($person);
 
@@ -106,7 +106,7 @@ final class PostgreSqlAtomicPersonPersistenceTest extends TestCase
             events: new DomainEventCollector(),
             transactions: new PdoTransactionManager($this->connection),
         );
-        $person = Person::register(new PersonId('GAM-PER-900001'), 'Amina Traoré');
+        $person = Person::register(new PersonId('GAM-GAT-PER-900001'), 'Amina Traoré');
 
         try {
             $persister->persist($person);

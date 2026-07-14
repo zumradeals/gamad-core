@@ -39,7 +39,7 @@ final class PostgreSqlPersonRepositoryTest extends TestCase
         $this->connection->exec('DROP TABLE IF EXISTS persons CASCADE');
         $this->connection->exec('DROP TABLE IF EXISTS identities CASCADE');
 
-        foreach ([1, 11, 12, 13, 14] as $number) {
+        foreach ([1, 11, 12, 13, 14, 15, 16] as $number) {
             $files = glob(__DIR__ . '/../../../database/migrations/' . sprintf('%03d', $number) . '_*.sql');
             self::assertNotEmpty($files);
             $this->connection->exec((string) file_get_contents($files[0]));
@@ -48,23 +48,23 @@ final class PostgreSqlPersonRepositoryTest extends TestCase
 
     public function test_it_saves_and_finds_a_person_by_id(): void
     {
-        $this->insertIdentity('GAM-PER-900001');
+        $this->insertIdentity('GAM-GAT-PER-900001');
         $repository = new PostgreSqlPersonRepository($this->connection);
-        $person = Person::register(new PersonId('GAM-PER-900001'), 'Amina Traoré', new DateTimeImmutable('2026-07-14T00:00:00+00:00'));
+        $person = Person::register(new PersonId('GAM-GAT-PER-900001'), 'Amina Traoré', new DateTimeImmutable('2026-07-14T00:00:00+00:00'));
 
         $repository->save($person);
-        $found = $repository->findById(new PersonId('GAM-PER-900001'));
+        $found = $repository->findById(new PersonId('GAM-GAT-PER-900001'));
 
         self::assertNotNull($found);
         self::assertSame('Amina Traoré', $found->declaredName());
         self::assertSame(PersonStatus::Active, $found->status());
-        self::assertTrue($repository->exists(new PersonId('GAM-PER-900001')));
+        self::assertTrue($repository->exists(new PersonId('GAM-GAT-PER-900001')));
     }
 
     public function test_it_rejects_a_person_referencing_a_nonexistent_identity(): void
     {
         $repository = new PostgreSqlPersonRepository($this->connection);
-        $person = Person::register(new PersonId('GAM-PER-900099'), 'Ghost');
+        $person = Person::register(new PersonId('GAM-GAT-PER-900099'), 'Ghost');
 
         $this->expectException(\PDOException::class);
 
@@ -73,15 +73,15 @@ final class PostgreSqlPersonRepositoryTest extends TestCase
 
     public function test_identity_lookup_reads_the_identity_registry_table_directly(): void
     {
-        $this->insertIdentity('GAM-PER-900002');
+        $this->insertIdentity('GAM-GAT-PER-900002');
         $lookup = new PostgreSqlIdentityLookup($this->connection);
 
-        $result = $lookup->find('GAM-PER-900002');
+        $result = $lookup->find('GAM-GAT-PER-900002');
 
         self::assertNotNull($result);
         self::assertSame('person', $result->type);
         self::assertSame('active', $result->status);
-        self::assertNull($lookup->find('GAM-PER-999999'));
+        self::assertNull($lookup->find('GAM-GAT-PER-999999'));
     }
 
     private function insertIdentity(string $id): void

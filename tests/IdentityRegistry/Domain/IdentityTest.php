@@ -15,10 +15,15 @@ use PHPUnit\Framework\TestCase;
 
 final class IdentityTest extends TestCase
 {
+    public function test_identity_id_exposes_its_realm_segment(): void
+    {
+        self::assertSame('GAT', (new IdentityId('GAM-GAT-PER-000001'))->realm());
+    }
+
     public function test_it_registers_an_active_identity_with_distinct_identifiers(): void
     {
         $registeredAt = new DateTimeImmutable('2026-07-12T00:00:00+00:00');
-        $identityId = new IdentityId('GAM-PER-000001');
+        $identityId = new IdentityId('GAM-GAT-PER-000001');
         $internalId = new IdentityInternalId('11111111-1111-4111-8111-111111111111');
 
         $identity = Identity::register(

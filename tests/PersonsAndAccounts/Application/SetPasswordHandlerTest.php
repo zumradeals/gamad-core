@@ -24,7 +24,7 @@ final class SetPasswordHandlerTest extends TestCase
     public function test_it_stores_an_argon2id_hash_never_the_plaintext(): void
     {
         $accounts = new InMemoryUserAccountRepository();
-        $account = UserAccount::create(UserAccountId::generate(), new PersonId('GAM-PER-000001'));
+        $account = UserAccount::create(UserAccountId::generate(), new PersonId('GAM-GAT-PER-000001'));
         $accounts->save($account);
         $outbox = new InMemoryOutboxRepository();
         $handler = new SetPasswordHandler(
@@ -47,7 +47,7 @@ final class SetPasswordHandlerTest extends TestCase
     public function test_it_rejects_an_empty_password(): void
     {
         $accounts = new InMemoryUserAccountRepository();
-        $account = UserAccount::create(UserAccountId::generate(), new PersonId('GAM-PER-000001'));
+        $account = UserAccount::create(UserAccountId::generate(), new PersonId('GAM-GAT-PER-000001'));
         $accounts->save($account);
         $outbox = new InMemoryOutboxRepository();
         $handler = new SetPasswordHandler(

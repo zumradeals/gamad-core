@@ -16,6 +16,7 @@ use Gamad\Core\IdentityRegistry\Domain\IdentityStatus;
 use Gamad\Core\IdentityRegistry\Domain\IdentityType;
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\InMemoryIdentityRepository;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
+use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredRealmPolicy;
 use Gamad\Core\Shared\Application\DomainEventCollector;
 use Gamad\Core\Shared\Infrastructure\Metrics\InMemoryMetricsCollector;
 use Gamad\Core\Tests\Support\InMemoryOutboxRepository;
@@ -30,11 +31,11 @@ final class RegisterIdentityHandlerTest extends TestCase
         $outbox = new InMemoryOutboxRepository();
         $metrics = new InMemoryMetricsCollector();
         $authority = new class implements IdentityIdentifierAuthority {
-            public function allocate(IdentityType $type): AllocatedIdentityIdentifier
+            public function allocate(IdentityType $type, string $realm): AllocatedIdentityIdentifier
             {
                 return new AllocatedIdentityIdentifier(
                     new IdentityInternalId('11111111-1111-4111-8111-111111111111'),
-                    new IdentityId('GAM-ORG-000001'),
+                    new IdentityId('GAM-GAT-ORG-000001'),
                 );
             }
         };
@@ -48,15 +49,16 @@ final class RegisterIdentityHandlerTest extends TestCase
                 transactions: new SynchronousTransactionManager(),
             ),
             metrics: $metrics,
+            realm: new AllowConfiguredRealmPolicy('GAT'),
         );
 
         $identity = $handler(new RegisterIdentity(
             identityType: IdentityType::Organization,
-            actorId: 'GAM-PER-000001',
+            actorId: 'GAM-GAT-PER-000001',
             registeredAt: new DateTimeImmutable('2026-07-12T08:00:00+00:00'),
         ));
 
-        self::assertSame('GAM-ORG-000001', (string) $identity->id());
+        self::assertSame('GAM-GAT-ORG-000001', (string) $identity->id());
         self::assertSame(IdentityStatus::Active, $identity->status());
         self::assertTrue($repository->exists($identity->id()));
         self::assertCount(1, $outbox->messages);

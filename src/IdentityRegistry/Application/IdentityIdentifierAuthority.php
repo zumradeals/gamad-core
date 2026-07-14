@@ -8,5 +8,5 @@ use Gamad\Core\IdentityRegistry\Domain\IdentityType;
 
 interface IdentityIdentifierAuthority
 {
-    public function allocate(IdentityType $type): AllocatedIdentityIdentifier;
+    public function allocate(IdentityType $type, string $realm): AllocatedIdentityIdentifier;
 }

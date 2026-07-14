@@ -89,7 +89,7 @@ paths:
         - in: path
           name: identityId
           required: true
-          schema: { type: string, pattern: '^GAM-[A-Z]{3}-[0-9]{6,}$' }
+          schema: { type: string, pattern: '^GAM-[A-Z0-9]{2,6}-[A-Z]{3}-[0-9]{6,}$' }
       responses:
         '200': { description: Identity, content: { application/json: { schema: { $ref: '#/components/schemas/Identity' } } } }
         '404': { description: Not found }
@@ -101,7 +101,7 @@ paths:
         - in: path
           name: identityId
           required: true
-          schema: { type: string, pattern: '^GAM-[A-Z]{3}-[0-9]{6,}$' }
+          schema: { type: string, pattern: '^GAM-[A-Z0-9]{2,6}-[A-Z]{3}-[0-9]{6,}$' }
         - in: path
           name: transition
           required: true
@@ -136,9 +136,10 @@ components:
         identity_type: { $ref: '#/components/schemas/IdentityType' }
     Identity:
       type: object
-      required: [identity_id, identity_type, status, registered_at]
+      required: [identity_id, identity_type, status, registered_at, realm]
       properties:
-        identity_id: { type: string, pattern: '^GAM-[A-Z]{3}-[0-9]{6,}$' }
+        identity_id: { type: string, pattern: '^GAM-[A-Z0-9]{2,6}-[A-Z]{3}-[0-9]{6,}$' }
         identity_type: { $ref: '#/components/schemas/IdentityType' }
         status: { $ref: '#/components/schemas/IdentityStatus' }
         registered_at: { type: string, format: date-time }
+        realm: { type: string, pattern: '^[A-Z0-9]{2,6}$' }

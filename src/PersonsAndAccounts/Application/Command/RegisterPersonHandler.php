@@ -46,7 +46,7 @@ final readonly class RegisterPersonHandler
             throw PersonAlreadyExists::withId($command->identityId);
         }
 
-        $person = Person::register($personId, $command->declaredName, $command->registeredAt);
+        $person = Person::register($personId, $command->declaredName, $command->registeredAt, $command->contact);
         $this->persister->persist($person);
 
         return $person;

@@ -23,12 +23,12 @@ final class RegisterPersonHandlerTest extends TestCase
     public function test_it_registers_a_person_from_an_active_identity(): void
     {
         [$handler, $identities, $persons, $outbox] = $this->handler();
-        $identities->register('GAM-PER-000001', 'person', 'active');
+        $identities->register('GAM-GAT-PER-000001', 'person', 'active');
 
-        $person = $handler(new RegisterPerson('GAM-PER-000001', 'Amina Traoré'));
+        $person = $handler(new RegisterPerson('GAM-GAT-PER-000001', 'Amina Traoré'));
 
         self::assertSame(PersonStatus::Active, $person->status());
-        self::assertTrue($persons->exists(new PersonId('GAM-PER-000001')));
+        self::assertTrue($persons->exists(new PersonId('GAM-GAT-PER-000001')));
         self::assertCount(1, $outbox->messages);
     }
 
@@ -38,38 +38,38 @@ final class RegisterPersonHandlerTest extends TestCase
 
         $this->expectException(IdentityNotEligibleForPerson::class);
 
-        $handler(new RegisterPerson('GAM-PER-999999', 'Nobody'));
+        $handler(new RegisterPerson('GAM-GAT-PER-999999', 'Nobody'));
     }
 
     public function test_it_rejects_an_inactive_identity(): void
     {
         [$handler, $identities] = $this->handler();
-        $identities->register('GAM-PER-000002', 'person', 'suspended');
+        $identities->register('GAM-GAT-PER-000002', 'person', 'suspended');
 
         $this->expectException(IdentityNotEligibleForPerson::class);
 
-        $handler(new RegisterPerson('GAM-PER-000002', 'Someone Suspended'));
+        $handler(new RegisterPerson('GAM-GAT-PER-000002', 'Someone Suspended'));
     }
 
     public function test_it_rejects_an_identity_that_is_not_of_type_person(): void
     {
         [$handler, $identities] = $this->handler();
-        $identities->register('GAM-SRV-000001', 'service', 'active');
+        $identities->register('GAM-GAT-SRV-000001', 'service', 'active');
 
         $this->expectException(IdentityNotEligibleForPerson::class);
 
-        $handler(new RegisterPerson('GAM-SRV-000001', 'A Service'));
+        $handler(new RegisterPerson('GAM-GAT-SRV-000001', 'A Service'));
     }
 
     public function test_it_rejects_registering_the_same_person_twice(): void
     {
         [$handler, $identities] = $this->handler();
-        $identities->register('GAM-PER-000001', 'person', 'active');
-        $handler(new RegisterPerson('GAM-PER-000001', 'Amina Traoré'));
+        $identities->register('GAM-GAT-PER-000001', 'person', 'active');
+        $handler(new RegisterPerson('GAM-GAT-PER-000001', 'Amina Traoré'));
 
         $this->expectException(PersonAlreadyExists::class);
 
-        $handler(new RegisterPerson('GAM-PER-000001', 'Amina Traoré'));
+        $handler(new RegisterPerson('GAM-GAT-PER-000001', 'Amina Traoré'));
     }
 
     /** @return array{0: RegisterPersonHandler, 1: InMemoryIdentityLookup, 2: InMemoryPersonRepository, 3: InMemoryOutboxRepository} */

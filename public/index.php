@@ -11,6 +11,7 @@ use Gamad\Core\IdentityRegistry\Infrastructure\Http\PostgreSqlIdempotencyReposit
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityIdentifierAuthority;
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityRepository;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
+use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredRealmPolicy;
 use Gamad\Core\PersonsAndAccounts\Application\AtomicPersonPersister;
 use Gamad\Core\PersonsAndAccounts\Application\AtomicSessionPersister;
 use Gamad\Core\PersonsAndAccounts\Application\AtomicUserAccountPersister;
@@ -61,6 +62,12 @@ $dsn = getenv('GAMAD_PG_DSN');
 if ($dsn === false || $dsn === '') {
     throw new RuntimeException('Environment variable GAMAD_PG_DSN is required.');
 }
+
+$coreRealm = getenv('GAMAD_CORE_REALM');
+if ($coreRealm === false || $coreRealm === '') {
+    throw new RuntimeException('Environment variable GAMAD_CORE_REALM is required.');
+}
+$realmPolicy = new AllowConfiguredRealmPolicy($coreRealm);
 
 $connection = new PDO(
     $dsn,
@@ -117,6 +124,7 @@ $registerIdentity = new RegisterIdentityHandler(
     policy: new AllowConfiguredIdentityTypesPolicy(),
     persister: $identityPersister,
     metrics: new PostgreSqlMetricsCollector($connection),
+    realm: $realmPolicy,
 );
 $identityController = new IdentityHttpController(
     register: $registerIdentity,

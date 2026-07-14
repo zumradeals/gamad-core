@@ -14,6 +14,7 @@ final readonly class PersonRegistered implements DomainEvent
         public PersonId $personId,
         public string $declaredName,
         private DateTimeImmutable $occurredAt,
+        public ?string $contact = null,
     ) {
     }
 
@@ -37,6 +38,7 @@ final readonly class PersonRegistered implements DomainEvent
         return [
             'person_id' => (string) $this->personId,
             'declared_name' => $this->declaredName,
+            'contact' => $this->contact,
         ];
     }
 }

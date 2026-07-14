@@ -10,6 +10,7 @@ use Gamad\Core\IdentityRegistry\Domain\IdentityType;
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityIdentifierAuthority;
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityRepository;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
+use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredRealmPolicy;
 use Gamad\Core\PersonsAndAccounts\Application\AtomicPersonPersister;
 use Gamad\Core\PersonsAndAccounts\Application\AtomicUserAccountPersister;
 use Gamad\Core\PersonsAndAccounts\Application\Command\RegisterPerson;
@@ -35,16 +36,54 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 // Persons and User Accounts (Task 6), so the first account can only ever
 // be created here, by an operator with direct server/DB access — never
 // through a new public or admin-token-protected route (ADR-0011 §4).
+//
+// Declared name, contact and password are read interactively (never as a
+// CLI argument) so the password never lands in shell history or a log —
+// only --identity=<existing-identity-id> is a plain argument.
 
-$declaredName = $argv[1] ?? null;
-$plainPassword = $argv[2] ?? null;
-$actorId = getenv('GAMAD_ACTOR_ID') ?: '';
+function bootstrapPersonPrompt(string $label): string
+{
+    fwrite(STDOUT, $label . ': ');
+    $line = fgets(STDIN);
+    if ($line === false) {
+        throw new RuntimeException(sprintf('Unexpected end of input while reading %s.', $label));
+    }
 
-if ($declaredName === null || $declaredName === '' || $plainPassword === null || $plainPassword === '') {
-    throw new RuntimeException('Usage: php bin/bootstrap-person <declared-name> <password>');
+    return trim($line);
 }
-if ($actorId === '') {
-    throw new RuntimeException('Environment variable GAMAD_ACTOR_ID is required.');
+
+function bootstrapPersonPromptSecret(string $label): string
+{
+    $isTty = function_exists('posix_isatty') && posix_isatty(STDIN);
+    fwrite(STDOUT, $label . ': ');
+    if ($isTty) {
+        system('stty -echo');
+    }
+    $line = fgets(STDIN);
+    if ($isTty) {
+        system('stty echo');
+        fwrite(STDOUT, PHP_EOL);
+    }
+    if ($line === false) {
+        throw new RuntimeException(sprintf('Unexpected end of input while reading %s.', $label));
+    }
+
+    return trim($line);
+}
+
+$identityIdArg = null;
+foreach (array_slice($argv, 1) as $arg) {
+    if (str_starts_with($arg, '--identity=')) {
+        $identityIdArg = substr($arg, strlen('--identity='));
+    }
+}
+
+$declaredName = bootstrapPersonPrompt('Declared name');
+$contact = bootstrapPersonPrompt('Contact (email)');
+$plainPassword = bootstrapPersonPromptSecret('Password');
+
+if ($declaredName === '' || $contact === '' || $plainPassword === '') {
+    throw new RuntimeException('Declared name, contact and password are all required.');
 }
 
 $dsn = getenv('GAMAD_PG_DSN');
@@ -62,20 +101,35 @@ $connection = new PDO(
 $transactionManager = new PdoTransactionManager($connection);
 $outbox = new PostgreSqlOutboxRepository($connection);
 
-$identityRepository = new PostgreSqlIdentityRepository($connection);
-$registerIdentity = new RegisterIdentityHandler(
-    identifiers: new PostgreSqlIdentityIdentifierAuthority($connection),
-    policy: new AllowConfiguredIdentityTypesPolicy(),
-    persister: new AtomicIdentityPersister(
-        identities: $identityRepository,
-        outbox: $outbox,
-        events: new DomainEventCollector(),
-        transactions: $transactionManager,
-    ),
-    metrics: new PostgreSqlMetricsCollector($connection),
-);
+if ($identityIdArg !== null) {
+    $identityId = $identityIdArg;
+} else {
+    $actorId = getenv('GAMAD_ACTOR_ID') ?: '';
+    if ($actorId === '') {
+        throw new RuntimeException('Environment variable GAMAD_ACTOR_ID is required when --identity is not given.');
+    }
+    $realm = getenv('GAMAD_CORE_REALM');
+    if ($realm === false || $realm === '') {
+        throw new RuntimeException('Environment variable GAMAD_CORE_REALM is required when --identity is not given.');
+    }
 
-$identity = $registerIdentity(new RegisterIdentity(IdentityType::Person, $actorId, new DateTimeImmutable()));
+    $identityRepository = new PostgreSqlIdentityRepository($connection);
+    $registerIdentity = new RegisterIdentityHandler(
+        identifiers: new PostgreSqlIdentityIdentifierAuthority($connection),
+        policy: new AllowConfiguredIdentityTypesPolicy(),
+        persister: new AtomicIdentityPersister(
+            identities: $identityRepository,
+            outbox: $outbox,
+            events: new DomainEventCollector(),
+            transactions: $transactionManager,
+        ),
+        metrics: new PostgreSqlMetricsCollector($connection),
+        realm: new AllowConfiguredRealmPolicy($realm),
+    );
+
+    $identity = $registerIdentity(new RegisterIdentity(IdentityType::Person, $actorId, new DateTimeImmutable()));
+    $identityId = $identity->id()->value;
+}
 
 $personRepository = new PostgreSqlPersonRepository($connection);
 $userAccountRepository = new PostgreSqlUserAccountRepository($connection);
@@ -96,12 +150,12 @@ $setPassword = new SetPasswordHandler(
     persister: new AtomicUserAccountPersister($userAccountRepository, $outbox, $personsAndAccountsEvents, $transactionManager),
 );
 
-$person = $registerPerson(new RegisterPerson($identity->id()->value, $declaredName));
+$person = $registerPerson(new RegisterPerson($identityId, $declaredName, contact: $contact));
 $account = $registerUserAccount(new RegisterUserAccount($person->id()->value));
 $setPassword(new SetPassword($account->id()->value, $plainPassword));
 
 fwrite(STDOUT, json_encode([
-    'identity_id' => $identity->id()->value,
+    'identity_id' => $identityId,
     'person_id' => $person->id()->value,
     'account_id' => $account->id()->value,
 ], JSON_THROW_ON_ERROR) . PHP_EOL);

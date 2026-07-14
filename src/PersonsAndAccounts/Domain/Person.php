@@ -25,6 +25,7 @@ final class Person implements RecordsDomainEvents
         private string $declaredName,
         private PersonStatus $status,
         private readonly DateTimeImmutable $registeredAt,
+        private ?string $contact = null,
     ) {
     }
 
@@ -32,10 +33,11 @@ final class Person implements RecordsDomainEvents
         PersonId $id,
         string $declaredName,
         ?DateTimeImmutable $registeredAt = null,
+        ?string $contact = null,
     ): self {
         $registeredAt ??= new DateTimeImmutable();
-        $person = new self($id, $declaredName, PersonStatus::Active, $registeredAt);
-        $person->recordedEvents[] = new PersonRegistered($id, $declaredName, $registeredAt);
+        $person = new self($id, $declaredName, PersonStatus::Active, $registeredAt, $contact);
+        $person->recordedEvents[] = new PersonRegistered($id, $declaredName, $registeredAt, $contact);
 
         return $person;
     }
@@ -45,8 +47,9 @@ final class Person implements RecordsDomainEvents
         string $declaredName,
         PersonStatus $status,
         DateTimeImmutable $registeredAt,
+        ?string $contact = null,
     ): self {
-        return new self($id, $declaredName, $status, $registeredAt);
+        return new self($id, $declaredName, $status, $registeredAt, $contact);
     }
 
     public function id(): PersonId
@@ -57,6 +60,11 @@ final class Person implements RecordsDomainEvents
     public function declaredName(): string
     {
         return $this->declaredName;
+    }
+
+    public function contact(): ?string
+    {
+        return $this->contact;
     }
 
     public function status(): PersonStatus

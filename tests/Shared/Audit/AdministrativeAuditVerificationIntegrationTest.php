@@ -29,8 +29,8 @@ final class AdministrativeAuditVerificationIntegrationTest extends TestCase
         $connection->exec('TRUNCATE administrative_audit RESTART IDENTITY');
         $repository = new PostgreSqlAdministrativeAuditRepository($connection);
 
-        $repository->record('GAM-PER-000001', 'health.read', '/admin/runtime/health', 200, new DateTimeImmutable('2026-07-12T14:00:00+00:00'), ['request_id' => 'r1']);
-        $repository->record('GAM-PER-000001', 'outbox.read', '/admin/runtime/outbox', 200, new DateTimeImmutable('2026-07-12T14:01:00+00:00'), ['request_id' => 'r2']);
+        $repository->record('GAM-GAT-PER-000001', 'health.read', '/admin/runtime/health', 200, new DateTimeImmutable('2026-07-12T14:00:00+00:00'), ['request_id' => 'r1']);
+        $repository->record('GAM-GAT-PER-000001', 'outbox.read', '/admin/runtime/outbox', 200, new DateTimeImmutable('2026-07-12T14:01:00+00:00'), ['request_id' => 'r2']);
 
         $rows = $connection->query(
             'SELECT actor_id, action, target, status_code, occurred_at, context, previous_hash, record_hash FROM administrative_audit ORDER BY id'

@@ -29,7 +29,7 @@ final class PostgreSqlRateLimiterContentionTest extends TestCase
         $decisions = [];
 
         for ($attempt = 1; $attempt <= 20; ++$attempt) {
-            $decisions[] = ($attempt % 2 === 0 ? $second : $first)->allow('GAM-PER-000001:/admin/runtime/health', 10, 60);
+            $decisions[] = ($attempt % 2 === 0 ? $second : $first)->allow('GAM-GAT-PER-000001:/admin/runtime/health', 10, 60);
         }
 
         self::assertSame(10, count(array_filter($decisions)));

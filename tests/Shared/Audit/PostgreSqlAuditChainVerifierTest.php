@@ -27,8 +27,8 @@ final class PostgreSqlAuditChainVerifierTest extends TestCase
         $connection->exec((string) file_get_contents(__DIR__ . '/../../../database/migrations/007_harden_administrative_audit.sql'));
 
         $repository = new PostgreSqlAdministrativeAuditRepository($connection);
-        $repository->record('GAM-PER-000001', 'health.read', '/admin/runtime/health', 200, new DateTimeImmutable('2026-07-12T14:00:00+00:00'));
-        $repository->record('GAM-PER-000001', 'outbox.read', '/admin/runtime/outbox', 200, new DateTimeImmutable('2026-07-12T14:01:00+00:00'));
+        $repository->record('GAM-GAT-PER-000001', 'health.read', '/admin/runtime/health', 200, new DateTimeImmutable('2026-07-12T14:00:00+00:00'));
+        $repository->record('GAM-GAT-PER-000001', 'outbox.read', '/admin/runtime/outbox', 200, new DateTimeImmutable('2026-07-12T14:01:00+00:00'));
 
         $valid = (new PostgreSqlAuditChainVerifier($connection))->verify();
         self::assertTrue($valid->valid);

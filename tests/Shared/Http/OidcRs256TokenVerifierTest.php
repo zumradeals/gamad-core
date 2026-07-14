@@ -17,7 +17,7 @@ final class OidcRs256TokenVerifierTest extends TestCase
         $verifier = $this->verifier(['test-key-1' => $factory->jwk()]);
         $actor = $verifier->verify($factory->token($this->claims()));
 
-        self::assertSame('GAM-PER-000001', $actor?->actorId);
+        self::assertSame('GAM-GAT-PER-000001', $actor?->actorId);
         self::assertTrue($actor?->hasScope('core.runtime.health.read') ?? false);
     }
 
@@ -53,7 +53,7 @@ final class OidcRs256TokenVerifierTest extends TestCase
 
         $provider->replace(['new-key' => $new->jwk()]);
 
-        self::assertSame('GAM-PER-000001', $verifier->verify($newToken)?->actorId);
+        self::assertSame('GAM-GAT-PER-000001', $verifier->verify($newToken)?->actorId);
     }
 
     public function test_it_rejects_a_tampered_signature(): void
@@ -61,7 +61,7 @@ final class OidcRs256TokenVerifierTest extends TestCase
         $factory = new JwtTestFactory();
         $token = $factory->token($this->claims());
         $parts = explode('.', $token);
-        $parts[1] = rtrim(strtr(base64_encode(json_encode(array_replace($this->claims(), ['sub' => 'GAM-PER-999999']), JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
+        $parts[1] = rtrim(strtr(base64_encode(json_encode(array_replace($this->claims(), ['sub' => 'GAM-GAT-PER-999999']), JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
 
         self::assertNull($this->verifier(['test-key-1' => $factory->jwk()])->verify(implode('.', $parts)));
     }
@@ -78,7 +78,7 @@ final class OidcRs256TokenVerifierTest extends TestCase
         return [
             'iss' => 'https://idp.example.test',
             'aud' => 'gamad-admin',
-            'sub' => 'GAM-PER-000001',
+            'sub' => 'GAM-GAT-PER-000001',
             'scope' => 'core.runtime.health.read core.outbox.dashboard.read',
             'iat' => time(),
             'nbf' => time() - 5,

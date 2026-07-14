@@ -21,11 +21,12 @@ final readonly class PostgreSqlPersonRepository implements PersonRepository
     {
         $statement = $this->connection->prepare(
             <<<'SQL'
-            INSERT INTO persons (identity_id, declared_name, status, registered_at)
-            VALUES (:identity_id, :declared_name, :status, :registered_at)
+            INSERT INTO persons (identity_id, declared_name, status, registered_at, contact)
+            VALUES (:identity_id, :declared_name, :status, :registered_at, :contact)
             ON CONFLICT (identity_id) DO UPDATE SET
                 declared_name = EXCLUDED.declared_name,
-                status = EXCLUDED.status
+                status = EXCLUDED.status,
+                contact = EXCLUDED.contact
             SQL
         );
         $statement->execute([
@@ -33,13 +34,14 @@ final readonly class PostgreSqlPersonRepository implements PersonRepository
             'declared_name' => $person->declaredName(),
             'status' => $person->status()->value,
             'registered_at' => $person->registeredAt()->format(DATE_ATOM),
+            'contact' => $person->contact(),
         ]);
     }
 
     public function findById(PersonId $personId): ?Person
     {
         $statement = $this->connection->prepare(
-            'SELECT identity_id, declared_name, status, registered_at FROM persons WHERE identity_id = :identity_id'
+            'SELECT identity_id, declared_name, status, registered_at, contact FROM persons WHERE identity_id = :identity_id'
         );
         $statement->execute(['identity_id' => (string) $personId]);
         $row = $statement->fetch(PDO::FETCH_ASSOC);
@@ -63,6 +65,7 @@ final readonly class PostgreSqlPersonRepository implements PersonRepository
             declaredName: (string) $row['declared_name'],
             status: PersonStatus::from((string) $row['status']),
             registeredAt: new DateTimeImmutable((string) $row['registered_at']),
+            contact: $row['contact'] === null ? null : (string) $row['contact'],
         );
     }
 }

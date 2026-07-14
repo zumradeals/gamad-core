@@ -16,7 +16,7 @@ final readonly class PostgreSqlIdentityIdentifierAuthority implements IdentityId
 {
     public function __construct(private PDO $connection) {}
 
-    public function allocate(IdentityType $type): AllocatedIdentityIdentifier
+    public function allocate(IdentityType $type, string $realm): AllocatedIdentityIdentifier
     {
         $statement = $this->connection->prepare(
             <<<'SQL'
@@ -36,7 +36,7 @@ final readonly class PostgreSqlIdentityIdentifierAuthority implements IdentityId
 
         return new AllocatedIdentityIdentifier(
             internalId: IdentityInternalId::generate(),
-            publicId: new IdentityId(sprintf('GAM-%s-%06d', (string) $row['prefix'], (int) $row['last_value'])),
+            publicId: new IdentityId(sprintf('GAM-%s-%s-%06d', $realm, (string) $row['prefix'], (int) $row['last_value'])),
         );
     }
 }

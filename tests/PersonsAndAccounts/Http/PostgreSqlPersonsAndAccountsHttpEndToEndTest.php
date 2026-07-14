@@ -69,7 +69,7 @@ final class PostgreSqlPersonsAndAccountsHttpEndToEndTest extends TestCase
         $this->connection->exec('DROP TABLE IF EXISTS outbox_messages CASCADE');
         $this->connection->exec('DROP TABLE IF EXISTS identities CASCADE');
 
-        foreach ([1, 2, 3, 6, 7, 11, 12, 13, 14] as $number) {
+        foreach ([1, 2, 3, 6, 7, 11, 12, 13, 14, 15, 16] as $number) {
             $files = glob(__DIR__ . '/../../../database/migrations/' . sprintf('%03d', $number) . '_*.sql');
             self::assertNotEmpty($files);
             $this->connection->exec((string) file_get_contents($files[0]));
@@ -80,13 +80,13 @@ final class PostgreSqlPersonsAndAccountsHttpEndToEndTest extends TestCase
         // only come from a pre-provisioned account, not from this API alone.
         $this->connection->prepare(
             'INSERT INTO identities (id, type, status, registered_at) VALUES (:id, :type, :status, :registered_at)'
-        )->execute(['id' => 'GAM-PER-900001', 'type' => 'person', 'status' => 'active', 'registered_at' => (new DateTimeImmutable())->format(DATE_ATOM)]);
+        )->execute(['id' => 'GAM-GAT-PER-900001', 'type' => 'person', 'status' => 'active', 'registered_at' => (new DateTimeImmutable())->format(DATE_ATOM)]);
 
         $personRepository = new PostgreSqlPersonRepository($this->connection);
-        $personRepository->save(Person::register(new PersonId('GAM-PER-900001'), 'Amina Traoré'));
+        $personRepository->save(Person::register(new PersonId('GAM-GAT-PER-900001'), 'Amina Traoré'));
 
         $accountRepository = new PostgreSqlUserAccountRepository($this->connection);
-        $account = UserAccount::create(UserAccountId::generate(), new PersonId('GAM-PER-900001'));
+        $account = UserAccount::create(UserAccountId::generate(), new PersonId('GAM-GAT-PER-900001'));
         $account->addAuthenticationMethod(AuthenticationMethodId::generate(), AuthenticationMethodType::Password, 'argon2id$seed');
         $accountRepository->save($account);
 
@@ -106,26 +106,26 @@ final class PostgreSqlPersonsAndAccountsHttpEndToEndTest extends TestCase
     {
         $this->connection->prepare(
             'INSERT INTO identities (id, type, status, registered_at) VALUES (:id, :type, :status, :registered_at)'
-        )->execute(['id' => 'GAM-PER-900002', 'type' => 'person', 'status' => 'active', 'registered_at' => (new DateTimeImmutable())->format(DATE_ATOM)]);
+        )->execute(['id' => 'GAM-GAT-PER-900002', 'type' => 'person', 'status' => 'active', 'registered_at' => (new DateTimeImmutable())->format(DATE_ATOM)]);
 
         $kernel = $this->kernel();
 
-        $unauthenticated = $kernel->handle(new Request('POST', '/persons', [], [], json_encode(['identity_id' => 'GAM-PER-900002', 'declared_name' => 'New Person'])));
+        $unauthenticated = $kernel->handle(new Request('POST', '/persons', [], [], json_encode(['identity_id' => 'GAM-GAT-PER-900002', 'declared_name' => 'New Person', 'contact' => 'new.person@example.test'])));
         self::assertSame(401, $unauthenticated->status);
 
         $authenticated = $kernel->handle(new Request('POST', '/persons', [
             'Authorization' => 'Bearer ' . $this->rawSessionToken,
-        ], [], json_encode(['identity_id' => 'GAM-PER-900002', 'declared_name' => 'New Person'])));
+        ], [], json_encode(['identity_id' => 'GAM-GAT-PER-900002', 'declared_name' => 'New Person', 'contact' => 'new.person@example.test'])));
         self::assertSame(201, $authenticated->status);
         $body = json_decode($authenticated->body, true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame('GAM-PER-900002', $body['person_id']);
+        self::assertSame('GAM-GAT-PER-900002', $body['person_id']);
     }
 
     public function test_login_is_public_and_issues_a_session(): void
     {
         $kernel = $this->kernel();
 
-        $response = $kernel->handle(new Request('POST', '/auth/login', [], [], json_encode(['person_id' => 'GAM-PER-999999', 'password' => 'whatever'])));
+        $response = $kernel->handle(new Request('POST', '/auth/login', [], [], json_encode(['person_id' => 'GAM-GAT-PER-999999', 'password' => 'whatever'])));
 
         self::assertSame(401, $response->status);
         $body = json_decode($response->body, true, flags: JSON_THROW_ON_ERROR);

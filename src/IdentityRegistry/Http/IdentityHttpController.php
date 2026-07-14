@@ -167,6 +167,7 @@ final readonly class IdentityHttpController
             'identity_type' => $identity->type()->value,
             'status' => $identity->status()->value,
             'registered_at' => $identity->registeredAt()->format(DATE_ATOM),
+            'realm' => $identity->id()->realm(),
         ];
     }
 }

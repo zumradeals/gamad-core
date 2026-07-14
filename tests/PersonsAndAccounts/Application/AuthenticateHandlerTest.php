@@ -24,7 +24,7 @@ final class AuthenticateHandlerTest extends TestCase
 {
     public function test_it_issues_a_session_on_successful_authentication(): void
     {
-        $personId = new PersonId('GAM-PER-000001');
+        $personId = new PersonId('GAM-GAT-PER-000001');
         [$handler, , $sessions] = $this->handlerWithAccount($personId, 'correct horse battery staple');
 
         $result = $handler(new Authenticate((string) $personId, 'correct horse battery staple'));
@@ -44,7 +44,7 @@ final class AuthenticateHandlerTest extends TestCase
         );
 
         try {
-            $handler(new Authenticate('GAM-PER-999999', 'whatever'));
+            $handler(new Authenticate('GAM-GAT-PER-999999', 'whatever'));
             self::fail('Expected AuthenticationFailed to be thrown.');
         } catch (AuthenticationFailed $exception) {
             self::assertSame('Invalid credentials.', $exception->getMessage());
@@ -53,7 +53,7 @@ final class AuthenticateHandlerTest extends TestCase
 
     public function test_it_fails_with_the_same_generic_message_for_a_wrong_password(): void
     {
-        $personId = new PersonId('GAM-PER-000001');
+        $personId = new PersonId('GAM-GAT-PER-000001');
         [$handler] = $this->handlerWithAccount($personId, 'correct horse battery staple');
 
         try {
@@ -66,7 +66,7 @@ final class AuthenticateHandlerTest extends TestCase
 
     public function test_it_rejects_authentication_for_a_suspended_account(): void
     {
-        $personId = new PersonId('GAM-PER-000001');
+        $personId = new PersonId('GAM-GAT-PER-000001');
         [$handler, $accounts] = $this->handlerWithAccount($personId, 'correct horse battery staple');
         $account = $accounts->findByPersonId($personId);
         $account?->suspend();

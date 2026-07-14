@@ -1,0 +1,137 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
+use PDO;
+use RuntimeException;
+use Throwable;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+// ADR-0017 §4 — a single administrative migration rewriting pre-federation
+// identity ids (GAM-{TYPE}-{NUMERO}) to the realm-tagged format
+// (GAM-{REALM}-{TYPE}-{NUMERO}), as an explicit audited event. Operator-only
+// (server access, never HTTP), transactional per identity.
+
+$mode = null;
+foreach (array_slice($argv, 1) as $arg) {
+    if ($arg === '--dry-run' || $arg === '--execute') {
+        if ($mode !== null) {
+            throw new RuntimeException('Pass exactly one of --dry-run or --execute.');
+        }
+        $mode = $arg === '--dry-run' ? 'dry-run' : 'execute';
+    }
+}
+if ($mode === null) {
+    throw new RuntimeException('Usage: php bin/migrate-realm-legacy-identities --dry-run|--execute');
+}
+
+$realm = getenv('GAMAD_CORE_REALM');
+if ($realm === false || $realm === '' || preg_match('/^[A-Z0-9]{2,6}$/', $realm) !== 1) {
+    throw new RuntimeException('Environment variable GAMAD_CORE_REALM must be set to a valid realm code.');
+}
+
+$actorId = getenv('GAMAD_ACTOR_ID') ?: '';
+if ($mode === 'execute' && $actorId === '') {
+    throw new RuntimeException('Environment variable GAMAD_ACTOR_ID is required for --execute.');
+}
+
+$dsn = getenv('GAMAD_PG_DSN');
+if ($dsn === false || $dsn === '') {
+    throw new RuntimeException('Environment variable GAMAD_PG_DSN is required.');
+}
+
+$connection = new PDO(
+    $dsn,
+    getenv('GAMAD_PG_USER') ?: null,
+    getenv('GAMAD_PG_PASSWORD') ?: null,
+    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+);
+
+// Exactly the pre-ADR-0017 3-segment shape — an already-migrated 4-segment id
+// never matches this (its 2nd segment would have to be both the realm and,
+// impossibly, immediately followed by digits-to-end).
+$legacyPattern = '/^GAM-([A-Z]{3})-([0-9]{6,})$/';
+
+$legacyIds = $connection
+    ->query("SELECT id FROM identities WHERE id ~ '^GAM-[A-Z]{3}-[0-9]{6,}$' ORDER BY id")
+    ->fetchAll(PDO::FETCH_COLUMN);
+
+$plan = [];
+foreach ($legacyIds as $oldId) {
+    if (preg_match($legacyPattern, (string) $oldId, $matches) !== 1) {
+        throw new RuntimeException(sprintf('Identity "%s" matched the SQL filter but not the PHP pattern.', $oldId));
+    }
+    $plan[] = [
+        'old_id' => $oldId,
+        'new_id' => sprintf('GAM-%s-%s-%s', $realm, $matches[1], $matches[2]),
+    ];
+}
+
+if ($mode === 'dry-run') {
+    fwrite(STDOUT, json_encode([
+        'mode' => 'dry-run',
+        'count' => count($plan),
+        'migrations' => $plan,
+    ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT) . PHP_EOL);
+    exit(0);
+}
+
+$audit = new PostgreSqlAdministrativeAuditRepository($connection);
+$migrated = [];
+
+foreach ($plan as $item) {
+    $oldId = $item['old_id'];
+    $newId = $item['new_id'];
+
+    $connection->beginTransaction();
+    try {
+        $connection->exec('SET CONSTRAINTS ALL DEFERRED');
+
+        $updateIdentity = $connection->prepare('UPDATE identities SET id = :new_id WHERE id = :old_id');
+        $updateIdentity->execute(['new_id' => $newId, 'old_id' => $oldId]);
+        if ($updateIdentity->rowCount() !== 1) {
+            throw new RuntimeException(sprintf(
+                'Expected to rewrite exactly one identities row for "%s", affected %d.',
+                $oldId,
+                $updateIdentity->rowCount(),
+            ));
+        }
+
+        $connection->prepare('UPDATE persons SET identity_id = :new_id WHERE identity_id = :old_id')
+            ->execute(['new_id' => $newId, 'old_id' => $oldId]);
+        $connection->prepare('UPDATE user_accounts SET person_id = :new_id WHERE person_id = :old_id')
+            ->execute(['new_id' => $newId, 'old_id' => $oldId]);
+
+        $audit->record(
+            actorId: $actorId,
+            action: 'identity.realm_migrated',
+            target: $newId,
+            statusCode: 200,
+            occurredAt: new DateTimeImmutable(),
+            context: ['adr' => 'ADR-0017', 'old_id' => $oldId, 'new_id' => $newId],
+        );
+
+        $connection->commit();
+    } catch (Throwable $exception) {
+        $connection->rollBack();
+        fwrite(STDERR, sprintf('Migration failed for "%s" -> "%s": %s%s', $oldId, $newId, $exception->getMessage(), PHP_EOL));
+        fwrite(STDOUT, json_encode([
+            'mode' => 'execute',
+            'migrated' => $migrated,
+            'failed_at' => $oldId,
+        ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT) . PHP_EOL);
+        exit(1);
+    }
+
+    $migrated[] = ['old_id' => $oldId, 'new_id' => $newId];
+}
+
+fwrite(STDOUT, json_encode([
+    'mode' => 'execute',
+    'count' => count($migrated),
+    'migrated' => $migrated,
+], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT) . PHP_EOL);
+exit(0);

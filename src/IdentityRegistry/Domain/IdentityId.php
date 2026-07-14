@@ -8,7 +8,7 @@ use InvalidArgumentException;
 
 final readonly class IdentityId
 {
-    private const PATTERN = '/^GAM-[A-Z]{3}-[0-9]{6,}$/';
+    private const PATTERN = '/^GAM-[A-Z0-9]{2,6}-[A-Z]{3}-[0-9]{6,}$/';
 
     public function __construct(public string $value)
     {
@@ -20,6 +20,12 @@ final readonly class IdentityId
     public function equals(self $other): bool
     {
         return $this->value === $other->value;
+    }
+
+    /** ADR-0017 §3 — the realm segment, e.g. "GAT" for "GAM-GAT-PER-000001". */
+    public function realm(): string
+    {
+        return explode('-', $this->value)[1];
     }
 
     public function __toString(): string

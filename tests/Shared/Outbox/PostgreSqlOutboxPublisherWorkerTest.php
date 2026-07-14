@@ -45,9 +45,9 @@ final class PostgreSqlOutboxPublisherWorkerTest extends TestCase
         $repository = new PostgreSqlOutboxRepository($this->connection);
         $repository->append(new OutboxMessage(
             id: '44444444-4444-4444-8444-444444444444',
-            aggregateId: 'GAM-PER-900100',
+            aggregateId: 'GAM-GAT-PER-900100',
             eventName: 'identity.registered.v1',
-            payload: ['identity_id' => 'GAM-PER-900100'],
+            payload: ['identity_id' => 'GAM-GAT-PER-900100'],
             occurredAt: new DateTimeImmutable('2000-01-01T00:00:00+00:00'),
             recordedAt: new DateTimeImmutable('2000-01-01T00:00:00+00:00'),
         ));
@@ -78,9 +78,9 @@ final class PostgreSqlOutboxPublisherWorkerTest extends TestCase
         $repository = new PostgreSqlOutboxRepository($this->connection);
         $repository->append(new OutboxMessage(
             id: '55555555-5555-4555-8555-555555555555',
-            aggregateId: 'GAM-ORG-900100',
+            aggregateId: 'GAM-GAT-ORG-900100',
             eventName: 'identity.registered.v1',
-            payload: ['identity_id' => 'GAM-ORG-900100'],
+            payload: ['identity_id' => 'GAM-GAT-ORG-900100'],
             occurredAt: new DateTimeImmutable('2000-01-01T00:00:00+00:00'),
             recordedAt: new DateTimeImmutable('2000-01-01T00:00:00+00:00'),
         ));

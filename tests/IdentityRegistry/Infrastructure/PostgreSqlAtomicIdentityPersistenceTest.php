@@ -45,7 +45,7 @@ final class PostgreSqlAtomicIdentityPersistenceTest extends TestCase
         $this->connection->exec('DROP TABLE IF EXISTS outbox_dead_letters');
         $this->connection->exec('DROP TABLE IF EXISTS outbox_messages');
         $this->connection->exec('DROP TABLE IF EXISTS identities');
-        foreach ([1, 2, 3, 10] as $number) {
+        foreach ([1, 2, 3, 10, 15] as $number) {
             $files = glob(__DIR__ . '/../../../database/migrations/' . sprintf('%03d', $number) . '_*.sql');
             self::assertNotEmpty($files);
             $this->connection->exec((string) file_get_contents($files[0]));
@@ -62,7 +62,7 @@ final class PostgreSqlAtomicIdentityPersistenceTest extends TestCase
         );
         $identity = Identity::register(
             new IdentityInternalId('11111111-1111-4111-8111-111111111111'),
-            new IdentityId('GAM-PER-900001'),
+            new IdentityId('GAM-GAT-PER-900001'),
             IdentityType::Person,
             new DateTimeImmutable('2026-07-12T10:00:00+00:00'),
         );
@@ -91,7 +91,7 @@ final class PostgreSqlAtomicIdentityPersistenceTest extends TestCase
         );
         $identity = Identity::register(
             new IdentityInternalId('22222222-2222-4222-8222-222222222222'),
-            new IdentityId('GAM-PER-900002'),
+            new IdentityId('GAM-GAT-PER-900002'),
             IdentityType::Person,
             new DateTimeImmutable('2026-07-12T10:05:00+00:00'),
         );

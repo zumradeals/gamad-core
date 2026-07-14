@@ -18,7 +18,7 @@ final class PersonTest extends TestCase
     public function test_it_registers_an_active_person(): void
     {
         $registeredAt = new DateTimeImmutable('2026-07-14T00:00:00+00:00');
-        $id = new PersonId('GAM-PER-000001');
+        $id = new PersonId('GAM-GAT-PER-000001');
 
         $person = Person::register($id, 'Amina Traoré', $registeredAt);
 
@@ -26,6 +26,21 @@ final class PersonTest extends TestCase
         self::assertSame('Amina Traoré', $person->declaredName());
         self::assertSame(PersonStatus::Active, $person->status());
         self::assertInstanceOf(PersonRegistered::class, $person->releaseEvents()[0]);
+    }
+
+    public function test_it_records_an_optional_contact(): void
+    {
+        $person = Person::register(new PersonId('GAM-GAT-PER-000001'), 'Amina Traoré', contact: 'amina@example.test');
+
+        self::assertSame('amina@example.test', $person->contact());
+        self::assertSame('amina@example.test', $person->releaseEvents()[0]->contact);
+    }
+
+    public function test_contact_defaults_to_null(): void
+    {
+        $person = Person::register(new PersonId('GAM-GAT-PER-000001'), 'Amina Traoré');
+
+        self::assertNull($person->contact());
     }
 
     public function test_person_id_rejects_a_malformed_identifier(): void
@@ -37,7 +52,7 @@ final class PersonTest extends TestCase
 
     public function test_it_allows_active_to_inactive_transition(): void
     {
-        $person = Person::register(new PersonId('GAM-PER-000001'), 'Amina Traoré');
+        $person = Person::register(new PersonId('GAM-GAT-PER-000001'), 'Amina Traoré');
 
         $person->transitionTo(PersonStatus::Inactive);
 
@@ -46,7 +61,7 @@ final class PersonTest extends TestCase
 
     public function test_it_allows_inactive_back_to_active_transition(): void
     {
-        $person = Person::register(new PersonId('GAM-PER-000001'), 'Amina Traoré');
+        $person = Person::register(new PersonId('GAM-GAT-PER-000001'), 'Amina Traoré');
         $person->transitionTo(PersonStatus::Inactive);
 
         $person->transitionTo(PersonStatus::Active);
@@ -56,7 +71,7 @@ final class PersonTest extends TestCase
 
     public function test_deceased_is_a_terminal_status(): void
     {
-        $person = Person::register(new PersonId('GAM-PER-000001'), 'Amina Traoré');
+        $person = Person::register(new PersonId('GAM-GAT-PER-000001'), 'Amina Traoré');
         $person->transitionTo(PersonStatus::Deceased);
 
         $this->expectException(DomainException::class);

@@ -144,13 +144,13 @@ final class PostgreSqlAdministrativeHttpEndToEndTest extends TestCase
             $deadLetters,
             new ReplayDeadLetterHandler(
                 $deadLetters,
-                new EnvironmentAuthorizationService(['GAM-PER-000001' => $scopes]),
+                new EnvironmentAuthorizationService(['GAM-GAT-PER-000001' => $scopes]),
             ),
             new PostgreSqlAuditChainVerifier($this->connection),
         );
         $routes = AdministrativeRoutes::forController($controller);
         $tokens = json_encode([
-            'integration-token' => ['actor_id' => 'GAM-PER-000001', 'scopes' => $scopes],
+            'integration-token' => ['actor_id' => 'GAM-GAT-PER-000001', 'scopes' => $scopes],
         ], JSON_THROW_ON_ERROR);
 
         return new AdministrativeHttpKernel(

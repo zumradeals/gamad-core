@@ -67,7 +67,7 @@ final class IdentityStatusChangedInvalidatesSessionsTest extends TestCase
         $this->connection->exec('DROP TABLE IF EXISTS identity_identifier_sequences CASCADE');
         $this->connection->exec('DROP TABLE IF EXISTS identities CASCADE');
 
-        foreach ([1, 2, 3, 10, 11, 12, 13, 14] as $number) {
+        foreach ([1, 2, 3, 10, 11, 12, 13, 14, 15, 16] as $number) {
             $files = glob(__DIR__ . '/../../../database/migrations/' . sprintf('%03d', $number) . '_*.sql');
             self::assertNotEmpty($files);
             $this->connection->exec((string) file_get_contents($files[0]));
@@ -83,16 +83,16 @@ final class IdentityStatusChangedInvalidatesSessionsTest extends TestCase
 
         $identity = Identity::register(
             IdentityInternalId::generate(),
-            new IdentityId('GAM-PER-900001'),
+            new IdentityId('GAM-GAT-PER-900001'),
             IdentityType::Person,
         );
         $identityPersister->persist($identity);
 
         $personRepository = new PostgreSqlPersonRepository($this->connection);
-        $personRepository->save(Person::register(new PersonId('GAM-PER-900001'), 'Amina Traoré'));
+        $personRepository->save(Person::register(new PersonId('GAM-GAT-PER-900001'), 'Amina Traoré'));
 
         $accountRepository = new PostgreSqlUserAccountRepository($this->connection);
-        $account = UserAccount::create(UserAccountId::generate(), new PersonId('GAM-PER-900001'));
+        $account = UserAccount::create(UserAccountId::generate(), new PersonId('GAM-GAT-PER-900001'));
         $account->addAuthenticationMethod(AuthenticationMethodId::generate(), AuthenticationMethodType::Password, 'argon2id$hash');
         $accountRepository->save($account);
 
@@ -112,7 +112,7 @@ final class IdentityStatusChangedInvalidatesSessionsTest extends TestCase
         // reaction happens when that message is actually published, exactly
         // as it would in the real outbox-worker process.
         $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister);
-        $lifecycle->transition(new IdentityId('GAM-PER-900001'), IdentityStatus::Suspended);
+        $lifecycle->transition(new IdentityId('GAM-GAT-PER-900001'), IdentityStatus::Suspended);
 
         $reactor = new ReactToIdentityStatusChanged(
             persons: $personRepository,
@@ -148,7 +148,7 @@ final class IdentityStatusChangedInvalidatesSessionsTest extends TestCase
         $outbox = new PostgreSqlOutboxRepository($this->connection);
         $identityPersister = new AtomicIdentityPersister($identityRepository, $outbox, new DomainEventCollector(), $transactions);
 
-        $identity = Identity::register(IdentityInternalId::generate(), new IdentityId('GAM-ORG-900001'), IdentityType::Organization);
+        $identity = Identity::register(IdentityInternalId::generate(), new IdentityId('GAM-GAT-ORG-900001'), IdentityType::Organization);
         $identityPersister->persist($identity);
 
         $reactor = new ReactToIdentityStatusChanged(
@@ -170,7 +170,7 @@ final class IdentityStatusChangedInvalidatesSessionsTest extends TestCase
         );
 
         $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister);
-        $lifecycle->transition(new IdentityId('GAM-ORG-900001'), IdentityStatus::Suspended);
+        $lifecycle->transition(new IdentityId('GAM-GAT-ORG-900001'), IdentityStatus::Suspended);
 
         $report = $publisher->publishPending();
 

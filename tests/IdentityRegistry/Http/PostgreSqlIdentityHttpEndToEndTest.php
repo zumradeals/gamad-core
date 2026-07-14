@@ -13,6 +13,7 @@ use Gamad\Core\IdentityRegistry\Infrastructure\Http\PostgreSqlIdempotencyReposit
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityIdentifierAuthority;
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityRepository;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
+use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredRealmPolicy;
 use Gamad\Core\Shared\Application\DomainEventCollector;
 use Gamad\Core\Shared\Http\AdministrativeHttpKernel;
 use Gamad\Core\Shared\Http\AuthenticatedActor;
@@ -50,7 +51,7 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
         foreach (['identity_identifier_sequences', 'identity_idempotency', 'administrative_audit', 'operational_metrics', 'rate_limit_buckets', 'outbox_dead_letters', 'outbox_messages', 'identities'] as $table) {
             $this->connection->exec('DROP TABLE IF EXISTS ' . $table . ' CASCADE');
         }
-        foreach ([1, 2, 3, 5, 6, 7, 8, 9, 10] as $number) {
+        foreach ([1, 2, 3, 5, 6, 7, 8, 9, 10, 15] as $number) {
             $files = glob(__DIR__ . '/../../../database/migrations/' . sprintf('%03d', $number) . '_*.sql');
             self::assertNotEmpty($files);
             $this->connection->exec((string) file_get_contents($files[0]));
@@ -74,7 +75,7 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
         $search = $kernel->handle(new Request('GET', '/identities', query: ['type' => 'organization', 'limit' => '1']));
         $suspended = $kernel->handle(new Request('POST', '/identities/' . $publicId . '/suspend'));
 
-        self::assertSame('GAM-PER-000001', $publicId);
+        self::assertSame('GAM-GAT-PER-000001', $publicId);
         self::assertSame($created->body, $replayed->body);
         self::assertSame(201, $bulk->status);
         self::assertSame(200, $read->status);
@@ -102,6 +103,7 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
                 new AllowConfiguredIdentityTypesPolicy(),
                 $persister,
                 new PostgreSqlMetricsCollector($this->connection),
+                new AllowConfiguredRealmPolicy('GAT'),
             ),
             $repository,
             $repository,
@@ -125,7 +127,7 @@ final readonly class IdentityTestAuthenticationAdapter implements Authentication
 {
     public function authenticate(Request $request): ?AuthenticatedActor
     {
-        return new AuthenticatedActor('GAM-PER-000001', [
+        return new AuthenticatedActor('GAM-GAT-PER-000001', [
             'core.identity.register',
             'core.identity.read',
             'core.identity.lifecycle.manage',

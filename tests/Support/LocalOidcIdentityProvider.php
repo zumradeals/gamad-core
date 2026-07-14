@@ -70,7 +70,7 @@ final class LocalOidcIdentityProvider implements JwksProvider
         $payload = $claims + [
             'iss' => $this->issuer,
             'aud' => $this->audience,
-            'sub' => 'GAM-PER-000001',
+            'sub' => 'GAM-GAT-PER-000001',
             'scope' => 'core.runtime.health.read',
             'iat' => $now,
             'nbf' => $now - 1,

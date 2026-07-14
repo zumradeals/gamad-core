@@ -49,6 +49,7 @@ final readonly class PersonsAndAccountsHttpController
             $person = ($this->registerPerson)(new RegisterPerson(
                 identityId: (string) ($body['identity_id'] ?? ''),
                 declaredName: (string) ($body['declared_name'] ?? ''),
+                contact: (string) ($body['contact'] ?? ''),
             ));
         } catch (IdentityNotEligibleForPerson|PersonAlreadyExists $exception) {
             return Response::json(409, ['error' => 'person_registration_rejected', 'detail' => $exception->getMessage()]);
@@ -144,6 +145,7 @@ final readonly class PersonsAndAccountsHttpController
             'declared_name' => $person->declaredName(),
             'status' => $person->status()->value,
             'registered_at' => $person->registeredAt()->format(DATE_ATOM),
+            'contact' => $person->contact(),
         ];
     }
 
