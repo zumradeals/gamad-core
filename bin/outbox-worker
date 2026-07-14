@@ -3,11 +3,19 @@
 
 declare(strict_types=1);
 
+use Gamad\Core\PersonsAndAccounts\Application\AtomicSessionPersister;
+use Gamad\Core\PersonsAndAccounts\Application\ReactToIdentityStatusChanged;
+use Gamad\Core\PersonsAndAccounts\Infrastructure\Messaging\IdentityStatusChangedReactingEventBus;
+use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlPersonRepository;
+use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlSessionRepository;
+use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlUserAccountRepository;
+use Gamad\Core\Shared\Application\DomainEventCollector;
 use Gamad\Core\Shared\Infrastructure\Health\PostgreSqlHeartbeatRepository;
 use Gamad\Core\Shared\Infrastructure\Messaging\JsonLineEventBus;
 use Gamad\Core\Shared\Infrastructure\Metrics\PostgreSqlMetricsCollector;
 use Gamad\Core\Shared\Infrastructure\Observability\JsonLineLogger;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
+use Gamad\Core\Shared\Infrastructure\Persistence\PdoTransactionManager;
 use Gamad\Core\Shared\Outbox\OutboxPublisher;
 use Gamad\Core\Shared\Outbox\RetryPolicy;
 use Gamad\Core\Shared\Runtime\OutboxWorker;
@@ -54,9 +62,21 @@ $connection = new PDO(
 );
 
 $logger = new JsonLineLogger(STDERR);
+$sessionRepository = new PostgreSqlSessionRepository($connection);
+$identityStatusChangedReactor = new ReactToIdentityStatusChanged(
+    persons: new PostgreSqlPersonRepository($connection),
+    accounts: new PostgreSqlUserAccountRepository($connection),
+    sessions: $sessionRepository,
+    persister: new AtomicSessionPersister(
+        $sessionRepository,
+        new PostgreSqlOutboxRepository($connection),
+        new DomainEventCollector(),
+        new PdoTransactionManager($connection),
+    ),
+);
 $publisher = new OutboxPublisher(
     outbox: new PostgreSqlOutboxRepository($connection),
-    eventBus: new JsonLineEventBus(STDOUT),
+    eventBus: new IdentityStatusChangedReactingEventBus(new JsonLineEventBus(STDOUT), $identityStatusChangedReactor),
     retryPolicy: new RetryPolicy(
         maxAttempts: $integer('GAMAD_OUTBOX_MAX_ATTEMPTS', 5),
         baseDelaySeconds: $integer('GAMAD_OUTBOX_BASE_RETRY_SECONDS', 5),

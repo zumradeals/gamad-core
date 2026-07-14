@@ -11,6 +11,23 @@ use Gamad\Core\IdentityRegistry\Infrastructure\Http\PostgreSqlIdempotencyReposit
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityIdentifierAuthority;
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityRepository;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
+use Gamad\Core\PersonsAndAccounts\Application\AtomicPersonPersister;
+use Gamad\Core\PersonsAndAccounts\Application\AtomicSessionPersister;
+use Gamad\Core\PersonsAndAccounts\Application\AtomicUserAccountPersister;
+use Gamad\Core\PersonsAndAccounts\Application\Command\AuthenticateHandler;
+use Gamad\Core\PersonsAndAccounts\Application\Command\RegisterPersonHandler;
+use Gamad\Core\PersonsAndAccounts\Application\Command\RegisterUserAccountHandler;
+use Gamad\Core\PersonsAndAccounts\Application\Command\RevokeSessionHandler;
+use Gamad\Core\PersonsAndAccounts\Application\Command\SetPasswordHandler;
+use Gamad\Core\PersonsAndAccounts\Http\PersonsAndAccountsHttpController;
+use Gamad\Core\PersonsAndAccounts\Http\PersonsAndAccountsHttpKernel;
+use Gamad\Core\PersonsAndAccounts\Http\PersonsAndAccountsResponseValidator;
+use Gamad\Core\PersonsAndAccounts\Http\PersonsAndAccountsRoutes;
+use Gamad\Core\PersonsAndAccounts\Infrastructure\Http\SessionTokenAuthenticator;
+use Gamad\Core\PersonsAndAccounts\Infrastructure\IdentityRegistry\PostgreSqlIdentityLookup;
+use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlPersonRepository;
+use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlSessionRepository;
+use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlUserAccountRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
 use Gamad\Core\Shared\Application\HealthSummaryQueryService;
 use Gamad\Core\Shared\Application\ReplayDeadLetterHandler;
@@ -125,6 +142,50 @@ $kernel = new AdministrativeHttpKernel(
     rateWindowSeconds: (int) (getenv('GAMAD_ADMIN_RATE_WINDOW_SECONDS') ?: 60),
 );
 
+// Persons and User Accounts (DIRECTIVE-003) — a distinct HTTP surface, on
+// purpose: session-token authentication, never the ADR-0011 administrative
+// bootstrap (Task 6).
+$personRepository = new PostgreSqlPersonRepository($connection);
+$userAccountRepository = new PostgreSqlUserAccountRepository($connection);
+$sessionRepository = new PostgreSqlSessionRepository($connection);
+$personsAndAccountsOutbox = new PostgreSqlOutboxRepository($connection);
+$personsAndAccountsEvents = new DomainEventCollector();
+$personsAndAccountsController = new PersonsAndAccountsHttpController(
+    registerPerson: new RegisterPersonHandler(
+        identities: new PostgreSqlIdentityLookup($connection),
+        persons: $personRepository,
+        persister: new AtomicPersonPersister($personRepository, $personsAndAccountsOutbox, $personsAndAccountsEvents, $transactionManager),
+    ),
+    persons: $personRepository,
+    registerUserAccount: new RegisterUserAccountHandler(
+        persons: $personRepository,
+        accounts: $userAccountRepository,
+        persister: new AtomicUserAccountPersister($userAccountRepository, $personsAndAccountsOutbox, $personsAndAccountsEvents, $transactionManager),
+    ),
+    setPassword: new SetPasswordHandler(
+        accounts: $userAccountRepository,
+        persister: new AtomicUserAccountPersister($userAccountRepository, $personsAndAccountsOutbox, $personsAndAccountsEvents, $transactionManager),
+    ),
+    authenticate: new AuthenticateHandler(
+        accounts: $userAccountRepository,
+        persister: new AtomicSessionPersister($sessionRepository, $personsAndAccountsOutbox, $personsAndAccountsEvents, $transactionManager),
+    ),
+    revokeSession: new RevokeSessionHandler(
+        sessions: $sessionRepository,
+        persister: new AtomicSessionPersister($sessionRepository, $personsAndAccountsOutbox, $personsAndAccountsEvents, $transactionManager),
+    ),
+);
+$personsAndAccountsRoutes = PersonsAndAccountsRoutes::forController($personsAndAccountsController);
+$personsAndAccountsKernel = new PersonsAndAccountsHttpKernel(
+    validator: new OpenApiRequestValidator($personsAndAccountsRoutes),
+    responseValidator: new PersonsAndAccountsResponseValidator(),
+    sessionAuthentication: new SessionTokenAuthenticator($sessionRepository),
+    rateLimiter: new PostgreSqlRateLimiter($connection),
+    audit: new PostgreSqlAdministrativeAuditRepository($connection),
+    rateLimit: (int) (getenv('GAMAD_ADMIN_RATE_LIMIT') ?: 120),
+    rateWindowSeconds: (int) (getenv('GAMAD_ADMIN_RATE_WINDOW_SECONDS') ?: 60),
+);
+
 $headers = [];
 foreach (getallheaders() ?: [] as $name => $value) {
     $headers[(string) $name] = (string) $value;
@@ -137,7 +198,16 @@ $request = new Request(
     query: array_map('strval', $_GET),
     body: file_get_contents('php://input') ?: '',
 );
-$response = $kernel->handle($request);
+$matchesPersonsAndAccounts = false;
+foreach ($personsAndAccountsRoutes as $route) {
+    if ($route->match($request->method, $request->path) !== null) {
+        $matchesPersonsAndAccounts = true;
+        break;
+    }
+}
+$response = $matchesPersonsAndAccounts
+    ? $personsAndAccountsKernel->handle($request)
+    : $kernel->handle($request);
 
 http_response_code($response->status);
 foreach ($response->headers as $name => $value) {
