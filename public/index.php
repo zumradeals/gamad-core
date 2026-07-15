@@ -12,6 +12,22 @@ use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityIde
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityRepository;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredRealmPolicy;
+use Gamad\Core\OrganizationsAndMemberships\Application\AtomicMembershipPersister;
+use Gamad\Core\OrganizationsAndMemberships\Application\AtomicOrganizationPersister;
+use Gamad\Core\OrganizationsAndMemberships\Application\Command\CreateDepartmentHandler;
+use Gamad\Core\OrganizationsAndMemberships\Application\Command\CreateMembershipHandler;
+use Gamad\Core\OrganizationsAndMemberships\Application\Command\CreateOrganizationHandler;
+use Gamad\Core\OrganizationsAndMemberships\Application\Command\EndMembershipHandler;
+use Gamad\Core\OrganizationsAndMemberships\Application\Command\ResumeMembershipHandler;
+use Gamad\Core\OrganizationsAndMemberships\Application\Command\SuspendMembershipHandler;
+use Gamad\Core\OrganizationsAndMemberships\Http\OrganizationsAndMembershipsHttpController;
+use Gamad\Core\OrganizationsAndMemberships\Http\OrganizationsAndMembershipsHttpKernel;
+use Gamad\Core\OrganizationsAndMemberships\Http\OrganizationsAndMembershipsResponseValidator;
+use Gamad\Core\OrganizationsAndMemberships\Http\OrganizationsAndMembershipsRoutes;
+use Gamad\Core\OrganizationsAndMemberships\Infrastructure\IdentityRegistry\PostgreSqlIdentityLookup as OrganizationsIdentityLookup;
+use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\PostgreSqlMembershipRepository;
+use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\PostgreSqlOrganizationRepository;
+use Gamad\Core\OrganizationsAndMemberships\Infrastructure\PersonsAndAccounts\PostgreSqlPersonLookup;
 use Gamad\Core\PersonsAndAccounts\Application\AtomicPersonPersister;
 use Gamad\Core\PersonsAndAccounts\Application\AtomicSessionPersister;
 use Gamad\Core\PersonsAndAccounts\Application\AtomicUserAccountPersister;
@@ -194,6 +210,57 @@ $personsAndAccountsKernel = new PersonsAndAccountsHttpKernel(
     rateWindowSeconds: (int) (getenv('GAMAD_ADMIN_RATE_WINDOW_SECONDS') ?: 60),
 );
 
+// Organizations and Memberships (DIRECTIVE-006) — a distinct HTTP surface
+// from both the administrative bootstrap and Persons and User Accounts,
+// though it authenticates with the same session-token mechanism as the
+// latter (Task 6). Reuses the shared SessionTokenAuthenticator instance —
+// only the composition root is allowed to know both contexts.
+$organizationRepository = new PostgreSqlOrganizationRepository($connection);
+$membershipRepository = new PostgreSqlMembershipRepository($connection);
+$organizationsAndMembershipsOutbox = new PostgreSqlOutboxRepository($connection);
+$organizationsAndMembershipsEvents = new DomainEventCollector();
+$organizationsAndMembershipsController = new OrganizationsAndMembershipsHttpController(
+    createOrganization: new CreateOrganizationHandler(
+        identities: new OrganizationsIdentityLookup($connection),
+        organizations: $organizationRepository,
+        persister: new AtomicOrganizationPersister($organizationRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+    ),
+    organizations: $organizationRepository,
+    createDepartment: new CreateDepartmentHandler(
+        organizations: $organizationRepository,
+        persister: new AtomicOrganizationPersister($organizationRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+    ),
+    createMembership: new CreateMembershipHandler(
+        persons: new PostgreSqlPersonLookup($connection),
+        organizations: $organizationRepository,
+        memberships: $membershipRepository,
+        persister: new AtomicMembershipPersister($membershipRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+    ),
+    memberships: $membershipRepository,
+    suspendMembership: new SuspendMembershipHandler(
+        memberships: $membershipRepository,
+        persister: new AtomicMembershipPersister($membershipRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+    ),
+    resumeMembership: new ResumeMembershipHandler(
+        memberships: $membershipRepository,
+        persister: new AtomicMembershipPersister($membershipRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+    ),
+    endMembership: new EndMembershipHandler(
+        memberships: $membershipRepository,
+        persister: new AtomicMembershipPersister($membershipRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+    ),
+);
+$organizationsAndMembershipsRoutes = OrganizationsAndMembershipsRoutes::forController($organizationsAndMembershipsController);
+$organizationsAndMembershipsKernel = new OrganizationsAndMembershipsHttpKernel(
+    validator: new OpenApiRequestValidator($organizationsAndMembershipsRoutes),
+    responseValidator: new OrganizationsAndMembershipsResponseValidator(),
+    sessionAuthentication: new SessionTokenAuthenticator($sessionRepository),
+    rateLimiter: new PostgreSqlRateLimiter($connection),
+    audit: new PostgreSqlAdministrativeAuditRepository($connection),
+    rateLimit: (int) (getenv('GAMAD_ADMIN_RATE_LIMIT') ?: 120),
+    rateWindowSeconds: (int) (getenv('GAMAD_ADMIN_RATE_WINDOW_SECONDS') ?: 60),
+);
+
 $headers = [];
 foreach (getallheaders() ?: [] as $name => $value) {
     $headers[(string) $name] = (string) $value;
@@ -213,9 +280,18 @@ foreach ($personsAndAccountsRoutes as $route) {
         break;
     }
 }
-$response = $matchesPersonsAndAccounts
-    ? $personsAndAccountsKernel->handle($request)
-    : $kernel->handle($request);
+$matchesOrganizationsAndMemberships = false;
+foreach ($organizationsAndMembershipsRoutes as $route) {
+    if ($route->match($request->method, $request->path) !== null) {
+        $matchesOrganizationsAndMemberships = true;
+        break;
+    }
+}
+$response = match (true) {
+    $matchesPersonsAndAccounts => $personsAndAccountsKernel->handle($request),
+    $matchesOrganizationsAndMemberships => $organizationsAndMembershipsKernel->handle($request),
+    default => $kernel->handle($request),
+};
 
 http_response_code($response->status);
 foreach ($response->headers as $name => $value) {

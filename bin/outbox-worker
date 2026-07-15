@@ -3,6 +3,14 @@
 
 declare(strict_types=1);
 
+use Gamad\Core\OrganizationsAndMemberships\Application\AtomicMembershipPersister;
+use Gamad\Core\OrganizationsAndMemberships\Application\AtomicOrganizationPersister;
+use Gamad\Core\OrganizationsAndMemberships\Application\ReactToIdentityStatusChangedForOrganizations;
+use Gamad\Core\OrganizationsAndMemberships\Application\ReactToOrganizationSuspended;
+use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Messaging\IdentityStatusChangedReactingEventBus as OrganizationsIdentityStatusChangedReactingEventBus;
+use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Messaging\OrganizationSuspendedReactingEventBus;
+use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\PostgreSqlMembershipRepository;
+use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\PostgreSqlOrganizationRepository;
 use Gamad\Core\PersonsAndAccounts\Application\AtomicSessionPersister;
 use Gamad\Core\PersonsAndAccounts\Application\ReactToIdentityStatusChanged;
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Messaging\IdentityStatusChangedReactingEventBus;
@@ -62,21 +70,46 @@ $connection = new PDO(
 );
 
 $logger = new JsonLineLogger(STDERR);
+$outboxRepository = new PostgreSqlOutboxRepository($connection);
+$transactionManager = new PdoTransactionManager($connection);
+
 $sessionRepository = new PostgreSqlSessionRepository($connection);
 $identityStatusChangedReactor = new ReactToIdentityStatusChanged(
     persons: new PostgreSqlPersonRepository($connection),
     accounts: new PostgreSqlUserAccountRepository($connection),
     sessions: $sessionRepository,
-    persister: new AtomicSessionPersister(
-        $sessionRepository,
-        new PostgreSqlOutboxRepository($connection),
-        new DomainEventCollector(),
-        new PdoTransactionManager($connection),
-    ),
+    persister: new AtomicSessionPersister($sessionRepository, $outboxRepository, new DomainEventCollector(), $transactionManager),
 );
+
+$organizationRepository = new PostgreSqlOrganizationRepository($connection);
+$membershipRepository = new PostgreSqlMembershipRepository($connection);
+$organizationEvents = new DomainEventCollector();
+$organizationPersister = new AtomicOrganizationPersister($organizationRepository, $outboxRepository, $organizationEvents, $transactionManager);
+$membershipPersister = new AtomicMembershipPersister($membershipRepository, $outboxRepository, $organizationEvents, $transactionManager);
+$organizationSuspendedReactor = new ReactToOrganizationSuspended(
+    memberships: $membershipRepository,
+    persister: $membershipPersister,
+);
+$identityStatusChangedForOrganizationsReactor = new ReactToIdentityStatusChangedForOrganizations(
+    organizations: $organizationRepository,
+    memberships: $membershipRepository,
+    organizationPersister: $organizationPersister,
+    membershipPersister: $membershipPersister,
+);
+
+// DIRECTIVE-006 Task 8 — each decorator reacts only to its own event name
+// and delegates to `inner` first, so their nesting order does not affect
+// correctness; a cascade that spans two contexts (e.g. an organization's
+// identity suspension eventually suspending its memberships) always takes
+// one extra poll cycle per hop, by design (never a synchronous chain).
+$eventBus = new JsonLineEventBus(STDOUT);
+$eventBus = new IdentityStatusChangedReactingEventBus($eventBus, $identityStatusChangedReactor);
+$eventBus = new OrganizationsIdentityStatusChangedReactingEventBus($eventBus, $identityStatusChangedForOrganizationsReactor);
+$eventBus = new OrganizationSuspendedReactingEventBus($eventBus, $organizationSuspendedReactor);
+
 $publisher = new OutboxPublisher(
-    outbox: new PostgreSqlOutboxRepository($connection),
-    eventBus: new IdentityStatusChangedReactingEventBus(new JsonLineEventBus(STDOUT), $identityStatusChangedReactor),
+    outbox: $outboxRepository,
+    eventBus: $eventBus,
     retryPolicy: new RetryPolicy(
         maxAttempts: $integer('GAMAD_OUTBOX_MAX_ATTEMPTS', 5),
         baseDelaySeconds: $integer('GAMAD_OUTBOX_BASE_RETRY_SECONDS', 5),

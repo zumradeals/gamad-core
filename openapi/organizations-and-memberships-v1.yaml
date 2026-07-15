@@ -1,0 +1,218 @@
+openapi: 3.1.0
+info:
+  title: GAMAD Core Organizations and Memberships API
+  version: 1.0.0-alpha
+  description: >
+    Organizations, departments and memberships (GENESIS-011, GENESIS-012).
+    Authentication here is the same session token issued by
+    /auth/login (Persons and User Accounts, ADR-0018) — never the
+    administrative bootstrap mechanism of ADR-0011. No route is public.
+paths:
+  /organizations:
+    post:
+      operationId: createOrganization
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateOrganizationRequest' }
+      responses:
+        '201': { description: Organization created, content: { application/json: { schema: { $ref: '#/components/schemas/Organization' } } } }
+        '409': { description: Identity not eligible, parent not eligible, or organization already registered }
+  /organizations/{orgId}:
+    get:
+      operationId: getOrganization
+      security:
+        - sessionAuth: []
+      parameters:
+        - in: path
+          name: orgId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Organization, content: { application/json: { schema: { $ref: '#/components/schemas/Organization' } } } }
+        '404': { description: Organization not found }
+  /organizations/{orgId}/children:
+    get:
+      operationId: getOrganizationChildren
+      security:
+        - sessionAuth: []
+      parameters:
+        - in: path
+          name: orgId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Direct child organizations
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Organization' }
+  /organizations/{orgId}/departments:
+    post:
+      operationId: createDepartment
+      security:
+        - sessionAuth: []
+      parameters:
+        - in: path
+          name: orgId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateDepartmentRequest' }
+      responses:
+        '201': { description: Department created, content: { application/json: { schema: { $ref: '#/components/schemas/Department' } } } }
+        '404': { description: Organization not found }
+  /organizations/{orgId}/memberships:
+    post:
+      operationId: createMembership
+      security:
+        - sessionAuth: []
+      parameters:
+        - in: path
+          name: orgId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateMembershipRequest' }
+      responses:
+        '201': { description: Membership created, content: { application/json: { schema: { $ref: '#/components/schemas/Membership' } } } }
+        '404': { description: Person, organization or department not found }
+        '409': { description: Person already has an active membership in this organization }
+    get:
+      operationId: listOrganizationMemberships
+      security:
+        - sessionAuth: []
+      parameters:
+        - in: path
+          name: orgId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Active memberships of this organization
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Membership' }
+  /memberships/{membershipId}/suspend:
+    post:
+      operationId: suspendMembership
+      security:
+        - sessionAuth: []
+      parameters:
+        - in: path
+          name: membershipId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Membership suspended, content: { application/json: { schema: { $ref: '#/components/schemas/Membership' } } } }
+        '404': { description: Membership not found }
+        '409': { description: Invalid lifecycle transition }
+  /memberships/{membershipId}/resume:
+    post:
+      operationId: resumeMembership
+      security:
+        - sessionAuth: []
+      parameters:
+        - in: path
+          name: membershipId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Membership resumed, content: { application/json: { schema: { $ref: '#/components/schemas/Membership' } } } }
+        '404': { description: Membership not found }
+        '409': { description: Invalid lifecycle transition }
+  /memberships/{membershipId}/end:
+    post:
+      operationId: endMembership
+      security:
+        - sessionAuth: []
+      parameters:
+        - in: path
+          name: membershipId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Membership ended, content: { application/json: { schema: { $ref: '#/components/schemas/Membership' } } } }
+        '404': { description: Membership not found }
+        '409': { description: Invalid lifecycle transition }
+components:
+  securitySchemes:
+    sessionAuth:
+      type: http
+      scheme: bearer
+      description: >
+        Bearer token returned by /auth/login (Persons and User Accounts). Not
+        the ADR-0011 administrative bootstrap mechanism — the same session
+        mechanism as that context (DIRECTIVE-006 Task 6).
+  schemas:
+    CreateOrganizationRequest:
+      type: object
+      required: [identity_id, name]
+      additionalProperties: false
+      properties:
+        identity_id: { type: string, pattern: '^GAM-[A-Z0-9]{2,6}-[A-Z]{3}-[0-9]{6,}$' }
+        name: { type: string, minLength: 1 }
+        parent_id: { type: [string, 'null'] }
+    Organization:
+      type: object
+      required: [organization_id, name, status, founded_at]
+      properties:
+        organization_id: { type: string }
+        parent_id: { type: [string, 'null'] }
+        name: { type: string }
+        status: { type: string, enum: [active, inactive] }
+        founded_at: { type: string, format: date-time }
+    CreateDepartmentRequest:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1 }
+    Department:
+      type: object
+      required: [department_id, name, status]
+      properties:
+        department_id: { type: string, format: uuid }
+        name: { type: string }
+        status: { type: string, enum: [active, inactive] }
+    CreateMembershipRequest:
+      type: object
+      required: [person_id, membership_type]
+      additionalProperties: false
+      properties:
+        person_id: { type: string }
+        membership_type: { type: string, enum: [GAMAD_CITIZEN, ORDINARY_CITIZEN, PARTNER] }
+        department_id: { type: [string, 'null'], format: uuid }
+    Membership:
+      type: object
+      required: [membership_id, person_id, organization_id, membership_type, status, started_at]
+      properties:
+        membership_id: { type: string, format: uuid }
+        person_id: { type: string }
+        organization_id: { type: string }
+        department_id: { type: [string, 'null'], format: uuid }
+        membership_type: { type: string, enum: [GAMAD_CITIZEN, ORDINARY_CITIZEN, PARTNER] }
+        status: { type: string, enum: [active, suspended, ended] }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: [string, 'null'], format: date-time }

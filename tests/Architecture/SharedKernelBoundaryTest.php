@@ -24,6 +24,7 @@ final class SharedKernelBoundaryTest extends TestCase
 {
     private const string SHARED_DIRECTORY = __DIR__ . '/../../src/Shared';
     private const string IDENTITY_REGISTRY_DIRECTORY = __DIR__ . '/../../src/IdentityRegistry';
+    private const string ORGANIZATIONS_AND_MEMBERSHIPS_DIRECTORY = __DIR__ . '/../../src/OrganizationsAndMemberships';
 
     private const string IDENTITY_REGISTRY_NAMESPACE_PREFIX = 'Gamad\\Core\\IdentityRegistry\\';
     private const string PERSONS_AND_ACCOUNTS_NAMESPACE_PREFIX = 'Gamad\\Core\\PersonsAndAccounts\\';
@@ -51,6 +52,39 @@ final class SharedKernelBoundaryTest extends TestCase
             "The following files under src/IdentityRegistry import Gamad\\Core\\PersonsAndAccounts\\*, "
             . "which violates GENESIS-010 §C (dependency runs one way only — "
             . "Persons and User Accounts reads the Identity Registry, never the reverse):\n"
+            . implode("\n", $violations),
+        );
+    }
+
+    /**
+     * DIRECTIVE-006 Task 7 (extends ADR-0013) — Organizations and
+     * Memberships reads both the Identity Registry and Persons and User
+     * Accounts (GENESIS-012 §C), but only through its own Application-layer
+     * ports (IdentityLookup, PersonLookup) backed by plain SQL in
+     * Infrastructure — never by importing either context's own namespace.
+     */
+    public function test_organizations_and_memberships_never_imports_identity_registry(): void
+    {
+        $violations = $this->findViolations(self::ORGANIZATIONS_AND_MEMBERSHIPS_DIRECTORY, self::IDENTITY_REGISTRY_NAMESPACE_PREFIX);
+
+        self::assertSame(
+            [],
+            $violations,
+            "The following files under src/OrganizationsAndMemberships import Gamad\\Core\\IdentityRegistry\\*, "
+            . "which violates ADR-0013 (Shared kernel boundary) as extended by DIRECTIVE-006 Task 7:\n"
+            . implode("\n", $violations),
+        );
+    }
+
+    public function test_organizations_and_memberships_never_imports_persons_and_accounts(): void
+    {
+        $violations = $this->findViolations(self::ORGANIZATIONS_AND_MEMBERSHIPS_DIRECTORY, self::PERSONS_AND_ACCOUNTS_NAMESPACE_PREFIX);
+
+        self::assertSame(
+            [],
+            $violations,
+            "The following files under src/OrganizationsAndMemberships import Gamad\\Core\\PersonsAndAccounts\\*, "
+            . "which violates ADR-0013 (Shared kernel boundary) as extended by DIRECTIVE-006 Task 7:\n"
             . implode("\n", $violations),
         );
     }

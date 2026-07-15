@@ -6,8 +6,10 @@ namespace Gamad\Console\Lib;
 
 /**
  * Server-side session handling for the Console d'Exploitation (ADR-0016).
- * The Core API bearer token lives only here — never in a cookie value,
- * never sent to the browser, never in localStorage.
+ * ADR-0019 — two independent credential slots, `admin_token` (ADR-0011) and
+ * `person_session_token` (ADR-0018). No function reads one in place of the
+ * other; each lives only here, never in a cookie value, never sent to the
+ * browser, never in localStorage.
  */
 final class Session
 {
@@ -33,31 +35,67 @@ final class Session
         session_start();
     }
 
-    public static function token(): ?string
+    // --- Admin credential (ADR-0011 bootstrap token) -----------------------
+
+    public static function adminToken(): ?string
     {
         self::start();
 
-        return $_SESSION['core_token'] ?? null;
+        return $_SESSION['admin_token'] ?? null;
     }
 
-    public static function setToken(string $token): void
+    public static function setAdminToken(string $token): void
     {
         self::start();
         session_regenerate_id(true);
-        $_SESSION['core_token'] = $token;
+        $_SESSION['admin_token'] = $token;
     }
 
-    public static function isAuthenticated(): bool
+    public static function isAdminAuthenticated(): bool
     {
-        return self::token() !== null;
+        return self::adminToken() !== null;
     }
 
-    public static function destroy(): void
+    public static function destroyAdmin(): void
     {
         self::start();
-        $_SESSION = [];
-        session_destroy();
+        unset($_SESSION['admin_token']);
     }
+
+    // --- Person credential (ADR-0018 Persons session) -----------------------
+
+    public static function personToken(): ?string
+    {
+        self::start();
+
+        return $_SESSION['person_session_token'] ?? null;
+    }
+
+    public static function setPersonToken(string $token): void
+    {
+        self::start();
+        session_regenerate_id(true);
+        $_SESSION['person_session_token'] = $token;
+    }
+
+    public static function isPersonAuthenticated(): bool
+    {
+        return self::personToken() !== null;
+    }
+
+    public static function destroyPerson(): void
+    {
+        self::start();
+        unset($_SESSION['person_session_token']);
+    }
+
+    public static function destroyAll(): void
+    {
+        self::destroyAdmin();
+        self::destroyPerson();
+    }
+
+    // --- Shared session utilities -------------------------------------------
 
     public static function csrfToken(): string
     {
