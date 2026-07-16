@@ -18,6 +18,7 @@ use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\InMemoryIdentityRepos
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredRealmPolicy;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Shared\Infrastructure\Metrics\InMemoryMetricsCollector;
 use Gamad\Core\Tests\Support\InMemoryOutboxRepository;
 use Gamad\Core\Tests\Support\SynchronousTransactionManager;
@@ -50,6 +51,7 @@ final class RegisterIdentityHandlerTest extends TestCase
             ),
             metrics: $metrics,
             realm: new AllowConfiguredRealmPolicy('GAT'),
+            accessControl: new PermissiveAccessControlGateway(),
         );
 
         $identity = $handler(new RegisterIdentity(

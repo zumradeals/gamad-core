@@ -12,6 +12,24 @@ use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityIde
 use Gamad\Core\IdentityRegistry\Infrastructure\Persistence\PostgreSqlIdentityRepository;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredIdentityTypesPolicy;
 use Gamad\Core\IdentityRegistry\Infrastructure\Policy\AllowConfiguredRealmPolicy;
+use Gamad\Core\AccessControl\Application\AtomicRoleAssignmentPersister;
+use Gamad\Core\AccessControl\Application\AtomicRolePersister;
+use Gamad\Core\AccessControl\Application\Command\AddPermissionToRoleHandler;
+use Gamad\Core\AccessControl\Application\Command\AssignRoleHandler;
+use Gamad\Core\AccessControl\Application\Command\CreatePermissionHandler;
+use Gamad\Core\AccessControl\Application\Command\CreateRoleHandler;
+use Gamad\Core\AccessControl\Application\Command\EvaluateAccessHandler;
+use Gamad\Core\AccessControl\Application\Command\RevokeRoleHandler;
+use Gamad\Core\AccessControl\Domain\AccessControlEngine;
+use Gamad\Core\AccessControl\Http\AccessControlHttpController;
+use Gamad\Core\AccessControl\Http\AccessControlHttpKernel;
+use Gamad\Core\AccessControl\Http\AccessControlResponseValidator;
+use Gamad\Core\AccessControl\Http\AccessControlRoutes;
+use Gamad\Core\AccessControl\Infrastructure\Outbox\PostgreSqlAccessDecisionsOutboxRepository;
+use Gamad\Core\AccessControl\Infrastructure\Persistence\PostgreSqlAccessControlLookup;
+use Gamad\Core\AccessControl\Infrastructure\Persistence\PostgreSqlPermissionRepository;
+use Gamad\Core\AccessControl\Infrastructure\Persistence\PostgreSqlRoleAssignmentRepository;
+use Gamad\Core\AccessControl\Infrastructure\Persistence\PostgreSqlRoleRepository;
 use Gamad\Core\OrganizationsAndMemberships\Application\AtomicMembershipPersister;
 use Gamad\Core\OrganizationsAndMemberships\Application\AtomicOrganizationPersister;
 use Gamad\Core\OrganizationsAndMemberships\Application\Command\CreateDepartmentHandler;
@@ -48,6 +66,7 @@ use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlUserAccou
 use Gamad\Core\Shared\Application\DomainEventCollector;
 use Gamad\Core\Shared\Application\HealthSummaryQueryService;
 use Gamad\Core\Shared\Application\ReplayDeadLetterHandler;
+use Gamad\Core\Shared\Contract\AccessControlGateway;
 use Gamad\Core\Shared\Http\AdministrativeHttpKernel;
 use Gamad\Core\Shared\Http\AdministrativeRoutes;
 use Gamad\Core\Shared\Http\AdministrativeRuntimeController;
@@ -55,6 +74,7 @@ use Gamad\Core\Shared\Http\OpenApiRequestValidator;
 use Gamad\Core\Shared\Http\OpenApiResponseValidator;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\ScopeAuthorizationMiddleware;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAuditChainVerifier;
 use Gamad\Core\Shared\Infrastructure\Health\PostgreSqlWorkerStatusRepository;
@@ -127,6 +147,10 @@ $administrativeController = new AdministrativeRuntimeController(
     auditVerifier: new PostgreSqlAuditChainVerifier($connection),
 );
 
+// ADR-0021 — provisional gateway, active until DIRECTIVE-007 Task 10 swaps
+// it for RbacAccessControlGateway once the real engine is validated.
+$accessControlGateway = new PermissiveAccessControlGateway();
+
 $identityRepository = new PostgreSqlIdentityRepository($connection);
 $transactionManager = new PdoTransactionManager($connection);
 $identityPersister = new AtomicIdentityPersister(
@@ -141,12 +165,13 @@ $registerIdentity = new RegisterIdentityHandler(
     persister: $identityPersister,
     metrics: new PostgreSqlMetricsCollector($connection),
     realm: $realmPolicy,
+    accessControl: $accessControlGateway,
 );
 $identityController = new IdentityHttpController(
     register: $registerIdentity,
     identities: $identityRepository,
     search: $identityRepository,
-    lifecycle: new IdentityLifecycleService($identityRepository, $identityPersister),
+    lifecycle: new IdentityLifecycleService($identityRepository, $identityPersister, $accessControlGateway),
     idempotency: new PostgreSqlIdempotencyRepository($connection),
     transactions: $transactionManager,
 );
@@ -179,12 +204,14 @@ $personsAndAccountsController = new PersonsAndAccountsHttpController(
         identities: new PostgreSqlIdentityLookup($connection),
         persons: $personRepository,
         persister: new AtomicPersonPersister($personRepository, $personsAndAccountsOutbox, $personsAndAccountsEvents, $transactionManager),
+        accessControl: $accessControlGateway,
     ),
     persons: $personRepository,
     registerUserAccount: new RegisterUserAccountHandler(
         persons: $personRepository,
         accounts: $userAccountRepository,
         persister: new AtomicUserAccountPersister($userAccountRepository, $personsAndAccountsOutbox, $personsAndAccountsEvents, $transactionManager),
+        accessControl: $accessControlGateway,
     ),
     setPassword: new SetPasswordHandler(
         accounts: $userAccountRepository,
@@ -197,6 +224,7 @@ $personsAndAccountsController = new PersonsAndAccountsHttpController(
     revokeSession: new RevokeSessionHandler(
         sessions: $sessionRepository,
         persister: new AtomicSessionPersister($sessionRepository, $personsAndAccountsOutbox, $personsAndAccountsEvents, $transactionManager),
+        accessControl: $accessControlGateway,
     ),
 );
 $personsAndAccountsRoutes = PersonsAndAccountsRoutes::forController($personsAndAccountsController);
@@ -224,36 +252,102 @@ $organizationsAndMembershipsController = new OrganizationsAndMembershipsHttpCont
         identities: new OrganizationsIdentityLookup($connection),
         organizations: $organizationRepository,
         persister: new AtomicOrganizationPersister($organizationRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+        accessControl: $accessControlGateway,
     ),
     organizations: $organizationRepository,
     createDepartment: new CreateDepartmentHandler(
         organizations: $organizationRepository,
         persister: new AtomicOrganizationPersister($organizationRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+        accessControl: $accessControlGateway,
     ),
     createMembership: new CreateMembershipHandler(
         persons: new PostgreSqlPersonLookup($connection),
         organizations: $organizationRepository,
         memberships: $membershipRepository,
         persister: new AtomicMembershipPersister($membershipRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+        accessControl: $accessControlGateway,
     ),
     memberships: $membershipRepository,
     suspendMembership: new SuspendMembershipHandler(
         memberships: $membershipRepository,
         persister: new AtomicMembershipPersister($membershipRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+        accessControl: $accessControlGateway,
     ),
     resumeMembership: new ResumeMembershipHandler(
         memberships: $membershipRepository,
         persister: new AtomicMembershipPersister($membershipRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+        accessControl: $accessControlGateway,
     ),
     endMembership: new EndMembershipHandler(
         memberships: $membershipRepository,
         persister: new AtomicMembershipPersister($membershipRepository, $organizationsAndMembershipsOutbox, $organizationsAndMembershipsEvents, $transactionManager),
+        accessControl: $accessControlGateway,
     ),
 );
 $organizationsAndMembershipsRoutes = OrganizationsAndMembershipsRoutes::forController($organizationsAndMembershipsController);
 $organizationsAndMembershipsKernel = new OrganizationsAndMembershipsHttpKernel(
     validator: new OpenApiRequestValidator($organizationsAndMembershipsRoutes),
     responseValidator: new OrganizationsAndMembershipsResponseValidator(),
+    sessionAuthentication: new SessionTokenAuthenticator($sessionRepository),
+    rateLimiter: new PostgreSqlRateLimiter($connection),
+    audit: new PostgreSqlAdministrativeAuditRepository($connection),
+    rateLimit: (int) (getenv('GAMAD_ADMIN_RATE_LIMIT') ?: 120),
+    rateWindowSeconds: (int) (getenv('GAMAD_ADMIN_RATE_WINDOW_SECONDS') ?: 60),
+);
+
+// Access Control (DIRECTIVE-007) — a distinct HTTP surface, authenticating
+// with the same session-token mechanism as Persons and User Accounts and
+// Organizations and Memberships (Task 7). $accessControlGateway
+// (PermissiveAccessControlGateway, wired above) is what the three
+// existing contexts call; this composition wires the real engine's own
+// handlers directly, since AccessControl is the engine's home context.
+$permissionRepository = new PostgreSqlPermissionRepository($connection);
+$roleRepository = new PostgreSqlRoleRepository($connection);
+$roleAssignmentRepository = new PostgreSqlRoleAssignmentRepository($connection);
+$accessDecisionsOutbox = new PostgreSqlAccessDecisionsOutboxRepository($connection);
+$accessControlOutbox = new PostgreSqlOutboxRepository($connection);
+$accessControlEvents = new DomainEventCollector();
+$evaluateAccessHandler = new EvaluateAccessHandler(
+    assignments: $roleAssignmentRepository,
+    roles: $roleRepository,
+    permissions: $permissionRepository,
+    engine: new AccessControlEngine(),
+    accessDecisionsOutbox: $accessDecisionsOutbox,
+);
+$realmRootOrganizationId = sprintf('GAM-%s-ORG-000001', $coreRealm);
+$accessControlLookup = new PostgreSqlAccessControlLookup($connection);
+$accessControlController = new AccessControlHttpController(
+    createPermission: new CreatePermissionHandler($permissionRepository),
+    permissions: $permissionRepository,
+    createRole: new CreateRoleHandler(
+        roles: $roleRepository,
+        persister: new AtomicRolePersister($roleRepository, $accessControlOutbox, $accessControlEvents, $transactionManager),
+    ),
+    roles: $roleRepository,
+    addPermissionToRole: new AddPermissionToRoleHandler(
+        roles: $roleRepository,
+        permissions: $permissionRepository,
+        persister: new AtomicRolePersister($roleRepository, $accessControlOutbox, $accessControlEvents, $transactionManager),
+    ),
+    assignRole: new AssignRoleHandler(
+        roles: $roleRepository,
+        assignments: $roleAssignmentRepository,
+        lookup: $accessControlLookup,
+        evaluateAccess: $evaluateAccessHandler,
+        persister: new AtomicRoleAssignmentPersister($roleAssignmentRepository, $accessControlOutbox, $accessControlEvents, $transactionManager),
+    ),
+    revokeRole: new RevokeRoleHandler(
+        assignments: $roleAssignmentRepository,
+        persister: new AtomicRoleAssignmentPersister($roleAssignmentRepository, $accessControlOutbox, $accessControlEvents, $transactionManager),
+    ),
+    evaluateAccess: $evaluateAccessHandler,
+    lookup: $accessControlLookup,
+    realmRootOrganizationId: $realmRootOrganizationId,
+);
+$accessControlRoutes = AccessControlRoutes::forController($accessControlController);
+$accessControlKernel = new AccessControlHttpKernel(
+    validator: new OpenApiRequestValidator($accessControlRoutes),
+    responseValidator: new AccessControlResponseValidator(),
     sessionAuthentication: new SessionTokenAuthenticator($sessionRepository),
     rateLimiter: new PostgreSqlRateLimiter($connection),
     audit: new PostgreSqlAdministrativeAuditRepository($connection),
@@ -287,9 +381,17 @@ foreach ($organizationsAndMembershipsRoutes as $route) {
         break;
     }
 }
+$matchesAccessControl = false;
+foreach ($accessControlRoutes as $route) {
+    if ($route->match($request->method, $request->path) !== null) {
+        $matchesAccessControl = true;
+        break;
+    }
+}
 $response = match (true) {
     $matchesPersonsAndAccounts => $personsAndAccountsKernel->handle($request),
     $matchesOrganizationsAndMemberships => $organizationsAndMembershipsKernel->handle($request),
+    $matchesAccessControl => $accessControlKernel->handle($request),
     default => $kernel->handle($request),
 };
 

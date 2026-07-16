@@ -23,6 +23,7 @@ use Gamad\Core\Shared\Http\OpenApiResponseValidator;
 use Gamad\Core\Shared\Http\RateLimiter;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\ScopeAuthorizationMiddleware;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
 use Gamad\Core\Shared\Infrastructure\Metrics\PostgreSqlMetricsCollector;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
@@ -104,10 +105,11 @@ final class PostgreSqlIdentityHttpEndToEndTest extends TestCase
                 $persister,
                 new PostgreSqlMetricsCollector($this->connection),
                 new AllowConfiguredRealmPolicy('GAT'),
+                new PermissiveAccessControlGateway(),
             ),
             $repository,
             $repository,
-            new IdentityLifecycleService($repository, $persister),
+            new IdentityLifecycleService($repository, $persister, new PermissiveAccessControlGateway()),
             new PostgreSqlIdempotencyRepository($this->connection),
             $transactions,
         );

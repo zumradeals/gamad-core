@@ -36,6 +36,7 @@ use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlUserAccou
 use Gamad\Core\Shared\Application\DomainEventCollector;
 use Gamad\Core\Shared\Http\OpenApiRequestValidator;
 use Gamad\Core\Shared\Http\Request;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
 use Gamad\Core\Shared\Infrastructure\Http\InMemoryRateLimiter;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
@@ -188,22 +189,25 @@ final class PostgreSqlOrganizationsAndMembershipsHttpEndToEndTest extends TestCa
                 identities: new PostgreSqlIdentityLookup($this->connection),
                 organizations: $organizations,
                 persister: new AtomicOrganizationPersister($organizations, $outbox, $events, $transactions),
+                accessControl: new PermissiveAccessControlGateway(),
             ),
             organizations: $organizations,
             createDepartment: new CreateDepartmentHandler(
                 organizations: $organizations,
                 persister: new AtomicOrganizationPersister($organizations, $outbox, $events, $transactions),
+                accessControl: new PermissiveAccessControlGateway(),
             ),
             createMembership: new CreateMembershipHandler(
                 persons: new PostgreSqlPersonLookup($this->connection),
                 organizations: $organizations,
                 memberships: $memberships,
                 persister: new AtomicMembershipPersister($memberships, $outbox, $events, $transactions),
+                accessControl: new PermissiveAccessControlGateway(),
             ),
             memberships: $memberships,
-            suspendMembership: new SuspendMembershipHandler($memberships, new AtomicMembershipPersister($memberships, $outbox, $events, $transactions)),
-            resumeMembership: new ResumeMembershipHandler($memberships, new AtomicMembershipPersister($memberships, $outbox, $events, $transactions)),
-            endMembership: new EndMembershipHandler($memberships, new AtomicMembershipPersister($memberships, $outbox, $events, $transactions)),
+            suspendMembership: new SuspendMembershipHandler($memberships, new AtomicMembershipPersister($memberships, $outbox, $events, $transactions), new PermissiveAccessControlGateway()),
+            resumeMembership: new ResumeMembershipHandler($memberships, new AtomicMembershipPersister($memberships, $outbox, $events, $transactions), new PermissiveAccessControlGateway()),
+            endMembership: new EndMembershipHandler($memberships, new AtomicMembershipPersister($memberships, $outbox, $events, $transactions), new PermissiveAccessControlGateway()),
         );
 
         $sessionRepository = new PostgreSqlSessionRepository($this->connection);

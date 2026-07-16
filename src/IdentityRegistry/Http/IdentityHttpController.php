@@ -16,6 +16,7 @@ use Gamad\Core\IdentityRegistry\Domain\IdentityRepository;
 use Gamad\Core\IdentityRegistry\Domain\IdentityStatus;
 use Gamad\Core\IdentityRegistry\Domain\IdentityType;
 use Gamad\Core\Shared\Application\TransactionManager;
+use Gamad\Core\Shared\Contract\AccessDenied;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\Response;
 use InvalidArgumentException;
@@ -128,9 +129,11 @@ final readonly class IdentityHttpController
         }
 
         try {
-            $identity = $this->lifecycle->transition(new IdentityId($request->pathParameters['identityId']), $target);
+            $identity = $this->lifecycle->transition(new IdentityId($request->pathParameters['identityId']), $target, $request->actor?->actorId ?? '');
         } catch (DomainException $exception) {
             return Response::json(409, ['error' => 'invalid_lifecycle_transition', 'detail' => $exception->getMessage()]);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return $identity === null

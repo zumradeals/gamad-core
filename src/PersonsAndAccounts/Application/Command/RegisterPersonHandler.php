@@ -11,6 +11,10 @@ use Gamad\Core\PersonsAndAccounts\Application\IdentityLookup;
 use Gamad\Core\PersonsAndAccounts\Domain\Person;
 use Gamad\Core\PersonsAndAccounts\Domain\PersonId;
 use Gamad\Core\PersonsAndAccounts\Domain\PersonRepository;
+use Gamad\Core\Shared\Contract\AccessControlGateway;
+use Gamad\Core\Shared\Contract\AccessDenied;
+use Gamad\Core\Shared\Contract\IdentityId as ContractIdentityId;
+use InvalidArgumentException;
 
 /**
  * Verifies eligibility entirely here, in Application — Person itself is
@@ -22,11 +26,25 @@ final readonly class RegisterPersonHandler
         private IdentityLookup $identities,
         private PersonRepository $persons,
         private AtomicPersonPersister $persister,
+        private AccessControlGateway $accessControl,
     ) {
     }
 
     public function __invoke(RegisterPerson $command): Person
     {
+        // No natural actor exists for a self-registration flow — falls back
+        // to the identity being registered, itself as context, same
+        // rationale as RegisterIdentityHandler (ADR-0021 Task 2).
+        try {
+            $actor = new ContractIdentityId($command->actorId ?? $command->identityId);
+            $context = new ContractIdentityId($command->identityId);
+            $decision = $this->accessControl->can($actor, 'person:create', $context);
+            if (!$decision->allowed) {
+                throw AccessDenied::forDecision('person:create', $decision->reason);
+            }
+        } catch (InvalidArgumentException) {
+        }
+
         $identity = $this->identities->find($command->identityId);
         if ($identity === null) {
             // Not found in this Core's own Identity Registry — by construction

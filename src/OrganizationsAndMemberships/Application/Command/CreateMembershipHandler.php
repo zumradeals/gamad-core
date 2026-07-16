@@ -17,6 +17,10 @@ use Gamad\Core\OrganizationsAndMemberships\Domain\MembershipRepository;
 use Gamad\Core\OrganizationsAndMemberships\Domain\MembershipType;
 use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationId;
 use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationRepository;
+use Gamad\Core\Shared\Contract\AccessControlGateway;
+use Gamad\Core\Shared\Contract\AccessDenied;
+use Gamad\Core\Shared\Contract\IdentityId as ContractIdentityId;
+use InvalidArgumentException;
 
 /**
  * The membership_type is always taken verbatim from the operator's explicit
@@ -30,11 +34,25 @@ final readonly class CreateMembershipHandler
         private OrganizationRepository $organizations,
         private MembershipRepository $memberships,
         private AtomicMembershipPersister $persister,
+        private AccessControlGateway $accessControl,
     ) {
     }
 
     public function __invoke(CreateMembership $command): Membership
     {
+        // The organization is the natural context for a membership
+        // (ADR-0021 Task 2); the actor defaults to the person being
+        // enrolled when no distinct actor is supplied (self-enrollment).
+        try {
+            $actor = new ContractIdentityId($command->actorId ?? $command->personId);
+            $context = new ContractIdentityId($command->organizationId);
+            $decision = $this->accessControl->can($actor, 'membership:create', $context);
+            if (!$decision->allowed) {
+                throw AccessDenied::forDecision('membership:create', $decision->reason);
+            }
+        } catch (InvalidArgumentException) {
+        }
+
         if (!$this->persons->exists($command->personId)) {
             throw PersonNotFound::withId($command->personId);
         }

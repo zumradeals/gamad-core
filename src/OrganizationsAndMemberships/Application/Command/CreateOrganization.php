@@ -13,6 +13,7 @@ final readonly class CreateOrganization
         public string $name,
         public ?string $parentId = null,
         public ?DateTimeImmutable $foundedAt = null,
+        public ?string $actorId = null,
     ) {
     }
 }

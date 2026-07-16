@@ -24,6 +24,7 @@ use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\PostgreSql
 use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\PostgreSqlOrganizationRepository;
 use Gamad\Core\OrganizationsAndMemberships\Infrastructure\PersonsAndAccounts\PostgreSqlPersonLookup;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Shared\Infrastructure\Metrics\PostgreSqlMetricsCollector;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Infrastructure\Persistence\PdoTransactionManager;
@@ -78,6 +79,7 @@ $registerIdentity = new RegisterIdentityHandler(
     ),
     metrics: new PostgreSqlMetricsCollector($connection),
     realm: new AllowConfiguredRealmPolicy($realm),
+    accessControl: new PermissiveAccessControlGateway(),
 );
 
 /**
@@ -121,12 +123,14 @@ $createOrganization = new CreateOrganizationHandler(
     identities: new PostgreSqlIdentityLookup($connection),
     organizations: $organizationRepository,
     persister: $organizationPersister,
+    accessControl: new PermissiveAccessControlGateway(),
 );
 $createMembership = new CreateMembershipHandler(
     persons: new PostgreSqlPersonLookup($connection),
     organizations: $organizationRepository,
     memberships: $membershipRepository,
     persister: $membershipPersister,
+    accessControl: new PermissiveAccessControlGateway(),
 );
 
 if (!$organizationRepository->exists(new OrganizationId('GAM-GAT-ORG-000001'))) {

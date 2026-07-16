@@ -31,6 +31,7 @@ use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlPersonRep
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlSessionRepository;
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlUserAccountRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Shared\Http\OpenApiRequestValidator;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Infrastructure\Audit\PostgreSqlAdministrativeAuditRepository;
@@ -159,12 +160,14 @@ final class PostgreSqlPersonsAndAccountsHttpEndToEndTest extends TestCase
                 identities: new PostgreSqlIdentityLookup($this->connection),
                 persons: $personRepository,
                 persister: new AtomicPersonPersister($personRepository, $outbox, $events, $transactions),
+                accessControl: new PermissiveAccessControlGateway(),
             ),
             persons: $personRepository,
             registerUserAccount: new RegisterUserAccountHandler(
                 persons: $personRepository,
                 accounts: $accountRepository,
                 persister: new AtomicUserAccountPersister($accountRepository, $outbox, $events, $transactions),
+                accessControl: new PermissiveAccessControlGateway(),
             ),
             setPassword: new SetPasswordHandler(
                 accounts: $accountRepository,
@@ -177,6 +180,7 @@ final class PostgreSqlPersonsAndAccountsHttpEndToEndTest extends TestCase
             revokeSession: new RevokeSessionHandler(
                 sessions: $sessionRepository,
                 persister: new AtomicSessionPersister($sessionRepository, $outbox, $events, $transactions),
+                accessControl: new PermissiveAccessControlGateway(),
             ),
         );
 

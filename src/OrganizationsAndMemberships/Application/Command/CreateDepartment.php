@@ -9,6 +9,7 @@ final readonly class CreateDepartment
     public function __construct(
         public string $organizationId,
         public string $name,
+        public ?string $actorId = null,
     ) {
     }
 }

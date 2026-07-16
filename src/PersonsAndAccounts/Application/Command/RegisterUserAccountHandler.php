@@ -12,6 +12,10 @@ use Gamad\Core\PersonsAndAccounts\Domain\PersonRepository;
 use Gamad\Core\PersonsAndAccounts\Domain\UserAccount;
 use Gamad\Core\PersonsAndAccounts\Domain\UserAccountId;
 use Gamad\Core\PersonsAndAccounts\Domain\UserAccountRepository;
+use Gamad\Core\Shared\Contract\AccessControlGateway;
+use Gamad\Core\Shared\Contract\AccessDenied;
+use Gamad\Core\Shared\Contract\IdentityId as ContractIdentityId;
+use InvalidArgumentException;
 
 final readonly class RegisterUserAccountHandler
 {
@@ -19,11 +23,24 @@ final readonly class RegisterUserAccountHandler
         private PersonRepository $persons,
         private UserAccountRepository $accounts,
         private AtomicUserAccountPersister $persister,
+        private AccessControlGateway $accessControl,
     ) {
     }
 
     public function __invoke(RegisterUserAccount $command): UserAccount
     {
+        // Self-provisioning by default, same rationale as
+        // RegisterPersonHandler (ADR-0021 Task 8).
+        try {
+            $actor = new ContractIdentityId($command->actorId ?? $command->personId);
+            $context = new ContractIdentityId($command->personId);
+            $decision = $this->accessControl->can($actor, 'account:create', $context);
+            if (!$decision->allowed) {
+                throw AccessDenied::forDecision('account:create', $decision->reason);
+            }
+        } catch (InvalidArgumentException) {
+        }
+
         $personId = new PersonId($command->personId);
         if (!$this->persons->exists($personId)) {
             throw PersonNotFound::withId($command->personId);

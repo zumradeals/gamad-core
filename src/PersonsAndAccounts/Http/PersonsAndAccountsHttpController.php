@@ -25,6 +25,7 @@ use Gamad\Core\PersonsAndAccounts\Domain\Person;
 use Gamad\Core\PersonsAndAccounts\Domain\PersonId;
 use Gamad\Core\PersonsAndAccounts\Domain\PersonRepository;
 use Gamad\Core\PersonsAndAccounts\Domain\UserAccount;
+use Gamad\Core\Shared\Contract\AccessDenied;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\Response;
 use InvalidArgumentException;
@@ -50,9 +51,12 @@ final readonly class PersonsAndAccountsHttpController
                 identityId: (string) ($body['identity_id'] ?? ''),
                 declaredName: (string) ($body['declared_name'] ?? ''),
                 contact: (string) ($body['contact'] ?? ''),
+                actorId: $request->actor?->actorId,
             ));
         } catch (IdentityNotEligibleForPerson|PersonAlreadyExists $exception) {
             return Response::json(409, ['error' => 'person_registration_rejected', 'detail' => $exception->getMessage()]);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return Response::json(201, $this->serializePerson($person));
@@ -76,11 +80,16 @@ final readonly class PersonsAndAccountsHttpController
     public function registerUserAccount(Request $request): Response
     {
         try {
-            $account = ($this->registerUserAccount)(new RegisterUserAccount($request->pathParameters['personId']));
+            $account = ($this->registerUserAccount)(new RegisterUserAccount(
+                personId: $request->pathParameters['personId'],
+                actorId: $request->actor?->actorId,
+            ));
         } catch (PersonNotFound $exception) {
             return Response::json(404, ['error' => 'person_not_found', 'detail' => $exception->getMessage()]);
         } catch (UserAccountAlreadyExists $exception) {
             return Response::json(409, ['error' => 'user_account_already_exists', 'detail' => $exception->getMessage()]);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return Response::json(201, $this->serializeAccount($account));
@@ -121,9 +130,14 @@ final readonly class PersonsAndAccountsHttpController
     public function revokeSession(Request $request): Response
     {
         try {
-            ($this->revokeSession)(new RevokeSession($request->pathParameters['sessionId']));
+            ($this->revokeSession)(new RevokeSession(
+                sessionId: $request->pathParameters['sessionId'],
+                actorId: $request->actor?->actorId,
+            ));
         } catch (SessionNotFound $exception) {
             return Response::json(404, ['error' => 'session_not_found', 'detail' => $exception->getMessage()]);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return new Response(204, '');

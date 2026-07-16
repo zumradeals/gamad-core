@@ -15,6 +15,7 @@ use Gamad\Core\PersonsAndAccounts\Domain\SessionId;
 use Gamad\Core\PersonsAndAccounts\Domain\UserAccountId;
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\InMemorySessionRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Tests\Support\InMemoryOutboxRepository;
 use Gamad\Core\Tests\Support\SynchronousTransactionManager;
 use PHPUnit\Framework\TestCase;
@@ -37,6 +38,7 @@ final class RevokeSessionHandlerTest extends TestCase
         $handler = new RevokeSessionHandler(
             sessions: $sessions,
             persister: new AtomicSessionPersister($sessions, $outbox, new DomainEventCollector(), new SynchronousTransactionManager()),
+            accessControl: new PermissiveAccessControlGateway(),
         );
 
         $handler(new RevokeSession((string) $session->id()));
@@ -52,6 +54,7 @@ final class RevokeSessionHandlerTest extends TestCase
         $handler = new RevokeSessionHandler(
             sessions: $sessions,
             persister: new AtomicSessionPersister($sessions, $outbox, new DomainEventCollector(), new SynchronousTransactionManager()),
+            accessControl: new PermissiveAccessControlGateway(),
         );
 
         $this->expectException(SessionNotFound::class);

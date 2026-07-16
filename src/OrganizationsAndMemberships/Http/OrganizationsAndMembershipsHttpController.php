@@ -31,6 +31,7 @@ use Gamad\Core\OrganizationsAndMemberships\Domain\MembershipRepository;
 use Gamad\Core\OrganizationsAndMemberships\Domain\Organization;
 use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationId;
 use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationRepository;
+use Gamad\Core\Shared\Contract\AccessDenied;
 use Gamad\Core\Shared\Http\Request;
 use Gamad\Core\Shared\Http\Response;
 use InvalidArgumentException;
@@ -59,9 +60,12 @@ final readonly class OrganizationsAndMembershipsHttpController
                 identityId: (string) ($body['identity_id'] ?? ''),
                 name: (string) ($body['name'] ?? ''),
                 parentId: isset($body['parent_id']) && $body['parent_id'] !== null ? (string) $body['parent_id'] : null,
+                actorId: $request->actor?->actorId,
             ));
         } catch (IdentityNotEligibleForOrganization|OrganizationAlreadyExists|ParentOrganizationNotEligible $exception) {
             return Response::json(409, ['error' => 'organization_registration_rejected', 'detail' => $exception->getMessage()]);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return Response::json(201, $this->serializeOrganization($organization));
@@ -104,9 +108,12 @@ final readonly class OrganizationsAndMembershipsHttpController
             $department = ($this->createDepartment)(new CreateDepartment(
                 organizationId: $request->pathParameters['orgId'],
                 name: (string) ($body['name'] ?? ''),
+                actorId: $request->actor?->actorId,
             ));
         } catch (OrganizationNotFound $exception) {
             return Response::json(404, ['error' => 'organization_not_found', 'detail' => $exception->getMessage()]);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return Response::json(201, $this->serializeDepartment($department));
@@ -122,6 +129,7 @@ final readonly class OrganizationsAndMembershipsHttpController
                 organizationId: $request->pathParameters['orgId'],
                 membershipType: (string) ($body['membership_type'] ?? ''),
                 departmentId: isset($body['department_id']) && $body['department_id'] !== null ? (string) $body['department_id'] : null,
+                actorId: $request->actor?->actorId,
             ));
         } catch (PersonNotFound|OrganizationNotFound|DepartmentNotFound $exception) {
             return Response::json(404, ['error' => 'membership_registration_rejected', 'detail' => $exception->getMessage()]);
@@ -129,6 +137,8 @@ final readonly class OrganizationsAndMembershipsHttpController
             return Response::json(409, ['error' => 'membership_already_active', 'detail' => $exception->getMessage()]);
         } catch (ValueError) {
             return Response::json(404, ['error' => 'membership_registration_rejected', 'detail' => 'Unknown membership_type.']);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return Response::json(201, $this->serializeMembership($membership));
@@ -153,11 +163,13 @@ final readonly class OrganizationsAndMembershipsHttpController
     public function suspendMembership(Request $request): Response
     {
         try {
-            $membership = ($this->suspendMembership)(new SuspendMembership($request->pathParameters['membershipId']));
+            $membership = ($this->suspendMembership)(new SuspendMembership($request->pathParameters['membershipId'], $request->actor?->actorId));
         } catch (MembershipNotFound $exception) {
             return Response::json(404, ['error' => 'membership_not_found', 'detail' => $exception->getMessage()]);
         } catch (DomainException $exception) {
             return Response::json(409, ['error' => 'invalid_lifecycle_transition', 'detail' => $exception->getMessage()]);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return Response::json(200, $this->serializeMembership($membership));
@@ -166,11 +178,13 @@ final readonly class OrganizationsAndMembershipsHttpController
     public function resumeMembership(Request $request): Response
     {
         try {
-            $membership = ($this->resumeMembership)(new ResumeMembership($request->pathParameters['membershipId']));
+            $membership = ($this->resumeMembership)(new ResumeMembership($request->pathParameters['membershipId'], $request->actor?->actorId));
         } catch (MembershipNotFound $exception) {
             return Response::json(404, ['error' => 'membership_not_found', 'detail' => $exception->getMessage()]);
         } catch (DomainException $exception) {
             return Response::json(409, ['error' => 'invalid_lifecycle_transition', 'detail' => $exception->getMessage()]);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return Response::json(200, $this->serializeMembership($membership));
@@ -179,11 +193,13 @@ final readonly class OrganizationsAndMembershipsHttpController
     public function endMembership(Request $request): Response
     {
         try {
-            $membership = ($this->endMembership)(new EndMembership($request->pathParameters['membershipId']));
+            $membership = ($this->endMembership)(new EndMembership($request->pathParameters['membershipId'], $request->actor?->actorId));
         } catch (MembershipNotFound $exception) {
             return Response::json(404, ['error' => 'membership_not_found', 'detail' => $exception->getMessage()]);
         } catch (DomainException $exception) {
             return Response::json(409, ['error' => 'invalid_lifecycle_transition', 'detail' => $exception->getMessage()]);
+        } catch (AccessDenied $exception) {
+            return Response::json(403, ['error' => 'access_denied', 'detail' => $exception->getMessage()]);
         }
 
         return Response::json(200, $this->serializeMembership($membership));

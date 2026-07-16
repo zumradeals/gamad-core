@@ -6,7 +6,9 @@ namespace Gamad\Core\OrganizationsAndMemberships\Application\Command;
 
 final readonly class SuspendOrganization
 {
-    public function __construct(public string $organizationId)
-    {
+    public function __construct(
+        public string $organizationId,
+        public ?string $actorId = null,
+    ) {
     }
 }

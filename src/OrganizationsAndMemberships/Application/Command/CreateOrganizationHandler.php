@@ -13,6 +13,10 @@ use Gamad\Core\OrganizationsAndMemberships\Domain\Organization;
 use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationId;
 use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationRepository;
 use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationStatus;
+use Gamad\Core\Shared\Contract\AccessControlGateway;
+use Gamad\Core\Shared\Contract\AccessDenied;
+use Gamad\Core\Shared\Contract\IdentityId as ContractIdentityId;
+use InvalidArgumentException;
 
 /**
  * Verifies eligibility entirely here, in Application — Organization itself
@@ -24,11 +28,26 @@ final readonly class CreateOrganizationHandler
         private IdentityLookup $identities,
         private OrganizationRepository $organizations,
         private AtomicOrganizationPersister $persister,
+        private AccessControlGateway $accessControl,
     ) {
     }
 
     public function __invoke(CreateOrganization $command): Organization
     {
+        // Context is the parent organization when there is one; a root
+        // organization has no organizational context yet, so it is
+        // evaluated against itself (ADR-0021 Task 2, same rationale as
+        // RegisterIdentityHandler).
+        try {
+            $actor = new ContractIdentityId($command->actorId ?? $command->identityId);
+            $context = new ContractIdentityId($command->parentId ?? $command->identityId);
+            $decision = $this->accessControl->can($actor, 'organization:create', $context);
+            if (!$decision->allowed) {
+                throw AccessDenied::forDecision('organization:create', $decision->reason);
+            }
+        } catch (InvalidArgumentException) {
+        }
+
         $identity = $this->identities->find($command->identityId);
         if ($identity === null) {
             // Not found in this Core's own Identity Registry — by construction

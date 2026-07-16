@@ -19,6 +19,7 @@ use Gamad\Core\OrganizationsAndMemberships\Domain\MembershipType;
 use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationId;
 use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\InMemoryMembershipRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Tests\Support\InMemoryOutboxRepository;
 use Gamad\Core\Tests\Support\SynchronousTransactionManager;
 use PHPUnit\Framework\TestCase;
@@ -30,7 +31,7 @@ final class MembershipLifecycleHandlersTest extends TestCase
         [$memberships, $persister] = $this->repository();
         $membership = Membership::create(MembershipId::generate(), 'GAM-GAT-PER-000001', new OrganizationId('GAM-GAT-ORG-000001'), MembershipType::GamadCitizen);
         $memberships->save($membership);
-        $handler = new SuspendMembershipHandler($memberships, $persister);
+        $handler = new SuspendMembershipHandler($memberships, $persister, new PermissiveAccessControlGateway());
 
         $result = $handler(new SuspendMembership((string) $membership->id()));
 
@@ -40,7 +41,7 @@ final class MembershipLifecycleHandlersTest extends TestCase
     public function test_suspend_handler_rejects_an_unknown_membership(): void
     {
         [$memberships, $persister] = $this->repository();
-        $handler = new SuspendMembershipHandler($memberships, $persister);
+        $handler = new SuspendMembershipHandler($memberships, $persister, new PermissiveAccessControlGateway());
 
         $this->expectException(MembershipNotFound::class);
 
@@ -53,7 +54,7 @@ final class MembershipLifecycleHandlersTest extends TestCase
         $membership = Membership::create(MembershipId::generate(), 'GAM-GAT-PER-000001', new OrganizationId('GAM-GAT-ORG-000001'), MembershipType::GamadCitizen);
         $membership->suspend();
         $memberships->save($membership);
-        $handler = new ResumeMembershipHandler($memberships, $persister);
+        $handler = new ResumeMembershipHandler($memberships, $persister, new PermissiveAccessControlGateway());
 
         $result = $handler(new ResumeMembership((string) $membership->id()));
 
@@ -63,7 +64,7 @@ final class MembershipLifecycleHandlersTest extends TestCase
     public function test_resume_handler_rejects_an_unknown_membership(): void
     {
         [$memberships, $persister] = $this->repository();
-        $handler = new ResumeMembershipHandler($memberships, $persister);
+        $handler = new ResumeMembershipHandler($memberships, $persister, new PermissiveAccessControlGateway());
 
         $this->expectException(MembershipNotFound::class);
 
@@ -75,7 +76,7 @@ final class MembershipLifecycleHandlersTest extends TestCase
         [$memberships, $persister] = $this->repository();
         $membership = Membership::create(MembershipId::generate(), 'GAM-GAT-PER-000001', new OrganizationId('GAM-GAT-ORG-000001'), MembershipType::GamadCitizen);
         $memberships->save($membership);
-        $handler = new EndMembershipHandler($memberships, $persister);
+        $handler = new EndMembershipHandler($memberships, $persister, new PermissiveAccessControlGateway());
 
         $result = $handler(new EndMembership((string) $membership->id()));
 
@@ -86,7 +87,7 @@ final class MembershipLifecycleHandlersTest extends TestCase
     public function test_end_handler_rejects_an_unknown_membership(): void
     {
         [$memberships, $persister] = $this->repository();
-        $handler = new EndMembershipHandler($memberships, $persister);
+        $handler = new EndMembershipHandler($memberships, $persister, new PermissiveAccessControlGateway());
 
         $this->expectException(MembershipNotFound::class);
 

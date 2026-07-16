@@ -13,6 +13,7 @@ final readonly class RegisterPerson
         public string $declaredName,
         public ?DateTimeImmutable $registeredAt = null,
         public ?string $contact = null,
+        public ?string $actorId = null,
     ) {
     }
 }

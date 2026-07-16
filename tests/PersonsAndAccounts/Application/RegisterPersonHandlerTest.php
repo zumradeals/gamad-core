@@ -14,6 +14,7 @@ use Gamad\Core\PersonsAndAccounts\Domain\PersonStatus;
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\InMemoryIdentityLookup;
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\InMemoryPersonRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Tests\Support\InMemoryOutboxRepository;
 use Gamad\Core\Tests\Support\SynchronousTransactionManager;
 use PHPUnit\Framework\TestCase;
@@ -83,6 +84,7 @@ final class RegisterPersonHandlerTest extends TestCase
             identities: $identities,
             persons: $persons,
             persister: new AtomicPersonPersister($persons, $outbox, new DomainEventCollector(), new SynchronousTransactionManager()),
+            accessControl: new PermissiveAccessControlGateway(),
         );
 
         return [$handler, $identities, $persons, $outbox];

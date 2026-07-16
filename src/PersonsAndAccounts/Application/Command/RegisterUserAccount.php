@@ -11,6 +11,7 @@ final readonly class RegisterUserAccount
     public function __construct(
         public string $personId,
         public ?DateTimeImmutable $createdAt = null,
+        public ?string $actorId = null,
     ) {
     }
 }

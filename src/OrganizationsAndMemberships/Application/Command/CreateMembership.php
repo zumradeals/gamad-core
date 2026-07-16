@@ -14,6 +14,7 @@ final readonly class CreateMembership
         public string $membershipType,
         public ?string $departmentId = null,
         public ?DateTimeImmutable $startedAt = null,
+        public ?string $actorId = null,
     ) {
     }
 }

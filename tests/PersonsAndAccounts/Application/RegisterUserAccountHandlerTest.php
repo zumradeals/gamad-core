@@ -17,6 +17,7 @@ use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\InMemoryIdentityLoo
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\InMemoryPersonRepository;
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\InMemoryUserAccountRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Tests\Support\InMemoryOutboxRepository;
 use Gamad\Core\Tests\Support\SynchronousTransactionManager;
 use PHPUnit\Framework\TestCase;
@@ -51,6 +52,7 @@ final class RegisterUserAccountHandlerTest extends TestCase
             persons: $persons,
             accounts: $accounts,
             persister: new AtomicUserAccountPersister($accounts, $outbox, new DomainEventCollector(), new SynchronousTransactionManager()),
+            accessControl: new PermissiveAccessControlGateway(),
         );
 
         $this->expectException(PersonNotFound::class);
@@ -69,6 +71,7 @@ final class RegisterUserAccountHandlerTest extends TestCase
             identities: $identities,
             persons: $persons,
             persister: new AtomicPersonPersister($persons, $personOutbox, new DomainEventCollector(), new SynchronousTransactionManager()),
+            accessControl: new PermissiveAccessControlGateway(),
         ))(new RegisterPerson($identityId, 'Amina Traoré'));
 
         $accounts = new InMemoryUserAccountRepository();
@@ -77,6 +80,7 @@ final class RegisterUserAccountHandlerTest extends TestCase
             persons: $persons,
             accounts: $accounts,
             persister: new AtomicUserAccountPersister($accounts, $outbox, new DomainEventCollector(), new SynchronousTransactionManager()),
+            accessControl: new PermissiveAccessControlGateway(),
         );
 
         return [$handler, $accounts];

@@ -23,6 +23,7 @@ use Gamad\Core\PersonsAndAccounts\Infrastructure\IdentityRegistry\PostgreSqlIden
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlPersonRepository;
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlUserAccountRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Shared\Infrastructure\Metrics\PostgreSqlMetricsCollector;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Infrastructure\Persistence\PdoTransactionManager;
@@ -125,6 +126,7 @@ if ($identityIdArg !== null) {
         ),
         metrics: new PostgreSqlMetricsCollector($connection),
         realm: new AllowConfiguredRealmPolicy($realm),
+        accessControl: new PermissiveAccessControlGateway(),
     );
 
     $identity = $registerIdentity(new RegisterIdentity(IdentityType::Person, $actorId, new DateTimeImmutable()));
@@ -139,11 +141,13 @@ $registerPerson = new RegisterPersonHandler(
     identities: new PostgreSqlIdentityLookup($connection),
     persons: $personRepository,
     persister: new AtomicPersonPersister($personRepository, $outbox, $personsAndAccountsEvents, $transactionManager),
+    accessControl: new PermissiveAccessControlGateway(),
 );
 $registerUserAccount = new RegisterUserAccountHandler(
     persons: $personRepository,
     accounts: $userAccountRepository,
     persister: new AtomicUserAccountPersister($userAccountRepository, $outbox, $personsAndAccountsEvents, $transactionManager),
+    accessControl: new PermissiveAccessControlGateway(),
 );
 $setPassword = new SetPasswordHandler(
     accounts: $userAccountRepository,

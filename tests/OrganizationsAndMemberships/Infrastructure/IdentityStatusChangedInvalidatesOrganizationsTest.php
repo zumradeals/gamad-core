@@ -32,6 +32,7 @@ use Gamad\Core\PersonsAndAccounts\Domain\Person;
 use Gamad\Core\PersonsAndAccounts\Domain\PersonId;
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlPersonRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Infrastructure\Persistence\PdoTransactionManager;
 use Gamad\Core\Shared\Messaging\EventBus;
@@ -99,8 +100,8 @@ final class IdentityStatusChangedInvalidatesOrganizationsTest extends TestCase
 
         $publisher = $this->publisher($organizationRepository, $membershipRepository, $outbox, $transactions);
 
-        $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister);
-        $lifecycle->transition(new IdentityId('GAM-GAT-ORG-000001'), IdentityStatus::Suspended);
+        $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister, new PermissiveAccessControlGateway());
+        $lifecycle->transition(new IdentityId('GAM-GAT-ORG-000001'), IdentityStatus::Suspended, 'GAM-GAT-PER-000001');
 
         // First poll: identity.status_changed.v1 is published, suspending the
         // Organization and appending organization.suspended.v1 to the outbox
@@ -140,8 +141,8 @@ final class IdentityStatusChangedInvalidatesOrganizationsTest extends TestCase
 
         $publisher = $this->publisher($organizationRepository, $membershipRepository, $outbox, $transactions);
 
-        $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister);
-        $lifecycle->transition(new IdentityId('GAM-GAT-PER-900002'), IdentityStatus::Suspended);
+        $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister, new PermissiveAccessControlGateway());
+        $lifecycle->transition(new IdentityId('GAM-GAT-PER-900002'), IdentityStatus::Suspended, 'GAM-GAT-PER-000001');
 
         $report = $publisher->publishPending();
 

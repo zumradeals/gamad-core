@@ -13,6 +13,7 @@ use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationId;
 use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationStatus;
 use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\InMemoryOrganizationRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Tests\Support\InMemoryOutboxRepository;
 use Gamad\Core\Tests\Support\SynchronousTransactionManager;
 use PHPUnit\Framework\TestCase;
@@ -27,6 +28,7 @@ final class SuspendOrganizationHandlerTest extends TestCase
         $handler = new SuspendOrganizationHandler(
             organizations: $organizations,
             persister: new AtomicOrganizationPersister($organizations, $outbox, new DomainEventCollector(), new SynchronousTransactionManager()),
+            accessControl: new PermissiveAccessControlGateway(),
         );
 
         $organization = $handler(new SuspendOrganization('GAM-GAT-ORG-000001'));
@@ -43,6 +45,7 @@ final class SuspendOrganizationHandlerTest extends TestCase
         $handler = new SuspendOrganizationHandler(
             organizations: $organizations,
             persister: new AtomicOrganizationPersister($organizations, $outbox, new DomainEventCollector(), new SynchronousTransactionManager()),
+            accessControl: new PermissiveAccessControlGateway(),
         );
 
         $this->expectException(OrganizationNotFound::class);

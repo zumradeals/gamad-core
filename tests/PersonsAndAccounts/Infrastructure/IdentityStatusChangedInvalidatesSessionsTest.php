@@ -28,6 +28,7 @@ use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlPersonRep
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlSessionRepository;
 use Gamad\Core\PersonsAndAccounts\Infrastructure\Persistence\PostgreSqlUserAccountRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Shared\Infrastructure\Outbox\PostgreSqlOutboxRepository;
 use Gamad\Core\Shared\Infrastructure\Persistence\PdoTransactionManager;
 use Gamad\Core\Shared\Messaging\EventBus;
@@ -111,8 +112,8 @@ final class IdentityStatusChangedInvalidatesSessionsTest extends TestCase
         // Suspend the identity — this only appends an outbox message; the
         // reaction happens when that message is actually published, exactly
         // as it would in the real outbox-worker process.
-        $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister);
-        $lifecycle->transition(new IdentityId('GAM-GAT-PER-900001'), IdentityStatus::Suspended);
+        $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister, new PermissiveAccessControlGateway());
+        $lifecycle->transition(new IdentityId('GAM-GAT-PER-900001'), IdentityStatus::Suspended, 'GAM-GAT-PER-000001');
 
         $reactor = new ReactToIdentityStatusChanged(
             persons: $personRepository,
@@ -169,8 +170,8 @@ final class IdentityStatusChangedInvalidatesSessionsTest extends TestCase
             workerId: 'test-worker',
         );
 
-        $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister);
-        $lifecycle->transition(new IdentityId('GAM-GAT-ORG-900001'), IdentityStatus::Suspended);
+        $lifecycle = new IdentityLifecycleService($identityRepository, $identityPersister, new PermissiveAccessControlGateway());
+        $lifecycle->transition(new IdentityId('GAM-GAT-ORG-900001'), IdentityStatus::Suspended, 'GAM-GAT-PER-000001');
 
         $report = $publisher->publishPending();
 

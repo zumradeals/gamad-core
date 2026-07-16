@@ -9,6 +9,7 @@ final readonly class RevokeSession
     public function __construct(
         public string $sessionId,
         public string $reason = 'manual_revoke',
+        public ?string $actorId = null,
     ) {
     }
 }

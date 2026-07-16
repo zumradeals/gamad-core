@@ -15,6 +15,7 @@ use Gamad\Core\OrganizationsAndMemberships\Domain\OrganizationStatus;
 use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\InMemoryIdentityLookup;
 use Gamad\Core\OrganizationsAndMemberships\Infrastructure\Persistence\InMemoryOrganizationRepository;
 use Gamad\Core\Shared\Application\DomainEventCollector;
+use Gamad\Core\Shared\Infrastructure\AccessControl\PermissiveAccessControlGateway;
 use Gamad\Core\Tests\Support\InMemoryOutboxRepository;
 use Gamad\Core\Tests\Support\SynchronousTransactionManager;
 use PHPUnit\Framework\TestCase;
@@ -119,6 +120,7 @@ final class CreateOrganizationHandlerTest extends TestCase
             identities: $identities,
             organizations: $organizations,
             persister: new AtomicOrganizationPersister($organizations, $outbox, new DomainEventCollector(), new SynchronousTransactionManager()),
+            accessControl: new PermissiveAccessControlGateway(),
         );
 
         return [$handler, $identities, $organizations, $outbox];
