@@ -1,8 +1,12 @@
-# PROJET D’ACTE DE REFONDATION GÉNÉRATIONNELLE DE GAMAD CORE
+# ACTE DE REFONDATION GÉNÉRATIONNELLE DE GAMAD CORE
 
 ## GENESIS II — ACTE-0001
 
-**Statut : PROJET FONDATEUR — EN COURS DE DÉLIBÉRATION**
+**Statut : ADOPTÉ — EN VIGUEUR**
+
+- **Autorité d’adoption :** Koné Djakaridja, dit Zakaria le Soufi, dirigeant actuel de GAMAD
+- **Date d’adoption :** 24 juillet 2026
+- **Portée :** premier acte fondateur adopté du chantier GAMAD Core — Genesis II
 
 ## Préambule
 
@@ -302,15 +306,15 @@ Toute décision prise dans le cadre de Genesis II doit pouvoir répondre aux que
 
 ---
 
-## Article 12 — Entrée en chantier
+## Article 12 — Adoption et entrée en vigueur
 
 Le présent acte ouvre officiellement le chantier documentaire de Genesis II.
 
-Il acquiert une valeur normative uniquement après validation et adoption par l’autorité institutionnelle compétente.
+Il est adopté le 24 juillet 2026 par Koné Djakaridja, dit Zakaria le Soufi, dirigeant actuel de GAMAD, dans l’exercice de son autorité institutionnelle déclarée.
 
-Jusqu’à cette adoption, il porte le statut :
+Il entre en vigueur à la date de son adoption et acquiert dès lors une valeur normative dans le périmètre du chantier Genesis II.
 
-> **PROJET FONDATEUR — EN COURS DE DÉLIBÉRATION**
+Il constitue le premier texte adopté de GAMAD Core — Genesis II.
 
 Aucun code de Genesis II ne doit être considéré comme canonique avant l’établissement minimal :
 
