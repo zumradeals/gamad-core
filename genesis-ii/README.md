@@ -72,6 +72,16 @@ Les textes adoptés sont publiés directement dans cette branche après leur ado
 **Statut canonique :** `genesis-ii/gouvernance/ENGINEERING-GOVERNANCE-0001-STATUT.md`  
 **Registre :** `genesis-ii/registre/ADOPTION-0006-ENGINEERING-GOVERNANCE-0001.md`
 
+### 7. SECURITY-GOVERNANCE-0001
+
+**Titre :** Gouvernance des accès, secrets, incidents et de la continuité  
+**Version adoptée :** 0.1  
+**Statut :** LU ET ADOPTÉ — EN VIGUEUR  
+**Date d’adoption :** 24 juillet 2026  
+**Chemin :** `genesis-ii/gouvernance/SECURITY-GOVERNANCE-0001-gouvernance-acces-secrets-incidents-continuite.md`  
+**Statut canonique :** `genesis-ii/gouvernance/SECURITY-GOVERNANCE-0001-STATUT.md`  
+**Registre :** `genesis-ii/registre/ADOPTION-0007-SECURITY-GOVERNANCE-0001.md`
+
 ## Porte constitutionnelle G0
 
 `GOVERNANCE-0001` institue la Porte constitutionnelle `G0`. Le codage canonique de GAMAD Core — Genesis II ne pourra commencer qu’après satisfaction et constat formel des conditions prévues par cette Constitution.
@@ -82,7 +92,9 @@ Conformément à `GOVERNANCE-0003`, un Registre initial des décisions et les pr
 
 Conformément à `ENGINEERING-GOVERNANCE-0001`, les registres initiaux des dépôts, contributions, versions, déploiements, migrations, dépendances et exceptions d’ingénierie, ainsi que les modèles de contribution, intégration, release, déploiement, rollback, migration, hotfix et revue post-incident, devront être créés avant le passage de `G0`.
 
-L’adoption de `ENGINEERING-GOVERNANCE-0001` n’ouvre pas à elle seule le codage canonique de Genesis II.
+Conformément à `SECURITY-GOVERNANCE-0001`, les registres initiaux des actifs critiques, risques et contrôles, accès privilégiés, secrets et clés, vulnérabilités, incidents, sauvegardes et restaurations, continuité, tiers critiques, exceptions de sécurité et agents sensibles, ainsi que les modèles d’accès, risque, cérémonie de clé, incident, restauration et continuité, devront être créés avant le passage de `G0`.
+
+L’adoption de `SECURITY-GOVERNANCE-0001` établit la doctrine minimale de sécurité requise, sous réserve de ces réalisations et du constat formel de `G0`. Elle n’ouvre pas à elle seule le codage canonique de Genesis II.
 
 ## Archives
 
@@ -108,5 +120,6 @@ Genesis I est préservé par :
 4. `GOVERNANCE-0002`
 5. `GOVERNANCE-0003`
 6. `ENGINEERING-GOVERNANCE-0001`
-7. les statuts canoniques et registres d’adoption correspondants
-8. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
+7. `SECURITY-GOVERNANCE-0001`
+8. les statuts canoniques et registres d’adoption correspondants
+9. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
