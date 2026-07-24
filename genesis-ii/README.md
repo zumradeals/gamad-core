@@ -32,6 +32,20 @@ Les textes adoptés sont publiés directement dans cette branche après leur ado
 **Statut canonique :** `genesis-ii/sources/SOURCES-0001-STATUT.md`  
 **Registre :** `genesis-ii/registre/ADOPTION-0002-SOURCES-0001.md`
 
+### 3. GOVERNANCE-0001
+
+**Titre :** Constitution de gouvernance de GAMAD Core  
+**Version adoptée :** 0.1  
+**Statut :** ADOPTÉ — EN VIGUEUR  
+**Date d’adoption :** 24 juillet 2026  
+**Chemin :** `genesis-ii/gouvernance/GOVERNANCE-0001-constitution-gouvernance-gamad-core.md`  
+**Statut canonique :** `genesis-ii/gouvernance/GOVERNANCE-0001-STATUT.md`  
+**Registre :** `genesis-ii/registre/ADOPTION-0003-GOVERNANCE-0001.md`
+
+## Porte constitutionnelle G0
+
+`GOVERNANCE-0001` institue la Porte constitutionnelle `G0`. Le codage canonique de GAMAD Core — Genesis II ne pourra commencer qu’après satisfaction et constat formel des conditions prévues par cette Constitution.
+
 ## Archives
 
 Genesis I est préservé par :
@@ -52,5 +66,6 @@ Genesis I est préservé par :
 
 1. `ACTE-0001`
 2. `SOURCES-0001`
-3. les registres d’adoption correspondants
-4. les futurs textes dans l’ordre indiqué par le présent index
+3. `GOVERNANCE-0001`
+4. les statuts canoniques et registres d’adoption correspondants
+5. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
