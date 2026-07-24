@@ -62,6 +62,16 @@ Les textes adoptés sont publiés directement dans cette branche après leur ado
 **Statut canonique :** `genesis-ii/gouvernance/GOVERNANCE-0003-STATUT.md`  
 **Registre :** `genesis-ii/registre/ADOPTION-0005-GOVERNANCE-0003.md`
 
+### 6. ENGINEERING-GOVERNANCE-0001
+
+**Titre :** Gouvernance du dépôt, des versions et des mises en production  
+**Version adoptée :** 0.1  
+**Statut :** LU ET ADOPTÉ — EN VIGUEUR  
+**Date d’adoption :** 24 juillet 2026  
+**Chemin :** `genesis-ii/gouvernance/ENGINEERING-GOVERNANCE-0001-gouvernance-depot-versions-mises-production.md`  
+**Statut canonique :** `genesis-ii/gouvernance/ENGINEERING-GOVERNANCE-0001-STATUT.md`  
+**Registre :** `genesis-ii/registre/ADOPTION-0006-ENGINEERING-GOVERNANCE-0001.md`
+
 ## Porte constitutionnelle G0
 
 `GOVERNANCE-0001` institue la Porte constitutionnelle `G0`. Le codage canonique de GAMAD Core — Genesis II ne pourra commencer qu’après satisfaction et constat formel des conditions prévues par cette Constitution.
@@ -69,6 +79,10 @@ Les textes adoptés sont publiés directement dans cette branche après leur ado
 Conformément à `GOVERNANCE-0002`, un Registre initial des autorités et mandats devra être créé avant le passage de `G0`. L’adoption de `GOVERNANCE-0002` ne nomme automatiquement aucune personne aux fonctions permanentes du Core.
 
 Conformément à `GOVERNANCE-0003`, un Registre initial des décisions et les premiers modèles canoniques de proposition, revue, délibération, validation, adoption, publication, acceptation de risque, contestation, urgence et clôture devront être créés avant le passage de `G0`.
+
+Conformément à `ENGINEERING-GOVERNANCE-0001`, les registres initiaux des dépôts, contributions, versions, déploiements, migrations, dépendances et exceptions d’ingénierie, ainsi que les modèles de contribution, intégration, release, déploiement, rollback, migration, hotfix et revue post-incident, devront être créés avant le passage de `G0`.
+
+L’adoption de `ENGINEERING-GOVERNANCE-0001` n’ouvre pas à elle seule le codage canonique de Genesis II.
 
 ## Archives
 
@@ -93,5 +107,6 @@ Genesis I est préservé par :
 3. `GOVERNANCE-0001`
 4. `GOVERNANCE-0002`
 5. `GOVERNANCE-0003`
-6. les statuts canoniques et registres d’adoption correspondants
-7. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
+6. `ENGINEERING-GOVERNANCE-0001`
+7. les statuts canoniques et registres d’adoption correspondants
+8. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
