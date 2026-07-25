@@ -1,0 +1,42 @@
+name: Materialize CORE-CHARTER-0001
+
+on:
+  push:
+    branches:
+      - agent/genesis-ii-core-charter-0001
+    paths:
+      - .github/workflows/materialize-core-charter-0001.yml
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout charter branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/genesis-ii-core-charter-0001
+          fetch-depth: 0
+
+      - name: Materialize and verify exact charter
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p genesis-ii/charte
+          cat genesis-ii/.tmp/core-charter/part-*.md > genesis-ii/charte/CORE-CHARTER-0001-charte-gamad-core.md
+          printf '%s  %s\n' \
+            '88710892d007cb1605dc239c671d7aa64599c258919faf39620bfcd82f730cfb' \
+            'genesis-ii/charte/CORE-CHARTER-0001-charte-gamad-core.md' \
+            | sha256sum --check -
+          test "$(git hash-object genesis-ii/charte/CORE-CHARTER-0001-charte-gamad-core.md)" = \
+            '8236a2734646b0b568759e6316e0627c3cceb81f'
+          rm -rf genesis-ii/.tmp/core-charter
+          rmdir genesis-ii/.tmp 2>/dev/null || true
+          rm -f .github/workflows/materialize-core-charter-0001.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'docs(genesis-ii): add exact CORE-CHARTER-0001 source'
+          git push origin HEAD:agent/genesis-ii-core-charter-0001
