@@ -1,0 +1,197 @@
+environnement réel ; elle ne vaut pas adoption.
+
+## Entrée 104 — Registre
+
+Ensemble gouverné d’inscriptions reconstructibles.
+
+## Entrée 105 — Inscription
+
+Enregistrement identifié avec origine, date, statut et intégrité.
+
+## Entrée 106 — Preuve
+
+Élément établissant un fait, une action, une origine, une décision ou un contrôle.
+
+## Entrée 107 — Preuve racine
+
+Preuve critique dont dépendent identité, autorité, adoption ou continuité.
+
+## Entrée 108 — Trace
+
+Donnée enregistrant une action ou transformation ; elle n’est pas toujours une preuve suffisante.
+
+## Entrée 109 — Audit
+
+Examen contrôlé des preuves et processus par rapport à des exigences.
+
+## Entrée 110 — Recours
+
+Procédure de contestation d’une décision ou d’un effet significatif.
+
+---
+
+# TITRE VII — PRODUITS ET CYCLE DE VIE
+
+## Entrée 111 — Module
+
+Partie fonctionnelle d’un produit sans gouvernance distincte automatique.
+
+## Entrée 112 — Service
+
+Capacité fournie selon un contrat ou engagement opérationnel.
+
+## Entrée 113 — Application
+
+Interface ou logiciel permettant des interactions ; pas automatiquement un produit institutionnel.
+
+## Entrée 114 — Plateforme
+
+Ensemble permettant plusieurs usages ou intégrations sans rang constitutionnel automatique.
+
+## Entrée 115 — Instance
+
+Déploiement déterminé d’un produit.
+
+## Entrée 116 — Portefeuille de produits
+
+Ensemble gouverné des produits dans tous leurs états.
+
+## Entrée 117 — Propriétaire institutionnel du produit
+
+Autorité ou organisation responsable de la mission, continuité et obligations du produit.
+
+## Entrée 118 — Autorité métier
+
+Autorité compétente pour les concepts et règles spécialisés.
+
+## Entrée 119 — Responsable de produit
+
+Fonction coordonnant stratégie, valeur, feuille de route et dossiers de décision.
+
+## Entrée 120 — Charte produit
+
+Texte adopté définissant mission, périmètre, autorités, frontières et cycle de vie d’un produit.
+
+## Entrée 121 — Admission
+
+Décision reconnaissant une version et un périmètre de produit sous conditions.
+
+## Entrée 122 — Conformité au Core
+
+État prouvé d’une version et d’un périmètre par rapport aux normes communes.
+
+## Entrée 123 — Réserve de conformité
+
+Écart accepté temporairement avec compensation, responsable et échéance.
+
+## Entrée 124 — Non-conformité
+
+Écart pouvant entraîner correction, limitation, suspension ou retrait.
+
+## Entrée 125 — Pilote
+
+Usage limité sans conformité générale.
+
+## Entrée 126 — Activation
+
+Passage gouverné vers un état de service autorisé.
+
+## Entrée 127 — Limitation
+
+Réduction de périmètre pour contrôler un risque.
+
+## Entrée 128 — Suspension
+
+Interruption temporaire de tout ou partie d’un produit.
+
+## Entrée 129 — Dépréciation
+
+Annonce gouvernée d’une fin future avec migration et support.
+
+## Entrée 130 — Retrait
+
+Fin de l’usage ordinaire avec traitement des accès, données et obligations.
+
+## Entrée 131 — Archivage produit
+
+Préservation des preuves et enseignements sans maintien actif.
+
+## Entrée 132 — Produit historique
+
+Produit existant avant son admission formelle dans Genesis II.
+
+---
+
+# TITRE VIII — REALMS ET TIERS
+
+## Entrée 133 — Tenant
+
+Périmètre logique attribué à une organisation ou population.
+
+## Entrée 134 — Multi-tenant
+
+Architecture partageant des ressources tout en exigeant une isolation gouvernée.
+
+## Entrée 135 — Isolation
+
+Séparation des données, secrets, configurations, journaux et privilèges.
+
+## Entrée 136 — Fédération
+
+Relation contractuelle de reconnaissance limitée entre realms, organisations ou systèmes.
+
+## Entrée 137 — Confiance fédérée
+
+Confiance limitée à des finalités, attributs, niveaux et durées.
+
+## Entrée 138 — Fournisseur d’identité
+
+Système attestant certaines identités ou authentifications sans posséder l’Identity Registry.
+
+## Entrée 139 — Partenaire
+
+Organisation autorisée à distribuer, opérer, financer ou intégrer un produit.
+
+## Entrée 140 — Fournisseur
+
+Entité fournissant une technologie ou ressource sans autorité institutionnelle.
+
+## Entrée 141 — Sous-traitant
+
+Tiers traitant des données ou opérant pour le compte d’un responsable.
+
+## Entrée 142 — Application tierce
+
+Application extérieure recevant identité, permissions, quotas et révocation.
+
+## Entrée 143 — Contrat de fédération
+
+Contrat définissant identités, autorités, données, permissions, preuves et rupture.
+
+## Entrée 144 — Rupture de fédération
+
+Fin gouvernée d’une relation fédérée.
+
+---
+
+# TITRE IX — DONNÉES
+
+## Entrée 145 — Donnée
+
+Représentation enregistrée d’un fait, état, événement, mesure, déclaration ou relation.
+
+## Entrée 146 — Information
+
+Sens produit par l’interprétation de données dans un contexte.
+
+## Entrée 147 — Document
+
+Objet structuré destiné à communiquer ou conserver un contenu.
+
+## Entrée 148 — Enregistrement probant
+
+Document ou donnée conservé comme preuve.
+
+## Entrée 149 — Jeu de données
+
+Ensemble g
