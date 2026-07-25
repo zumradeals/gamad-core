@@ -1,0 +1,215 @@
+blesse exploitable.
+
+## Entrée 199 — Risque
+
+Combinaison d’une menace, vraisemblance, impact et contrôles.
+
+## Entrée 200 — Contrôle
+
+Mesure préventive, détective, corrective ou compensatoire.
+
+## Entrée 201 — Risque résiduel
+
+Risque restant après les contrôles.
+
+## Entrée 202 — Acceptation de risque
+
+Décision assumant un risque résiduel pour une durée et un périmètre.
+
+## Entrée 203 — Exception
+
+Autorisation temporaire de déroger avec compensation et échéance.
+
+## Entrée 204 — Incident
+
+Événement portant atteinte ou menaçant confidentialité, intégrité, disponibilité, droits ou continuité.
+
+## Entrée 205 — Incident de données
+
+Incident affectant données, droits, finalités ou partages.
+
+## Entrée 206 — Secret
+
+Information permettant accès, signature, chiffrement ou récupération.
+
+## Entrée 207 — Clé cryptographique
+
+Valeur utilisée pour chiffrer, signer, vérifier ou dériver.
+
+## Entrée 208 — Certificat
+
+Objet liant une clé publique à une identité ou capacité.
+
+## Entrée 209 — Rotation
+
+Remplacement planifié d’un secret, clé, certificat ou accès.
+
+## Entrée 210 — Session
+
+Période d’interaction authentifiée avec contexte et expiration.
+
+## Entrée 211 — Journal de sécurité
+
+Enregistrement protégé utile à la détection, enquête et preuve.
+
+## Entrée 212 — Sauvegarde
+
+Copie destinée à la restauration.
+
+## Entrée 213 — Restauration
+
+Récupération depuis sauvegarde avec réapplication des corrections et révocations.
+
+## Entrée 214 — Continuité
+
+Capacité à poursuivre ou reprendre les fonctions essentielles.
+
+## Entrée 215 — RTO
+
+Temps maximal acceptable pour restaurer une fonction.
+
+## Entrée 216 — RPO
+
+Point maximal acceptable de perte de données.
+
+## Entrée 217 — Mode dégradé
+
+Fonctionnement limité et sûr lors d’une indisponibilité.
+
+## Entrée 218 — Plan de sortie fournisseur
+
+Mesures permettant de remplacer un fournisseur et récupérer données, secrets et continuité.
+
+---
+
+# TITRE XII — INGÉNIERIE
+
+## Entrée 219 — Dépôt
+
+Système versionné conservant code ou documents ; son contrôle ne crée pas la souveraineté.
+
+## Entrée 220 — Branche
+
+Ligne de travail versionnée.
+
+## Entrée 221 — Branche canonique
+
+Branche désignée pour publier l’état reconnu ; pour Genesis II, `main`.
+
+## Entrée 222 — Branche de chantier
+
+Branche dédiée à une proposition, non canonique.
+
+## Entrée 223 — Commit
+
+Objet Git identifiant un arbre et un historique ; il ne vaut pas adoption.
+
+## Entrée 224 — Empreinte Git
+
+Identifiant cryptographique d’un objet Git.
+
+## Entrée 225 — Fusion
+
+Intégration d’historiques ; elle ne vaut pas adoption.
+
+## Entrée 226 — Fast-forward
+
+Avancement vers un descendant direct sans divergence.
+
+## Entrée 227 — Réécriture forcée
+
+Déplacement non fast-forward d’une référence partagée.
+
+## Entrée 228 — Artefact
+
+Objet construit ou empaqueté pour distribution.
+
+## Entrée 229 — Version
+
+État identifié d’un texte, contrat, produit ou artefact.
+
+## Entrée 230 — Release
+
+Ensemble versionné préparé pour distribution.
+
+## Entrée 231 — Déploiement
+
+Installation ou activation d’un artefact.
+
+## Entrée 232 — Environnement
+
+Périmètre technique distinct.
+
+## Entrée 233 — Production
+
+Environnement servant des usages ou données réels.
+
+## Entrée 234 — Migration
+
+Transformation gouvernée d’un état vers un autre.
+
+## Entrée 235 — Rollback
+
+Retour contrôlé vers un état antérieur ou compensatoire.
+
+## Entrée 236 — Hotfix
+
+Correction urgente soumise à revue postérieure.
+
+## Entrée 237 — CI
+
+Intégration continue automatisant vérifications et tests.
+
+## Entrée 238 — CD
+
+Livraison ou déploiement continu sous garde-fous.
+
+## Entrée 239 — Test d’architecture
+
+Test vérifiant frontière, dépendance, contrat ou invariant.
+
+## Entrée 240 — Compilateur constitutionnel
+
+Contrôles automatisés traduisant partiellement des normes sans remplacer l’autorité.
+
+## Entrée 241 — Dette technique
+
+Coût futur créé par un compromis d’implémentation.
+
+## Entrée 242 — Dette documentaire
+
+Écart entre l’état réel et la documentation nécessaire.
+
+---
+
+# TITRE XIII — INTELLIGENCE ARTIFICIELLE
+
+## Entrée 243 — Intelligence artificielle
+
+Système produisant sorties ou actions à partir de modèles sans autorité institutionnelle autonome.
+
+## Entrée 244 — Modèle
+
+Composant calculatoire produisant des sorties à partir d’entrées.
+
+## Entrée 245 — Agent
+
+Système utilisant modèle, instructions, mémoire et outils pour poursuivre une mission.
+
+## Entrée 246 — Automatisation
+
+Mécanisme exécutant des opérations selon des règles ou déclencheurs.
+
+## Entrée 247 — Identité d’agent
+
+Identité technique reliant mission, permissions, actions, versions et révocations.
+
+## Entrée 248 — Parrain
+
+Personne ou organisation répondant institutionnellement d’un agent.
+
+## Entrée 249 — Propriétaire opérationnel de l’agent
+
+Fonction responsable de configuration, supervision, incidents et coûts.
+
+## Entrée 25
