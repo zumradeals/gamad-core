@@ -1,0 +1,123 @@
+# CORE-LAWS-0001 — PREMIÈRES LOIS ET INVARIANTS DE GAMAD CORE
+
+## Genesis II — Version 0.1
+
+**Statut : PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
+
+- **Périmètre :** Lois fondamentales et invariants transversaux de mission, souveraineté, identité, autorité, décisions, données, produits, sécurité, agents artificiels, architecture, ingénierie, audit, continuité et Porte `G0`
+- **Autorité de proposition :** Koné Djakaridja, dit Zakaria le Soufi, dirigeant actuel de GAMAD
+- **Rédaction initiale :** ChatGPT, sous instruction et supervision de l’autorité de proposition
+- **Enregistrement Git :** chantier GAMAD Core — Genesis II au moyen du connecteur GitHub autorisé
+- **Dépendances normatives :** ACTE-0001 ; SOURCES-0001 ; GOVERNANCE-0001 ; GOVERNANCE-0002 ; GOVERNANCE-0003 ; ENGINEERING-GOVERNANCE-0001 ; SECURITY-GOVERNANCE-0001 ; DATA-GOVERNANCE-0001 ; AI-GOVERNANCE-0001 ; CORE-CHARTER-0001 ; PRODUCT-CONSTITUTION-0001 ; LEXICON-0001
+- **Principe directeur :** une Loi du Core exprime une obligation commune indépendante de la technologie ; un invariant est une propriété qui doit rester vraie à travers les versions, migrations, produits, fournisseurs, incidents et générations
+
+---
+
+## Préambule
+
+GAMAD Core doit pouvoir évoluer sans que les fondations communes changent de sens au gré d’un langage, d’une base, d’un fournisseur, d’un produit ou d’une équipe. Les Constitutions, Chartes et gouvernances adoptées définissent la mission, les autorités, les procédures et les frontières. Le Lexique stabilise les concepts. Les présentes Lois rendent ces fondations opposables sous forme d’obligations et d’invariants destinés à être traduits dans les registres, contrats, architectures, tests, opérations et audits.
+
+> **La mission donne le sens. La Constitution fixe les limites. Les Lois expriment ce qui doit rester vrai. L’architecture protège les invariants. L’ingénierie les implémente. L’exploitation les maintient. L’audit en établit les preuves.**
+
+Une Loi ne devient pas vraie parce qu’elle est écrite. Elle doit être reliée à des responsables, des contrôles et des preuves. Inversement, une implémentation techniquement fonctionnelle ne peut neutraliser une Loi adoptée. En cas de conflit, l’implémentation doit être corrigée, limitée ou retirée, sauf évolution normative expressément décidée.
+
+## Mode de lecture
+
+Chaque Loi comprend :
+
+- une **règle normative**, qui énonce l’obligation ;
+- un **invariant vérifiable**, qui décrit la propriété devant rester vraie ;
+- une **preuve minimale**, qui indique le type de trace attendu sans exclure des contrôles plus forts.
+
+Les preuves minimales ne constituent pas une liste exhaustive. Leur niveau est renforcé selon les classes `P0–P4`, `I0–I4`, `R0–R4`, `PR0–PR4` et `A0–A4` définies dans les textes adoptés.
+
+---
+
+# TITRE 1 — NATURE, RANG, PORTÉE ET MÉTHODE
+
+## Loi 1 — Objet des Lois
+
+Les présentes Lois transforment les principes constitutionnels de Genesis II en obligations transversales que toute norme inférieure, architecture, contrat, produit, donnée, opération et automatisation doit respecter.
+
+**Invariant vérifiable :** Toute réalisation relevant de GAMAD Core peut être reliée à une Loi applicable ou à une décision motivée constatant son inapplicabilité.
+
+**Preuve minimale :** Matrice de conformité reliant objets, Lois applicables, preuves et responsables.
+
+## Loi 2 — Rang normatif
+
+Les présentes Lois s’interprètent sous ACTE-0001, SOURCES-0001, les Constitutions et Chartes adoptées. Elles prévalent sur les politiques, contrats, standards et implémentations de rang inférieur.
+
+**Invariant vérifiable :** Aucun document inférieur ne peut neutraliser ou inverser une Loi sans procédure d’amendement compétente.
+
+**Preuve minimale :** Référence explicite à la hiérarchie des sources dans les décisions et contrats structurants.
+
+## Loi 3 — Opposabilité
+
+Une Loi adoptée s’impose indépendamment du langage, du dépôt, du fournisseur, de la plateforme, de l’organisation technique ou du produit concerné.
+
+**Invariant vérifiable :** Le changement de technologie ou d’opérateur ne modifie pas l’obligation.
+
+**Preuve minimale :** Tests ou revues reproduits dans au moins un environnement indépendant de l’implémentation initiale.
+
+## Loi 4 — Primauté du sens
+
+Le sens institutionnel d’une Loi est déterminé par les sources adoptées et le Lexique, non par le nom d’une table, d’une classe, d’un rôle, d’une API ou d’une interface.
+
+**Invariant vérifiable :** Une convention technique ne peut créer une réalité institutionnelle différente.
+
+**Preuve minimale :** Revue lexicale et conceptuelle des contrats, schémas et modèles.
+
+## Loi 5 — Principe de vérifiabilité
+
+Toute Loi doit pouvoir être traduite en une ou plusieurs preuves documentaires, contractuelles, techniques, opérationnelles ou d’audit proportionnées.
+
+**Invariant vérifiable :** Une obligation sans méthode de preuve est incomplète et doit être précisée avant contrôle.
+
+**Preuve minimale :** Catalogue des contrôles et critères d’acceptation.
+
+## Loi 6 — Principe de proportionnalité
+
+La force des contrôles augmente avec la criticité, l’irréversibilité, les données sensibles, l’impact sur les droits, les autorités et la continuité.
+
+**Invariant vérifiable :** Un risque élevé ne peut être traité par une preuve ou une revue manifestement insuffisante.
+
+**Preuve minimale :** Classification applicable et justification du niveau de contrôle.
+
+## Loi 7 — Refus par défaut
+
+Ce qui n’est pas explicitement autorisé dans un périmètre sensible est réputé interdit jusqu’à décision compétente.
+
+**Invariant vérifiable :** Aucune absence de règle locale ne crée une permission.
+
+**Preuve minimale :** Politiques de refus par défaut et journaux des décisions d’autorisation.
+
+## Loi 8 — Aucune présomption de conformité
+
+L’ancienneté, l’usage, la popularité, le financement, un commit, un déploiement ou l’absence d’incident connu ne prouvent pas la conformité.
+
+**Invariant vérifiable :** La conformité résulte d’une évaluation identifiée pour une version et un périmètre.
+
+**Preuve minimale :** Dossier de conformité daté et versionné.
+
+## Loi 9 — Interdiction de la fiction documentaire
+
+Aucun registre, rapport, statut ou preuve ne peut être créé pour simuler une décision, une revue, un contrôle ou un fait qui n’a pas eu lieu.
+
+**Invariant vérifiable :** La traçabilité reflète les événements réels, y compris les lacunes et échecs.
+
+**Preuve minimale :** Sources primaires, signatures, horodatages et rapprochements indépendants.
+
+## Loi 10 — Révision gouvernée
+
+Toute modification substantielle d’une Loi, d’un invariant ou de son périmètre exige une décision traçable selon SOURCES-0001 et GOVERNANCE-0003.
+
+**Invariant vérifiable :** Une modification de fichier ou de code ne modifie jamais seule la Loi applicable.
+
+**Preuve minimale :** Acte d’amendement, version, motif, impacts et migration.
+
+---
+
+# TITRE 2 — MISSION, FRONTIÈRES ET SOUVERAINETÉ DU CORE
+
+## Loi 11 — Mission de GAMAD
+
