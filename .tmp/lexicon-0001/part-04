@@ -1,0 +1,205 @@
+ouverné partageant finalité, responsable, schéma, classification et cycle de vie.
+
+## Entrée 150 — Domaine de données
+
+Périmètre cohérent de données et responsabilités.
+
+## Entrée 151 — Responsable des données
+
+Autorité répondant des finalités et obligations d’un jeu de données.
+
+## Entrée 152 — Intendant de données
+
+Fonction assurant qualité, définitions, métadonnées et coordination.
+
+## Entrée 153 — Gardien technique
+
+Fonction opérant stockage et protection sans décider seule des finalités.
+
+## Entrée 154 — Finalité
+
+But légitime, explicite et déterminé justifiant un traitement.
+
+## Entrée 155 — Traitement
+
+Toute opération appliquée à des données.
+
+## Entrée 156 — Minimisation
+
+Limitation des données au nécessaire.
+
+## Entrée 157 — Classification des données
+
+Attribution d’une classe selon confidentialité, intégrité, disponibilité et impact.
+
+## Entrée 158 — Donnée personnelle
+
+Donnée se rapportant à une personne identifiée ou identifiable.
+
+## Entrée 159 — Donnée d’identité
+
+Donnée contribuant à distinguer ou maintenir une identité.
+
+## Entrée 160 — Donnée sensible
+
+Donnée dont l’usage peut affecter fortement droits, sécurité ou dignité.
+
+## Entrée 161 — Donnée spirituelle ou religieuse
+
+Donnée relative aux croyances, pratiques ou fonctions spirituelles, protégée de manière renforcée.
+
+## Entrée 162 — Donnée biométrique
+
+Donnée issue de caractéristiques physiques ou comportementales utilisée pour reconnaître une personne.
+
+## Entrée 163 — Donnée opérationnelle
+
+Donnée produite pour exploitation, support ou continuité.
+
+## Entrée 164 — Donnée dérivée
+
+Donnée obtenue par calcul, agrégation ou transformation.
+
+## Entrée 165 — Inférence
+
+Conclusion probable ne constituant pas automatiquement un fait vérifié.
+
+## Entrée 166 — Provenance
+
+Origine, déclarant, contexte, date, assurance et transformations d’une donnée.
+
+## Entrée 167 — Lignée de données
+
+Chaîne des sources, transformations, copies, usages et destinations.
+
+## Entrée 168 — Qualité des données
+
+Exactitude, complétude, cohérence, actualité et adéquation à l’usage.
+
+## Entrée 169 — Conservation
+
+Maintien gouverné pendant une durée justifiée.
+
+## Entrée 170 — Archivage des données
+
+Conservation longue pour histoire, preuve ou obligation.
+
+## Entrée 171 — Suppression
+
+Retrait gouverné des usages et systèmes.
+
+## Entrée 172 — Destruction
+
+Action rendant les données irrécupérables.
+
+## Entrée 173 — Anonymisation
+
+Transformation visant une non-identification raisonnablement irréversible.
+
+## Entrée 174 — Pseudonymisation
+
+Remplacement d’identifiants directs sans supprimer toute réidentification possible.
+
+## Entrée 175 — Portabilité
+
+Capacité de recevoir ou transférer certaines données dans un format utilisable.
+
+---
+
+# TITRE X — CONTRATS ET INTEROPÉRABILITÉ
+
+## Entrée 176 — Contrat
+
+Engagement explicite et versionné concernant données, services, comportements ou responsabilités.
+
+## Entrée 177 — Contrat du Core
+
+Contrat commun publié par une capacité du Core.
+
+## Entrée 178 — Contrat produit
+
+Contrat appartenant à un produit pour ses capacités spécialisées.
+
+## Entrée 179 — API
+
+Interface définissant opérations, entrées, sorties, erreurs et limites.
+
+## Entrée 180 — Événement
+
+Représentation immuable d’un fait significatif.
+
+## Entrée 181 — Commande
+
+Demande visant à provoquer une action.
+
+## Entrée 182 — Requête
+
+Demande de lecture ou calcul sans effet métier silencieux.
+
+## Entrée 183 — Schéma
+
+Définition structurée des champs, types et contraintes.
+
+## Entrée 184 — Contrat de données
+
+Accord sur structure, sémantique, qualité, classification, finalité et évolution.
+
+## Entrée 185 — Producteur
+
+Domaine responsable de publier selon un contrat.
+
+## Entrée 186 — Consommateur
+
+Domaine autorisé à utiliser un contrat pour une finalité.
+
+## Entrée 187 — Compatibilité ascendante
+
+Capacité d’un nouveau producteur à servir des consommateurs antérieurs.
+
+## Entrée 188 — Compatibilité descendante
+
+Capacité d’un système nouveau à traiter des objets antérieurs.
+
+## Entrée 189 — Version majeure
+
+Version comportant des changements incompatibles.
+
+## Entrée 190 — Version mineure
+
+Version ajoutant des capacités compatibles.
+
+## Entrée 191 — Dépréciation de contrat
+
+Période annonçant le retrait futur d’un contrat.
+
+## Entrée 192 — Accès direct aux données
+
+Lecture d’un stockage interne sans contrat autorisé.
+
+## Entrée 193 — Idempotence
+
+Répétition d’une opération identifiée sans effets supplémentaires indus.
+
+## Entrée 194 — Corrélation
+
+Mécanisme reliant messages, actions, événements et preuves.
+
+---
+
+# TITRE XI — SÉCURITÉ ET CONTINUITÉ
+
+## Entrée 195 — Actif
+
+Élément ayant une valeur à protéger.
+
+## Entrée 196 — Actif critique
+
+Actif dont la compromission produit un impact grave.
+
+## Entrée 197 — Menace
+
+Cause potentielle d’un incident.
+
+## Entrée 198 — Vulnérabilité
+
+Fai
