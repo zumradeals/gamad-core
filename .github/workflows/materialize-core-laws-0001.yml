@@ -1,0 +1,40 @@
+name: Materialize CORE-LAWS-0001
+
+on:
+  push:
+    branches:
+      - agent/genesis-ii-core-laws-0001
+    paths:
+      - '.github/workflows/materialize-core-laws-0001.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/genesis-ii-core-laws-0001
+          fetch-depth: 0
+      - name: Reconstruct and verify exact document
+        shell: bash
+        run: |
+          set -euo pipefail
+          target='genesis-ii/lois/CORE-LAWS-0001-premieres-lois-invariants-gamad-core.md'
+          mkdir -p "$(dirname "$target")"
+          cat .tmp/core-laws-0001/part-* > "$target"
+          test "$(sha256sum "$target" | awk '{print $1}')" = '54f183dbebebff5913fb8b02d16535ce6072412ff1e9de20f46a0c93897dcf3d'
+          test "$(git hash-object "$target")" = 'c943ad8f3e1e2beb2a3388f8fdf35b3359c1a4c9'
+          rm -rf .tmp/core-laws-0001
+          rm -f .github/workflows/materialize-core-laws-0001.yml
+      - name: Commit exact project
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'GAMAD Core Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'docs(genesis-ii): draft CORE-LAWS-0001'
+          git push origin HEAD:agent/genesis-ii-core-laws-0001
