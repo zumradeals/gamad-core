@@ -1,0 +1,152 @@
+it ; l’autre ce qui est permis.
+
+## Entrée 312 — Validation ≠ adoption
+
+La validation constate ; l’adoption donne force normative.
+
+## Entrée 313 — Publication ≠ adoption
+
+Publier rend visible ; adopter confère l’effet normatif.
+
+## Entrée 314 — Commit ≠ adoption
+
+Git fixe un contenu, pas une décision institutionnelle.
+
+## Entrée 315 — Fusion Git ≠ production
+
+Intégrer un historique n’est pas déployer.
+
+## Entrée 316 — Core ≠ GAMAD
+
+Le Core sert GAMAD ; il n’est pas GAMAD tout entier.
+
+## Entrée 317 — Core ≠ produit
+
+Le Core maintient les fondations ; le produit accomplit un métier.
+
+## Entrée 318 — Produit ≠ capacité souveraine
+
+Un produit peut opérer une capacité sans la posséder.
+
+## Entrée 319 — Identity Registry ≠ GAMAD ID
+
+Le premier est souverain ; le second consomme ses contrats.
+
+## Entrée 320 — Donnée ≠ information
+
+La donnée représente ; l’information interprète.
+
+## Entrée 321 — Sauvegarde ≠ archive
+
+La sauvegarde restaure ; l’archive conserve.
+
+## Entrée 322 — Trace ≠ preuve suffisante
+
+Une trace exige provenance, intégrité et contexte.
+
+## Entrée 323 — Évaluation IA ≠ autorisation IA
+
+Une mesure favorable ne permet pas automatiquement l’usage.
+
+## Entrée 324 — Autonomie IA ≠ autorité
+
+Agir seul ne donne aucun pouvoir institutionnel.
+
+## Entrée 325 — Sortie IA ≠ fait canonique
+
+Une sortie doit être sourcée et validée.
+
+## Entrée 326 — Conformité ≠ perfection
+
+La conformité peut comporter réserves et risque résiduel.
+
+## Entrée 327 — Ancienneté ≠ conformité
+
+Un produit historique doit être évalué.
+
+## Entrée 328 — Financement ≠ souveraineté
+
+Le financeur ne possède pas le Core.
+
+## Entrée 329 — Administration technique ≠ autorité institutionnelle
+
+Une clé ou console ne donne pas le droit de décider la mission.
+
+---
+
+# TITRE XVII — GOUVERNANCE DU LEXIQUE
+
+## Entrée 330 — Entrée lexicale
+
+Unité composée d’un terme, d’une définition et de ses exclusions.
+
+## Entrée 331 — Responsable lexical
+
+Fonction maintenant la cohérence terminologique sans modifier seule les normes supérieures.
+
+## Entrée 332 — Proposition lexicale
+
+Demande identifiée de création, modification, fusion, scission ou retrait d’une entrée.
+
+## Entrée 333 — Conflit terminologique
+
+Usage incompatible d’un même terme ou de plusieurs termes pour un même concept.
+
+## Entrée 334 — Décision lexicale
+
+Décision gouvernée résolvant une proposition ou un conflit.
+
+## Entrée 335 — Registre lexical
+
+Registre des entrées, versions, décisions, conflits et dépréciations.
+
+## Entrée 336 — Migration terminologique
+
+Mise à jour des documents, contrats, schémas et codes après une décision lexicale.
+
+## Entrée 337 — Compatibilité terminologique
+
+Interopérabilité temporaire entre anciens et nouveaux termes.
+
+## Entrée 338 — Extension locale
+
+Terme métier qualifié ne concurrençant pas un terme du Core.
+
+## Entrée 339 — Référence lexicale
+
+Lien vers une version déterminée du Lexique ou d’une entrée.
+
+## Entrée 340 — Contrôle lexical
+
+Vérification détectant termes interdits, ambiguïtés ou collisions.
+
+## Entrée 341 — Effet de G0
+
+L’adoption du Lexique satisfait une condition documentaire de G0 sans ouvrir seule le codage.
+
+---
+
+## Index de contrôle
+
+- **Nombre d’entrées :** 341
+- **Nombre de titres :** 17
+- **Règle d’intégrité :** toute adoption future devra identifier l’empreinte Git exacte du présent contenu.
+- **Condition de G0 :** l’adoption du Lexique canonique initial satisfera la condition lexicale de `G0`, sans ouvrir à elle seule le codage canonique.
+- **Documents encore nécessaires :** premières Lois et invariants du Core ; Atlas initial ; registres et modèles exigés ; constat formel de `G0`.
+
+## Formule finale
+
+Tout concept commun de Genesis II doit pouvoir répondre :
+
+- quel est son terme canonique ;
+- quelle définition le gouverne ;
+- quelles réalités il exclut ;
+- quelle source lui donne autorité ;
+- dans quel périmètre et quelle version il s’applique ;
+- quels contrats, registres et systèmes le représentent ;
+- comment une évolution ou dépréciation sera conduite ;
+- quelles preuves permettent de reconstruire son sens historique.
+
+Jusqu’à son adoption expresse et son inscription au Registre des adoptions, le présent texte demeure :
+
+> **PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
