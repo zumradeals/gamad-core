@@ -82,6 +82,16 @@ Les textes adoptés sont publiés directement dans cette branche après leur ado
 **Statut canonique :** `genesis-ii/gouvernance/SECURITY-GOVERNANCE-0001-STATUT.md`  
 **Registre :** `genesis-ii/registre/ADOPTION-0007-SECURITY-GOVERNANCE-0001.md`
 
+### 8. DATA-GOVERNANCE-0001
+
+**Titre :** Gouvernance des données, finalités, responsabilités, classification, conservation, partage et droits  
+**Version adoptée :** 0.1  
+**Statut :** LU ET ADOPTÉ — EN VIGUEUR  
+**Date d’adoption :** 25 juillet 2026  
+**Chemin :** `genesis-ii/gouvernance/DATA-GOVERNANCE-0001-gouvernance-donnees-finalites-responsabilites-classification-conservation-partage-droits.md`  
+**Statut canonique :** `genesis-ii/gouvernance/DATA-GOVERNANCE-0001-STATUT.md`  
+**Registre :** `genesis-ii/registre/ADOPTION-0008-DATA-GOVERNANCE-0001.md`
+
 ## Porte constitutionnelle G0
 
 `GOVERNANCE-0001` institue la Porte constitutionnelle `G0`. Le codage canonique de GAMAD Core — Genesis II ne pourra commencer qu’après satisfaction et constat formel des conditions prévues par cette Constitution.
@@ -94,7 +104,11 @@ Conformément à `ENGINEERING-GOVERNANCE-0001`, les registres initiaux des dép�
 
 Conformément à `SECURITY-GOVERNANCE-0001`, les registres initiaux des actifs critiques, risques et contrôles, accès privilégiés, secrets et clés, vulnérabilités, incidents, sauvegardes et restaurations, continuité, tiers critiques, exceptions de sécurité et agents sensibles, ainsi que les modèles d’accès, risque, cérémonie de clé, incident, restauration et continuité, devront être créés avant le passage de `G0`.
 
-L’adoption de `SECURITY-GOVERNANCE-0001` établit la doctrine minimale de sécurité requise, sous réserve de ces réalisations et du constat formel de `G0`. Elle n’ouvre pas à elle seule le codage canonique de Genesis II.
+Conformément à `DATA-GOVERNANCE-0001`, les registres initiaux des domaines et responsabilités, jeux de données, finalités et traitements, classifications, sources et lignées, flux et tiers, conservations et suppressions, demandes et droits, qualités, analyses d’impact, usages analytiques et IA, exceptions, risques et incidents de données, ainsi que les modèles de jeu de données, finalité, responsabilité, classification, contrat, partage, impact, droit, correction, conservation, suppression, qualité, incident et usage IA, devront être créés avant le passage de `G0`.
+
+L’adoption de `SECURITY-GOVERNANCE-0001` établit la doctrine minimale de sécurité requise. L’adoption de `DATA-GOVERNANCE-0001` établit la doctrine minimale de données requise. Ces conditions restent soumises à la création effective des registres, modèles et contrôles initiaux et au constat formel de `G0`.
+
+Aucune de ces adoptions n’ouvre à elle seule le codage canonique de Genesis II.
 
 ## Archives
 
@@ -121,5 +135,6 @@ Genesis I est préservé par :
 5. `GOVERNANCE-0003`
 6. `ENGINEERING-GOVERNANCE-0001`
 7. `SECURITY-GOVERNANCE-0001`
-8. les statuts canoniques et registres d’adoption correspondants
-9. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
+8. `DATA-GOVERNANCE-0001`
+9. les statuts canoniques et registres d’adoption correspondants
+10. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
