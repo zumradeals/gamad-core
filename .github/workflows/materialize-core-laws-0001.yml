@@ -38,3 +38,5 @@ jobs:
           git add -A
           git commit -m 'docs(genesis-ii): draft CORE-LAWS-0001'
           git push origin HEAD:agent/genesis-ii-core-laws-0001
+
+# retrigger: 2026-07-25
