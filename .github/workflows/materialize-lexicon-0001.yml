@@ -1,0 +1,40 @@
+name: Materialize LEXICON-0001
+
+on:
+  push:
+    branches:
+      - agent/genesis-ii-lexicon-0001
+    paths:
+      - '.github/workflows/materialize-lexicon-0001.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/genesis-ii-lexicon-0001
+          fetch-depth: 0
+      - name: Reconstruct and verify exact document
+        shell: bash
+        run: |
+          set -euo pipefail
+          target='genesis-ii/lexique/LEXICON-0001-lexique-canonique-gamad-core.md'
+          mkdir -p "$(dirname "$target")"
+          cat .tmp/lexicon-0001/part-* > "$target"
+          test "$(sha256sum "$target" | awk '{print $1}')" = '02a988604125576446d45b2b5c0fd544ea2a2c04d1abbf50800a0790ab59c55b'
+          test "$(git hash-object "$target")" = 'b3e83f2ccd6d117ed111b3d4eec6304d61e4a648'
+          rm -rf .tmp/lexicon-0001
+          rm -f .github/workflows/materialize-lexicon-0001.yml
+      - name: Commit exact project
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'GAMAD Core Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'docs(genesis-ii): draft LEXICON-0001'
+          git push origin HEAD:agent/genesis-ii-lexicon-0001
