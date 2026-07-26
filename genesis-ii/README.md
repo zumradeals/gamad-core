@@ -132,6 +132,16 @@ Les textes adoptés sont publiés directement dans cette branche après leur ado
 **Statut canonique :** `genesis-ii/lexique/LEXICON-0001-STATUT.md`  
 **Registre :** `genesis-ii/registre/ADOPTION-0012-LEXICON-0001.md`
 
+### 13. CORE-LAWS-0001
+
+**Titre :** Premières Lois et invariants de GAMAD Core  
+**Version adoptée :** 0.1  
+**Statut :** LU ET ADOPTÉ — EN VIGUEUR  
+**Date d’adoption :** 26 juillet 2026  
+**Chemin :** `genesis-ii/lois/CORE-LAWS-0001-premieres-lois-invariants-gamad-core.md`  
+**Statut canonique :** `genesis-ii/lois/CORE-LAWS-0001-STATUT.md`  
+**Registre :** `genesis-ii/registre/ADOPTION-0013-CORE-LAWS-0001.md`
+
 ## Porte constitutionnelle G0
 
 `GOVERNANCE-0001` institue la Porte constitutionnelle `G0`. Le codage canonique de GAMAD Core — Genesis II ne pourra commencer qu’après satisfaction et constat formel des conditions prévues par cette Constitution.
@@ -156,11 +166,11 @@ L’adoption de `PRODUCT-CONSTITUTION-0001` satisfait la condition constitutionn
 
 L’adoption de `LEXICON-0001` satisfait la condition constitutionnelle « Lexique canonique initial ». Avant `G0`, devront encore être créés le Registre lexical initial, les références lexicales et les contrôles terminologiques nécessaires à la vérification des documents, contrats, schémas et futures implémentations.
 
-Avant `G0`, devront encore être adoptés ou réalisés les premières Lois et invariants du Core, l’Atlas initial, le Registre initial des capacités souveraines et les autres registres, modèles et contrôles exigés.
+L’adoption de `CORE-LAWS-0001` satisfait la condition constitutionnelle « premières Lois et invariants du Core ». Avant `G0`, devront encore être créés la matrice `Loi → responsable → contrôle → preuve`, l’Atlas initial, le Registre initial des capacités souveraines et les autres registres, modèles et contrôles exigés.
 
 L’adoption de `SECURITY-GOVERNANCE-0001` établit la doctrine minimale de sécurité requise. L’adoption de `DATA-GOVERNANCE-0001` établit la doctrine minimale de données requise. Ces conditions restent soumises à la création effective des registres, modèles et contrôles initiaux et au constat formel de `G0`.
 
-L’adoption de `AI-GOVERNANCE-0001` gouverne les agents utilisés pour préparer, vérifier, publier ou exploiter Genesis II. L’adoption de `CORE-CHARTER-0001` fixe la mission, le périmètre et les capacités souveraines du Core. L’adoption de `PRODUCT-CONSTITUTION-0001` gouverne l’héritage, l’autonomie, l’admission, la conformité et le cycle de vie des produits. L’adoption de `LEXICON-0001` fixe le langage canonique commun. Aucune de ces adoptions n’ouvre à elle seule le codage canonique.
+L’adoption de `AI-GOVERNANCE-0001` gouverne les agents utilisés pour préparer, vérifier, publier ou exploiter Genesis II. L’adoption de `CORE-CHARTER-0001` fixe la mission, le périmètre et les capacités souveraines du Core. L’adoption de `PRODUCT-CONSTITUTION-0001` gouverne l’héritage, l’autonomie, l’admission, la conformité et le cycle de vie des produits. L’adoption de `LEXICON-0001` fixe le langage canonique commun. L’adoption de `CORE-LAWS-0001` fixe les premières obligations et invariants transversaux. Aucune de ces adoptions n’ouvre à elle seule le codage canonique.
 
 ## Archives
 
@@ -192,5 +202,6 @@ Genesis I est préservé par :
 10. `CORE-CHARTER-0001`
 11. `PRODUCT-CONSTITUTION-0001`
 12. `LEXICON-0001`
-13. les statuts canoniques et registres d’adoption correspondants
-14. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
+13. `CORE-LAWS-0001`
+14. les statuts canoniques et registres d’adoption correspondants
+15. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
