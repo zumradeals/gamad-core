@@ -182,18 +182,27 @@ Les textes adoptés sont publiés directement dans cette branche après leur ado
 **Statut canonique :** `genesis-ii/registres/autorites/REGISTRE-INITIAL-AUTORITES-MANDATS-0001-STATUT.md`  
 **Registre :** `genesis-ii/registre/ADOPTION-0017-REGISTRE-INITIAL-AUTORITES-MANDATS-0001.md`
 
+### 18. REGISTRE-INITIAL-DECISIONS-0001
+
+**Titre :** Registre initial des décisions de GAMAD Core  
+**Version adoptée :** 0.1  
+**Statut :** LU ET ADOPTÉ — EN VIGUEUR  
+**Date d’adoption :** 26 juillet 2026  
+**Chemin :** `genesis-ii/registres/decisions/REGISTRE-INITIAL-DECISIONS-0001.md`  
+**Statut canonique :** `genesis-ii/registres/decisions/REGISTRE-INITIAL-DECISIONS-0001-STATUT.md`  
+**Registre :** `genesis-ii/registre/ADOPTION-0018-REGISTRE-INITIAL-DECISIONS-0001.md`
+
 ## Porte constitutionnelle G0
 
 `GOVERNANCE-0001` institue la Porte constitutionnelle `G0`. Le codage canonique de GAMAD Core — Genesis II ne pourra commencer qu’après satisfaction et constat formel des conditions prévues par cette Constitution.
 
-L’adoption de `CORE-CHARTER-0001`, `PRODUCT-CONSTITUTION-0001`, `LEXICON-0001`, `CORE-LAWS-0001`, `CORE-ATLAS-0001`, `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, `REGISTRE-INITIAL-PRODUITS-0001` et `REGISTRE-INITIAL-AUTORITES-MANDATS-0001` satisfait leurs conditions documentaires respectives.
+L’adoption des dix-huit textes et registres listés ci-dessus satisfait leurs conditions documentaires respectives. Elle ne rend à elle seule aucune capacité opérationnelle, n’admet aucun produit, ne valide aucun accès, n’accepte aucun risque et n’ouvre pas le codage canonique.
 
-L’adoption de `REGISTRE-INITIAL-AUTORITES-MANDATS-0001` confirme l’état documentaire initial des autorités et mandats. Elle ne nomme automatiquement aucun titulaire permanent, ne valide aucun accès technique et laisse ouverts les nominations, reconnaissances, délégations, suppléances, conflits, rapprochements d’accès et contrôles de succession.
+`REGISTRE-INITIAL-DECISIONS-0001` constitue une photographie initiale préparée avant la publication d’`ADOPTION-0017`. `ADOPTION-0017`, `ADOPTION-0018` et les décisions ultérieures devront être intégrées par une mise à jour gouvernée ou un registre complémentaire, sans réécriture silencieuse du texte adopté.
 
 Avant `G0`, restent notamment à créer ou accomplir :
 
-- `REGISTRE-INITIAL-DECISIONS-0001` ;
-- les modèles canoniques de proposition, revue, délibération, validation, adoption, publication, acceptation de risque, contestation, urgence et clôture ;
+- les modèles canoniques du cycle de décision : proposition, recevabilité, instruction, revue, délibération, validation, adoption, publication, acceptation de risque, contestation, urgence et clôture ;
 - les registres et modèles d’ingénierie ;
 - les registres et modèles de sécurité ;
 - les registres et modèles de données ;
@@ -205,8 +214,6 @@ Avant `G0`, restent notamment à créer ou accomplir :
 - les contrôles, tests et preuves nécessaires ;
 - l’audit complet des conditions de `G0` ;
 - l’acte distinct de constat de la Porte `G0`.
-
-L’adoption des textes documentaires ne rend à elle seule aucune capacité opérationnelle, n’admet aucun produit, n’accepte aucun risque et n’ouvre pas le codage canonique.
 
 ## Archives
 
@@ -243,5 +250,6 @@ Genesis I est préservé par :
 15. `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`
 16. `REGISTRE-INITIAL-PRODUITS-0001`
 17. `REGISTRE-INITIAL-AUTORITES-MANDATS-0001`
-18. les statuts canoniques et registres d’adoption correspondants
-19. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
+18. `REGISTRE-INITIAL-DECISIONS-0001`
+19. les statuts canoniques et registres d’adoption correspondants
+20. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
