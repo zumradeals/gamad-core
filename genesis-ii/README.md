@@ -192,17 +192,28 @@ Les textes adoptés sont publiés directement dans cette branche après leur ado
 **Statut canonique :** `genesis-ii/registres/decisions/REGISTRE-INITIAL-DECISIONS-0001-STATUT.md`  
 **Registre :** `genesis-ii/registre/ADOPTION-0018-REGISTRE-INITIAL-DECISIONS-0001.md`
 
+### 19. MODELES-INITIAUX-CYCLE-DECISION-0001
+
+**Titre :** Modèles initiaux du cycle de décision de GAMAD Core  
+**Version adoptée :** 0.1  
+**Statut :** LU ET ADOPTÉ — EN VIGUEUR  
+**Date d’adoption :** 26 juillet 2026  
+**Chemin :** `genesis-ii/modeles/decisions/MODELES-INITIAUX-CYCLE-DECISION-0001.md`  
+**Statut canonique :** `genesis-ii/modeles/decisions/MODELES-INITIAUX-CYCLE-DECISION-0001-STATUT.md`  
+**Registre :** `genesis-ii/registre/ADOPTION-0019-MODELES-INITIAUX-CYCLE-DECISION-0001.md`
+
 ## Porte constitutionnelle G0
 
 `GOVERNANCE-0001` institue la Porte constitutionnelle `G0`. Le codage canonique de GAMAD Core — Genesis II ne pourra commencer qu’après satisfaction et constat formel des conditions prévues par cette Constitution.
 
-L’adoption des dix-huit textes et registres listés ci-dessus satisfait leurs conditions documentaires respectives. Elle ne rend à elle seule aucune capacité opérationnelle, n’admet aucun produit, ne valide aucun accès, n’accepte aucun risque et n’ouvre pas le codage canonique.
+L’adoption des dix-neuf textes, registres et modèles listés ci-dessus satisfait leurs conditions documentaires respectives. Elle ne rend à elle seule aucune capacité opérationnelle, n’admet aucun produit, ne valide aucun accès, n’accepte aucun risque et n’ouvre pas le codage canonique.
 
-`REGISTRE-INITIAL-DECISIONS-0001` constitue une photographie initiale préparée avant la publication d’`ADOPTION-0017`. `ADOPTION-0017`, `ADOPTION-0018` et les décisions ultérieures devront être intégrées par une mise à jour gouvernée ou un registre complémentaire, sans réécriture silencieuse du texte adopté.
+`REGISTRE-INITIAL-DECISIONS-0001` constitue une photographie initiale préparée avant la publication d’`ADOPTION-0017`. `ADOPTION-0017`, `ADOPTION-0018`, `ADOPTION-0019` et les décisions ultérieures devront être intégrées par une mise à jour gouvernée ou un registre complémentaire, sans réécriture silencieuse du texte adopté.
+
+L’adoption de `MODELES-INITIAUX-CYCLE-DECISION-0001` satisfait la condition documentaire relative aux premiers modèles communs du cycle de décision. Elle ne crée aucune décision réelle, ne valide aucun quorum, ne préremplit aucune signature et n’accepte aucun risque.
 
 Avant `G0`, restent notamment à créer ou accomplir :
 
-- les modèles canoniques du cycle de décision : proposition, recevabilité, instruction, revue, délibération, validation, adoption, publication, acceptation de risque, contestation, urgence et clôture ;
 - les registres et modèles d’ingénierie ;
 - les registres et modèles de sécurité ;
 - les registres et modèles de données ;
@@ -251,5 +262,6 @@ Genesis I est préservé par :
 16. `REGISTRE-INITIAL-PRODUITS-0001`
 17. `REGISTRE-INITIAL-AUTORITES-MANDATS-0001`
 18. `REGISTRE-INITIAL-DECISIONS-0001`
-19. les statuts canoniques et registres d’adoption correspondants
-20. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
+19. `MODELES-INITIAUX-CYCLE-DECISION-0001`
+20. les statuts canoniques et registres d’adoption correspondants
+21. les futurs textes organiques et techniques dans l’ordre prévu par la Constitution de gouvernance
