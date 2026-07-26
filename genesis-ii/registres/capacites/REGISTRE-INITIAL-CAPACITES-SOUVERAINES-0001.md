@@ -233,21 +233,21 @@ Tout champ non établi ou non conforme devient un écart avec risque, propriéta
 | `CAP-CORE-003` | Registre des autorités et mandats | `DOM-03` | `RACINE` | Gouvernance adoptée ; registre initial absent | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-004` | Moteur d’autorisation commun | `DOM-03` | `RACINE` | Doctrine adoptée ; implémentation Genesis I non admise | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-005` | Authentification et assurance communes | `DOM-02` / `DOM-08` | `RACINE` | Doctrine adoptée ; état technique non audité | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
-| `CAP-CORE-006` | Registre des sources | `DOM-01` | `RACINE` | Sources et preuves documentaires présentes | `PARTIEL` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
-| `CAP-CORE-007` | Registre des normes | `DOM-01` | `RACINE` | Textes, statuts et adoptions présents | `PARTIEL` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
+| `CAP-CORE-006` | Registre des sources | `DOM-01` | `RACINE` | Sources et preuves documentaires présentes | `EN CONCEPTION` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
+| `CAP-CORE-007` | Registre des normes | `DOM-01` | `RACINE` | Textes, statuts et adoptions présents | `EN CONCEPTION` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-008` | Registre des décisions | `DOM-05` | `RACINE` | Adoptions documentées ; registre initial général absent | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-009` | Registre des contrats | `DOM-06` | `CRITIQUE` | Exigences adoptées ; catalogue initial absent | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
-| `CAP-CORE-010` | Lexique canonique | `DOM-01` | `CRITIQUE` | Lexique `LEXICON-0001` adopté | `PARTIEL` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
+| `CAP-CORE-010` | Lexique canonique | `DOM-01` | `CRITIQUE` | Lexique `LEXICON-0001` adopté | `EN CONCEPTION` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-011` | Registre des produits | `DOM-04` | `CRITIQUE` | Constitution adoptée ; registre initial absent | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-012` | Registre des realms | `DOM-04` | `CRITIQUE` | Fondements adoptés ; inventaire initial absent | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-013` | Audit commun | `DOM-09` | `CRITIQUE` | Exigences adoptées ; mécanisme commun non établi | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-014` | Journal d’événements communs | `DOM-06` / `DOM-09` | `CRITIQUE` | Exigences adoptées ; contrat et journal non établis | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
-| `CAP-CORE-015` | Preuves d’intégrité | `DOM-09` | `RACINE` | Empreintes Git disponibles pour les textes ; service commun absent | `PARTIEL` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
+| `CAP-CORE-015` | Preuves d’intégrité | `DOM-09` | `RACINE` | Empreintes Git disponibles pour les textes ; service commun absent | `EN CONCEPTION` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-016` | Gouvernance des secrets et clés | `DOM-08` | `RACINE` | Doctrine adoptée ; inventaire et contrôles non établis | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-017` | Registre des risques et exceptions | `DOM-10` | `CRITIQUE` | Doctrine adoptée ; registre initial absent | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-018` | Registre des incidents | `DOM-10` | `CRITIQUE` | Doctrine adoptée ; registre initial absent | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 | `CAP-CORE-019` | Sauvegarde et restauration souveraines | `DOM-10` | `RACINE` | Archive Genesis I existante ; restauration souveraine non prouvée | `À ÉTABLIR` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
-| `CAP-CORE-020` | Annuaire des capacités et Atlas | Transversal | `CRITIQUE` | Atlas adopté ; présent Registre en projet | `PARTIEL` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
+| `CAP-CORE-020` | Annuaire des capacités et Atlas | Transversal | `CRITIQUE` | Atlas adopté ; présent Registre en projet | `EN CONCEPTION` | `NON COMMENCÉE` | `INACTIVE` | `P1` |
 
 ## Article 32 — Lecture du tableau
 
@@ -739,8 +739,8 @@ Jusqu’à adoption expresse et inscription au Registre des adoptions, le prése
 - **Nombre de titres :** 13
 - **Nombre d’articles :** 90
 - **Nombre de capacités inscrites :** 20
-- **Capacités de criticité proposée `RACINE` :** 9
-- **Capacités de criticité proposée `CRITIQUE` :** 11
+- **Capacités de criticité proposée `RACINE` :** 10
+- **Capacités de criticité proposée `CRITIQUE` :** 10
 - **État d’implémentation canonique global :** non commencée avant `G0`
 - **Niveau de preuve maximal généralement constaté :** `P1 — DOCUMENTÉ`
 - **Condition de `G0` visée :** Registre initial des capacités souveraines
