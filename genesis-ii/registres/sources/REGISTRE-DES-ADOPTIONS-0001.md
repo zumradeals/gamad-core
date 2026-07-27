@@ -66,6 +66,7 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 | `ADOPTION-0022` | Attribution transitoire de 4 fonctions bloquantes pour `G0` (`FCT-CORE-009/013/016/021`) | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0023` | Décision du statut des 4 produits historiques (`PRD-GAMAD-001` à `004`) | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0024` | Évaluation formelle des agents IA (`AGENT-IA-001`, `AGENT-IA-002`) | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+| `ADOPTION-0025` | **Constat de passage de la Porte constitutionnelle `G0`** | Koné Djakaridja | 27 juillet 2026 | `SIGNÉ — G0 CONSTATÉE` |
 
 ## Article 5 — Textes en cours de délibération non inscrits
 

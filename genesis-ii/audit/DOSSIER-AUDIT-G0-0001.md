@@ -111,3 +111,40 @@ Ce dossier peut servir de base à l'acte de constat de `G0` prévu par `ACTE-DE-
 Le présent texte ne possède une force normative qu'après adoption expresse par l'autorité compétente et inscription au Registre des adoptions. Jusqu'à cette adoption, il demeure :
 
 > **PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
+
+---
+
+# TITRE V — LEVÉE DES RÉSERVES DES ARTICLES 6 À 10
+
+> **Nature :** mise à jour post-adoption, additive, ne réécrivant aucun article existant du présent dossier. Rédigée par SIRR (Claude), sous instruction de l'autorité de proposition, conformément à sa mission bornée (`ADOPTION-0024`, Article 3).
+> **Rattachement :** conséquence d'exécution de `ADOPTION-0022`, `ADOPTION-0023`, `ADOPTION-0024`, du registre autonome des accès et secrets, et d'`ADOPTION-0025` (constat de `G0`, signé le 27 juillet 2026).
+
+## Article 15 — Levée de l'écart de l'Article 6 (accès et secrets)
+
+L'écart signalé à l'Article 6 est **levé par décision documentée, non par résolution technique complète**. L'autorité de proposition a adopté, le 27 juillet 2026, un registre autonome recensant les systèmes détenus (dépôt GitHub, VPS, GamaDrive/Railway, Google Drive, domaine), constatant leur détention exclusive par l'autorité seule, et consignant le mot de passe GamaDrive en clair comme **risque accepté à titre transitoire**.
+
+**Décision définitive de l'autorité, confirmée à la signature d'`ADOPTION-0025` :** ce registre demeure un document autonome, hors de `REGISTRE-DES-ADOPTIONS-0001`, assumé tel quel comme suffisant pour constater `G0`. Ce n'est plus un point ouvert.
+
+## Article 16 — Levée de l'écart de l'Article 7 (fonctions vacantes)
+
+`ADOPTION-0022` attribue `AUT-SEC`, `AUT-EXP`, `AUT-ING` et `AUDIT` à titre transitoire à l'autorité de proposition seule. **Levé.**
+
+## Article 17 — Levée de l'écart de l'Article 8 (évaluation IA)
+
+`ADOPTION-0024` évalue formellement `AGENT-IA-001` et `AGENT-IA-002`, ce dernier explicitement exclu de `FCT-CORE-021`. **Levé.**
+
+## Article 18 — Levée de l'écart de l'Article 9 (produits non qualifiés)
+
+`ADOPTION-0023` décide du statut des quatre entrées historiques. **Levé** — au sens d'une décision de statut, non d'une certification de conformité.
+
+## Article 19 — Levée de l'écart de l'Article 10 (adoption des Phases 1-4)
+
+`ADOPTION-0020` et `ADOPTION-0021`. **Levé.**
+
+## Article 20 — Constat de `G0`
+
+Les cinq écarts des Articles 6 à 10 sont tous levés. `ADOPTION-0025`, signé le 27 juillet 2026 par Koné Djakaridja, dit Zakaria le Soufi, **constate la Porte `G0`** dans le périmètre et sous les réserves qu'il énonce. Le présent Titre V, à compter de cette signature, décrit un état historique désormais dépassé par `ADOPTION-0025` lui-même, qui prévaut.
+
+## Article 21 — Portée
+
+Le présent Titre ne constate rien par lui-même ; il documente la levée des écarts. Le constat effectif de `G0` procède exclusivement d'`ADOPTION-0025`.
