@@ -13,7 +13,10 @@ Il applique six contrôles bloquants et un contrôle indicatif :
   C2  Toute ligne du tableau de l'Article 4 renvoie à un registre d'adoption
       réellement présent dans le dépôt.
   C3  La numérotation des registres d'adoption est continue depuis `0001`,
-      sans trou ni doublon.
+      sans trou ni doublon. Un constat d'exécution compagnon
+      (`ADOPTION-NNNN-…-EXECUTION.md`) n'est pas un acte distinct et n'est pas
+      compté ici : il déclare, sans rouvrir l'acte signé NNNN, l'empreinte des
+      fichiers que son exécution a modifiés.
   C4  Tout chemin de fichier du dépôt cité entre accents graves dans le corpus
       existe, hors exemptions déclarées ci-dessous.
   C5  Toute empreinte Git déclarée en regard d'un chemin, dans un tableau du
@@ -70,6 +73,13 @@ CHEMINS_HORS_DEPOT = {
 
 # Nom de fichier d'un registre d'adoption : ADOPTION-NNNN-…-md
 RE_FICHIER_ADOPTION = re.compile(r"^ADOPTION-(\d{4})-.+\.md$")
+
+# Nom de fichier d'un constat d'exécution compagnon : ADOPTION-NNNN-…-EXECUTION.md
+# Un tel fichier ne constate ni n'adopte rien par lui-même : il déclare les
+# empreintes des conséquences d'exécution d'un acte signé qui ne doit pas être
+# rouvert pour les porter. Il n'est pas compté par C1/C3 comme un acte
+# d'adoption distinct — un seul acte porte chaque numéro.
+RE_FICHIER_EXECUTION = re.compile(r"^ADOPTION-(\d{4})-.+-EXECUTION\.md$")
 
 # Ligne du tableau de l'Article 4 : | `ADOPTION-NNNN` | … |
 RE_LIGNE_INDEX = re.compile(r"^\|\s*`ADOPTION-(\d{4})`\s*\|")
@@ -158,9 +168,15 @@ def fichiers_du_corpus(racine: Path) -> list[Path]:
 
 
 def adoptions_sur_disque(racine: Path) -> dict[str, list[str]]:
-    """Numéro d'adoption -> fichiers portant ce numéro dans `genesis-ii/registre/`."""
+    """Numéro d'adoption -> fichiers portant ce numéro dans `genesis-ii/registre/`.
+
+    Les constats d'exécution compagnons (suffixe `-EXECUTION.md`) ne sont pas
+    des actes d'adoption distincts et ne sont pas comptés ici.
+    """
     trouvees: dict[str, list[str]] = {}
     for fichier in sorted((racine / REPERTOIRE_ADOPTIONS).glob("ADOPTION-*.md")):
+        if RE_FICHIER_EXECUTION.match(fichier.name):
+            continue
         correspondance = RE_FICHIER_ADOPTION.match(fichier.name)
         if correspondance:
             trouvees.setdefault(correspondance.group(1), []).append(fichier.name)
@@ -269,11 +285,15 @@ def rang_declarant(chemin_relatif: str) -> int:
 
     Une empreinte déclarée par `ADOPTION-0021` prime celle déclarée pour le
     même fichier par `ADOPTION-0020`, l'adoption la plus récente étant celle
-    qui lie le contenu publié.
+    qui lie le contenu publié. Un constat d'exécution compagnon
+    (`ADOPTION-NNNN-…-EXECUTION.md`) porte le même rang que l'acte NNNN qu'il
+    accompagne : il existe précisément pour déclarer, sans rouvrir un acte
+    signé, l'empreinte des conséquences d'exécution de cet acte.
     """
     if not chemin_relatif.startswith(f"{REPERTOIRE_ADOPTIONS}/"):
         return 0
-    correspondance = RE_FICHIER_ADOPTION.match(Path(chemin_relatif).name)
+    nom = Path(chemin_relatif).name
+    correspondance = RE_FICHIER_EXECUTION.match(nom) or RE_FICHIER_ADOPTION.match(nom)
     return int(correspondance.group(1)) if correspondance else 0
 
 
