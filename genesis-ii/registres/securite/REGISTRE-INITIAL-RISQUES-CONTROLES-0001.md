@@ -45,6 +45,18 @@ Conformément à la Loi 65 de `CORE-LAWS-0001`, aucune entrée du présent regis
 
 Ces trois risques sont proposés à titre provisoire par un agent artificiel. Conformément à la Loi 65 de `CORE-LAWS-0001`, leur niveau définitif et leur traitement doivent être arbitrés par l'autorité compétente.
 
+## Article 6 bis — Arbitrage de `RISK-SEC-0001` (`ADOPTION-0022`)
+
+Koné Djakaridja, dit Zakaria le Soufi, dirigeant actuel de GAMAD, a arbitré `RISK-SEC-0001` par l'Article 1 d'`ADOPTION-0022-ATTRIBUTION-TRANSITOIRE-FONCTIONS-0001`, adopté le 27 juillet 2026 :
+
+- **Niveau confirmé :** `S3`.
+- **Traitement :** accepté à titre transitoire, et non écarté ni traité par contrôle compensatoire technique. L'acceptation ne porte que sur la vacance de séparation entre `FCT-CORE-021` (audit) et les fonctions `FCT-CORE-009`, `FCT-CORE-013`, `FCT-CORE-016` — non sur une vacance générale des quatre fonctions, désormais attribuées (voir `REGISTRE-INITIAL-AUTORITES-MANDATS-0001`, Titre XV).
+- **Exception associée :** `EXC-SEC-0001`, `REGISTRE-INITIAL-EXCEPTIONS-SECURITE-0001`, Article 3 bis.
+- **Autorité d'acceptation :** Koné Djakaridja, dit Zakaria le Soufi, seule autorité compétente au sens de la Loi 65 de `CORE-LAWS-0001`.
+- **Date de réexamen :** dès disponibilité d'une seconde personne de confiance ; aucun terme fixe.
+
+`RISK-SEC-0002` et `RISK-SEC-0003` demeurent, à ce jour, non arbitrés et conservent leur niveau provisoire.
+
 ---
 
 # TITRE III — DISPOSITIONS FINALES
