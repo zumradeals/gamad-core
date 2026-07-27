@@ -16,7 +16,7 @@ Koné Djakaridja, dit Zakaria le Soufi, dirigeant actuel de GAMAD, déclare avoi
 
 - **Nom :** Koné Djakaridja, dit Zakaria le Soufi
 - **Qualité :** dirigeant actuel de GAMAD, autorité institutionnelle transitoire au sens de `REGISTRE-INITIAL-AUTORITES-MANDATS-0001`
-- **Date de la décision :** [à renseigner par l'autorité — Article 9]
+- **Date de la décision :** 27 juillet 2026
 - **Entrée en vigueur :** immédiate, à la publication sur `main`
 
 ---
@@ -83,7 +83,16 @@ Ces étiquettes n'adoptent rien. Elles conservent une trace historique non canon
 
 **5.4 — Si la conservation échoue.** Si les commits `e9f3f7a` et `99c7ada` ne peuvent être rattachés à une étiquette — ramasse-miettes de la forge déjà passé, ou refus de la forge de servir un objet non atteignable — la trace est **réputée non conservée**. Ce fait est alors acté ici même, sans être maquillé : les contributions correspondantes de `AGENT-IA-001` demeurent inscrites au registre des usages IA par leur description, leur date, leur horodatage et leur empreinte de commit, mais leur contenu n'est plus recouvrable. L'échec de conservation ne fait pas obstacle à la suppression décidée au 5.2, la branche trompeuse ne conservant rien qui puisse être perdu.
 
-**5.5 — Constat d'exécution.**
+**5.5 — Constat de récupérabilité.** Le 27 juillet 2026, les deux commits ont été récupérés depuis `origin` par leur empreinte complète et leur contenu vérifié :
+
+| Commit | Fichier retrouvé | Volume |
+|---|---|---|
+| `e9f3f7a9f0e5296d0b93176e1efe456f93348690` | `genesis-ii/securite/REGISTRES-ET-MODELES-SECURITE-0001.md` | 1 190 lignes |
+| `99c7ada849b374bed8df8f715e3e5eafd646c5cb` | `genesis-ii/ingenierie/REGISTRES-ET-MODELES-INGENIERIE-0001.md` | 1 615 lignes |
+
+La trace est donc intégralement recouvrable. L'hypothèse de l'alinéa 5.4 n'est pas réalisée et la conservation prévue au 5.1 peut être exécutée.
+
+**5.6 — Constat d'exécution.**
 
 | Élément | Constat |
 |---|---|
@@ -92,7 +101,7 @@ Ces étiquettes n'adoptent rien. Elles conservent une trace historique non canon
 | Branche `agent/genesis-ii-registres-et-modeles-securite-0001` | [à renseigner à l'exécution : supprimée] |
 | Branche `agent/genesis-ii-registres-et-modeles-ingenierie-0001` | [à renseigner à l'exécution : supprimée] |
 
-**5.6 — Effet sur les textes adoptés.** Ni `ADOPTION-0020` ni `REGISTRE-INITIAL-USAGES-IA-0001` ne sont modifiés. Leur énoncé sur la conservation des deux branches devient historiquement daté ; le présent article prévaut pour établir l'état réel du dépôt distant à compter de son adoption.
+**5.7 — Effet sur les textes adoptés.** Ni `ADOPTION-0020` ni `REGISTRE-INITIAL-USAGES-IA-0001` ne sont modifiés. Leur énoncé sur la conservation des deux branches devient historiquement daté ; le présent article prévaut pour établir l'état réel du dépôt distant à compter de son adoption.
 
 ## Article 6 — Message du commit de fusion et hygiène de l'historique
 
@@ -115,7 +124,7 @@ Le caractère non bloquant de ce signalement est délibéré : un contrôle qui 
 | `outils/verifier-integrite.py` | Contrôleur d'intégrité documentaire du corpus | `aafe8414d351008a8f183a7e48deca6077c4dc13` |
 | `.github/workflows/integrite-documentaire.yml` | Exécution automatique du contrôleur sur `main` et sur les propositions de fusion | `2b828d8c4feaded5c68804cd20b541a694c184e9` |
 | `genesis-ii/registre/STATUT-CONSOLIDE-0020-0001.md` | Statut canonique consolidé des cinquante-sept documents d'`ADOPTION-0020` | `6bb6637d41bf5bbbba690e4c28cbbf7d3d5ef939` |
-| `genesis-ii/registres/sources/REGISTRE-DES-ADOPTIONS-0001.md` | Index central, complété de deux lignes au tableau de son Article 4 | `56fe2cbf79ef6b50fbadfbaa1ed7d29b0cbdda11` |
+| `genesis-ii/registres/sources/REGISTRE-DES-ADOPTIONS-0001.md` | Index central, complété de deux lignes au tableau de son Article 4 | `5d5ce96680b8c0de21cf1a5fd66d58c3a5d1ac1d` |
 
 **Sur l'empreinte de l'index.** L'empreinte ci-dessus remplace, pour ce seul fichier, celle déclarée à la Section B du Titre I de `ADOPTION-0020`. Cette dernière demeure exacte comme constat de l'état du fichier au 27 juillet 2026 ; elle est dépassée par le présent acte, seul l'ajout de lignes permis par l'Article 3 de l'index étant intervenu entre les deux. Aucune ligne existante du tableau n'a été modifiée.
 
@@ -158,7 +167,7 @@ Ce gel n'est pas un aboutissement mais une limite reconnue. Ce qui demeure ouver
 |---|---|
 | Autorité d'adoption | Koné Djakaridja, dit Zakaria le Soufi |
 | Qualité | Dirigeant actuel de GAMAD |
-| Date d'adoption | [à renseigner par l'autorité] |
+| Date d'adoption | 27 juillet 2026 |
 | Entrée en vigueur | Immédiate, à la publication sur `main` |
 | Mention | LU ET ADOPTÉ |
 
