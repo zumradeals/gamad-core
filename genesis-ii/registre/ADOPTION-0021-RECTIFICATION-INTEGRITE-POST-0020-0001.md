@@ -68,14 +68,16 @@ Les deux commits demeuraient, au 27 juillet 2026, accessibles par l'interface de
 
 L'autorité tranche comme suit.
 
-**5.1 — Conservation de la trace.** Il est tenté, préalablement à toute suppression, de rendre les deux commits historiques de nouveau atteignables en les rattachant à deux étiquettes permanentes :
+**5.1 — Conservation de la trace.** Il est procédé, préalablement à toute suppression, à rendre les deux commits historiques de nouveau atteignables en les rattachant à deux références permanentes sous le préfixe `archive/` :
 
-| Étiquette | Commit visé | Contribution |
+| Référence | Commit visé | Contribution |
 |---|---|---|
 | `archive/genesis-ii-chatgpt-securite-0001` | `e9f3f7a9f0e5296d0b93176e1efe456f93348690` | `genesis-ii/securite/REGISTRES-ET-MODELES-SECURITE-0001.md` |
 | `archive/genesis-ii-chatgpt-ingenierie-0001` | `99c7ada849b374bed8df8f715e3e5eafd646c5cb` | `genesis-ii/ingenierie/REGISTRES-ET-MODELES-INGENIERIE-0001.md` |
 
-Ces étiquettes n'adoptent rien. Elles conservent une trace historique non canonique, conformément à ce que `ADOPTION-0020` avait entendu conserver et à ce que la correction du 27 juillet 2026 à `REGISTRE-INITIAL-USAGES-IA-0001` déclare vouloir conserver.
+Ces références n'adoptent rien. Elles conservent une trace historique non canonique, conformément à ce que `ADOPTION-0020` avait entendu conserver et à ce que la correction du 27 juillet 2026 à `REGISTRE-INITIAL-USAGES-IA-0001` déclare vouloir conserver.
+
+La forme retenue est celle de branches d'archive (`refs/heads/archive/…`) et non d'étiquettes (`refs/tags/…`). Ce choix suit la convention déjà établie dans le dépôt par `archive/genesis-i-2026-07-24`, elle-même une branche. Il n'affecte ni l'atteignabilité des commits, ni leur préservation du ramasse-miettes, ni le caractère non canonique de la trace. Une conversion ultérieure en étiquettes, si elle est jugée préférable, ne changerait rien à ce qui est conservé.
 
 **5.2 — Suppression des deux branches.** Les deux branches nommées à l'Article 4 sont supprimées de `origin`. Elles ne portent plus que des doublons de `main` et leur nom induit en erreur sur ce qu'elles conservent. Cette suppression est irréversible ; elle est exécutée sur instruction expresse de l'autorité et ne peut l'être autrement.
 
@@ -94,14 +96,27 @@ La trace est donc intégralement recouvrable. L'hypothèse de l'alinéa 5.4 n'es
 
 **5.6 — Constat d'exécution.**
 
-| Élément | Constat |
+| Élément | Constat au 27 juillet 2026 |
 |---|---|
-| Étiquette `archive/genesis-ii-chatgpt-securite-0001` | [à renseigner à l'exécution : créée / non créée] |
-| Étiquette `archive/genesis-ii-chatgpt-ingenierie-0001` | [à renseigner à l'exécution : créée / non créée] |
-| Branche `agent/genesis-ii-registres-et-modeles-securite-0001` | [à renseigner à l'exécution : supprimée] |
-| Branche `agent/genesis-ii-registres-et-modeles-ingenierie-0001` | [à renseigner à l'exécution : supprimée] |
+| Branche d'archive `archive/genesis-ii-chatgpt-securite-0001` | **Créée** sur `origin`, sur le commit `e9f3f7a9f0e5296d0b93176e1efe456f93348690` ; contenu vérifié |
+| Branche d'archive `archive/genesis-ii-chatgpt-ingenierie-0001` | **Créée** sur `origin`, sur le commit `99c7ada849b374bed8df8f715e3e5eafd646c5cb` ; contenu vérifié |
+| Branche `agent/genesis-ii-registres-et-modeles-securite-0001` | **Non supprimée** — voir alinéa 5.7 |
+| Branche `agent/genesis-ii-registres-et-modeles-ingenierie-0001` | **Non supprimée** — voir alinéa 5.7 |
 
-**5.7 — Effet sur les textes adoptés.** Ni `ADOPTION-0020` ni `REGISTRE-INITIAL-USAGES-IA-0001` ne sont modifiés. Leur énoncé sur la conservation des deux branches devient historiquement daté ; le présent article prévaut pour établir l'état réel du dépôt distant à compter de son adoption.
+La conservation prévue au 5.1 est donc **acquise** : les deux contributions de `AGENT-IA-001` sont de nouveau atteignables depuis une référence permanente de `origin` et ne dépendent plus du sursis décrit à l'Article 4.
+
+**5.7 — Suppression non exécutée et sa raison.** La suppression décidée au 5.2 n'a pas pu être exécutée par l'agent chargé de la publication. L'environnement d'exécution de cet agent interpose un mandataire qui refuse toute suppression de référence sur `origin`, aussi bien par `git push --delete` (rejet `HTTP 403` au moment de la remise) que par appel direct à l'interface de programmation de la forge (`Write access to this GitHub API path is not permitted through this proxy`). Ce refus est une restriction de l'outillage, non une décision institutionnelle.
+
+La décision du 5.2 demeure entière et n'est pas rapportée. Son exécution incombe à l'autorité de proposition, qui dispose des accès nécessaires :
+
+```
+git push origin --delete agent/genesis-ii-registres-et-modeles-securite-0001
+git push origin --delete agent/genesis-ii-registres-et-modeles-ingenierie-0001
+```
+
+Tant que cette exécution n'a pas eu lieu, les deux branches trompeuses subsistent sur `origin` et le troisième constat de l'Article 4 demeure partiellement ouvert : la trace est conservée, mais l'apparence trompeuse n'est pas encore levée. Le présent alinéa sera complété par le constat de la suppression lorsqu'elle sera intervenue.
+
+**5.8 — Effet sur les textes adoptés.** Ni `ADOPTION-0020` ni `REGISTRE-INITIAL-USAGES-IA-0001` ne sont modifiés. Leur énoncé sur la conservation des deux branches devient historiquement daté ; le présent article prévaut pour établir l'état réel du dépôt distant à compter de son adoption.
 
 ## Article 6 — Message du commit de fusion et hygiène de l'historique
 
