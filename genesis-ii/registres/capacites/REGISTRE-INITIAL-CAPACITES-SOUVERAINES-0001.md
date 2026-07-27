@@ -767,3 +767,30 @@ Pour chaque capacité souveraine, GAMAD Core doit pouvoir répondre :
 Jusqu’à son adoption expresse et son inscription au Registre des adoptions, le présent texte demeure :
 
 > **PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
+
+---
+
+# TITRE XIV — MISE À JOUR POST-ADOPTION : ÉTAT DE CONCEPTION DE `CAP-CORE-007`
+
+## Article 91 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0026-CONCEPTION-CAP-CORE-007-0001`. Il ne modifie aucune disposition des Titres I à XIII ci-dessus : ceux-ci demeurent la description exacte de l'état du Registre tel qu'adopté par `ADOPTION-0015`. Le présent Titre ajoute un fait postérieur, conformément aux Articles 58 (mise à jour) et 60 (historique) du présent Registre. Il ne réécrit ni le tableau de l'Article 31, ni la fiche de l'Article 42.
+
+## Article 92 — Changement d'état de conception
+
+`CAP-CORE-007 — Registre des normes` passe de l'état de conception `EN CONCEPTION` (Article 31, colonne « Conception Genesis II ») à l'état `CONÇUE`, au sens de l'Article 13.
+
+| Capacité | État aux Titres III-VI (`ADOPTION-0015`) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-007` — Registre des normes | Conception `EN CONCEPTION` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` | Conception **`CONÇUE`** ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` |
+
+- **Source :** `ADOPTION-0026`, adoptant `CONCEPTION-CAP-CORE-007-REGISTRE-DES-NORMES-0001`.
+- **Portée :** ce changement d'état est **documentaire**. Il n'entraîne ni implémentation, ni exploitation : les états `NON COMMENCÉE` et `INACTIVE` demeurent inchangés (Articles 14-15).
+
+## Article 93 — Écarts subsistants
+
+Le passage à `CONÇUE` ne lève aucun des écarts globaux du Titre XI. En particulier, l'écart de preuve (Article 73) subsiste : la conception adoptée atteint le niveau `P2` partiel et la preuve `P3` de reconstruction temporelle reste à produire dans le premier incrément de code. Les responsables de capacité et l'autorité des données (`FCT-CORE-023`) demeurent non désignés.
+
+## Article 94 — Non-effet
+
+Le présent Titre, comme `ADOPTION-0026` dont il constate l'exécution, ne rend `CAP-CORE-007` ni implémentée, ni admise, ni active, ne fige aucun choix technologique et n'accepte aucun risque nouveau.
