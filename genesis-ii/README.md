@@ -202,6 +202,15 @@ Les textes adoptés sont publiés directement dans cette branche après leur ado
 **Statut canonique :** `genesis-ii/modeles/decisions/MODELES-INITIAUX-CYCLE-DECISION-0001-STATUT.md`  
 **Registre :** `genesis-ii/registre/ADOPTION-0019-MODELES-INITIAUX-CYCLE-DECISION-0001.md`
 
+### 20. ADOPTION-0020 — Chantier de complétion Phases 1 à 4 (57 documents)
+
+**Nature :** adoption consolidée en un seul acte, à la différence des adoptions 1 à 19 adoptées individuellement.
+**Statut :** ADOPTÉ — EN VIGUEUR
+**Date d'adoption :** 27 juillet 2026
+**Registre :** `genesis-ii/registre/ADOPTION-0020-CHANTIER-PHASES-1-A-4-0001.md`
+**Contenu :** matrice `Loi → domaine → responsable → contrôle → preuve` ; registres et modèles initiaux des domaines Sources/Lexique, Sécurité, Données, Ingénierie, Intelligence artificielle et Produits ; dossier d'audit `G0` ; squelette vide (non exécuté) de l'acte de constat `G0` ; registre initial des usages IA (avec sa correction du 27 juillet 2026).
+**Limite :** ne constate pas `G0` ; ne couvre pas l'inventaire réel des comptes et accès, exclusivement géré par l'autorité de proposition ; ne pourvoit aucune des fonctions vacantes `AUT-SEC`, `AUT-EXP`, `AUDIT`, `AUT-ING` ; ne qualifie aucun des quatre produits historiques. Le détail de ces réserves figure dans `genesis-ii/audit/DOSSIER-AUDIT-G0-0001.md`.
+
 ## Porte constitutionnelle G0
 
 `GOVERNANCE-0001` institue la Porte constitutionnelle `G0`. Le codage canonique de GAMAD Core — Genesis II ne pourra commencer qu’après satisfaction et constat formel des conditions prévues par cette Constitution.
@@ -212,19 +221,14 @@ L’adoption des dix-neuf textes, registres et modèles listés ci-dessus satisf
 
 L’adoption de `MODELES-INITIAUX-CYCLE-DECISION-0001` satisfait la condition documentaire relative aux premiers modèles communs du cycle de décision. Elle ne crée aucune décision réelle, ne valide aucun quorum, ne préremplit aucune signature et n’accepte aucun risque.
 
-Avant `G0`, restent notamment à créer ou accomplir :
+Les registres et modèles d’ingénierie, de sécurité, de données, d’IA et de produits, le Registre lexical initial, la matrice `Loi → domaine → responsable → contrôle → preuve` et le dossier d’audit des conditions de `G0` sont désormais adoptés par `ADOPTION-0020` (voir ci-dessus, point 20). Restent notamment à accomplir avant `G0` :
 
-- les registres et modèles d’ingénierie ;
-- les registres et modèles de sécurité ;
-- les registres et modèles de données ;
-- les registres et modèles IA, y compris la traçabilité des contributions assistées par IA ;
-- les registres et modèles produits encore exigés ;
-- le Registre lexical initial et les contrôles terminologiques ;
-- la matrice `Loi → domaine → responsable → contrôle → preuve` ;
-- l’inventaire et le rapprochement des accès, secrets, clés, sauvegardes et restaurations ;
-- les contrôles, tests et preuves nécessaires ;
-- l’audit complet des conditions de `G0` ;
-- l’acte distinct de constat de la Porte `G0`.
+- l’inventaire et le rapprochement des accès, secrets, clés, sauvegardes et restaurations, exclusivement géré par l’autorité de proposition ;
+- la nomination ou la confirmation de vacance assumée des fonctions `AUT-SEC`, `AUT-EXP`, `AUDIT` et `AUT-ING` ;
+- l’évaluation formelle des agents IA au sens du Titre X d’`AI-GOVERNANCE-0001` ;
+- la qualification des quatre produits historiques (GAMAD ID, GAMAD Drive, Wasplex, IKOMA) ;
+- les contrôles, tests et preuves opérationnels au-delà du niveau documentaire ;
+- l’acte distinct de constat de la Porte `G0`, dont seul le squelette vide existe à ce jour (`ACTE-DE-CONSTAT-G0-0001`).
 
 ## Archives
 
