@@ -1,0 +1,39 @@
+name: Intégrité documentaire
+
+# Contrôle automatique de la cohérence documentaire du corpus Genesis II.
+# Ce contrôle est technique : il ne constate pas la Porte G0, n'adopte aucun
+# texte et ne rend aucune capacité opérationnelle. Il vérifie seulement que le
+# dépôt dit la vérité sur lui-même.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verifier-integrite:
+    name: Contrôle d'intégrité du corpus
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          # Historique complet : le constat indicatif A1 porte sur les messages
+          # de commit, et les empreintes Git sont recalculées sur les fichiers.
+          fetch-depth: 0
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Exécuter le contrôle d'intégrité
+        run: python3 outils/verifier-integrite.py

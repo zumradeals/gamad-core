@@ -61,6 +61,8 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 | `ADOPTION-0017` | `REGISTRE-INITIAL-AUTORITES-MANDATS-0001` | Koné Djakaridja | 26 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0018` | `REGISTRE-INITIAL-DECISIONS-0001` | Koné Djakaridja | 26 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0019` | `MODELES-INITIAUX-CYCLE-DECISION-0001` | Koné Djakaridja | 26 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+| `ADOPTION-0020` | Chantier Phases 1 à 4 — 57 documents (matrice, sources et lexique, sécurité, données, ingénierie, IA, produits et audit `G0`) | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+| `ADOPTION-0021` | Rectification d'intégrité post-`0020` — 4 documents (contrôleur, flux d'intégration, `STATUT-CONSOLIDE-0020-0001`, présent index) | Koné Djakaridja | [date d'adoption] | `LU ET ADOPTÉ — EN VIGUEUR` |
 
 ## Article 5 — Textes en cours de délibération non inscrits
 
