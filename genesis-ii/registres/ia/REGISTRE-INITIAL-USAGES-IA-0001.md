@@ -306,3 +306,32 @@ Toute nouvelle mission significative d'un agent déjà inscrit, ou l'apparition 
 Le présent texte ne possède une force normative qu'après adoption expresse par l'autorité compétente et inscription au Registre des adoptions. Jusqu'à cette adoption, il demeure :
 
 > **PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
+
+---
+
+# TITRE IX — ÉVALUATION FORMELLE DES DEUX AGENTS (`ADOPTION-0024`)
+
+## Article 48 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0024-EVALUATION-AGENTS-IA-0001`, adopté le 27 juillet 2026, en application de la clause d'amendement de l'Article 46 ci-dessus. Il ne modifie aucune disposition des Titres I à VIII, qui demeurent la description exacte de l'état du registre tel qu'adopté avec `ADOPTION-0020` (correction du 27 juillet 2026 y comprise).
+
+## Article 49 — Écart de l'Article 9 partiellement clos
+
+L'écart déclaré à l'Article 9 (« aucun des deux agents inscrits n'a fait l'objet de l'évaluation préalable prévue au Titre X d'`AI-GOVERNANCE-0001` ») reçoit sa première réponse par l'évaluation conduite dans `ADOPTION-0024`, dont les fiches figurent désormais dans `REGISTRE-EVALUATIONS-IA-0001` (Titre III de ce registre). Cette évaluation :
+
+- confirme le principe de l'Article 1 d'`ADOPTION-0024` : aucun agent IA n'est une autorité ;
+- ne constitue pas l'évaluation complète du Titre X d'`AI-GOVERNANCE-0001` (Articles 169-188), laquelle exige scénarios de test, seuils et évaluateur distinct du concepteur — voir Article 51 ci-dessous ;
+- borne expressément `AGENT-IA-002` (Article 3 d'`ADOPTION-0024`) : ayant conçu et rédigé une part substantielle du corpus, il ne détient pas et ne peut pas détenir `FCT-CORE-021` (AUDIT), laquelle demeure à l'autorité de proposition conformément à `ADOPTION-0022`.
+
+## Article 50 — État constaté
+
+| ID | Agent | État aux Articles 33/42 (avant `ADOPTION-0024`) | État constaté par le présent Titre |
+|---|---|---|---|
+| `AGENT-IA-001` | ChatGPT | `ACTIF — SANS ÉVALUATION FORMELLE` | `ACTIF — ÉVALUÉ (ADOPTION-0024, Art. 2) — AUCUNE AUTORITÉ CONFÉRÉE` |
+| `AGENT-IA-002` | Claude | `ACTIF — SANS ÉVALUATION FORMELLE` | `ACTIF — ÉVALUÉ (ADOPTION-0024, Art. 3) — AUCUNE AUTORITÉ CONFÉRÉE — EXCLU DE FCT-CORE-021` |
+
+Les procédures d'arrêt décrites aux Articles 33 et 42 demeurent inchangées et applicables.
+
+## Article 51 — Écart demeurant ouvert
+
+L'évaluation d'`ADOPTION-0024` ne remplace pas le système complet de l'Article 250 d'`AI-GOVERNANCE-0001`, ni le protocole détaillé du Titre X (scénarios testés, métriques, seuils, évaluateur indépendant) que `REGISTRE-EVALUATIONS-IA-0001` (Articles 3-4) continue de décrire comme non conduit. Le présent Titre clôt la condition minimale de gouvernance (aucune autorité sans supervision, parrain identifié, procédure d'arrêt), non l'évaluation technique complète.

@@ -1103,3 +1103,65 @@ Pour chaque produit de l’écosystème GAMAD, le portefeuille doit pouvoir rép
 Jusqu’à son adoption expresse et son inscription au Registre des adoptions, le présent texte demeure :
 
 > **PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
+
+---
+
+# TITRE XVI — MISE À JOUR POST-ADOPTION : STATUT DÉCIDÉ DES QUATRE PRODUITS HISTORIQUES
+
+## Article 150 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0023-STATUT-PRODUITS-HISTORIQUES-0001`, adopté le 27 juillet 2026. Il ne modifie aucune disposition des Titres I à XV ci-dessus, qui demeurent la description exacte de l'état du Registre tel qu'adopté par `ADOPTION-0016`, le 26 juillet 2026, et de ses fiches initiales. Conformément à l'Article 15, l'historique de chaque identifiant est préservé : le présent Titre ajoute un fait postérieur, il ne réécrit aucune fiche.
+
+## Article 151 — `PRD-GAMAD-001` (GAMAD ID) — dissolution en tant que produit
+
+Conformément à l'Article 1 d'`ADOPTION-0023` :
+
+- `PRD-GAMAD-001` est **dissous** en tant que produit ; il ne désigne plus un produit du portefeuille.
+- Toute matérialisation historique portant le nom « GAMAD ID » (notamment les dépôts `zumradeals/gamad-id-core` et `zumradeals/gamad-id-core-kit` référencés à l'Article 49) est réputée **trace historique d'une capacité du Core**, à savoir `CAP-CORE-001 — Identity Registry` (`REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 36), et non un produit distinct.
+- La contradiction documentaire majeure constatée à l'Article 52 est **close** : la souveraineté d'identité appartient à `CAP-CORE-001`, jamais à un produit.
+- L'état `HISTORIQUE À QUALIFIER` porté par l'Article 43 (tableau) et l'Article 49 (fiche) décrit l'état du Registre avant cette dissolution ; il n'est pas effacé, conformément à l'Article 15.
+
+**État constaté par le présent Titre :** `DISSOUS — IDENTITÉ RENDUE AU CORE (CAP-CORE-001)`.
+
+## Article 152 — `PRD-GAMAD-002` (GamaDrive) — premier produit officiel reconnu
+
+Conformément à l'Article 2 d'`ADOPTION-0023` :
+
+- L'orthographe canonique retenue est **GamaDrive**.
+- GamaDrive est reconnu comme le **premier produit officiel réel de GAMAD**.
+- **Appartenance :** établie par `ADOPTION-0023`.
+- **Conformité au Core :** `À ÉTABLIR APRÈS G0` — aucune certification, aucune admission de conformité et aucune autorité produit ne sont prononcées par le présent Titre. Le dossier de conformité sera constitué après `G0`, conformément aux Articles 7 et 8 ci-dessus.
+
+**État constaté par le présent Titre :** `PRODUIT OFFICIEL RECONNU — APPARTENANCE ÉTABLIE ; CONFORMITÉ À ÉTABLIR APRÈS G0`. Ce nouvel état prévaut sur `HISTORIQUE À QUALIFIER` (Article 43, Article 58) pour déterminer le statut actuel de `PRD-GAMAD-002`.
+
+## Article 153 — `PRD-GAMAD-003` (Wasplex) et `PRD-GAMAD-004` (IKOMA) — familles partenaires
+
+Conformément à l'Article 3 d'`ADOPTION-0023` :
+
+- Wasplex et IKOMA sont des **familles de produits partenaires**, dont les propriétaires existent et se déclarent disposés à être branchés au GAMAD Core.
+- Leur **appartenance officielle à GAMAD n'est pas entérinée** à ce jour.
+- Ils **ne sont pas** des produits GAMAD à la date du présent Titre.
+- Leur admission éventuelle exigera l'entérinement de leurs propriétaires et un acte d'admission distinct, avec dossier, réserves, échéance et preuves, conformément à l'Article 7 ci-dessus.
+
+**État constaté par le présent Titre pour `PRD-GAMAD-003` et `PRD-GAMAD-004` :** `PARTENAIRE EXTERNE — APPARTENANCE NON ENTÉRINÉE — INTÉGRATION ENVISAGÉE`. Ce nouvel état prévaut sur `HISTORIQUE À QUALIFIER` (Article 43, Articles 67 et 76) pour déterminer leur statut actuel.
+
+## Article 154 — Tableau de lecture combinée avec l'Article 43
+
+| ID | Produit | État au Titre IV (26 juillet 2026) | État constaté par le présent Titre (27 juillet 2026) |
+|---|---|---|---|
+| `PRD-GAMAD-001` | GAMAD ID | `HISTORIQUE À QUALIFIER` | `DISSOUS — IDENTITÉ RENDUE AU CORE` |
+| `PRD-GAMAD-002` | GamaDrive | `HISTORIQUE À QUALIFIER` | `PRODUIT OFFICIEL RECONNU — APPARTENANCE ÉTABLIE` |
+| `PRD-GAMAD-003` | Wasplex | `HISTORIQUE À QUALIFIER` | `PARTENAIRE EXTERNE — APPARTENANCE NON ENTÉRINÉE` |
+| `PRD-GAMAD-004` | IKOMA | `HISTORIQUE À QUALIFIER` | `PARTENAIRE EXTERNE — APPARTENANCE NON ENTÉRINÉE` |
+
+## Article 155 — Ce que le présent Titre ne fait pas
+
+Conformément à l'Article 4 d'`ADOPTION-0023`, le présent Titre :
+
+- n'admet aucun produit comme conforme ;
+- ne rend aucune capacité opérationnelle ;
+- ne nomme aucun propriétaire institutionnel, aucune Autorité métier, aucun Responsable de produit ;
+- n'accepte aucun risque produit ;
+- ne prononce pas la Porte `G0`.
+
+Il lève l'indétermination qui bloquait `DOSSIER-AUDIT-G0-0001` sur la qualification des produits.

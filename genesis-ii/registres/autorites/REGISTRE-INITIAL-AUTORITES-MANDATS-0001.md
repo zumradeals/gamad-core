@@ -911,3 +911,50 @@ Pour toute autorité et tout mandat de GAMAD Core, le Registre doit pouvoir rép
 Jusqu’à son adoption expresse et son inscription au Registre des adoptions, le présent texte demeure :
 
 > **PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
+
+---
+
+# TITRE XV — MISE À JOUR POST-ADOPTION : ATTRIBUTION TRANSITOIRE DE QUATRE FONCTIONS
+
+## Article 161 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0022-ATTRIBUTION-TRANSITOIRE-FONCTIONS-0001`, adopté le 27 juillet 2026. Il ne modifie aucune disposition des Titres I à XIV ci-dessus : ceux-ci demeurent la description exacte de l'état du Registre tel qu'adopté par `ADOPTION-0017`, le 26 juillet 2026. Le présent Titre ajoute un fait postérieur ; il ne le substitue à aucun fait antérieur, conformément à l'Article 30 (Historique) du présent Registre.
+
+## Article 162 — Fonctions concernées
+
+Conformément à `ADOPTION-0022`, Article 1, les quatre fonctions suivantes — recensées `VACANTE` aux Articles 34, 35 et 36, et décrites comme telles aux Articles 64, 66, 67 et 69 — passent à l'état `ATTRIBUÉE À TITRE TRANSITOIRE — TITULAIRE UNIQUE` :
+
+| Référence | Fonction | État aux Titres III-IV (26 juillet 2026) | État constaté par le présent Titre (27 juillet 2026) |
+|---|---|---|---|
+| `FCT-CORE-009` | Autorité d'ingénierie | `VACANTE` | `ATTRIBUÉE À TITRE TRANSITOIRE — TITULAIRE UNIQUE` |
+| `FCT-CORE-013` | Autorité de sécurité | `VACANTE` | `ATTRIBUÉE À TITRE TRANSITOIRE — TITULAIRE UNIQUE` |
+| `FCT-CORE-016` | Autorité d'exploitation | `VACANTE` | `ATTRIBUÉE À TITRE TRANSITOIRE — TITULAIRE UNIQUE` |
+| `FCT-CORE-021` | Autorité d'audit et de contrôle | `VACANTE` | `ATTRIBUÉE À TITRE TRANSITOIRE — TITULAIRE UNIQUE` |
+
+- **Titulaire unique :** Koné Djakaridja, dit Zakaria le Soufi, dirigeant actuel de GAMAD.
+- **Source :** `ADOPTION-0022-ATTRIBUTION-TRANSITOIRE-FONCTIONS-0001`, Décision et Article 2 (réversibilité).
+- **Niveau de preuve :** `P1 — DOCUMENTÉ`.
+- **Nature :** transitoire et révocable par simple acte de l'autorité ; ne crée aucun droit permanent, conformément à l'Article 2 d'`ADOPTION-0022`.
+
+## Article 163 — Limite reconnue sur l'indépendance de l'audit
+
+L'attribution de `FCT-CORE-021` au même titulaire que les trois autres fonctions prive temporairement l'audit de son indépendance structurelle. Cette limite, reconnue à l'Article 1 d'`ADOPTION-0022`, est inscrite comme risque accepté à titre transitoire dans `REGISTRE-INITIAL-EXCEPTIONS-SECURITE-0001` et dans `REGISTRE-INITIAL-RISQUES-CONTROLES-0001` (arbitrage de `RISK-SEC-0001`).
+
+## Article 164 — Fonctions demeurant vacantes
+
+Le présent Titre ne modifie l'état d'aucune autre fonction du catalogue. Toutes les fonctions listées à l'Article 129 autres que celles de l'Article 162 ci-dessus — notamment la garde constitutionnelle (`FCT-CORE-002`), le Registraire (`FCT-CORE-003`), l'autorité architecturale (`FCT-CORE-006`) et les responsables de capacités (`FCT-CAP-001` à `020`) — demeurent `VACANTES`, conformément à l'Article 3 d'`ADOPTION-0022`.
+
+## Article 165 — Effet sur la matrice de l'Article 129
+
+Pour lecture combinée avec la matrice de l'Article 129, les quatre lignes correspondant à `FCT-CORE-009`, `FCT-CORE-013`, `FCT-CORE-016` et `FCT-CORE-021` doivent désormais être lues comme suit, sans que les lignes de l'Article 129 soient elles-mêmes réécrites :
+
+| Autorité ou famille | Fonction | Mandat actif constaté | État |
+|---|---|---|---|
+| Koné Djakaridja, dit Zakaria le Soufi | Autorité d'ingénierie (`FCT-CORE-009`) | `ADOPTION-0022`, Décision | `P1 — DOCUMENTÉ`, `ATTRIBUÉE À TITRE TRANSITOIRE` |
+| Koné Djakaridja, dit Zakaria le Soufi | Autorité de sécurité (`FCT-CORE-013`) | `ADOPTION-0022`, Décision | `P1 — DOCUMENTÉ`, `ATTRIBUÉE À TITRE TRANSITOIRE` |
+| Koné Djakaridja, dit Zakaria le Soufi | Autorité d'exploitation (`FCT-CORE-016`) | `ADOPTION-0022`, Décision | `P1 — DOCUMENTÉ`, `ATTRIBUÉE À TITRE TRANSITOIRE` |
+| Koné Djakaridja, dit Zakaria le Soufi | Autorité d'audit (`FCT-CORE-021`) | `ADOPTION-0022`, Décision | `P1 — DOCUMENTÉ`, `ATTRIBUÉE À TITRE TRANSITOIRE — voir Article 163` |
+
+## Article 166 — Non-effet sur `G0`
+
+Le présent Titre, comme `ADOPTION-0022` dont il constate l'exécution, ne rend aucune capacité opérationnelle et ne constate pas la Porte `G0`.
