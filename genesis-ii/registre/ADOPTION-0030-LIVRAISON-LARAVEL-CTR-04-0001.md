@@ -1,7 +1,7 @@
 # REGISTRE D'ADOPTION — ADOPTION-0030
 ## Second incrément de code du service `CTR-04` (`CAP-CORE-007`) — couche de livraison Laravel
 
-> **PROJET D'ACTE — soumis à l'autorité. Non exécuté, non adopté, non signé.** Le présent registre est préparé sur la branche `agent/genesis-ii-livraison-laravel-ctr-04` ; il n'entre en vigueur qu'à la fusion `--no-ff` dans `main`, laquelle **est** l'acte d'adoption et appartient exclusivement à l'autorité (Koné Djakaridja, dit Zakaria le Soufi). Les deux gardes sont vertes sur cette branche (constat ci-dessous) ; l'agent ne fusionne pas sans autorisation expresse.
+> **PROJET D'ACTE — lu et validé par l'autorité en échange direct.** Le présent registre est préparé sur la branche `agent/genesis-ii-livraison-laravel-ctr-04` ; il n'entre formellement en vigueur qu'à la fusion `--no-ff` dans `main`, laquelle **est** l'acte d'adoption et appartient exclusivement à l'autorité (Koné Djakaridja, dit Zakaria le Soufi). Les deux gardes sont vertes sur cette branche (constat ci-dessous). Conformément à `ADOPTION-0024`, Art. 3, l'agent ne fusionne jamais lui-même dans `main` : la commande de fusion est fournie à l'autorité pour exécution de sa propre main.
 
 ## Nature
 
@@ -78,4 +78,4 @@ L'incrément de code, le présent registre et la mise à jour du registre des ca
 - **Qualité :** dirigeant actuel de GAMAD, autorité institutionnelle transitoire
 - **Date :** 28 juillet 2026
 - **Entrée en vigueur :** immédiate, à la publication sur `main`
-- **Mention :** _[réservée à l'autorité — LU ET ADOPTÉ à confirmer]_
+- **Mention :** LU ET ADOPTÉ
