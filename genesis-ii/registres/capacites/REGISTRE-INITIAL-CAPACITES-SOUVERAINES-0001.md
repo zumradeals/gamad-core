@@ -997,3 +997,41 @@ La séparation posée à l'Article 4 de `ADOPTION-0027` demeure entière : la ga
 ## Article 122 — Non-effet
 
 Le présent Titre ne rend `CAP-CORE-003` ni implémentée, ni admise, ni active, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
+
+---
+
+# TITRE XXI — MISE À JOUR POST-ADOPTION : PREMIER INCRÉMENT DE CODE DE `CAP-CORE-003`
+
+## Article 123 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0036-INCREMENT-CODE-CAP-CORE-003-0001`. Il ne modifie aucune disposition des Titres I à XX : ceux-ci demeurent exacts. Il ajoute un fait postérieur — le premier code de `CAP-CORE-003`, écrit sur la conception adoptée par `ADOPTION-0035`.
+
+## Article 124 — Changement d'état d'implémentation et de preuve
+
+| Capacité | État avant (Titre XX) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-003` — Registre des autorités et mandats | Conception `CONÇUE` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception `CONÇUE` ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0036`, adoptant le premier incrément de code de `CAP-CORE-003` (`core/registre-autorites/`).
+- **Contrat `CTR-02` :** ses trois opérations sont livrées — `resoudre_mandat`, `verifier_acte`, `resoudre_vacance`.
+- **Invariants matérialisés :** `INV-12` à `INV-16`.
+
+## Article 125 — La première preuve `P3` obtenue sous la doctrine des gardes
+
+`CAP-CORE-003` est la première capacité à atteindre `P3` par une garde éprouvant **son propre contrat**, conformément à la doctrine arrêtée à l'Article 120. Sa garde, `core/registre-autorites/tests/mandat_p3.php`, est distincte de celle de `CAP-CORE-007` et n'en hérite rien.
+
+La preuve porte sur la vérification d'un mandat à la date d'un acte (`INV-14`) et sur la terminaison constitutive de la chaîne (`INV-15`). Sa capacité à échouer est démontrée par la contre-épreuve déclarée à l'Article 4 de `ADOPTION-0036`.
+
+## Article 126 — Ce que cette capacité rend désormais possible
+
+Le Core peut, pour la première fois, répondre à la question : *l'autorité signataire d'un acte détenait-elle un mandat valide le jour de sa signature ?* La chaîne `norme → acte → autorité → mandat valide à la date` est close ; son quatrième maillon n'était jusqu'ici vérifié par personne.
+
+Quatre verdicts sont rendus, dont un seul affirme une vérification : `VÉRIFIÉ`, `CONSTITUTIF`, `NON COUVERT`, `INDETERMINE`.
+
+## Article 127 — Portée limitée
+
+`CAP-CORE-003` ne rend personne apte à se connecter. Elle rend le pouvoir **traçable**, non exerçable. L'accès administratif demeure subordonné à `CAP-CORE-001`, `CAP-CORE-005` et `CAP-CORE-004`, toutes `À ÉTABLIR`. La capacité n'est ni admise, ni active au sens de l'exploitation.
+
+## Article 128 — Non-effet
+
+Le présent Titre ne nomme personne, n'étend aucun pouvoir, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.

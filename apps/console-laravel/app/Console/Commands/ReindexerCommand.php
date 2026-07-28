@@ -27,7 +27,7 @@ final class ReindexerCommand extends Command
 {
     protected $signature = 'registre:reindexer';
 
-    protected $description = "Reconstruit l'index dérivé depuis le corpus, après vérification des deux gardes.";
+    protected $description = "Reconstruit l'index dérivé depuis le corpus, après vérification de toutes les gardes.";
 
     public function handle(): int
     {
@@ -40,7 +40,7 @@ final class ReindexerCommand extends Command
         // propagerait l'incohérence. La commande refuse alors de s'exécuter.
         if (!$this->gardesVertes($corpus)) {
             $this->newLine();
-            $this->error('Réindexation REFUSÉE : les deux gardes ne sont pas vertes.');
+            $this->error('Réindexation REFUSÉE : toutes les gardes ne sont pas vertes.');
             $this->line("Corriger le corpus, puis relancer. Aucun index n'a été touché.");
 
             return self::FAILURE;
@@ -54,12 +54,15 @@ final class ReindexerCommand extends Command
 
             $r = (new Ingestion($pdo, $corpus))->executer();
             $this->info(sprintf(
-                'Index reconstruit : %d adoptions, %d normes, %d versions, %d statuts, %d états de capacité.',
+                'Index reconstruit : %d adoptions, %d normes, %d versions, %d statuts, '
+                . "%d états de capacité, %d fonctions, %d mandat(s).",
                 $r['adoptions'],
                 $r['normes'],
                 $r['versions'],
                 $r['statuts'],
                 $r['etats'],
+                $r['fonctions'],
+                $r['mandats'],
             ));
 
             $index = (new Ctr04($pdo, $corpus))->resoudreIndex();
@@ -105,17 +108,23 @@ final class ReindexerCommand extends Command
     }
 
     /**
-     * Exécute les deux gardes du dépôt, séparément et sans les réécrire
-     * (ADOPTION-0027, Art. 4). Le contrôle documentaire Python et le test de
-     * comportement PHP demeurent deux programmes distincts ; cette commande les
+     * Exécute les gardes du dépôt, séparément et sans les réécrire
+     * (ADOPTION-0027, Art. 4). Le contrôle documentaire Python et les tests de
+     * comportement PHP demeurent des programmes distincts ; cette commande les
      * invoque, elle ne les absorbe pas.
      */
     private function gardesVertes(string $corpus): bool
     {
-        $gardes = [
-            'Garde 1 — intégrité documentaire' => ['python3', 'outils/verifier-integrite.py'],
-            'Garde 2 — preuve P3'              => ['php', 'core/registre-normes/tests/temporel_p3.php'],
-        ];
+        // Doctrine arrêtée par ADOPTION-0035, Art. 2.2 : une garde documentaire
+        // unique, et une garde de comportement par capacité codée. Les gardes
+        // de comportement sont donc DÉCOUVERTES, non énumérées : ajouter une
+        // capacité et sa garde suffit à la placer sous ce contrôle.
+        $gardes = ['Garde documentaire — intégrité' => ['python3', 'outils/verifier-integrite.py']];
+
+        foreach (glob($corpus . '/core/*/tests/*_p3.php') ?: [] as $test) {
+            $module = basename(dirname($test, 2));
+            $gardes["Garde de comportement — {$module}"] = ['php', ltrim(str_replace($corpus, '', $test), '/')];
+        }
 
         $toutes = true;
 
