@@ -27,13 +27,15 @@ final class Ctr04
      */
     public function resoudreNorme(string $reference, ?string $version = null, ?string $date = null): ?array
     {
-        $sql = 'SELECT id, norme_reference, version, empreinte_git, chemin FROM version_norme WHERE norme_reference = ?';
+        $sql = 'SELECT v.id, v.norme_reference, v.version, v.empreinte_git, v.chemin, n.rang_code
+                FROM version_norme v JOIN norme n ON n.reference = v.norme_reference
+                WHERE v.norme_reference = ?';
         $args = [$reference];
         if ($version !== null) {
-            $sql .= ' AND version = ?';
+            $sql .= ' AND v.version = ?';
             $args[] = $version;
         }
-        $sql .= ' ORDER BY version DESC LIMIT 1';
+        $sql .= ' ORDER BY v.version DESC LIMIT 1';
         $st = $this->pdo->prepare($sql);
         $st->execute($args);
         $v = $st->fetch();
@@ -63,10 +65,49 @@ final class Ctr04
             'version'            => $v['version'],
             'empreinte_git'      => $v['empreinte_git'],
             'chemin'             => $v['chemin'],
+            'rang'               => $v['rang_code'],
             'statut'             => $statut['valeur'] ?? null,
             'date_effet'         => $statut['date_effet'] ?? null,
             'adoption_reference' => $statut['adoption_reference'] ?? null,
             'en_vigueur'         => $statut !== null && !in_array($statut['valeur'], ['REMPLACE', 'ABROGE'], true),
+        ];
+    }
+
+    /**
+     * Résout une source reconnue : son identité, sa catégorie, son niveau
+     * d'authenticité et, si le corpus la connaît aussi comme norme, son statut.
+     *
+     * L'authenticité (`AUTH-0` à `AUTH-4`) et le statut d'adoption sont rendus
+     * côte à côte mais jamais confondus (`INV-9`) : une source peut être
+     * authentifiée et abrogée, ou de provenance seulement déclarée et faire
+     * règle. Le rang est celui du corpus, `INDETERMINE` tant qu'aucune autorité
+     * ne l'a établi (`INV-8`).
+     *
+     * @return array<string,mixed>|null
+     */
+    public function resoudreSource(string $reference, ?string $date = null): ?array
+    {
+        $st = $this->pdo->prepare(
+            'SELECT reference, titre, categorie, authenticite, reserve FROM source WHERE reference = ?'
+        );
+        $st->execute([$reference]);
+        $source = $st->fetch();
+        if ($source === false) {
+            return null;
+        }
+
+        $norme = $this->resoudreNorme($reference, null, $date);
+
+        return [
+            'reference'          => $source['reference'],
+            'titre'              => $source['titre'],
+            'categorie'          => $source['categorie'],
+            'authenticite'       => $source['authenticite'],
+            'reserve'            => $source['reserve'],
+            'rang'               => $norme['rang'] ?? 'INDETERMINE',
+            'statut'             => $norme['statut'] ?? null,
+            'adoption_reference' => $norme['adoption_reference'] ?? null,
+            'versionnee'         => $norme !== null,
         ];
     }
 

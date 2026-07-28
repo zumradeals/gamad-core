@@ -50,6 +50,10 @@ final class Ctr04Controller
         $integrite = $ctr04->verifierIntegrite();
         $index = $ctr04->resoudreIndex();
 
+        $indetermines = (int) $pdo->query(
+            "SELECT count(*) FROM norme WHERE rang_code = 'INDETERMINE'"
+        )->fetchColumn();
+
         $concordants = array_filter($integrite, fn ($l) => $l['concorde']);
         $divergents = array_filter($integrite, fn ($l) => !$l['concorde']);
 
@@ -72,6 +76,7 @@ final class Ctr04Controller
             'index' => $index,
             'p3' => $p3,
             'p3Ok' => $p3Ok,
+            'indetermines' => $indetermines,
         ]);
     }
 
@@ -85,6 +90,17 @@ final class Ctr04Controller
 
         if ($resultat === null) {
             return response()->json(['erreur' => 'norme introuvable', 'reference' => $reference], 404);
+        }
+
+        return response()->json($resultat);
+    }
+
+    public function resoudreSource(Request $request, string $reference): JsonResponse
+    {
+        $resultat = $this->ctr04()->resoudreSource($reference, $request->query('date'));
+
+        if ($resultat === null) {
+            return response()->json(['erreur' => 'source introuvable', 'reference' => $reference], 404);
         }
 
         return response()->json($resultat);

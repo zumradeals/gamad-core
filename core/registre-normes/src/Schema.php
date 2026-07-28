@@ -24,15 +24,44 @@ final class Schema
             ? 'bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY'
             : 'INTEGER PRIMARY KEY AUTOINCREMENT';
 
-        foreach (['relation_evolution', 'etat_capacite', 'statut', 'version_norme', 'adoption', 'norme'] as $t) {
+        foreach ([
+            'relation_evolution', 'etat_capacite', 'statut', 'version_norme',
+            'adoption', 'norme', 'source', 'rang_normatif',
+        ] as $t) {
             $pdo->exec("DROP TABLE IF EXISTS {$t}");
         }
+
+        // Hiérarchie normative de SOURCES-0001, Articles 25 à 33 (INV-8).
+        // Le rang d'une norme procède de cette table et d'elle seule ; il n'est
+        // jamais inventé. `INDETERMINE` y figure comme rang explicite : le
+        // service déclare son ignorance plutôt que de présumer.
+        $pdo->exec(<<<SQL
+            CREATE TABLE rang_normatif (
+                code    TEXT PRIMARY KEY,
+                libelle TEXT NOT NULL,
+                ordre   INTEGER NOT NULL,
+                article TEXT NOT NULL
+            )
+        SQL);
+
+        // Une source reconnue au sens de SOURCES-0001. L'authenticité (AUTH-n)
+        // y est distincte du statut d'adoption (INV-9) : une source peut être
+        // authentifiée et abrogée, ou de provenance déclarée et faire règle.
+        $pdo->exec(<<<SQL
+            CREATE TABLE source (
+                reference    TEXT PRIMARY KEY,
+                titre        TEXT NOT NULL,
+                categorie    TEXT NOT NULL,
+                authenticite TEXT NOT NULL,
+                reserve      TEXT
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE norme (
                 reference   TEXT PRIMARY KEY,
                 titre       TEXT NOT NULL,
-                rang        TEXT NOT NULL,
+                rang_code   TEXT NOT NULL REFERENCES rang_normatif(code),
                 domaine     TEXT NOT NULL
             )
         SQL);

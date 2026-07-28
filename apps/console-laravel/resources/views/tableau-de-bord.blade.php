@@ -36,6 +36,7 @@
     <div class="card"><div class="kpi {{ count($divergents) ? 'ko' : 'ok' }}">{{ count($divergents) }}</div><small>divergences d'empreinte</small></div>
     <div class="card"><div class="kpi {{ count($index['divergences']) ? 'ko' : 'ok' }}">{{ count($index['divergences']) }}</div><small>divergences d'index</small></div>
     <div class="card"><div class="kpi {{ $p3Ok ? 'ok' : 'ko' }}">{{ $p3Ok ? 'P3 ✓' : 'P3 ✗' }}</div><small>reconstruction temporelle</small></div>
+    <div class="card"><div class="kpi">{{ $indetermines }}</div><small>normes de rang indéterminé</small></div>
   </div>
 
   <h2>Preuve P3 — reconstruction temporelle de <code>CAP-CORE-007</code></h2>
@@ -83,6 +84,8 @@
   <p class="note">
     Index dérivé des fichiers versionnés — les fichiers Git restent la source de vérité (INV-5).
     Aucune écriture du corpus depuis cette vue (INV-4). Empreintes recalculées, jamais recopiées (INV-1).
+    Le rang normatif n'est établi pour aucune norme : <code>SOURCES-0001</code> énumère les rangs en prose
+    sans les assigner à des textes nommés, et cette qualification appartient à l'autorité (INV-8).
     Ce tableau de bord ne rend aucune capacité opérationnelle et ne constate pas <code>G0</code>.
   </p>
 </div>
