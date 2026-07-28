@@ -26,6 +26,7 @@ final class Schema
 
         foreach ([
             'relation_evolution', 'etat_capacite', 'statut', 'version_norme',
+            'delegation', 'etat_mandat', 'mandat', 'etat_fonction', 'fonction', 'titulaire',
             'adoption', 'norme', 'source', 'rang_normatif',
         ] as $t) {
             $pdo->exec("DROP TABLE IF EXISTS {$t}");
@@ -108,6 +109,71 @@ final class Schema
                     CHECK (dimension IN ('conception','implementation','exploitation','preuve')),
                 valeur             TEXT NOT NULL,
                 date_effet         TEXT NOT NULL,
+                adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        // CAP-CORE-003 — autorités et mandats (CONCEPTION-CAP-CORE-003, Titre II).
+        // Les vocabulaires d'état sont repris LITTÉRALEMENT des Articles 11 à 13
+        // du registre adopté ; aucune valeur nouvelle n'est introduite.
+        $pdo->exec(<<<SQL
+            CREATE TABLE titulaire (
+                reference TEXT PRIMARY KEY,
+                libelle   TEXT NOT NULL,
+                nature    TEXT NOT NULL
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE fonction (
+                reference TEXT PRIMARY KEY,
+                libelle   TEXT NOT NULL,
+                source    TEXT NOT NULL
+            )
+        SQL);
+
+        // État d'une fonction, en ajout seul (INV-3). Article 11 : 10 valeurs.
+        $pdo->exec(<<<SQL
+            CREATE TABLE etat_fonction (
+                id                 {$id},
+                fonction_reference TEXT NOT NULL REFERENCES fonction(reference),
+                valeur             TEXT NOT NULL,
+                date_effet         TEXT NOT NULL,
+                adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE mandat (
+                reference           TEXT PRIMARY KEY,
+                fonction_reference  TEXT NOT NULL REFERENCES fonction(reference),
+                titulaire_reference TEXT NOT NULL REFERENCES titulaire(reference),
+                debut               TEXT NOT NULL,
+                fin                 TEXT,
+                niveau_preuve       TEXT NOT NULL,
+                adoption_reference  TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        // État d'un mandat, en ajout seul (INV-3). Article 12 : 12 valeurs.
+        $pdo->exec(<<<SQL
+            CREATE TABLE etat_mandat (
+                id                 {$id},
+                mandat_reference   TEXT NOT NULL REFERENCES mandat(reference),
+                valeur             TEXT NOT NULL,
+                date_effet         TEXT NOT NULL,
+                adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE delegation (
+                reference          TEXT PRIMARY KEY,
+                mandat_source      TEXT NOT NULL REFERENCES mandat(reference),
+                delegataire        TEXT NOT NULL REFERENCES titulaire(reference),
+                portee             TEXT NOT NULL,
+                debut              TEXT NOT NULL,
+                fin                TEXT,
                 adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
             )
         SQL);

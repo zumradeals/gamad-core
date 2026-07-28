@@ -36,7 +36,7 @@ final class Ingestion
 
     /**
      * @return array{adoptions:int,normes:int,versions:int,statuts:int,etats:int,
-     *               rangs:int,sources:int,indetermines:int}
+     *               rangs:int,sources:int,fonctions:int,mandats:int,indetermines:int}
      */
     public function executer(): array
     {
@@ -50,6 +50,7 @@ final class Ingestion
         $versions  = $this->ingererNormesDeclarees();
         $versions += $this->ingererNormesDeFeuillesStatut();
         $this->ingererEtatsCapacites();
+        $fonctions = $this->ingererAutoritesEtMandats();
 
         return [
             'adoptions' => $adoptions,
@@ -59,6 +60,8 @@ final class Ingestion
             'etats'     => (int) $this->pdo->query('SELECT count(*) FROM etat_capacite')->fetchColumn(),
             'rangs'     => $rangs,
             'sources'   => $sources,
+            'fonctions' => $fonctions,
+            'mandats'   => (int) $this->pdo->query('SELECT count(*) FROM mandat')->fetchColumn(),
             'indetermines' => (int) $this->pdo
                 ->query("SELECT count(*) FROM norme WHERE rang_code = 'INDETERMINE'")->fetchColumn(),
         ];
@@ -271,6 +274,182 @@ final class Ingestion
     }
 
     /**
+     * Dérive fonctions, titulaires et mandats DU REGISTRE ADOPTÉ des autorités
+     * (`ADOPTION-0017`, complété par `ADOPTION-0022` et `ADOPTION-0035`).
+     *
+     * Rien n'est inscrit en dur : le catalogue vient des tableaux des Articles
+     * 33 à 36, ses évolutions des Titres de mise à jour post-adoption, et le
+     * mandat fondateur des Articles 46 et 47. Les dates d'effet viennent des
+     * actes, par l'index des adoptions (`INV-12` : aucune autorité implicite).
+     *
+     * @return int nombre de fonctions inscrites au catalogue
+     */
+    private function ingererAutoritesEtMandats(): int
+    {
+        $chemin = 'genesis-ii/registres/autorites/REGISTRE-INITIAL-AUTORITES-MANDATS-0001.md';
+        $absolu = $this->corpus . '/' . $chemin;
+        if (!is_file($absolu)) {
+            return 0;
+        }
+        $texte = (string) file_get_contents($absolu);
+
+        // L'acte qui adopte le registre fonde les états initiaux du catalogue.
+        $acteInitial = null;
+        foreach ($this->actes as $ref => $a) {
+            if (str_contains(mb_strtoupper($a['texte'], 'UTF-8'), 'AUTORITES-MANDATS')) {
+                $acteInitial = $ref;
+                break;
+            }
+        }
+        $dateInitiale = $this->actes[$acteInitial]['date'] ?? null;
+
+        $insFonction = $this->pdo->prepare('INSERT INTO fonction(reference,libelle,source) VALUES(?,?,?)');
+        $insEtatF = $this->pdo->prepare(
+            'INSERT INTO etat_fonction(fonction_reference,valeur,date_effet,adoption_reference) VALUES(?,?,?,?)'
+        );
+
+        // --- Catalogue : Articles 33 à 36, quatre colonnes, état en dernière.
+        $article = 0;
+        $vues = [];
+        foreach (explode("\n", $texte) as $ligne) {
+            if (preg_match('/^##\s*Article\s+(\d+)/u', $ligne, $m)) {
+                $article = (int) $m[1];
+                continue;
+            }
+            if ($article < 33 || $article > 36) {
+                continue;
+            }
+            $ligne = trim($ligne);
+            if (!preg_match('/^\|\s*`(FCT-[A-Z0-9-]+)`\s*\|/u', $ligne, $m)) {
+                continue;
+            }
+            $c = array_map(fn ($x) => $this->nettoyer(trim($x)), explode('|', trim($ligne, '|')));
+            if (count($c) < 4 || isset($vues[$m[1]])) {
+                continue;
+            }
+            $insFonction->execute([$m[1], $c[1], $c[2]]);
+            if ($dateInitiale !== null && $c[3] !== '') {
+                $insEtatF->execute([$m[1], $c[3], $dateInitiale, $acteInitial]);
+            }
+            $vues[$m[1]] = true;
+        }
+
+        // --- Évolutions : Titres de mise à jour post-adoption, trois colonnes
+        //     après la référence, la valeur d'arrivée en dernière.
+        foreach (preg_split('/^# TITRE /m', $texte) ?: [] as $bloc) {
+            if (!str_contains($bloc, 'MISE À JOUR POST-ADOPTION')
+                || !preg_match('/\*\*Source :\*\*\s*`(ADOPTION-\d{4})[^`]*`/u', $bloc, $src)) {
+                continue;
+            }
+            $date = $this->actes[$src[1]]['date'] ?? null;
+            if ($date === null) {
+                continue;
+            }
+            foreach (explode("\n", $bloc) as $ligne) {
+                $ligne = trim($ligne);
+                if (!preg_match('/^\|\s*`(FCT-[A-Z0-9-]+)`\s*\|/u', $ligne, $m) || !isset($vues[$m[1]])) {
+                    continue;
+                }
+                $c = array_map(fn ($x) => $this->nettoyer(trim($x)), explode('|', trim($ligne, '|')));
+                if (count($c) === 4 && $c[3] !== '') {
+                    $insEtatF->execute([$m[1], $c[3], $date, $src[1]]);
+                }
+            }
+        }
+
+        $this->ingererMandatFondateur($texte, $vues);
+
+        return count($vues);
+    }
+
+    /**
+     * Dérive le titulaire et le mandat fondateurs des Articles 46 et 47, puis
+     * leurs états successifs des Titres de mise à jour.
+     *
+     * @param array<string,bool> $fonctions fonctions connues du catalogue
+     */
+    private function ingererMandatFondateur(string $texte, array $fonctions): void
+    {
+        $champ = function (string $bloc, string $etiquette): ?string {
+            $motif = '/^-\s*\*\*' . preg_quote($etiquette, '/') . '[^:]*:\*\*\s*(.+?)\s*[;.]?\s*$/mu';
+
+            return preg_match($motif, $bloc, $m) ? $this->nettoyer($m[1]) : null;
+        };
+
+        $blocs = [];
+        foreach (preg_split('/^## Article (\d+)/m', $texte, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [] as $i => $part) {
+            if ($i > 0 && ctype_digit(trim($part))) {
+                $blocs[(int) trim($part)] = null;
+                $courant = (int) trim($part);
+            } elseif (isset($courant)) {
+                $blocs[$courant] = $part;
+                unset($courant);
+            }
+        }
+
+        $a46 = $blocs[46] ?? '';
+        $a47 = $blocs[47] ?? '';
+        if ($a46 === '' || $a47 === '') {
+            return;
+        }
+
+        $titulaire = $champ($a46, "Référence d'autorité") ?? $champ($a46, 'Référence d’autorité');
+        $nom = $champ($a46, 'Titulaire');
+        $mandat = $champ($a47, 'Référence');
+        $fonction = $champ($a47, 'Fonction');
+        $etat = $champ($a47, 'État proposé');
+        $preuve = $champ($a46, 'Niveau de preuve') ?? 'P1';
+        $debutBrut = $champ($a47, 'Début proposé') ?? '';
+        $debut = $this->dateIso($debutBrut);
+
+        if (!$titulaire || !$nom || !$mandat || !$fonction || !$debut || !isset($fonctions[$fonction])) {
+            return; // rien n'est inventé : à défaut de source lisible, aucun mandat
+        }
+
+        // L'acte qui fonde le mandat est celui qui adopte le registre.
+        $acte = null;
+        foreach ($this->actes as $ref => $a) {
+            if (str_contains(mb_strtoupper($a['texte'], 'UTF-8'), 'AUTORITES-MANDATS')) {
+                $acte = $ref;
+                break;
+            }
+        }
+        if ($acte === null) {
+            return;
+        }
+
+        $this->pdo->prepare('INSERT INTO titulaire(reference,libelle,nature) VALUES(?,?,?)')
+            ->execute([$titulaire, $nom, 'personne']);
+        $this->pdo->prepare(
+            'INSERT INTO mandat(reference,fonction_reference,titulaire_reference,debut,fin,niveau_preuve,adoption_reference)
+             VALUES(?,?,?,?,?,?,?)'
+        )->execute([$mandat, $fonction, $titulaire, $debut, null, $preuve, $acte]);
+
+        $insEtatM = $this->pdo->prepare(
+            'INSERT INTO etat_mandat(mandat_reference,valeur,date_effet,adoption_reference) VALUES(?,?,?,?)'
+        );
+        if ($etat !== null) {
+            $insEtatM->execute([$mandat, $etat, $debut, $acte]);
+        }
+
+        // Confirmations et changements d'état ultérieurs, portés par les Titres
+        // de mise à jour qui citent le mandat et leur acte source.
+        foreach (preg_split('/^# TITRE /m', $texte) ?: [] as $bloc) {
+            // Le Titre peut désigner son acte par « **Source :** » ou par la
+            // formule « conséquence d'exécution de `ADOPTION-NNNN-…` ». On
+            // retient le premier acte cité, quelle que soit la forme.
+            if (!str_contains($bloc, $mandat)
+                || !preg_match('/`(ADOPTION-\d{4})[^`]*`/u', $bloc, $src)) {
+                continue;
+            }
+            $date = $this->actes[$src[1]]['date'] ?? null;
+            if ($date !== null && preg_match('/^\|\s*État\s*\|\s*`([^`]+)`/mu', $bloc, $m)) {
+                $insEtatM->execute([$mandat, $this->nettoyer($m[1]), $date, $src[1]]);
+            }
+        }
+    }
+
+    /**
      * Indexe les textes fondateurs, dont l'empreinte est déclarée par une
      * feuille de statut `X-STATUT.md` et non par un constat d'exécution en
      * tableau (ère `ADOPTION-0001` à `0019`).
@@ -400,7 +579,7 @@ final class Ingestion
         // Transitions : Titres « MISE À JOUR POST-ADOPTION ».
         foreach (preg_split('/^# TITRE /m', $texte) ?: [] as $bloc) {
             if (!str_contains($bloc, 'MISE À JOUR POST-ADOPTION')
-                || !preg_match('/\*\*Source :\*\*\s*`(ADOPTION-\d{4})`/u', $bloc, $src)) {
+                || !preg_match('/\*\*Source :\*\*\s*`(ADOPTION-\d{4})[^`]*`/u', $bloc, $src)) {
                 continue;
             }
             foreach (explode("\n", $bloc) as $ligne) {
