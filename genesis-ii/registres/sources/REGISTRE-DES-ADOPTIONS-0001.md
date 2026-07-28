@@ -81,6 +81,7 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 | `ADOPTION-0037` | Mission de codage de `AGENT-IA-002` — `MISSION-AI-GENESIS-II-CODE-0001`, périmètre, interdictions et preuves exigées | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0038` | Conception et premier code de `CAP-CORE-001` — Registre des identités, contrat `CTR-01` | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0039` | Conception et premier code de `CAP-CORE-005` — authentification, magasin d'exploitation et première écriture applicative | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+| `ADOPTION-0040` | Conception et premier code de `CAP-CORE-004` — moteur d'autorisation, opposabilité des limites du mandat | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
 ## Article 5 — Textes en cours de délibération non inscrits
 

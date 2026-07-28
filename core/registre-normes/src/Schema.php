@@ -27,7 +27,7 @@ final class Schema
         foreach ([
             'relation_evolution', 'etat_capacite', 'statut', 'version_norme',
             'delegation', 'etat_mandat', 'mandat', 'etat_fonction', 'fonction', 'titulaire',
-            'denomination', 'etat_entite', 'entite',
+            'denomination', 'etat_entite', 'entite', 'regle', 'politique',
             'adoption', 'norme', 'source', 'rang_normatif',
         ] as $t) {
             $pdo->exec("DROP TABLE IF EXISTS {$t}");
@@ -111,6 +111,33 @@ final class Schema
                 valeur             TEXT NOT NULL,
                 date_effet         TEXT NOT NULL,
                 adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        // CAP-CORE-004 — politiques d'autorisation (CONCEPTION-CAP-CORE-004).
+        // Les politiques sont DÉRIVÉES du corpus, jamais écrites dans le code
+        // du moteur (INV-29) : changer une règle exige un acte, non un correctif.
+        $pdo->exec(<<<SQL
+            CREATE TABLE politique (
+                reference          TEXT PRIMARY KEY,
+                version            TEXT NOT NULL,
+                libelle            TEXT NOT NULL,
+                source             TEXT NOT NULL,
+                adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        // `sujet_type` NULL = la règle vaut pour TOUT sujet, titulaire du
+        // mandat compris (INV-30). Un moteur qui exempterait l'autorité de ses
+        // propres bornes ne serait pas un moteur d'autorisation.
+        $pdo->exec(<<<SQL
+            CREATE TABLE regle (
+                id                  {$id},
+                politique_reference TEXT NOT NULL REFERENCES politique(reference),
+                effet               TEXT NOT NULL CHECK (effet IN ('PERMET','REFUSE')),
+                action              TEXT NOT NULL,
+                sujet_type          TEXT,
+                motif               TEXT NOT NULL
             )
         SQL);
 

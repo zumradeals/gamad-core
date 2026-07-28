@@ -1117,3 +1117,37 @@ Une session établit *qui l'on est*, non *ce que l'on peut faire*. Les droits re
 ## Article 140 — Non-effet
 
 Le présent Titre ne crée aucun compte, ne détient aucun secret, ne rend `CAP-CORE-005` ni admise ni active, ne modifie le corps d'aucun article antérieur et ne constate pas `G0`.
+
+---
+
+# TITRE XXIV — MISE À JOUR POST-ADOPTION : `CAP-CORE-004` ET L'OPPOSABILITÉ DES LIMITES
+
+## Article 141 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0040-CAP-CORE-004-0001`. Il ne modifie aucune disposition des Titres I à XXIII.
+
+## Article 142 — Changement d'état
+
+| Capacité | État avant (Article 31) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-004` — Moteur d'autorisation commun | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0040`. **Contrat :** `CTR-03`. **Invariants introduits :** `INV-27` à `INV-30`.
+
+## Article 143 — Ce que cette capacité rend opératoire
+
+L'Article 49 du Registre des autorités énumère depuis le 26 juillet 2026 ce que le mandat transitoire ne permet pas — falsifier une source, effacer injustement une preuve, convertir le Core en propriété personnelle, prononcer `G0` sans les contrôles requis, entre autres. **Ces limites étaient écrites, non opposables.**
+
+Le moteur les dérive et les rend opposables **à tout sujet, titulaire du mandat compris** (`INV-30`). Un moteur d'autorisation qui exempterait l'autorité de ses propres bornes ne serait pas un moteur d'autorisation.
+
+Treize règles sont dérivées : six compétences de l'Article 48, sept limites de l'Article 49. Les énoncés du corpus sont repris **mot pour mot** comme motifs, sans reformulation.
+
+## Article 144 — Ce que le moteur n'empêche pas
+
+Le moteur **n'empêche rien physiquement**. Le titulaire qui détient les accès techniques peut agir sans le consulter ; aucune politique déclarée n'arrête une main qui dispose du dépôt.
+
+Il transforme un franchissement silencieux en **franchissement constatable**. C'est moins qu'un verrou, et c'est tout ce qu'un Core peut offrir tant que la séparation des fonctions n'est pas réelle — soit tant que les quinze fonctions constatées vacantes à l'Article 170 du Registre des autorités le demeurent.
+
+## Article 145 — Non-effet
+
+Le présent Titre ne confère ni ne retire aucun pouvoir, n'empêche aucune opération, ne modifie le corps d'aucun article antérieur et ne constate pas `G0`.
