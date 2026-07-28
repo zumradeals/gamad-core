@@ -90,6 +90,8 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 
 | `ADOPTION-0045` | Règle du domaine gardien, rectification de trois collisions inexistantes et réattribution des familles `CTR-09` et `CTR-05` | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
+| `ADOPTION-0046` | Point d'entrée de consultation de l'annuaire des capacités (`CAP-CORE-020`) | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
 ## Article 5 — Textes en cours de délibération non inscrits
 
 `MATRICE-INITIALE-LOI-PREUVE-0001` et `REGISTRE-INITIAL-USAGES-IA-0001`, ainsi que tout texte produit dans le cadre des Phases 1 à 4 en cours, portent le statut `PROJET NORMATIF — EN COURS DE DÉLIBÉRATION` et ne figurent pas dans ce tableau tant qu'ils ne sont pas adoptés.

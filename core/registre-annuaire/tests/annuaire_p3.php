@@ -220,6 +220,45 @@ $verifier(
     sprintf('%d capacité(s) codée(s) sur %d', $ecarts['capacites_codees'], $ecarts['capacites']),
 );
 
+/* ------------------------------------------- point d'entrée de consultation */
+echo "\n  Point d'entrée — l'annuaire est consultable sans lancer un test\n";
+
+// Une capacité dont l'état n'est lisible qu'en exécutant sa propre preuve n'est
+// pas consultable par l'autorité. La page est rendue ici en mémoire, sur le
+// même corpus que le reste de la garde, et son contenu est vérifié.
+$entree = dirname(__DIR__) . '/public/index.php';
+$verifier(is_file($entree), "le point d'entrée existe", $entree);
+
+$rendu = '';
+$erreur = null;
+if (is_file($entree)) {
+    ob_start();
+    try {
+        include $entree;
+    } catch (\Throwable $e) {
+        $erreur = $e->getMessage();
+    }
+    $rendu = (string) ob_get_clean();
+}
+
+$verifier(
+    $erreur === null && $rendu !== '',
+    "la page se rend sans erreur",
+    $erreur ?? strlen($rendu) . ' octets',
+);
+
+preg_match_all('/CAP-CORE-\d{3}/', $rendu, $mv);
+$verifier(
+    count(array_unique($mv[0])) === 20,
+    "les vingt capacités figurent sur la page rendue",
+    count(array_unique($mv[0])) . ' capacité(s) restituée(s)',
+);
+
+$verifier(
+    !preg_match('/\b(Fatal error|Warning|Notice|Deprecated)\b/', $rendu),
+    "la page ne laisse échapper aucun diagnostic PHP",
+);
+
 echo "\n";
 if ($echecs === 0) {
     echo "Preuve P3 : ÉTABLIE. CAP-CORE-020 atteint le niveau de preuve P3.\n";
