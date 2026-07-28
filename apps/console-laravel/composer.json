@@ -29,7 +29,8 @@
             "Database\\Seeders\\": "database/seeders/",
             "Gamad\\RegistreNormes\\": "../../core/registre-normes/src/",
             "Gamad\\RegistreAutorites\\": "../../core/registre-autorites/src/",
-            "Gamad\\RegistreIdentites\\": "../../core/registre-identites/src/"
+            "Gamad\\RegistreIdentites\\": "../../core/registre-identites/src/",
+            "Gamad\\RegistreAcces\\": "../../core/registre-acces/src/"
         }
     },
     "autoload-dev": {
