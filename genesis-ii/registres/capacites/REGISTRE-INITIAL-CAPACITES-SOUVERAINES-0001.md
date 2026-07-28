@@ -794,3 +794,29 @@ Le passage à `CONÇUE` ne lève aucun des écarts globaux du Titre XI. En parti
 ## Article 94 — Non-effet
 
 Le présent Titre, comme `ADOPTION-0026` dont il constate l'exécution, ne rend `CAP-CORE-007` ni implémentée, ni admise, ni active, ne fige aucun choix technologique et n'accepte aucun risque nouveau.
+
+---
+
+# TITRE XV — MISE À JOUR POST-ADOPTION : PREMIER INCRÉMENT DE CODE DE `CAP-CORE-007`
+
+## Article 95 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0029-INCREMENT-CODE-CTR-04-0001`. Il ne modifie aucune disposition des Titres I à XIV : ceux-ci demeurent exacts. Il ajoute un fait postérieur — le premier code canonique du Core, écrit après le constat de `G0`, sur la conception, la pile et la conception d'implémentation adoptées (`ADOPTION-0026`, `0027`, `0028`).
+
+## Article 96 — Changement d'état d'implémentation et de preuve
+
+| Capacité | État avant (`ADOPTION-0026`, Titre XIV) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-007` — Registre des normes | Conception `CONÇUE` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception `CONÇUE` ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** (Article 14) ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0029`, adoptant le premier incrément de code du service `CTR-04` (`core/registre-normes/`).
+- **Preuve `P3` établie :** le test de reconstruction temporelle (`core/registre-normes/tests/temporel_p3.php`) restitue le statut réellement en vigueur à une date passée. La preuve `P3` que l'Article 73 signalait manquante pour cette capacité est produite.
+- **Exploitation demeurée `INACTIVE` :** aucun déploiement, aucune base hébergée, aucun secret. L'écart de continuité (Article 74) et l'écart d'accès subsistent ; leur levée relève de l'autorité (`ADOPTION-0025`, Art. 3.a).
+
+## Article 97 — Portée limitée
+
+Le premier incrément expose le contrat `CTR-04` en lecture et attestation seulement (aucune écriture applicative). Il ne rend `CAP-CORE-007` ni admise, ni active au sens de l'exploitation, ne certifie aucun produit et ne constate pas `G0`. L'admission d'une implémentation (`ADMISE`, Article 14) demeure une décision distincte, postérieure.
+
+## Article 98 — Écart de cadre signalé
+
+`ADOPTION-0027` a retenu Laravel comme cadre applicatif. Le premier incrément livre le cœur porteur des invariants en PHP indépendant du cadre — pour qu'il soit testable sans réseau ni dépendance — la couche de livraison Laravel restant à poser. Cet écart, conforme au principe « invariants avant technologie » de l'Article 63, est traité expressément par `ADOPTION-0029` et demeure sous réserve de la décision de l'autorité.

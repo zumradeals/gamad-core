@@ -1,0 +1,5 @@
+# Index dérivé local — jamais versionné : il se reconstruit depuis le corpus (INV-5).
+var/*.sqlite
+var/*.sqlite-*
+# Dépendances éventuelles du cadre de livraison.
+/vendor/

@@ -1,0 +1,14 @@
+{
+    "name": "gamad/registre-normes",
+    "description": "Service CTR-04 du Registre des normes (CAP-CORE-007) de GAMAD Core — lecture et attestation.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.2",
+        "ext-pdo": "*"
+    },
+    "suggest": {
+        "ext-pdo_sqlite": "Index local et intégration continue (aucun secret requis)",
+        "ext-pdo_pgsql": "Index PostgreSQL en déploiement persistant"
+    }
+}
