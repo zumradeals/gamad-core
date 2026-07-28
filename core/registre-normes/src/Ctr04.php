@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gamad\RegistreNormes;
 
+use Gamad\RegistreSources\Ctr09;
+
 /**
  * Les trois opérations de lecture du contrat CTR-04 (conception adoptée,
  * Titre III ; conception d'implémentation, Titre IV). Lecture et attestation
@@ -83,32 +85,19 @@ final class Ctr04
      * règle. Le rang est celui du corpus, `INDETERMINE` tant qu'aucune autorité
      * ne l'a établi (`INV-8`).
      *
+     * Depuis le premier incrément à garde propre de `CAP-CORE-006`, cette
+     * opération **délègue** à `CTR-09`, seul titulaire du contrat des sources.
+     * Le comportement est inchangé ; ce qui change est le sens de la
+     * dépendance, désormais conforme à l'Article 42 du registre des capacités :
+     * le registre des normes dépend des sources, jamais l'inverse. La méthode
+     * demeure exposée ici pour les appelants existants (tableau de bord,
+     * couche Laravel), qui n'ont pas à connaître ce déplacement.
+     *
      * @return array<string,mixed>|null
      */
     public function resoudreSource(string $reference, ?string $date = null): ?array
     {
-        $st = $this->pdo->prepare(
-            'SELECT reference, titre, categorie, authenticite, reserve FROM source WHERE reference = ?'
-        );
-        $st->execute([$reference]);
-        $source = $st->fetch();
-        if ($source === false) {
-            return null;
-        }
-
-        $norme = $this->resoudreNorme($reference, null, $date);
-
-        return [
-            'reference'          => $source['reference'],
-            'titre'              => $source['titre'],
-            'categorie'          => $source['categorie'],
-            'authenticite'       => $source['authenticite'],
-            'reserve'            => $source['reserve'],
-            'rang'               => $norme['rang'] ?? 'INDETERMINE',
-            'statut'             => $norme['statut'] ?? null,
-            'adoption_reference' => $norme['adoption_reference'] ?? null,
-            'versionnee'         => $norme !== null,
-        ];
+        return (new Ctr09($this->pdo, $this->corpus))->resoudreSource($reference, $date);
     }
 
     /**
