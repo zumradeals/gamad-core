@@ -1264,3 +1264,74 @@ Le service la réduit d'un cran : il rend l'écart visible et chiffré là où i
 ## Article 160 — Non-effet
 
 Le présent Titre ne rend `CAP-CORE-015` ni admise, ni active, n'installe aucune clé, ne signe rien, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
+
+---
+
+# TITRE XXVII — MISE À JOUR POST-ADOPTION : `CAP-CORE-020` ET LE RELEVÉ DES DIVERGENCES
+
+## Article 161 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0044-CAP-CORE-020-0001`. Il ne modifie aucune disposition des Titres I à XXVI : ceux-ci demeurent exacts. Il ajoute deux faits postérieurs — la conception et le premier code de la dernière capacité de l'ensemble racine de l'Article 61, et le **relevé des divergences** que l'Article 55 exigeait sans qu'aucun mécanisme ne l'opère.
+
+## Article 162 — Changement d'état
+
+| Capacité | État avant (Article 31) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-020` — Annuaire des capacités et Atlas | Conception `EN CONCEPTION` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0044`. **Contrat :** `CTR-14`, déjà nommé par l'Article 55. **Invariants introduits :** `INV-36` à `INV-39`. **Menaces retenues :** `M-38` à `M-43`.
+
+## Article 163 — L'ensemble racine de l'Article 61 est complet
+
+L'Article 61 désigne six capacités de référence : `CAP-CORE-006` sources, `CAP-CORE-007` normes, `CAP-CORE-003` autorité, `CAP-CORE-001` identité, `CAP-CORE-015` intégrité et `CAP-CORE-020` cartographie. **Les six sont désormais conçues, codées et prouvées `P3`.**
+
+Ce constat porte sur la conception, l'implémentation partielle et la preuve. Il ne porte ni sur l'admission, ni sur l'exploitation, qui demeurent `INACTIVE` pour toutes, et il ne constate pas `G0`.
+
+## Article 164 — Quatre numéros de contrat sont revendiqués deux fois
+
+Le relevé produit par `CTR-14` établit ce qui suit :
+
+| Contrat | Revendiqué par | Où |
+|---|---|---|
+| `CTR-05` | `CAP-CORE-008` — Registre des décisions | Article 43 |
+| | `CAP-CORE-005` — Authentification | Titre XXIII, et le code le sert |
+| `CTR-08` | `CAP-CORE-011` — Registre des produits | Article 46 |
+| | `CAP-CORE-012` — Registre des realms | Article 47 |
+| `CTR-10` | `CAP-CORE-013` — Audit commun | Article 49 |
+| | `CAP-CORE-015` — Preuves d'intégrité | Article 50, et le code le sert |
+| `CTR-11` | `CAP-CORE-017` — Registre des risques | Article 52 |
+| | `CAP-CORE-018` — Registre des incidents | Article 53 |
+
+`CTR-08` et `CTR-11` figurent au Registre initial adopté par `ADOPTION-0015` : ces collisions sont antérieures à toute règle d'attribution. `CTR-05` et `CTR-10` touchent en revanche du **code en service**, exposé par des modules livrés et prouvés.
+
+`ADOPTION-0032`, Art. 2.1 avait arrêté la règle destinée à empêcher exactement cela : les numéros sont attribués dans l'ordre chronologique d'adoption, **jamais par correspondance avec le numéro de la capacité servie**, et ne sont jamais réemployés. `CTR-05` a été donné à `CAP-CORE-005` par correspondance de numéro, alors qu'il était déjà pris par `CAP-CORE-008`.
+
+## Article 165 — Aucune de ces collisions n'est tranchée ici
+
+Le service les **nomme** et s'arrête là (`INV-38`). Départager deux textes adoptés est un acte de l'autorité, non une opération d'un outil.
+
+Conséquence inscrite : les huit capacités concernées reçoivent, pour la comparaison au réel, le verdict `INDETERMINE`. La comparaison est **suspendue**, non devinée. Deviner à qui appartient un module serait pire que le silence, car la réponse aurait l'apparence d'un constat.
+
+Leur résolution appelle un acte distinct, dont la forme est délicate : réattribuer un numéro déjà servi par du code adopté suppose de décider si l'on renomme le contrat ou la revendication fautive.
+
+## Article 166 — Atlas et Registre concordent
+
+Sur les vingt fiches, libellé et domaine coïncident sans exception entre `CORE-ATLAS-0001` et le présent Registre. Le risque de « source multiple non arbitrée » ne se réalise pas sur ce terrain — il se réalise sur les numéros de contrat, à l'Article 164.
+
+Ce fait est rassurant, et aucun contrôle ne l'avait jamais établi.
+
+## Article 167 — Trois champs ne sont établis pour aucune capacité
+
+**Responsable, opérateur et sortie** ne sont établis pour aucune des vingt fiches. Ils sont restitués comme **non établis**, jamais comblés par une valeur plausible (`INV-39`).
+
+Cet écart est la conséquence directe de l'Article 69, qui constate depuis l'origine qu'aucune autorité permanente, aucun responsable de domaine et aucun opérateur ne sont inscrits, et qualifie cet écart de bloquant pour toute prétention opérationnelle. Le présent Titre ne le comble pas ; il le rend mesurable.
+
+## Article 168 — Une seule dimension d'état sur quatre était dérivée
+
+Le Registre déclare quatre dimensions par capacité — conception, implémentation, exploitation, preuve — et chaque Titre de mise à jour les constate toutes. Le service n'en dérivait qu'une : la conception.
+
+Le Core déclarait donc des états d'implémentation et de preuve que rien ne restituait ni ne vérifiait. `CTR-14` dérive les quatre et les tient distinctes (`INV-37`).
+
+## Article 169 — Non-effet
+
+Le présent Titre ne rend `CAP-CORE-020` ni admise, ni active, n'arbitre aucune divergence, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
