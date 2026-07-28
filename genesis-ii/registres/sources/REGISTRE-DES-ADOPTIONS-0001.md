@@ -83,6 +83,7 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 | `ADOPTION-0039` | Conception et premier code de `CAP-CORE-005` — authentification, magasin d'exploitation et première écriture applicative | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0040` | Conception et premier code de `CAP-CORE-004` — moteur d'autorisation, opposabilité des limites du mandat | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0041` | Inscription de la silsila `GAMAD ZUMARA` (`SRC-0007`), direction unique, occupation des fonctions vacantes et succession | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+| `ADOPTION-0042` | Module propre du registre des sources (`CTR-09`) et garde de comportement : `CAP-CORE-006` atteint `P3` | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
 ## Article 5 — Textes en cours de délibération non inscrits
 
