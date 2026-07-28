@@ -94,6 +94,17 @@ RE_LIGNE_EMPREINTE = re.compile(
     r"^\|\s*`([^`]+?\.(?:md|py|yml))`[^|]*\|(?:[^|]*\|)*?\s*`([0-9a-f]{40})`\s*\|\s*$"
 )
 
+# Empreinte déclarée par une feuille de statut (`X-STATUT.md`). Le chemin n'y
+# est pas cité : il est implicite, c'est le texte compagnon du même répertoire.
+# Cette forme est celle des textes fondateurs (ère ADOPTION-0001 à 0019), que
+# les constats d'exécution en tableau n'ont jamais couverts.
+RE_EMPREINTE_STATUT = re.compile(
+    r"^-\s*\*\*Empreinte Git du contenu adopté\s*:\*\*\s*`([0-9a-f]{40})`"
+)
+
+# Nom d'une feuille de statut.
+RE_FICHIER_STATUT = re.compile(r"^(?P<base>.+)-STATUT\.md$")
+
 # Décompte annoncé par ADOPTION-0020, en toutes lettres puis en chiffres.
 RE_DECOMPTE_0020 = re.compile(r"adopte\s+\*\*[^*]*?\((\d+)\)\s+fichiers\s+uniques\*\*")
 
@@ -297,6 +308,53 @@ def rang_declarant(chemin_relatif: str) -> int:
     return int(correspondance.group(1)) if correspondance else 0
 
 
+def texte_compagnon(feuille: Path) -> Path | None:
+    """Texte adopté que décrit une feuille de statut.
+
+    La feuille `X-STATUT.md` déclare l'empreinte d'un texte qu'elle ne nomme
+    pas : c'est le fichier du même répertoire dont le nom commence par le même
+    radical `X`. Le radical ne suffit pas toujours à désigner un fichier unique
+    (`SOURCES-0001-STATUT.md` face à `SOURCES-0001-hierarchie-….md`) ; on exige
+    donc une correspondance unique, faute de quoi le lien n'est pas établi et
+    la déclaration reste non contrôlée plutôt que rapportée au mauvais texte.
+    """
+    correspondance = RE_FICHIER_STATUT.match(feuille.name)
+    if not correspondance:
+        return None
+    base = correspondance.group("base")
+    candidats = [
+        p for p in feuille.parent.glob(f"{base}*.md")
+        if p.is_file() and not p.name.endswith("-STATUT.md")
+    ]
+    return candidats[0] if len(candidats) == 1 else None
+
+
+def declarations_des_feuilles_statut(racine: Path) -> list[tuple[str, str, str]]:
+    """Empreintes déclarées par les feuilles de statut.
+
+    Retourne des triplets (chemin déclaré, empreinte déclarée, déclarant).
+    Ces déclarations reçoivent le rang 0 dans `C5`, si bien que toute
+    déclaration ultérieure portée par un acte d'adoption les dépasse
+    automatiquement — une feuille de statut est la déclaration d'origine, non
+    la déclaration liante lorsqu'un acte postérieur a fait évoluer le texte.
+    """
+    trouvees: list[tuple[str, str, str]] = []
+    for feuille in sorted((racine / "genesis-ii").rglob("*-STATUT.md")):
+        compagnon = texte_compagnon(feuille)
+        if compagnon is None:
+            continue
+        for ligne in lire(feuille).splitlines():
+            correspondance = RE_EMPREINTE_STATUT.match(ligne.strip())
+            if correspondance:
+                trouvees.append((
+                    compagnon.relative_to(racine).as_posix(),
+                    correspondance.group(1),
+                    feuille.relative_to(racine).as_posix(),
+                ))
+                break
+    return trouvees
+
+
 def controle_c5(racine: Path, rapport: Rapport) -> None:
     """Les empreintes Git déclarées correspondent aux fichiers publiés."""
     if empreinte_git(racine, INDEX_ADOPTIONS) is None:
@@ -323,6 +381,17 @@ def controle_c5(racine: Path, rapport: Rapport) -> None:
                 .setdefault(declaree, [])
                 .append(relatif)
             )
+
+    # Feuilles de statut : déclaration d'origine des textes fondateurs, au
+    # rang 0. Elles étaient jusqu'ici hors de toute vérification.
+    for chemin, declaree, declarant in declarations_des_feuilles_statut(racine):
+        (
+            declarations
+            .setdefault(chemin, {})
+            .setdefault(0, {})
+            .setdefault(declaree, [])
+            .append(declarant)
+        )
 
     constats: list[str] = []
     verifiees = 0
