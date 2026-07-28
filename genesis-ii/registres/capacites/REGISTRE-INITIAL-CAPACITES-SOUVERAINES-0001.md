@@ -895,3 +895,33 @@ La table `statut` accueille aujourd'hui deux vocabulaires distincts : le statut 
 ## Article 108 — Non-effet
 
 Le présent Titre ne rend `CAP-CORE-007` ni admise, ni active, ne modifie le corps d'aucun article antérieur et n'accepte aucun risque nouveau. Il ne constate pas `G0`.
+
+---
+
+# TITRE XVIII — MISE À JOUR POST-ADOPTION : ÉTAT DE CONCEPTION DE `CAP-CORE-006`
+
+## Article 109 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0032-CONCEPTION-CAP-CORE-006-0001`. Il ne modifie aucune disposition des Titres I à XVII : ceux-ci demeurent exacts. Il ajoute un fait postérieur — l'adoption de la conception de la deuxième capacité racine du domaine `DOM-01`, après `CAP-CORE-007`.
+
+## Article 110 — Changement d'état de conception
+
+`CAP-CORE-006 — Registre des sources` passe de l'état de conception `EN CONCEPTION` (Article 31, colonne « Conception Genesis II ») à l'état `CONÇUE`, au sens de l'Article 13.
+
+| Capacité | État avant (Article 31) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-006` — Registre des sources | Conception `EN CONCEPTION` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` |
+
+- **Source :** `ADOPTION-0032`, adoptant `CONCEPTION-CAP-CORE-006-REGISTRE-DES-SOURCES-0001`.
+- **Contrat identifié :** `CTR-09`, attribué par l'autorité au titre du même acte, assorti d'une règle d'attribution chronologique des numéros de contrat.
+- **Invariants introduits :** `INV-7` à `INV-11`, dans la séquence unique du Core arrêtée par le même acte.
+
+## Article 111 — Portée limitée et limite de restitution connue
+
+La présente conception ne rend `CAP-CORE-006` ni implémentée, ni admise, ni active. Aucun code n'est livré par l'acte qui l'adopte ; la preuve demeure `P1`.
+
+Une limite de restitution est en outre constatée et assumée : le service `CTR-04`, dans son état adopté par `ADOPTION-0031`, dérive correctement les états de capacité du présent Registre, mais ne rattache ces états qu'à `CAP-CORE-007`, la correspondance entre une capacité et son document de conception étant inscrite en dur dans le code (`Ingestion.php`, lignes 208-209). En conséquence, l'état `CONÇUE` constaté au présent Titre **ne sera pas restitué par le service** tant que cette correspondance n'aura pas été fondée. Ce défaut relève précisément de `INV-7` — identité canonique — et sera traité par l'incrément de code de `CAP-CORE-006`. Il est signalé ici pour qu'il ne se découvre pas plus tard comme un silence.
+
+## Article 112 — Non-effet
+
+Le présent Titre, comme `ADOPTION-0032` dont il constate l'exécution, ne modifie le corps d'aucun article antérieur, ne fige aucun choix technologique, n'accepte aucun risque nouveau et ne constate pas `G0`.
