@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\AccesController;
 use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
+use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,8 @@ Route::get('/', [Ctr04Controller::class, 'tableauDeBord'])->name('ctr04.tableau-
     Route::get('/denominations', [Ctr01Controller::class, 'resoudreDenominations'])->name('ctr01.denominations');
     Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat'])->name('ctr02.resoudre-mandat');
     Route::get('/actes/{reference}/verification', [Ctr02Controller::class, 'verifierActe'])->name('ctr02.verifier-acte');
+    Route::get('/interdits', [Ctr03Controller::class, 'interdits'])->name('ctr03.interdits');
+    Route::get('/autorisation', [Ctr03Controller::class, 'autoriser'])->name('ctr03.autoriser');
     Route::get('/vacances', [Ctr02Controller::class, 'resoudreVacance'])->name('ctr02.resoudre-vacance');
     Route::get('/integrite/{reference?}', [Ctr04Controller::class, 'verifierIntegrite'])->name('ctr04.verifier-integrite');
     Route::get('/index', [Ctr04Controller::class, 'resoudreIndex'])->name('ctr04.resoudre-index');

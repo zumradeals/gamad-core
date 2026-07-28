@@ -52,6 +52,7 @@ final class Ingestion
         $this->ingererEtatsCapacites();
         $fonctions = $this->ingererAutoritesEtMandats();
         $entites   = $this->ingererIdentites();
+        $regles    = $this->ingererPolitiques();
 
         return [
             'adoptions' => $adoptions,
@@ -63,6 +64,7 @@ final class Ingestion
             'sources'   => $sources,
             'fonctions' => $fonctions,
             'entites'   => $entites,
+            'regles'    => $regles,
             'mandats'   => (int) $this->pdo->query('SELECT count(*) FROM mandat')->fetchColumn(),
             'indetermines' => (int) $this->pdo
                 ->query("SELECT count(*) FROM norme WHERE rang_code = 'INDETERMINE'")->fetchColumn(),
@@ -273,6 +275,108 @@ final class Ingestion
         $mm = $mois[mb_strtolower($m[2], 'UTF-8')] ?? null;
 
         return $mm === null ? null : sprintf('%s-%s-%02d', $m[3], $mm, (int) $m[1]);
+    }
+
+    /**
+     * Dérive les politiques d'autorisation des Articles 48 et 49 du Registre
+     * des autorités (`CAP-CORE-004`, `INV-29`).
+     *
+     * L'Article 48 énumère les compétences du mandat — autant de règles
+     * `PERMET`. L'Article 49 énumère ses limites — autant de règles `REFUSE`,
+     * **opposables au titulaire lui-même** (`INV-30`), d'où `sujet_type` nul.
+     *
+     * Les énoncés du corpus sont repris **mot pour mot** comme motifs, sans
+     * reformulation : la traduction demeure ainsi vérifiable par lecture.
+     *
+     * @return int nombre de règles inscrites
+     */
+    private function ingererPolitiques(): int
+    {
+        $chemin = 'genesis-ii/registres/autorites/REGISTRE-INITIAL-AUTORITES-MANDATS-0001.md';
+        $texte = (string) @file_get_contents($this->corpus . '/' . $chemin);
+        if ($texte === '') {
+            return 0;
+        }
+
+        $acte = null;
+        foreach ($this->actes as $ref => $a) {
+            if (str_contains(mb_strtoupper($a['texte'], 'UTF-8'), 'AUTORITES-MANDATS')) {
+                $acte = $ref;
+                break;
+            }
+        }
+        if ($acte === null) {
+            return 0;
+        }
+
+        $insPol = $this->pdo->prepare(
+            'INSERT INTO politique(reference,version,libelle,source,adoption_reference) VALUES(?,?,?,?,?)'
+        );
+        $insReg = $this->pdo->prepare(
+            'INSERT INTO regle(politique_reference,effet,action,sujet_type,motif) VALUES(?,?,?,?,?)'
+        );
+
+        $catalogue = [
+            48 => ['POL-MANDAT-COMPETENCES', 'PERMET', 'Compétences du mandat transitoire',
+                   'REGISTRE-INITIAL-AUTORITES-MANDATS-0001, Art. 48'],
+            49 => ['POL-MANDAT-LIMITES', 'REFUSE', 'Limites du mandat transitoire',
+                   'REGISTRE-INITIAL-AUTORITES-MANDATS-0001, Art. 49'],
+        ];
+
+        $n = 0;
+        foreach ($catalogue as $article => [$reference, $effet, $libelle, $source]) {
+            $insPol->execute([$reference, '0.1', $libelle, $source, $acte]);
+
+            foreach ($this->puceslDeLArticle($texte, $article) as $enonce) {
+                $insReg->execute([
+                    $reference,
+                    $effet,
+                    $this->actionDepuisEnonce($enonce),
+                    null,       // NULL : la règle vaut pour TOUT sujet (INV-30)
+                    $enonce,    // l'énoncé du corpus, cité mot pour mot (INV-28)
+                ]);
+                $n++;
+            }
+        }
+
+        return $n;
+    }
+
+    /**
+     * Relève les puces d'un article donné, sans les reformuler.
+     *
+     * @return list<string>
+     */
+    private function puceslDeLArticle(string $texte, int $article): array
+    {
+        if (!preg_match('/^##\s*Article\s+' . $article . '\s.*$/mu', $texte, $m, PREG_OFFSET_CAPTURE)) {
+            return [];
+        }
+        $debut = $m[0][1];
+        $fin = preg_match('/^##\s*Article\s+' . ($article + 1) . '\s/mu', $texte, $mm, PREG_OFFSET_CAPTURE)
+            ? $mm[0][1] : strlen($texte);
+
+        $puces = [];
+        foreach (explode("\n", substr($texte, $debut, $fin - $debut)) as $ligne) {
+            $ligne = trim($ligne);
+            if (str_starts_with($ligne, '- ') && strlen($ligne) > 8) {
+                $puces[] = $this->nettoyer(rtrim(substr($ligne, 2), " ;."));
+            }
+        }
+
+        return $puces;
+    }
+
+    /**
+     * Nom d'action tiré d'un énoncé, par normalisation typographique seulement.
+     * Aucune interprétation du sens : l'énoncé demeure le motif faisant foi.
+     */
+    private function actionDepuisEnonce(string $enonce): string
+    {
+        $a = preg_replace('/^(de |d\'|d’)/u', '', mb_strtolower($enonce, 'UTF-8')) ?? $enonce;
+        $a = preg_replace('/[^\p{L}\p{N}]+/u', '-', $a) ?? $a;
+
+        return trim(mb_substr($a, 0, 64, 'UTF-8'), '-');
     }
 
     /**
