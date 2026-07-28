@@ -820,3 +820,31 @@ Le premier incrément expose le contrat `CTR-04` en lecture et attestation seule
 ## Article 98 — Écart de cadre signalé
 
 `ADOPTION-0027` a retenu Laravel comme cadre applicatif. Le premier incrément livre le cœur porteur des invariants en PHP indépendant du cadre — pour qu'il soit testable sans réseau ni dépendance — la couche de livraison Laravel restant à poser. Cet écart, conforme au principe « invariants avant technologie » de l'Article 63, est traité expressément par `ADOPTION-0029` et demeure sous réserve de la décision de l'autorité.
+
+---
+
+# TITRE XVI — MISE À JOUR POST-ADOPTION : COUCHE DE LIVRAISON LARAVEL DE `CAP-CORE-007`
+
+## Article 99 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0030-LIVRAISON-LARAVEL-CTR-04-0001`. Il ne modifie aucune disposition des Titres I à XV : ceux-ci demeurent exacts. Il ajoute un fait postérieur — la pose de la couche de livraison Laravel annoncée et différée par l'Article 98 ci-dessus, close par le présent Titre.
+
+## Article 100 — Changement d'état d'implémentation
+
+| Capacité | État avant (`ADOPTION-0029`, Titre XV) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-007` — Registre des normes | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** (cadre de livraison Laravel posé, Article 1 de `ADOPTION-0027` désormais honoré) ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` |
+
+- **Source :** `ADOPTION-0030`, adoptant le second incrément de code du service `CTR-04` (`apps/console-laravel/`), enveloppant sans le modifier le cœur adopté par `ADOPTION-0029`.
+- **Écart de cadre soldé :** l'écart constaté à l'Article 98 (cœur PHP portable livré avant la couche Laravel) est refermé. `core/registre-normes/` demeure inchangé ; `apps/console-laravel/` l'enveloppe et l'expose en lecture seule (`INV-4`).
+- **Niveau d'implémentation inchangé :** `PARTIELLEMENT MATÉRIALISÉE` demeure exact — la couche de livraison ne change pas la nature du contrat `CTR-04` (lecture et attestation seulement), n'ajoute aucune écriture applicative et ne rend `CAP-CORE-007` ni admise ni active.
+- **Preuve `P3` :** inchangée, `P3 — TESTÉ`. Le test `core/registre-normes/tests/temporel_p3.php` n'est pas modifié par le présent incrément ; il isole volontairement son exécution sur une base SQLite éphémère, par construction du cœur adopté (`ADOPTION-0028`, Titre V), et continue de sortir `0`. Le même comportement de résolution temporelle a été vérifié manuellement, hors du test, contre une base PostgreSQL locale par les routes de la couche Laravel — constat opérationnel, non une preuve `P3` distincte.
+- **Exploitation demeurée `INACTIVE` :** aucun déploiement de production, aucune donnée réelle exposée publiquement au-delà de ce que l'autorité a positionné sous sa propre main (nginx, TLS, base PostgreSQL locale — hors du dépôt, hors du présent acte).
+
+## Article 101 — Portée limitée
+
+Le second incrément expose le contrat `CTR-04` en lecture et attestation seulement, par trois routes `GET` et une vue Blade portée à l'identique du tableau de bord adopté par `ADOPTION-0029`. Aucune route d'écriture n'est créée (`INV-4`). Il ne rend `CAP-CORE-007` ni admise, ni active au sens de l'exploitation, ne certifie aucun produit et ne constate pas `G0`.
+
+## Article 102 — Non-effet
+
+Le présent Titre, comme `ADOPTION-0030` dont il constate l'exécution, ne modifie le corps d'aucun article antérieur, ne fige aucun choix technologique au-delà de ce que `ADOPTION-0027` avait déjà retenu, et n'accepte aucun risque nouveau.
