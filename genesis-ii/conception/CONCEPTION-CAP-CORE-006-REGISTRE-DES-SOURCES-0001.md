@@ -23,9 +23,13 @@ L'ordre ci-dessous a été arrêté par l'autorité. Il n'est pas l'ordre de fac
 
 # TITRE I — INVARIANTS
 
-## Article 2 — Continuité de la numérotation
+## Article 2 — Numérotation des invariants
 
-Les invariants `INV-1` à `INV-6` ont été introduits par la conception de `CAP-CORE-007`. La présente conception poursuit la **même suite**, `INV-7` et suivants, en tenant pour acquis que la numérotation `INV-n` est une séquence unique à l'échelle du Core, chaque invariant demeurant rattaché à la capacité qui l'a introduit. Cette règle de numérotation n'a jamais été énoncée ; elle est portée en décision réservée (Article 24).
+Les invariants du Core forment une **séquence unique**, `INV-1`, `INV-2`, … , à l'échelle du Core entier et non par capacité. Chaque invariant demeure attribué à la capacité qui l'a introduit et cette attribution est inscrite ; le numéro, lui, est unique et **n'est jamais réemployé**, fût-ce après l'abandon de l'invariant qu'il désignait.
+
+Le motif est la citation. Une numérotation propre à chaque capacité obligerait toute citation à porter sa portée — « `INV-3` de `CAP-CORE-007` » — et l'usage abrège toujours. La citation abrégée deviendrait alors fausse. La séquence unique rend chaque citation exacte pour toujours, au prix d'une numérotation qui montera : inconvénient sans gravité, là où l'ambiguïté serait fatale. Le non-réemploi obéit au même motif : un numéro recyclé rendrait menteuses les citations anciennes.
+
+Cette règle formalise l'usage déjà établi — `INV-1`, `INV-4` et `INV-5` sont cités sans mention de portée dans le code adopté (`ADOPTION-0029`, `ADOPTION-0030`) comme dans les documents d'accueil du dépôt. Elle est arbitrée par l'autorité au titre de l'acte qui adopte la présente conception.
 
 ## Article 3 — `INV-7` — Identité canonique
 
@@ -138,24 +142,32 @@ CREATE TABLE etat_capacite (
 
 Les états de capacité quittent la table `statut`, qui redevient homogène — un statut de norme, et rien d'autre. `en_vigueur` cesse d'être calculé pour les capacités : la question n'a pas de sens pour elles.
 
-## Article 11 — Modification de l'existant, expressément circonscrite
+## Article 11 — Succession de schéma, et non réécriture
 
-Deux colonnes adoptées par `ADOPTION-0028` évoluent :
+Deux colonnes définies par `ADOPTION-0028` (Titre II) évoluent :
 
 | Table | Avant | Après | Motif |
 |---|---|---|---|
 | `norme.rang` | texte libre, en pratique `'texte canonique'` | `rang_code` référençant `rang_normatif` | `INV-8` |
 | `norme.reference` | nom de fichier | référence canonique du registre des sources | `INV-7` |
 
-C'est une modification de **schéma dérivé**, non de texte adopté : l'index est reconstruit à chaque ingestion (`INV-5`), aucune donnée n'est migrée ni perdue. La conception d'implémentation adoptée (`ADOPTION-0028`, Titre II) demeure exacte pour tout le reste ; le présent acte en amende deux colonnes et le déclare.
+Cette évolution emprunte le mécanisme que le corpus applique déjà à ses empreintes : **le Titre II de `ADOPTION-0028` n'est pas réécrit et demeure exact à sa date** ; l'acte qui adopte la présente conception déclare l'état de schéma qui lui succède, dans la seule mesure des deux colonnes décrites. Aucune autre définition n'est touchée.
+
+L'index étant dérivé et reconstruit à chaque ingestion (`INV-5`), la succession ne migre ni ne perd aucune donnée. **Aucune résolution possible avant la succession ne devient impossible après** : la colonne `chemin` demeure inchangée et continue de porter le chemin du fichier, de sorte qu'un texte reste atteignable par son emplacement même si son identité canonique change (`INV-11`).
 
 ---
 
 # TITRE III — CONTRATS
 
-## Article 12 — Les trois opérations
+## Article 12 — Identification du contrat et opérations
 
-Le contrat attendu de `CAP-CORE-006` est décrit à l'Article 41 du registre des capacités — « résolution de source, vérification d'authenticité, publication de statut et lignée » — **sans numéro attribué** (Article 24, décision réservée). Il est désigné ci-après `CTR-06bis` à titre provisoire et non normatif.
+Le contrat attendu de `CAP-CORE-006` est décrit à l'Article 41 du registre des capacités — « résolution de source, vérification d'authenticité, publication de statut et lignée » — sans numéro attribué à ce jour. `CTR-01` à `CTR-08` sont pris ; aucun ne porte les sources. L'autorité lui attribue le numéro **`CTR-09`**.
+
+Elle arrête en outre la règle d'attribution, faute de quoi la vacance persistante des contrats de `CAP-CORE-002` et `CAP-CORE-005` produirait une collision au premier chantier parallèle :
+
+> Les numéros de contrat sont attribués **dans l'ordre chronologique d'adoption de la conception qui les définit**, jamais par correspondance avec le numéro de la capacité qu'ils servent. Un numéro attribué n'est jamais réemployé.
+
+Les trois opérations de `CTR-09` sont les suivantes.
 
 ```
 resoudre_source(reference, date?)
@@ -249,7 +261,7 @@ Le contrôle Python (`outils/verifier-integrite.py`) n'est ni absorbé, ni réé
 
 - Aucune écriture applicative du corpus (`INV-4`).
 - Aucune classification d'authenticité prononcée par le service : il **restitue** ce que le registre déclare, il ne juge pas.
-- Aucune réévaluation des sources laissées `NON ÉTABLI` (`GENESIS-003`, `GENESIS-005`, Article 6 du registre des sources) : leur qualification appartient à l'autorité.
+- Aucune réévaluation des sources laissées `NON ÉTABLI` (`GENESIS-003`, `GENESIS-005`, Article 6 du registre des sources) : leur qualification appartient à une autorité compétente (`SOURCES-0001`, Art. 21). Elles sont néanmoins **inscrites au registre et exposées comme `NON ÉTABLI`**, et non omises : une source non qualifiée qui disparaît de l'index peut reparaître plus tard avec un statut présumé, tandis qu'une source déclarée non qualifiée reste visible et interrogeable. L'ignorance déclarée est l'état sûr.
 - Aucun franchissement de la frontière des accès réservés (`ADOPTION-0025`, Art. 3.a).
 
 ## Article 22 — Ce qui reste hors périmètre
@@ -270,15 +282,21 @@ L'exigence de contre-épreuve posée à l'Article 19 est la réponse technique �
 
 # TITRE IX — DÉCISIONS RÉSERVÉES À L'AUTORITÉ
 
-## Article 24 — Points à trancher
+## Article 24 — Points soumis à l'autorité et arbitrés
 
-1. **L'adoption ou la correction de la présente conception** (acte pressenti `ADOPTION-0032`).
-2. **Le numéro de contrat de `CAP-CORE-006`.** Le registre adopté laisse ce contrat sans numéro, comme ceux de `CAP-CORE-002` et `CAP-CORE-005`. `CTR-01` à `CTR-08` sont attribués. `CTR-09` est proposé ; l'agent ne s'attribue pas un numéro de contrat.
-3. **La règle de numérotation des invariants** (Article 2) : séquence unique à l'échelle du Core, ou séquences par capacité. La présente conception présume la première sans en avoir le pouvoir.
-4. **L'amendement des deux colonnes de `norme`** (Article 11), qui touche un schéma adopté par `ADOPTION-0028`, fût-il dérivé.
-5. **Le sort des sources `NON ÉTABLI`** (`GENESIS-003`, `GENESIS-005`) : qualification, ou maintien explicite en l'état.
+Cinq points excédaient le pouvoir de l'agent. Ils ont été soumis à l'autorité, qui les a arbitrés ; l'acte qui adopte la présente conception (`ADOPTION-0032`) en porte le constat motivé. Ils sont ici rappelés dans leur état arrêté :
 
-## Article 25 — Non-effet
+1. **Adoption de la présente conception** — accordée, après révision incorporant les arbitrages 2 à 5.
+2. **Numéro de contrat de `CAP-CORE-006`** — `CTR-09`, assorti de la règle d'attribution chronologique de l'Article 12.
+3. **Numérotation des invariants** — séquence unique à l'échelle du Core, sans réemploi (Article 2).
+4. **Évolution des deux colonnes de `norme`** — accordée sous forme de **succession de schéma**, `ADOPTION-0028` demeurant exact à sa date (Article 11).
+5. **Sources `NON ÉTABLI`** — maintenues en l'état, mais inscrites et exposées comme telles (Article 21).
+
+## Article 25 — Décisions demeurant ouvertes
+
+Ne sont tranchés ni par la présente conception ni par l'acte qui l'adopte : le vocabulaire canonique définitif des états de capacité (Article 80 du registre des capacités), les numéros de contrat de `CAP-CORE-002` et `CAP-CORE-005`, et la qualification d'authenticité de `GENESIS-003` et `GENESIS-005`.
+
+## Article 26 — Non-effet
 
 Le présent acte ne code rien, n'installe rien, ne rend `CAP-CORE-006` ni implémentée ni active, n'accepte aucun risque nouveau, ne modifie le corps d'aucun texte adopté et ne constate pas `G0`.
 
