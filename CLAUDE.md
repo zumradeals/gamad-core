@@ -66,10 +66,23 @@ python3 outils/verifier-integrite.py        # doit sortir 0
 php core/registre-normes/tests/temporel_p3.php   # doit sortir 0
 ```
 
-Les deux gardes sont **séparées à dessein** (`ADOPTION-0027`, Art. 4) : le
-contrôle Python vérifie la cohérence des fichiers ; le test PHP vérifie le
+Les gardes sont **séparées à dessein** (`ADOPTION-0027`, Art. 4) : le contrôle
+Python vérifie la cohérence des fichiers ; les tests PHP vérifient le
 comportement du code. **Ne réécris jamais le contrôle Python dans le cadre
 applicatif** — un contrôle couplé à ce qu'il vérifie perd sa valeur.
+
+**Doctrine arrêtée par `ADOPTION-0035`, Art. 2.2 :** le dépôt porte **une garde
+documentaire unique** et **une garde de comportement par capacité codée**. Une
+capacité ne peut atteindre `P3 — TESTÉ` que par une garde éprouvant son propre
+contrat — une capacité n'hérite pas de la preuve d'une autre. Le nombre de
+gardes croît donc avec les capacités ; la garde documentaire, elle, reste unique
+et indépendante.
+
+**Toute garde livrée au titre d'une preuve `P3` doit être accompagnée d'une
+contre-épreuve de falsification** (`ADOPTION-0032`, Art. 3) : altérer
+délibérément une copie du corpus hors dépôt et constater que le test échoue.
+L'acte déclare les deux exécutions. Un test qui ne peut pas échouer ne prouve
+rien.
 
 ---
 

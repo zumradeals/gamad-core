@@ -958,3 +958,51 @@ Pour lecture combinée avec la matrice de l'Article 129, les quatre lignes corre
 ## Article 166 — Non-effet sur `G0`
 
 Le présent Titre, comme `ADOPTION-0022` dont il constate l'exécution, ne rend aucune capacité opérationnelle et ne constate pas la Porte `G0`.
+
+---
+
+# TITRE XVI — CONFIRMATION DU MANDAT TRANSITOIRE ET CONSTAT DE VACANCE
+
+## Article 167 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0035-CONCEPTION-CAP-CORE-003-0001`. Il ne modifie aucune disposition des Titres I à XV : ceux-ci demeurent exacts à leur date. Il ajoute deux faits postérieurs que les Articles 142 et 143 du présent Registre appelaient expressément et qui demeuraient dus.
+
+## Article 168 — Confirmation du mandat transitoire (Article 142)
+
+L'Article 142 requiert la confirmation expresse du mandat transitoire proposé à l'Article 47. Cette confirmation, due depuis le 26 juillet 2026, est donnée par le présent Titre.
+
+| Élément | Valeur confirmée |
+|---|---|
+| Référence | `MANDAT-GENESIS-II-0001` |
+| Fonction | `FCT-CORE-001` |
+| Titulaire | `AUT-GAMAD-001` — Koné Djakaridja, dit Zakaria le Soufi |
+| Début | 24 juillet 2026 |
+| Fin | non déclarée ; activation des organes permanents ou décision expresse antérieure |
+| État | `ACTIF — TRANSITOIRE` |
+| Niveau de preuve | `P1 — DOCUMENTÉ` |
+
+Le mandat est confirmé dans les compétences de l'Article 48 et sous les limites de l'Article 49, sans extension d'aucune sorte.
+
+## Article 169 — Nature de cette confirmation, expressément qualifiée
+
+Cette confirmation est donnée par le titulaire du mandat qu'elle confirme, sans contre-signature, aucune autre fonction n'étant pourvue. Elle est **régulière** au sens de l'Article 142, qui ne prévoit pas d'autre autorité pour la donner ; elle n'est pas **indépendante**.
+
+Ce fait est inscrit et non atténué. Il illustre la limite que la conception de `CAP-CORE-003` désigne comme `M-13` : une autorité unique confirme ses propres pouvoirs par acte régulier, et aucun dispositif technique n'y supplée. Seule la nomination d'une seconde personne compétente y remédierait.
+
+Le niveau de preuve demeure `P1 — DOCUMENTÉ` et ne saurait être relevé du seul fait de cette confirmation (Article 20 — interdiction de surévaluation).
+
+## Article 170 — Constat de vacance (Article 143)
+
+L'Article 143 appelle les nominations prioritaires. L'autorité constate qu'**aucun candidat n'est disponible à ce jour** et que les fonctions demeurent vacantes en l'état de l'Article 164, notamment la garde constitutionnelle (`FCT-CORE-002`), le Registraire constitutionnel (`FCT-CORE-003`), l'autorité architecturale (`FCT-CORE-006`) et les responsables de capacités (`FCT-CAP-001` à `020`).
+
+En conséquence :
+
+- `FCT-CORE-021` — autorité d'audit et de contrôle — demeure attribuée à titre transitoire au titulaire unique (Article 162), et l'audit demeure privé de son indépendance structurelle (Article 163) ;
+- la réserve de `ADOPTION-0025`, Article 3.b, demeure entière et sans contre-pouvoir ;
+- aucune nomination fictive n'est inscrite. Une vacance déclarée vaut mieux qu'un titulaire de complaisance.
+
+Ce constat est réexaminable à tout moment par acte de l'autorité, et doit l'être avant tout constat postérieur à `G0`.
+
+## Article 171 — Non-effet
+
+Le présent Titre ne nomme personne, n'étend aucun pouvoir, ne modifie le corps d'aucun article antérieur, ne rend aucune capacité opérationnelle et ne constate pas `G0`.
