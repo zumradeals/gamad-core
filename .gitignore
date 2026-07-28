@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+vendor/
+node_modules/
+/core/registre-normes/*.sqlite
+/core/registre-normes/*.sqlite3
