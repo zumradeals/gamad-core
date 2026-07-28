@@ -925,3 +925,39 @@ Une limite de restitution est en outre constatée et assumée : le service `CTR-
 ## Article 112 — Non-effet
 
 Le présent Titre, comme `ADOPTION-0032` dont il constate l'exécution, ne modifie le corps d'aucun article antérieur, ne fige aucun choix technologique, n'accepte aucun risque nouveau et ne constate pas `G0`.
+
+---
+
+# TITRE XIX — MISE À JOUR POST-ADOPTION : PREMIER INCRÉMENT DE CODE DE `CAP-CORE-006`
+
+## Article 113 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0034-INCREMENT-CODE-CAP-CORE-006-0001`. Il ne modifie aucune disposition des Titres I à XVIII : ceux-ci demeurent exacts. Il ajoute un fait postérieur — le premier code de `CAP-CORE-006`, écrit sur la conception adoptée par `ADOPTION-0032`.
+
+## Article 114 — Changement d'état d'implémentation
+
+| Capacité | État avant (Titre XVIII) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-006` — Registre des sources | Conception `CONÇUE` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception `CONÇUE` ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve `P1` |
+
+- **Source :** `ADOPTION-0034`, adoptant le premier incrément de code de `CAP-CORE-006`.
+- **Invariants matérialisés :** `INV-7` (identité canonique), `INV-8` (rang fondé), `INV-10` (séparation des vocabulaires). `INV-9` et `INV-11` sont conçus mais non encore éprouvés.
+- **Contrat `CTR-09` :** partiellement livré. `resoudre_source` est exposée ; `verifier_authenticite` et `resoudre_lignee` ne le sont pas.
+
+## Article 115 — Le niveau de preuve demeure `P1`, et pourquoi
+
+L'Article 19 de la conception adoptée prescrivait, pour `CAP-CORE-006`, un cas de preuve `P3` propre — `resoudre_source('SOURCES-0001')` accompagné de sa contre-épreuve de falsification. **Cet essai n'est pas livré par le présent incrément.** Le niveau de preuve de `CAP-CORE-006` demeure en conséquence `P1 — DOCUMENTÉ`, et non `P3`.
+
+Le motif n'est pas technique : écrire cet essai créerait une **troisième garde**, là où la discipline du dépôt en pose deux, distinctes à dessein. Le nombre et la répartition des gardes sont une décision de l'autorité, non un choix d'implémentation. Elle est portée à l'Article 5 de `ADOPTION-0034`.
+
+Il eût été aisé de faire valoir que les deux gardes existantes s'exécutent sur le code de `CAP-CORE-006` et d'en tirer un niveau supérieur. Ce raisonnement est écarté : ces gardes éprouvent le comportement de `CTR-04`, non celui de `CTR-09`. Une capacité n'hérite pas de la preuve d'une autre.
+
+## Article 116 — Constat de portée : le rang n'est établi pour aucune norme
+
+Le code livré dérive les neuf rangs normatifs de `SOURCES-0001` (Articles 25 à 33), mais **n'assigne de rang à aucune norme**. `SOURCES-0001` énumère en prose les catégories de textes relevant de chaque rang sans jamais désigner un texte nommé ; établir cette correspondance est une **qualification**, réservée à une autorité compétente.
+
+Les quatre-vingt-deux normes indexées portent donc le rang `INDETERMINE`, et ce décompte est exposé sur les tableaux de bord. Le corpus cesse d'affirmer un rang qu'il ne fonde pas ; il déclare son ignorance et la chiffre. Combler cet écart relèvera d'un acte de qualification ultérieur.
+
+## Article 117 — Non-effet
+
+Le présent Titre ne rend `CAP-CORE-006` ni admise, ni active, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
