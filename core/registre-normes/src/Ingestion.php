@@ -139,9 +139,11 @@ final class Ingestion
             }
             $c = array_map(fn ($x) => $this->nettoyer(trim($x)), explode('|', trim($ligne, '|')));
 
-            // Article 5 : référence | titre | catégorie | authenticité | statut | réserve
-            // Article 8 : référence | titre | date | empreinte | authenticité
-            if ($article === 5 && count($c) >= 6) {
+            // Article 5  : référence | titre | catégorie | authenticité | statut | réserve
+            // Article 8  : référence | titre | date | empreinte | authenticité
+            // Article 14 : même forme que l'Article 5 — inscription de la
+            //              silsila au bloc patrimonial fondateur (ADOPTION-0041).
+            if (($article === 5 || $article === 14) && count($c) >= 6) {
                 $inserer->execute([$reference, $c[1], $c[2], $c[3], $c[5] !== 'Aucune' ? $c[5] : null]);
             } elseif ($article === 8 && count($c) >= 5) {
                 $inserer->execute([$reference, $c[1], 'Source institutionnelle adoptée (SOURCES-0001, Art. 9)', $c[4], null]);
