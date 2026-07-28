@@ -1410,3 +1410,51 @@ Le code qui sert `CAP-CORE-005` et `CAP-CORE-006` est renommé pour porter le nu
 ## Article 177 — Non-effet
 
 Le présent Titre ne rend aucune capacité admise ni active, n'accepte aucun risque nouveau, ne nomme aucun responsable, ne comble pas l'écart de l'Article 69, ne franchit pas la frontière des accès réservés et ne constate pas `G0`.
+
+---
+
+# TITRE XXIX — MISE À JOUR POST-ADOPTION : CONCEPTION DE `CAP-CORE-009`
+
+## Article 178 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0047`. Il ne modifie le corps d'aucune disposition des Titres I à XXVIII : ceux-ci demeurent au dépôt tels qu'adoptés. Il constate l'adoption de la **conception** de `CAP-CORE-009` — Registre des contrats, et d'elle seule.
+
+## Article 179 — Changement d'état
+
+| Capacité | État avant | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-009` — Registre des contrats | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` |
+
+- **Source :** `ADOPTION-0047`. **Contrat :** `CTR-06`, déjà nommé par l'Article 44. **Invariants introduits :** `INV-42` à `INV-45`. **Menaces retenues :** `M-46` à `M-51`.
+
+Une seule dimension change. L'implémentation demeure `NON COMMENCÉE` : aucun code n'est livré par cet acte.
+
+## Article 180 — Le contrat `CTR-06` satisfait la règle du domaine gardien
+
+`CTR-06` — Catalogue de contrats est gardée par `DOM-06`, que `CAP-CORE-009` garde également. `INV-40` est satisfait sans réattribution, et la famille n'est revendiquée par aucune autre capacité.
+
+## Article 181 — Motif de la priorité, et sa réserve
+
+L'Article 83 réserve à l'autorité l'ordre de conception et de mise en capacité, décidé selon les dépendances, les risques et les moyens, et non selon la seule facilité technique. `CAP-CORE-009` n'appartient pas à l'ensemble racine de l'Article 61.
+
+L'autorité la retient néanmoins pour la suite immédiate, sur un motif établi par les faits : les deux usurpations de famille rectifiées par `ADOPTION-0045` procèdent de l'absence d'un catalogue des contrats, et non d'une inattention isolée. `INV-40` empêche la récidive silencieuse ; il ne tient pas de catalogue.
+
+Ce choix est une décision d'ordonnancement. Il ne préjuge d'aucune priorité ultérieure et ne déclasse aucune capacité.
+
+## Article 182 — Trois faits que la conception a établis
+
+Relevés sur le dépôt à la date de l'acte :
+
+- **Seize familles de contrat sont définies, huit sont servies par un module, aucune n'est cataloguée.**
+- **`CTR-09` — Données et droits demeure sans capacité titulaire**, aucune des vingt ne gardant `DOM-07`. Ce fait est régulier ; l'écart global de données de l'Article 70 le prévoyait.
+- **Le service `CTR-04` délègue au service `CTR-15` sans qu'aucun texte adopté ne déclare cette dépendance.** C'est le « contrat implicite » et la « dépendance cachée » que l'Article 44 range parmi les risques de cette capacité, constatés dans le Core lui-même.
+
+## Article 183 — Ce que la conception laisse entier
+
+Les décisions ouvertes de l'Article 44 — **formats, protocoles, règles de compatibilité et autorité d'approbation** — ne sont pas arbitrées et demeurent réservées à l'autorité. Le blocage des accès directs aux bases, rangé par l'Article 44 parmi les contrôles requis, est **nommé et non traité** : il suppose une exploitation, qui est `INACTIVE`.
+
+Le registre initial des contrats attendu parmi les preuves `G0` demeure un document que l'autorité adopte, distinct du service qui le dérivera.
+
+## Article 184 — Non-effet
+
+Le présent Titre ne rend `CAP-CORE-009` ni implémentée, ni admise, ni active, n'arbitre aucune décision ouverte, n'accepte aucun risque nouveau, ne nomme aucun responsable et ne constate pas `G0`.
