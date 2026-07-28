@@ -50,17 +50,21 @@ final class Ctr04Controller
         $integrite = $ctr04->verifierIntegrite();
         $index = $ctr04->resoudreIndex();
 
+        $indetermines = (int) $pdo->query(
+            "SELECT count(*) FROM norme WHERE rang_code = 'INDETERMINE'"
+        )->fetchColumn();
+
         $concordants = array_filter($integrite, fn ($l) => $l['concorde']);
         $divergents = array_filter($integrite, fn ($l) => !$l['concorde']);
 
         $p3 = [];
         foreach ([['2026-07-26', 'EN CONCEPTION'], ['2026-07-27', 'CONÇUE'], ['2026-08-01', 'CONÇUE']] as [$d, $attendu]) {
-            $r = $ctr04->resoudreNorme('CAP-CORE-007', null, $d);
+            $r = $ctr04->resoudreCapacite('CAP-CORE-007', 'conception', $d);
             $p3[] = [
                 'date' => $d,
                 'attendu' => $attendu,
-                'obtenu' => $r['statut'] ?? '(aucun)',
-                'ok' => ($r['statut'] ?? null) === $attendu,
+                'obtenu' => $r['valeur'] ?? '(aucun)',
+                'ok' => ($r['valeur'] ?? null) === $attendu,
             ];
         }
         $p3Ok = count(array_filter($p3, fn ($c) => $c['ok'])) === count($p3);
@@ -72,6 +76,7 @@ final class Ctr04Controller
             'index' => $index,
             'p3' => $p3,
             'p3Ok' => $p3Ok,
+            'indetermines' => $indetermines,
         ]);
     }
 
@@ -85,6 +90,32 @@ final class Ctr04Controller
 
         if ($resultat === null) {
             return response()->json(['erreur' => 'norme introuvable', 'reference' => $reference], 404);
+        }
+
+        return response()->json($resultat);
+    }
+
+    public function resoudreSource(Request $request, string $reference): JsonResponse
+    {
+        $resultat = $this->ctr04()->resoudreSource($reference, $request->query('date'));
+
+        if ($resultat === null) {
+            return response()->json(['erreur' => 'source introuvable', 'reference' => $reference], 404);
+        }
+
+        return response()->json($resultat);
+    }
+
+    public function resoudreCapacite(Request $request, string $reference): JsonResponse
+    {
+        $resultat = $this->ctr04()->resoudreCapacite(
+            $reference,
+            $request->query('dimension', 'conception'),
+            $request->query('date'),
+        );
+
+        if ($resultat === null) {
+            return response()->json(['erreur' => 'capacité ou dimension introuvable', 'reference' => $reference], 404);
         }
 
         return response()->json($resultat);

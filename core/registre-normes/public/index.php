@@ -32,6 +32,7 @@ if ($vide || isset($_GET['refresh'])) {
 
 $ctr04 = new Ctr04($pdo, REGN_CORPUS);
 
+$indetermines = (int) $pdo->query("SELECT count(*) FROM norme WHERE rang_code = 'INDETERMINE'")->fetchColumn();
 $adoptions = $pdo->query('SELECT reference, autorite, date_adoption, signature_presente FROM adoption ORDER BY reference')->fetchAll();
 $integrite = $ctr04->verifierIntegrite();
 $index     = $ctr04->resoudreIndex();
@@ -42,8 +43,8 @@ $divergents  = array_filter($integrite, fn ($l) => !$l['concorde']);
 // Preuve P3 exécutée en direct sur la page.
 $p3 = [];
 foreach ([['2026-07-26', 'EN CONCEPTION'], ['2026-07-27', 'CONÇUE'], ['2026-08-01', 'CONÇUE']] as [$d, $attendu]) {
-    $r = $ctr04->resoudreNorme('CAP-CORE-007', null, $d);
-    $p3[] = ['date' => $d, 'attendu' => $attendu, 'obtenu' => $r['statut'] ?? '(aucun)', 'ok' => ($r['statut'] ?? null) === $attendu];
+    $r = $ctr04->resoudreCapacite('CAP-CORE-007', 'conception', $d);
+    $p3[] = ['date' => $d, 'attendu' => $attendu, 'obtenu' => $r['valeur'] ?? '(aucun)', 'ok' => ($r['valeur'] ?? null) === $attendu];
 }
 $p3_ok = count(array_filter($p3, fn ($c) => $c['ok'])) === count($p3);
 
@@ -90,6 +91,7 @@ function e(?string $s): string
     <div class="card"><div class="kpi <?= count($divergents) ? 'ko' : 'ok' ?>"><?= count($divergents) ?></div><small>divergences d'empreinte</small></div>
     <div class="card"><div class="kpi <?= count($index['divergences']) ? 'ko' : 'ok' ?>"><?= count($index['divergences']) ?></div><small>divergences d'index</small></div>
     <div class="card"><div class="kpi <?= $p3_ok ? 'ok' : 'ko' ?>"><?= $p3_ok ? 'P3 ✓' : 'P3 ✗' ?></div><small>reconstruction temporelle</small></div>
+    <div class="card"><div class="kpi"><?= $indetermines ?></div><small>normes de rang indéterminé</small></div>
   </div>
 
   <h2>Preuve P3 — reconstruction temporelle de <code>CAP-CORE-007</code></h2>

@@ -24,15 +24,44 @@ final class Schema
             ? 'bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY'
             : 'INTEGER PRIMARY KEY AUTOINCREMENT';
 
-        foreach (['relation_evolution', 'statut', 'version_norme', 'adoption', 'norme'] as $t) {
+        foreach ([
+            'relation_evolution', 'etat_capacite', 'statut', 'version_norme',
+            'adoption', 'norme', 'source', 'rang_normatif',
+        ] as $t) {
             $pdo->exec("DROP TABLE IF EXISTS {$t}");
         }
+
+        // Hiérarchie normative de SOURCES-0001, Articles 25 à 33 (INV-8).
+        // Le rang d'une norme procède de cette table et d'elle seule ; il n'est
+        // jamais inventé. `INDETERMINE` y figure comme rang explicite : le
+        // service déclare son ignorance plutôt que de présumer.
+        $pdo->exec(<<<SQL
+            CREATE TABLE rang_normatif (
+                code    TEXT PRIMARY KEY,
+                libelle TEXT NOT NULL,
+                ordre   INTEGER NOT NULL,
+                article TEXT NOT NULL
+            )
+        SQL);
+
+        // Une source reconnue au sens de SOURCES-0001. L'authenticité (AUTH-n)
+        // y est distincte du statut d'adoption (INV-9) : une source peut être
+        // authentifiée et abrogée, ou de provenance déclarée et faire règle.
+        $pdo->exec(<<<SQL
+            CREATE TABLE source (
+                reference    TEXT PRIMARY KEY,
+                titre        TEXT NOT NULL,
+                categorie    TEXT NOT NULL,
+                authenticite TEXT NOT NULL,
+                reserve      TEXT
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE norme (
                 reference   TEXT PRIMARY KEY,
                 titre       TEXT NOT NULL,
-                rang        TEXT NOT NULL,
+                rang_code   TEXT NOT NULL REFERENCES rang_normatif(code),
                 domaine     TEXT NOT NULL
             )
         SQL);
@@ -61,6 +90,22 @@ final class Schema
             CREATE TABLE statut (
                 id                 {$id},
                 version_norme_id   BIGINT NOT NULL REFERENCES version_norme(id),
+                valeur             TEXT NOT NULL,
+                date_effet         TEXT NOT NULL,
+                adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        // État d'une capacité souveraine, en ajout seul (INV-3), fondé sur un
+        // acte (INV-4). Séparé de `statut` : un état de capacité et un statut
+        // de norme sont deux vocabulaires distincts et ne partagent pas une
+        // colonne (INV-10, CONCEPTION-CAP-CORE-006, Art. 6 et 10).
+        $pdo->exec(<<<SQL
+            CREATE TABLE etat_capacite (
+                id                 {$id},
+                capacite_reference TEXT NOT NULL,
+                dimension          TEXT NOT NULL
+                    CHECK (dimension IN ('conception','implementation','exploitation','preuve')),
                 valeur             TEXT NOT NULL,
                 date_effet         TEXT NOT NULL,
                 adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
