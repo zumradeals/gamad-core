@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Preuve P3 de CAP-CORE-006 — résolution et authenticité d'une source (CTR-09).
+ * Preuve P3 de CAP-CORE-006 — résolution et authenticité d'une source (CTR-15).
  *
  * Garde de comportement propre à cette capacité, au sens de la doctrine
  * arrêtée par ADOPTION-0035, Art. 2.2 : une capacité n'hérite pas de la preuve
@@ -39,7 +39,7 @@ declare(strict_types=1);
 use Gamad\RegistreNormes\Db;
 use Gamad\RegistreNormes\GitBlob;
 use Gamad\RegistreNormes\Ingestion;
-use Gamad\RegistreSources\Ctr09;
+use Gamad\RegistreSources\Ctr15;
 
 require __DIR__ . '/../../registre-normes/bootstrap.php';
 
@@ -51,7 +51,7 @@ putenv('SQLITE_PATH=' . $fichier);
 
 $pdo = Db::connect();
 (new Ingestion($pdo, REGN_CORPUS))->executer();
-$ctr09 = new Ctr09($pdo, REGN_CORPUS);
+$ctr15 = new Ctr15($pdo, REGN_CORPUS);
 
 $echecs = 0;
 $verifier = function (bool $ok, string $libelle, string $detail = '') use (&$echecs): void {
@@ -61,12 +61,12 @@ $verifier = function (bool $ok, string $libelle, string $detail = '') use (&$ech
     }
 };
 
-echo "PREUVE P3 — RÉSOLUTION ET AUTHENTICITÉ D'UNE SOURCE (CAP-CORE-006 / CTR-09)\n\n";
+echo "PREUVE P3 — RÉSOLUTION ET AUTHENTICITÉ D'UNE SOURCE (CAP-CORE-006 / CTR-15)\n\n";
 
 /* ------------------------------------------------------------------ INV-7 */
 echo "  INV-7 — identité canonique\n";
 
-$sources = $ctr09->resoudreSource('SOURCES-0001');
+$sources = $ctr15->resoudreSource('SOURCES-0001');
 $verifier(
     $sources !== null && $sources['reference'] === 'SOURCES-0001',
     "SOURCES-0001 se résout par sa référence canonique",
@@ -74,7 +74,7 @@ $verifier(
 );
 
 $verifier(
-    $ctr09->resoudreSource('SRC-9999') === null,
+    $ctr15->resoudreSource('SRC-9999') === null,
     "une référence inconnue rend null, sans source approchante",
 );
 
@@ -100,7 +100,7 @@ echo "\n  INV-9 — authenticité distincte de l'adoption\n";
 
 // SRC-0007 (silsila GAMAD ZUMARA) est inscrite par un acte EN VIGUEUR et
 // demeure néanmoins AUTH-1 : l'adoption n'authentifie pas le contenu.
-$silsila = $ctr09->resoudreSource('SRC-0007');
+$silsila = $ctr15->resoudreSource('SRC-0007');
 $verifier(
     $silsila !== null && str_starts_with((string) $silsila['authenticite'], 'AUTH-1'),
     "SRC-0007, inscrite par un acte en vigueur, demeure AUTH-1",
@@ -112,7 +112,7 @@ $verifier(
     "la réserve inscrite sur SRC-0007 est restituée, non masquée",
 );
 
-$auth = $ctr09->verifierAuthenticite('SRC-0007');
+$auth = $ctr15->verifierAuthenticite('SRC-0007');
 $verifier(
     $auth !== null && $auth['verifiable'] === false && $auth['concorde'] === null,
     "une source non portée en fichier est déclarée invérifiable, non concordante",
@@ -122,7 +122,7 @@ $verifier(
 /* ------------------------------------------------------------------ INV-1 */
 echo "\n  INV-1 — empreinte recalculée, jamais recopiée\n";
 
-$authSources = $ctr09->verifierAuthenticite('SOURCES-0001');
+$authSources = $ctr15->verifierAuthenticite('SOURCES-0001');
 $verifier(
     $authSources !== null && $authSources['verifiable'] === true && $authSources['concorde'] === true,
     "l'empreinte de SOURCES-0001 concorde avec celle que le corpus déclare",
@@ -148,7 +148,7 @@ $verifier(
 /* ----------------------------------------------------------------- INV-11 */
 echo "\n  INV-11 — la lignée distingue l'ignorance du fait\n";
 
-$lignee = $ctr09->resoudreLignee('SOURCES-0001');
+$lignee = $ctr15->resoudreLignee('SOURCES-0001');
 $verifier(
     $lignee !== null && is_array($lignee['amont']) && is_array($lignee['aval']),
     "une source connue rend une lignée, fût-elle vide",
@@ -160,7 +160,7 @@ $verifier(
 );
 
 $verifier(
-    $ctr09->resoudreLignee('SRC-9999') === null,
+    $ctr15->resoudreLignee('SRC-9999') === null,
     "une source inconnue rend null, et non une lignée vide",
 );
 

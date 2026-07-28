@@ -24,6 +24,15 @@ namespace Gamad\RegistreAnnuaire;
  */
 final class Ctr14
 {
+    /**
+     * La capacité souveraine que ce module sert (INV-41).
+     *
+     * Une famille de contrat peut servir deux capacités — `CTR-10` sert
+     * l'audit et l'intégrité. Le numéro de famille ne suffit donc pas à
+     * rattacher un module ; le module le déclare lui-même.
+     */
+    public const CAPACITE = 'CAP-CORE-020';
+
     private const REGISTRE = 'genesis-ii/registres/capacites/REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001.md';
     private const ATLAS    = 'genesis-ii/atlas/CORE-ATLAS-0001-atlas-initial-gamad-core.md';
     private const CI       = '.github/workflows/gardes-comportement.yml';
@@ -36,6 +45,12 @@ final class Ctr14
 
     /** @var array<string,array<string,string>>|null */
     private ?array $atlas = null;
+
+    /** @var array<string,array<string,string>>|null */
+    private ?array $familles = null;
+
+    /** @var list<array<string,string|null>>|null */
+    private ?array $modules = null;
 
     public function __construct(
         private string $corpus,
@@ -124,22 +139,78 @@ final class Ctr14
     }
 
     /**
-     * Numéros de contrat revendiqués par plus d'une capacité.
+     * Familles de contrat servant plus d'une capacité.
      *
-     * `ADOPTION-0032`, Art. 2.1 a arrêté la règle : les numéros sont attribués
-     * dans l'ordre chronologique d'adoption de la conception qui les définit,
-     * jamais par correspondance avec le numéro de la capacité servie, et ne
-     * sont **jamais réemployés**. Une collision est donc une violation de cette
-     * règle, ou une ambiguïté antérieure à elle.
+     * Ce partage est RÉGULIER par construction : l'Article 69 de l'Atlas ne
+     * numérote pas des contrats par capacité, il définit des familles, et trois
+     * d'entre elles annoncent dans leur intitulé qu'elles en servent deux —
+     * « Statut produit ou realm », « Audit et intégrité », « Risque et
+     * incident ». Compter les revendications d'un même numéro et conclure à la
+     * faute était l'erreur de la première version de ce service, inscrite comme
+     * fait par ADOPTION-0044 et rectifiée par ADOPTION-0045.
      *
-     * Le service la NOMME ; il ne la tranche pas (INV-38). Départager deux
-     * textes adoptés est un acte de l'autorité.
+     * Ce qui fait la faute n'est pas le nombre : c'est le domaine (INV-40).
+     * Voir usurpations().
      *
      * @return array<string,list<string>>
      */
-    public function collisions(): array
+    public function partages(): array
     {
         return array_filter($this->attributions(), fn (array $caps) => count($caps) > 1);
+    }
+
+    /**
+     * Revendications fautives : une capacité porte une famille dont elle ne
+     * garde pas le domaine (INV-40).
+     *
+     * Le domaine gardien de la famille, tel que l'Atlas l'établit, doit figurer
+     * parmi les domaines de la capacité. Un partage entre capacités qui
+     * satisfont toutes cette condition est régulier ; une revendication qui ne
+     * la satisfait pas est une usurpation, fût-elle solitaire — et c'est ainsi
+     * que l'emprunt de CTR-09 par CAP-CORE-006 a échappé trois actes durant à
+     * un mécanisme qui ne cherchait que les doublons.
+     *
+     * Une famille qui ne déclare aucun code de domaine — « Transversal » — ne
+     * fournit rien à vérifier : la condition est tenue pour satisfaite plutôt
+     * que devinée.
+     *
+     * Le service NOMME l'usurpation ; il ne la corrige pas (INV-38).
+     *
+     * @return list<array<string,string>>
+     */
+    public function usurpations(): array
+    {
+        $familles = $this->familles();
+        $releve = [];
+
+        foreach ($this->registre() as $ref => $fiche) {
+            $domainesCapacite = $this->codesDomaine((string) $fiche['domaine']);
+            foreach ($fiche['contrats'] as $contrat) {
+                if (!isset($familles[$contrat])) {
+                    $releve[] = [
+                        'capacite' => $ref,
+                        'famille'  => $contrat,
+                        'motif'    => 'FAMILLE INCONNUE',
+                        'detail'   => 'aucune famille `' . $contrat . '` n\'est définie par l\'Atlas',
+                    ];
+                    continue;
+                }
+                $gardiens = $this->codesDomaine($familles[$contrat]['gardien']);
+                if ($gardiens === [] || array_intersect($gardiens, $domainesCapacite) !== []) {
+                    continue;
+                }
+                $releve[] = [
+                    'capacite' => $ref,
+                    'famille'  => $contrat,
+                    'motif'    => 'USURPATION DE FAMILLE',
+                    'detail'   => 'famille `' . $contrat . '` — ' . $familles[$contrat]['libelle']
+                        . ' — gardée par ' . implode(', ', $gardiens)
+                        . ' ; la capacité garde ' . (implode(', ', $domainesCapacite) ?: 'aucun domaine codé'),
+                ];
+            }
+        }
+
+        return $releve;
     }
 
     /**
@@ -157,24 +228,22 @@ final class Ctr14
     {
         $fiche = $this->resoudreCapacite($reference);
         $contrats = $fiche['contrats'] ?? [];
-        $collisions = $this->collisions();
 
-        // Un contrat revendiqué par plusieurs capacités ne permet pas de dire à
-        // laquelle appartient le code qui le sert. L'observation s'abstient
-        // plutôt que de trancher.
-        $contestes = array_values(array_filter($contrats, fn (string $c) => isset($collisions[$c])));
-        $contrats = array_values(array_filter($contrats, fn (string $c) => !isset($collisions[$c])));
-
+        // Le numéro de famille ne rattache plus un module à une capacité : une
+        // famille peut en servir deux. C'est le module qui déclare la capacité
+        // qu'il sert (INV-41), et cette déclaration est lue sur le disque.
         $module = null;
         $garde = null;
-        foreach ($contrats as $contrat) {
-            $classe = 'Ctr' . substr($contrat, 4); // CTR-09 -> Ctr09
-            foreach (glob($this->corpus . '/core/*/src/' . $classe . '.php') ?: [] as $trouve) {
-                $module = basename(dirname(dirname($trouve)));
-                $gardes = glob($this->corpus . '/core/' . $module . '/tests/*_p3.php') ?: [];
-                $garde = $gardes === [] ? null : 'core/' . $module . '/tests/' . basename($gardes[0]);
-                break 2;
+        $familleServie = null;
+        foreach ($this->modules() as $decrit) {
+            if ($decrit['capacite'] !== $reference) {
+                continue;
             }
+            $module = $decrit['module'];
+            $familleServie = $decrit['famille'];
+            $gardes = glob($this->corpus . '/core/' . $module . '/tests/*_p3.php') ?: [];
+            $garde = $gardes === [] ? null : 'core/' . $module . '/tests/' . basename($gardes[0]);
+            break;
         }
 
         $ci = false;
@@ -184,15 +253,51 @@ final class Ctr14
         }
 
         return [
-            'capacite'          => $reference,
-            'contrats'          => $contrats,
-            'contrats_contestes' => $contestes,
-            'module'            => $module,
-            'garde'             => $garde,
-            'garde_en_ci'       => $ci,
-            'code_present'      => $module !== null,
-            'observable'        => $contestes === [],
+            'capacite'       => $reference,
+            'contrats'       => $contrats,
+            'module'         => $module,
+            'famille_servie' => $familleServie,
+            'garde'          => $garde,
+            'garde_en_ci'    => $ci,
+            'code_present'   => $module !== null,
         ];
+    }
+
+    /**
+     * Modules présents sur le disque, et la capacité que chacun DÉCLARE servir.
+     *
+     * L'observation ne lit ici aucune déclaration du corpus : elle lit le code
+     * lui-même. Un module dépourvu de constante CAPACITE est relevé comme non
+     * rattaché plutôt qu'attribué de force à la capacité dont le numéro de
+     * famille se rapprocherait le plus.
+     *
+     * @return list<array<string,string|null>>
+     */
+    public function modules(): array
+    {
+        if ($this->modules !== null) {
+            return $this->modules;
+        }
+
+        $releve = [];
+        foreach (glob($this->corpus . '/core/*/src/Ctr*.php') ?: [] as $fichier) {
+            $nom = basename($fichier, '.php');           // Ctr15
+            if (!preg_match('/^Ctr(\d{2})$/', $nom, $m)) {
+                continue;
+            }
+            $source = (string) file_get_contents($fichier);
+            $capacite = preg_match("/const\s+CAPACITE\s*=\s*'(CAP-CORE-\d{3})'/", $source, $mc)
+                ? $mc[1]
+                : null;
+            $releve[] = [
+                'module'   => basename(dirname(dirname($fichier))),
+                'classe'   => $nom,
+                'famille'  => 'CTR-' . $m[1],
+                'capacite' => $capacite,
+            ];
+        }
+
+        return $this->modules = $releve;
     }
 
     /**
@@ -228,18 +333,16 @@ final class Ctr14
             $p3 = str_starts_with($preuve, 'P3');
 
             $divergences = [];
-            if (!$observe['observable']) {
-                // Contrat contesté : la comparaison au réel est impossible sans
-                // trancher, et trancher n'appartient pas au service.
-                $lignes[] = [
-                    'capacite'    => $ref,
-                    'declare'     => $etats,
-                    'observe'     => $observe,
-                    'divergences' => ['CONTRAT CONTESTÉ — ' . implode(', ', $observe['contrats_contestes'])
-                        . ' revendiqué(s) par plusieurs capacités ; la comparaison au réel est suspendue'],
-                    'verdict'     => 'INDETERMINE',
-                ];
-                continue;
+            foreach ($this->usurpations() as $u) {
+                if ($u['capacite'] === $ref) {
+                    $divergences[] = $u['motif'] . ' — ' . $u['detail'];
+                }
+            }
+            if ($observe['code_present']
+                && $observe['famille_servie'] !== null
+                && !in_array($observe['famille_servie'], $fiche['contrats'], true)) {
+                $divergences[] = 'MODULE HORS FAMILLE — `' . $observe['module'] . '` sert `'
+                    . $observe['famille_servie'] . '`, que la capacité ne revendique pas';
             }
             if ($codee && !$observe['code_present']) {
                 $divergences[] = 'CAPACITÉ FANTÔME — implémentation `' . $implementation . '` déclarée, aucun module ne sert son contrat';
@@ -285,8 +388,11 @@ final class Ctr14
         $atlas = $this->comparerAtlas();
 
         $divergentes = array_values(array_filter($reel, fn (array $l) => $l['verdict'] === 'DIVERGENCE'));
-        $indetermines = array_values(array_filter($reel, fn (array $l) => $l['verdict'] === 'INDETERMINE'));
         $divergencesAtlas = array_values(array_filter($atlas, fn (array $l) => $l['verdict'] === 'DIVERGENCE'));
+        $nonRattaches = array_values(array_filter(
+            $this->modules(),
+            fn (array $m) => $m['capacite'] === null,
+        ));
 
         $parType = [];
         foreach ($divergentes as $l) {
@@ -316,8 +422,10 @@ final class Ctr14
             'divergentes'          => count($divergentes),
             'divergences_par_type' => $parType,
             'atlas_divergent'      => count($divergencesAtlas),
-            'indeterminees'        => count($indetermines),
-            'collisions_contrat'   => $this->collisions(),
+            'familles'             => count($this->familles()),
+            'familles_partagees'   => $this->partages(),
+            'usurpations'          => $this->usurpations(),
+            'modules_non_rattaches' => array_map(fn (array $m) => $m['module'], $nonRattaches),
             'champs_non_etablis'   => $champsNonEtablis,
             'portee'               => "Annuaire dérivé, jamais autoritatif (INV-36). Il nomme les divergences ; il n'en arbitre aucune.",
         ];
@@ -344,6 +452,67 @@ final class Ctr14
         }
 
         return $this->atlas = $atlas;
+    }
+
+    /**
+     * Relève les familles de contrat : référence, libellé, domaine gardien.
+     *
+     * La table de l'Article 69 de l'Atlas, complétée par les familles ajoutées
+     * en fin de texte (Titre XIV). Seules sont retenues les lignes appartenant
+     * à un tableau dont l'en-tête est celui des familles : l'Atlas porte
+     * d'autres tableaux dont la première colonne est aussi un `CTR-XX` — le
+     * relevé des emprunts, celui des partages —, et les confondre ferait
+     * dépendre le contrôle de l'ordre des colonnes d'un tableau d'illustration.
+     *
+     * @return array<string,array<string,string>>
+     */
+    private function familles(): array
+    {
+        if ($this->familles !== null) {
+            return $this->familles;
+        }
+
+        $familles = [];
+        $dansTableDesFamilles = false;
+        foreach (explode("\n", $this->lire(self::ATLAS)) as $ligne) {
+            $ligne = trim($ligne);
+            if (!str_starts_with($ligne, '|')) {
+                $dansTableDesFamilles = false;
+                continue;
+            }
+            $c = array_map('trim', explode('|', trim($ligne, '|')));
+            if (isset($c[1]) && $this->normaliser($c[0]) === 'référence'
+                && str_contains($this->normaliser($c[1]), 'famille de contrat')) {
+                $dansTableDesFamilles = true;
+                continue;
+            }
+            if (!$dansTableDesFamilles || count($c) < 3) {
+                continue;
+            }
+            if (preg_match('/^`(CTR-\d{2})`$/', $c[0], $m)) {
+                $familles[$m[1]] = [
+                    'reference' => $m[1],
+                    'libelle'   => $this->sansAccolades($c[1]),
+                    'gardien'   => $c[2],
+                    'objet'     => $c[3] ?? '',
+                ];
+            }
+        }
+
+        return $this->familles = $familles;
+    }
+
+    /**
+     * Codes de domaine contenus dans une cellule — « `DOM-02` / `DOM-08` »
+     * en porte deux, « Transversal » aucun.
+     *
+     * @return list<string>
+     */
+    private function codesDomaine(string $cellule): array
+    {
+        preg_match_all('/DOM-\d{2}/', $cellule, $m);
+
+        return array_values(array_unique($m[0]));
     }
 
     /**
@@ -423,6 +592,34 @@ final class Ctr14
                     $capacites[$titre]['contrats'][] = $m[1];
                 }
             }
+        }
+
+        // 2 ter. Réattributions déclarées par un Titre postérieur. Une famille
+        //        attribuée par un texte adopté n'est jamais effacée de ce
+        //        texte ; elle est RETIRÉE par une déclaration plus récente, qui
+        //        nomme la capacité, la famille retirée et celle qui la
+        //        remplace. Sans ce mécanisme, corriger une attribution fautive
+        //        obligerait à réécrire l'article qui l'a portée.
+        foreach (explode("\n", $texte) as $ligne) {
+            if (!preg_match(
+                '/\*\*Réattribution\s*:\*\*\s*`(CAP-CORE-\d{3})`\s*—\s*famille retirée\s*`(CTR-\d{2})`,\s*famille attribuée\s*`(CTR-\d{2})`/u',
+                trim($ligne),
+                $m,
+            )) {
+                continue;
+            }
+            [, $ref, $retiree, $attribuee] = $m;
+            if (!isset($capacites[$ref])) {
+                continue;
+            }
+            $contrats = array_values(array_filter(
+                $capacites[$ref]['contrats'],
+                static fn (string $c) => $c !== $retiree,
+            ));
+            if (!in_array($attribuee, $contrats, true)) {
+                $contrats[] = $attribuee;
+            }
+            $capacites[$ref]['contrats'] = $contrats;
         }
 
         // 3. Titres de mise à jour post-adoption, dans l'ordre du document —

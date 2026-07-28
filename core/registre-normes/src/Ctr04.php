@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Gamad\RegistreNormes;
 
-use Gamad\RegistreSources\Ctr09;
+use Gamad\RegistreSources\Ctr15;
 
 /**
  * Les trois opérations de lecture du contrat CTR-04 (conception adoptée,
@@ -14,6 +14,15 @@ use Gamad\RegistreSources\Ctr09;
  */
 final class Ctr04
 {
+    /**
+     * La capacité souveraine que ce module sert (INV-41).
+     *
+     * Une famille de contrat peut servir deux capacités — `CTR-10` sert
+     * l'audit et l'intégrité. Le numéro de famille ne suffit donc pas à
+     * rattacher un module ; le module le déclare lui-même.
+     */
+    public const CAPACITE = 'CAP-CORE-007';
+
     public function __construct(
         private \PDO $pdo,
         private string $corpus,
@@ -86,7 +95,7 @@ final class Ctr04
      * ne l'a établi (`INV-8`).
      *
      * Depuis le premier incrément à garde propre de `CAP-CORE-006`, cette
-     * opération **délègue** à `CTR-09`, seul titulaire du contrat des sources.
+     * opération **délègue** à `CTR-15`, seul titulaire du contrat des sources.
      * Le comportement est inchangé ; ce qui change est le sens de la
      * dépendance, désormais conforme à l'Article 42 du registre des capacités :
      * le registre des normes dépend des sources, jamais l'inverse. La méthode
@@ -97,7 +106,7 @@ final class Ctr04
      */
     public function resoudreSource(string $reference, ?string $date = null): ?array
     {
-        return (new Ctr09($this->pdo, $this->corpus))->resoudreSource($reference, $date);
+        return (new Ctr15($this->pdo, $this->corpus))->resoudreSource($reference, $date);
     }
 
     /**

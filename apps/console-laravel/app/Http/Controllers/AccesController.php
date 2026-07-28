@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Gamad\RegistreAcces\Ctr05;
+use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +32,7 @@ final class AccesController
             'secret' => ['required', 'string'],
         ]);
 
-        $session = (new Ctr05(Magasin::connecter()))
+        $session = (new Ctr16(Magasin::connecter()))
             ->etablirSession($donnees['entite'], $donnees['secret']);
 
         if ($session === null) {
@@ -50,7 +50,7 @@ final class AccesController
     {
         $reference = $request->session()->get('gamad_session');
         if (is_string($reference)) {
-            (new Ctr05(Magasin::connecter()))->revoquerSession($reference);
+            (new Ctr16(Magasin::connecter()))->revoquerSession($reference);
         }
 
         $request->session()->invalidate();

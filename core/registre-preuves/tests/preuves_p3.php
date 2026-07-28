@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * Garde de comportement propre à cette capacité, au sens de la doctrine
  * arrêtée par ADOPTION-0035, Art. 2.2 : une capacité n'hérite pas de la preuve
- * d'une autre. Les gardes de CTR-04 et CTR-09 éprouvent des services voisins,
+ * d'une autre. Les gardes de CTR-04 et CTR-15 éprouvent des services voisins,
  * non celui-ci.
  *
  * Ce que le test vérifie :
