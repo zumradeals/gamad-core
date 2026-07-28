@@ -78,6 +78,7 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 | `ADOPTION-0034` | Premier incrément de code de `CAP-CORE-006` — identité canonique, rang fondé et séparation des vocabulaires | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0035` | Conception de `CAP-CORE-003` — Registre des autorités et mandats ; doctrine des gardes, confirmation du mandat transitoire et constat de vacance | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0036` | Premier incrément de code de `CAP-CORE-003` — contrat `CTR-02`, vérification des mandats à la date de l'acte | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+| `ADOPTION-0037` | Mission de codage de `AGENT-IA-002` — `MISSION-AI-GENESIS-II-CODE-0001`, périmètre, interdictions et preuves exigées | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
 ## Article 5 — Textes en cours de délibération non inscrits
 
