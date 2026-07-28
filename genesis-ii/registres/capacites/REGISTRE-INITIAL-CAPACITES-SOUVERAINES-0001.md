@@ -1073,3 +1073,47 @@ Ce chiffre n'est pas une limite technique : c'est l'état réel du corpus. **Auc
 ## Article 134 — Non-effet
 
 Le présent Titre ne crée aucune identité, ne nomme personne, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
+
+---
+
+# TITRE XXIII — MISE À JOUR POST-ADOPTION : `CAP-CORE-005` ET LA PREMIÈRE ÉCRITURE APPLICATIVE
+
+## Article 135 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0039-CAP-CORE-005-0001`. Il ne modifie aucune disposition des Titres I à XXII. Il ajoute un fait postérieur d'une nature nouvelle : **le Core écrit pour la première fois.**
+
+## Article 136 — Changement d'état
+
+| Capacité | État avant (Article 31) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-005` — Authentification et assurance communes | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0039`. **Contrat :** `CTR-05`. **Invariants introduits :** `INV-22` à `INV-26`.
+
+## Article 137 — Trois espaces d'écriture, et le maintien de `INV-4`
+
+L'autorité arrête que le Core comporte trois espaces d'écriture, qu'aucune opération ne doit confondre :
+
+| Espace | Qui écrit | Fait foi ? |
+|---|---|---|
+| Le **corpus** — fichiers versionnés | actes signés seulement (`INV-4`) | oui |
+| L'**index dérivé** — base reconstructible | l'ingestion (`INV-5`) | non : copie du corpus |
+| Le **magasin d'exploitation** | l'application | **non** : aucun fait institutionnel |
+
+`INV-4` n'est ni levé ni amendé. Sa portée est le corpus, et elle demeure entière : **aucune écriture applicative ne produit de fait institutionnel.** Le magasin d'exploitation ne contient que des moyens techniques d'accès, révocables et remplaçables, dont la perte ne détruit aucune vérité.
+
+## Article 138 — Ce que la capacité ferme, et ce qu'elle n'ouvre pas
+
+La console `console.dgafrique.com`, publiquement lisible depuis sa mise en ligne, exige désormais une session. **La capacité ferme une porte ; elle n'en ouvre aucune.**
+
+Une session établit *qui l'on est*, non *ce que l'on peut faire*. Les droits relèvent de `CAP-CORE-004`, `À ÉTABLIR`. Tant qu'elle n'existe pas, une session ouverte ne confère qu'un accès en lecture — exactement ce que la console offrait publiquement.
+
+## Article 139 — Écarts déclarés
+
+- **Facteur unique.** Les Articles 78 et 79 de `SECURITY-GOVERNANCE-0001` exigent plusieurs facteurs pour un compte privilégié. Un seul est livré. L'écart est déclaré et demeure à trancher.
+- **Récupération absente.** La fiche exige une récupération institutionnelle ; elle suppose une institution. Un seul titulaire étant en fonction, la perte du secret n'a d'autre remède que la reconstruction du magasin — possible sans dommage, précisément parce qu'il ne contient aucune vérité.
+- **Aucun compte n'existe.** L'incrément ne crée aucun authentificateur ; son établissement appartient à l'autorité seule.
+
+## Article 140 — Non-effet
+
+Le présent Titre ne crée aucun compte, ne détient aucun secret, ne rend `CAP-CORE-005` ni admise ni active, ne modifie le corps d'aucun article antérieur et ne constate pas `G0`.
