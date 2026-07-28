@@ -1,0 +1,36 @@
+name: Registre des normes — preuve P3
+
+# Exécute la preuve P3 de reconstruction temporelle du service CTR-04.
+# Cette garde est distincte du contrôle d'intégrité documentaire (Python) :
+# elle vérifie le COMPORTEMENT du service, non la cohérence des fichiers.
+# Les deux gardes sont séparées à dessein (ADOPTION-0027, Article 4).
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preuve-p3:
+    name: Preuve P3 (reconstruction temporelle)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_sqlite
+
+      - name: Exécuter la preuve P3
+        run: php core/registre-normes/tests/temporel_p3.php
