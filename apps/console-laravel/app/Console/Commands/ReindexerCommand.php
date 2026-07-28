@@ -54,11 +54,12 @@ final class ReindexerCommand extends Command
 
             $r = (new Ingestion($pdo, $corpus))->executer();
             $this->info(sprintf(
-                'Index reconstruit : %d adoptions, %d normes, %d versions, %d statuts.',
+                'Index reconstruit : %d adoptions, %d normes, %d versions, %d statuts, %d états de capacité.',
                 $r['adoptions'],
                 $r['normes'],
                 $r['versions'],
                 $r['statuts'],
+                $r['etats'],
             ));
 
             $index = (new Ctr04($pdo, $corpus))->resoudreIndex();

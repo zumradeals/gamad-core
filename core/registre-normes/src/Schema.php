@@ -24,7 +24,7 @@ final class Schema
             ? 'bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY'
             : 'INTEGER PRIMARY KEY AUTOINCREMENT';
 
-        foreach (['relation_evolution', 'statut', 'version_norme', 'adoption', 'norme'] as $t) {
+        foreach (['relation_evolution', 'etat_capacite', 'statut', 'version_norme', 'adoption', 'norme'] as $t) {
             $pdo->exec("DROP TABLE IF EXISTS {$t}");
         }
 
@@ -61,6 +61,22 @@ final class Schema
             CREATE TABLE statut (
                 id                 {$id},
                 version_norme_id   BIGINT NOT NULL REFERENCES version_norme(id),
+                valeur             TEXT NOT NULL,
+                date_effet         TEXT NOT NULL,
+                adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        // État d'une capacité souveraine, en ajout seul (INV-3), fondé sur un
+        // acte (INV-4). Séparé de `statut` : un état de capacité et un statut
+        // de norme sont deux vocabulaires distincts et ne partagent pas une
+        // colonne (INV-10, CONCEPTION-CAP-CORE-006, Art. 6 et 10).
+        $pdo->exec(<<<SQL
+            CREATE TABLE etat_capacite (
+                id                 {$id},
+                capacite_reference TEXT NOT NULL,
+                dimension          TEXT NOT NULL
+                    CHECK (dimension IN ('conception','implementation','exploitation','preuve')),
                 valeur             TEXT NOT NULL,
                 date_effet         TEXT NOT NULL,
                 adoption_reference TEXT NOT NULL REFERENCES adoption(reference)

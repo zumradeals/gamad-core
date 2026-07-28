@@ -42,8 +42,8 @@ $divergents  = array_filter($integrite, fn ($l) => !$l['concorde']);
 // Preuve P3 exécutée en direct sur la page.
 $p3 = [];
 foreach ([['2026-07-26', 'EN CONCEPTION'], ['2026-07-27', 'CONÇUE'], ['2026-08-01', 'CONÇUE']] as [$d, $attendu]) {
-    $r = $ctr04->resoudreNorme('CAP-CORE-007', null, $d);
-    $p3[] = ['date' => $d, 'attendu' => $attendu, 'obtenu' => $r['statut'] ?? '(aucun)', 'ok' => ($r['statut'] ?? null) === $attendu];
+    $r = $ctr04->resoudreCapacite('CAP-CORE-007', 'conception', $d);
+    $p3[] = ['date' => $d, 'attendu' => $attendu, 'obtenu' => $r['valeur'] ?? '(aucun)', 'ok' => ($r['valeur'] ?? null) === $attendu];
 }
 $p3_ok = count(array_filter($p3, fn ($c) => $c['ok'])) === count($p3);
 

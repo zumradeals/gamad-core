@@ -39,8 +39,12 @@ $cas = [
 $echecs = 0;
 echo "PREUVE P3 — RECONSTRUCTION TEMPORELLE DE CAP-CORE-007\n\n";
 foreach ($cas as [$date, $attendu, $libelle]) {
-    $r = $ctr04->resoudreNorme('CAP-CORE-007', null, $date);
-    $obtenu = $r['statut'] ?? '(aucun)';
+    // Depuis la séparation des vocabulaires (INV-10), l'état de conception
+    // d'une capacité se résout par `resoudreCapacite` et non par
+    // `resoudreNorme` : une capacité n'est pas une norme. Les cas d'essai,
+    // les dates et les valeurs attendues sont inchangés.
+    $r = $ctr04->resoudreCapacite('CAP-CORE-007', 'conception', $date);
+    $obtenu = $r['valeur'] ?? '(aucun)';
     $ok = $obtenu === $attendu;
     printf("  %s  au %s (%s) : attendu %-14s obtenu %-14s\n",
         $ok ? '[OK]  ' : '[ÉCHEC]', $date, $libelle, $attendu, $obtenu);

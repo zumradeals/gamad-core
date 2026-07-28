@@ -71,6 +71,45 @@ final class Ctr04
     }
 
     /**
+     * Résout l'état d'une capacité souveraine, éventuellement à une date passée.
+     *
+     * Distincte de `resoudreNorme` à dessein : l'état d'une capacité
+     * (`EN CONCEPTION`, `CONÇUE`, …) et le statut d'une norme
+     * (`EN VIGUEUR`, `ABROGE`, …) sont deux vocabulaires que rien n'autorise à
+     * mêler (`INV-10`). En particulier, `en_vigueur` n'est pas calculé ici :
+     * la question n'a pas de sens pour une capacité.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function resoudreCapacite(string $reference, string $dimension = 'conception', ?string $date = null): ?array
+    {
+        $sql = 'SELECT valeur, date_effet, adoption_reference FROM etat_capacite
+                WHERE capacite_reference = ? AND dimension = ?';
+        $args = [$reference, $dimension];
+        if ($date !== null) {
+            $sql .= ' AND date_effet <= ?';
+            $args[] = $date;
+        }
+        $sql .= ' ORDER BY date_effet DESC, id DESC LIMIT 1';
+
+        $st = $this->pdo->prepare($sql);
+        $st->execute($args);
+        $etat = $st->fetch();
+
+        if ($etat === false) {
+            return null;
+        }
+
+        return [
+            'reference'          => $reference,
+            'dimension'          => $dimension,
+            'valeur'             => $etat['valeur'],
+            'date_effet'         => $etat['date_effet'],
+            'adoption_reference' => $etat['adoption_reference'],
+        ];
+    }
+
+    /**
      * Recalcule l'empreinte réelle de chaque fichier référencé et la compare à
      * l'empreinte déclarée. L'empreinte réelle n'est jamais recopiée : elle est
      * recalculée (INV-1). Retourne une ligne par version.

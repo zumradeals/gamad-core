@@ -31,7 +31,7 @@ final class Ingestion
     ) {
     }
 
-    /** @return array{adoptions:int,normes:int,versions:int,statuts:int} */
+    /** @return array{adoptions:int,normes:int,versions:int,statuts:int,etats:int} */
     public function executer(): array
     {
         Schema::create($this->pdo);
@@ -46,6 +46,7 @@ final class Ingestion
             'normes'    => (int) $this->pdo->query('SELECT count(*) FROM norme')->fetchColumn(),
             'versions'  => $versions,
             'statuts'   => (int) $this->pdo->query('SELECT count(*) FROM statut')->fetchColumn(),
+            'etats'     => (int) $this->pdo->query('SELECT count(*) FROM etat_capacite')->fetchColumn(),
         ];
     }
 
@@ -205,22 +206,14 @@ final class Ingestion
         }
 
         foreach ($this->capacitesDeclarees($texte) as $capacite => $etats) {
-            $chemin = 'genesis-ii/conception/CONCEPTION-CAP-CORE-007-REGISTRE-DES-NORMES-0001.md';
-            if ($capacite !== 'CAP-CORE-007' || !is_file($this->corpus . '/' . $chemin)) {
-                continue; // seule CAP-CORE-007 dispose à ce jour d'une conception adoptée
-            }
-
-            $this->ensureNorme($capacite, 'Registre des normes (capacité souveraine)', 'capacité souveraine', 'DOM-01');
-            $versionId = $this->insererVersion($capacite, '0.1', GitBlob::hashFile($this->corpus . '/' . $chemin), $chemin);
-
             $precedent = null;
             foreach ($etats as [$valeur, $acte]) {
                 $acte ??= $acteInitial;
                 $date = $this->actes[$acte]['date'] ?? null;
                 if ($date === null || $valeur === $precedent) {
-                    continue; // sans acte daté, aucun statut ; un état réaffirmé n'est pas un changement
+                    continue; // sans acte daté, aucun état ; un état réaffirmé n'est pas un changement
                 }
-                $this->insererStatut($versionId, $valeur, $date, $acte);
+                $this->insererEtatCapacite($capacite, 'conception', $valeur, $date, $acte);
                 $precedent = $valeur;
             }
         }
@@ -305,6 +298,19 @@ final class Ingestion
         $this->pdo->prepare(
             'INSERT INTO statut(version_norme_id,valeur,date_effet,adoption_reference) VALUES(?,?,?,?)'
         )->execute([$versionId, $valeur, $dateEffet, $adoption]);
+    }
+
+    private function insererEtatCapacite(
+        string $capacite,
+        string $dimension,
+        string $valeur,
+        string $dateEffet,
+        string $adoption,
+    ): void {
+        $this->pdo->prepare(
+            'INSERT INTO etat_capacite(capacite_reference,dimension,valeur,date_effet,adoption_reference)
+             VALUES(?,?,?,?,?)'
+        )->execute([$capacite, $dimension, $valeur, $dateEffet, $adoption]);
     }
 
     private function referenceDepuisChemin(string $chemin): string
