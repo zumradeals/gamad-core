@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use Gamad\RegistreAcces\Ctr05;
+use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
 use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreNormes\Db;
@@ -67,7 +67,7 @@ final class InscrireAuthentificateurCommand extends Command
         }
 
         try {
-            $reference = (new Ctr05(Magasin::connecter()))->inscrireAuthentificateur($entite, $secret);
+            $reference = (new Ctr16(Magasin::connecter()))->inscrireAuthentificateur($entite, $secret);
         } catch (\InvalidArgumentException $e) {
             $this->error($e->getMessage());
 

@@ -29,6 +29,15 @@ namespace Gamad\RegistrePreuves;
  */
 final class Ctr10
 {
+    /**
+     * La capacité souveraine que ce module sert (INV-41).
+     *
+     * Une famille de contrat peut servir deux capacités — `CTR-10` sert
+     * l'audit et l'intégrité. Le numéro de famille ne suffit donc pas à
+     * rattacher un module ; le module le déclare lui-même.
+     */
+    public const CAPACITE = 'CAP-CORE-015';
+
     /** Registre adopté portant la politique des algorithmes (Titre XXVI). */
     private const REGISTRE_POLITIQUE =
         'genesis-ii/registres/capacites/REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001.md';

@@ -21,17 +21,17 @@ declare(strict_types=1);
  * Exécution : php core/registre-acces/tests/authentification_p3.php
  */
 
-use Gamad\RegistreAcces\Ctr05;
+use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
 
 require __DIR__ . '/../src/Magasin.php';
-require __DIR__ . '/../src/Ctr05.php';
+require __DIR__ . '/../src/Ctr16.php';
 
 $fichier = sys_get_temp_dir() . '/regn-authn-p3-' . getmypid() . '.sqlite';
 @unlink($fichier);
 
 $magasin = Magasin::connecter($fichier);
-$ctr05 = new Ctr05($magasin);
+$ctr16 = new Ctr16($magasin);
 
 $echecs = 0;
 $verifier = function (bool $ok, string $libelle) use (&$echecs): void {
@@ -45,46 +45,46 @@ echo "PREUVE P3 — AUTHENTIFICATION, EXPIRATION, RÉVOCATION (CAP-CORE-005)\n\n
 
 // Secret de test, sans rapport avec aucun secret réel.
 $secret = 'secret-de-test-non-institutionnel';
-$authn = $ctr05->inscrireAuthentificateur('ENTITE-DE-TEST', $secret);
+$authn = $ctr16->inscrireAuthentificateur('ENTITE-DE-TEST', $secret);
 
 // --- Le secret exact ouvre une session.
-$session = $ctr05->etablirSession('ENTITE-DE-TEST', $secret);
+$session = $ctr16->etablirSession('ENTITE-DE-TEST', $secret);
 $verifier($session !== null && isset($session['session']), 'un secret exact ouvre une session');
 
 // --- Le secret erroné la refuse.
 $verifier(
-    $ctr05->etablirSession('ENTITE-DE-TEST', 'mauvais-secret-quelconque') === null,
+    $ctr16->etablirSession('ENTITE-DE-TEST', 'mauvais-secret-quelconque') === null,
     'un secret erroné est refusé',
 );
 
 // --- Une entité sans authentificateur est refusée de la même manière.
 $verifier(
-    $ctr05->etablirSession('ENTITE-INEXISTANTE', $secret) === null,
+    $ctr16->etablirSession('ENTITE-INEXISTANTE', $secret) === null,
     'une entité sans authentificateur est refusée',
 );
 
 // --- La session ouverte est valide maintenant.
 $reference = $session['session'] ?? '';
-$verifier(($ctr05->verifierSession($reference)['valide'] ?? false) === true, 'la session ouverte est valide');
+$verifier(($ctr16->verifierSession($reference)['valide'] ?? false) === true, 'la session ouverte est valide');
 
 // --- Elle ne l'est plus après son expiration (INV-25).
 $apres = date('c', time() + 3600 * 24);
-$expiree = $ctr05->verifierSession($reference, $apres);
+$expiree = $ctr16->verifierSession($reference, $apres);
 $verifier(
     ($expiree['valide'] ?? true) === false && $expiree['motif'] === 'session expirée',
     'une session expirée est invalide (INV-25)',
 );
 
 // --- M-21 : la révocation de l'authentificateur invalide la session ouverte.
-$verifier($ctr05->revoquerAuthentificateur($authn), "l'authentificateur se révoque");
-$apresRevocation = $ctr05->verifierSession($reference);
+$verifier($ctr16->revoquerAuthentificateur($authn), "l'authentificateur se révoque");
+$apresRevocation = $ctr16->verifierSession($reference);
 $verifier(
     ($apresRevocation['valide'] ?? true) === false,
     'une session ne survit pas à la révocation de son authentificateur (M-21)',
 );
 
 // --- L'attestation ne restitue jamais l'empreinte du secret (INV-24).
-$attestation = $ctr05->attester('ENTITE-DE-TEST');
+$attestation = $ctr16->attester('ENTITE-DE-TEST');
 $fuite = false;
 foreach ($attestation['authentificateurs'] as $a) {
     if (array_key_exists('empreinte', $a)) {

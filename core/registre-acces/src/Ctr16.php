@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Gamad\RegistreAcces;
 
 /**
- * Contrat CTR-05 — Authentification et assurance communes (CAP-CORE-005),
+ * Contrat CTR-16 — Authentification et assurance communes (CAP-CORE-005),
  * conception adoptée par ADOPTION-0039.
  *
  * `etablirSession` est la PREMIÈRE ÉCRITURE APPLICATIVE du Core. Elle n'écrit
@@ -19,8 +19,17 @@ namespace Gamad\RegistreAcces;
  *
  * Aucun secret n'est conservé, seulement une empreinte non réversible (INV-24).
  */
-final class Ctr05
+final class Ctr16
 {
+    /**
+     * La capacité souveraine que ce module sert (INV-41).
+     *
+     * Une famille de contrat peut servir deux capacités — `CTR-10` sert
+     * l'audit et l'intégrité. Le numéro de famille ne suffit donc pas à
+     * rattacher un module ; le module le déclare lui-même.
+     */
+    public const CAPACITE = 'CAP-CORE-005';
+
     /** Durée d'une session, en secondes. Aucune session n'est permanente (INV-25). */
     private const DUREE_SESSION = 3600 * 8;
 

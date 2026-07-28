@@ -12,18 +12,22 @@ declare(strict_types=1);
  *              du Registre, aucune n'est inventée ni omise ;
  *   · INV-37 — les quatre dimensions d'état sont restituées distinctement, et
  *              l'état courant procède du dernier Titre qui l'a constaté ;
- *   · INV-38 — une divergence est NOMMÉE et jamais arbitrée : un contrat
- *              revendiqué par deux capacités suspend la comparaison au réel
- *              au lieu de trancher ;
+ *   · INV-38 — une divergence est NOMMÉE et jamais arbitrée ;
  *   · INV-39 — un champ que le corpus n'établit pour aucune capacité est
  *              déclaré non établi, jamais comblé par une valeur plausible ;
+ *   · INV-40 — une capacité ne porte que les familles dont elle garde le
+ *              domaine : le partage d'une famille entre deux capacités qui
+ *              gardent toutes deux son domaine est RÉGULIER, une revendication
+ *              hors domaine est une usurpation, fût-elle solitaire ;
+ *   · INV-41 — chaque module déclare la capacité qu'il sert, le numéro de
+ *              famille ne suffisant plus à l'y rattacher ;
  *   · la comparaison Atlas–Registre–réalité exigée par l'Article 55 s'opère
  *     réellement, sur les trois termes.
  *
  * CONTRE-ÉPREUVE OBLIGATOIRE (ADOPTION-0032, Art. 3) : exécuté contre un corpus
- * dont le domaine d'une capacité a été délibérément modifié dans l'Atlas sans
- * l'être au Registre, ce test DOIT échouer — la divergence Atlas/Registre
- * cessant d'être nulle. La falsification s'opère sur COPIE HORS DÉPÔT, via
+ * dont le domaine gardien d'une famille a été délibérément déplacé dans
+ * l'Atlas, ce test DOIT échouer — la capacité qui porte cette famille cessant
+ * d'en garder le domaine. La falsification s'opère sur COPIE HORS DÉPÔT, via
  * CORPUS_PATH.
  *
  * Exécution :             php core/registre-annuaire/tests/annuaire_p3.php
@@ -94,24 +98,20 @@ $verifier(
 /* ------------------------------------------------------------------ INV-38 */
 echo "\n  INV-38 — une divergence est nommée, jamais arbitrée\n";
 
-$collisions = $ctr14->collisions();
-$verifier(
-    $collisions !== [],
-    "les collisions de numéro de contrat sont relevées",
-    $collisions === [] ? 'aucune' : implode(' · ', array_map(
-        fn ($c, $caps) => $c . ' → ' . implode('/', $caps),
-        array_keys($collisions),
-        $collisions,
-    )),
-);
+// Une usurpation est restituée avec sa capacité, sa famille et son motif — les
+// éléments du constat — sans qu'aucune correction ne soit appliquée d'office.
+foreach ($ctr14->usurpations() as $u) {
+    $verifier(
+        isset($u['capacite'], $u['famille'], $u['motif'], $u['detail']),
+        "une usurpation est nommée sans être corrigée",
+        (string) ($u['capacite'] ?? '?') . ' → ' . (string) ($u['motif'] ?? '?'),
+    );
+}
 
-// Une capacité dont le contrat est contesté ne reçoit pas de verdict tranché.
-$contestee = array_values($collisions)[0][0] ?? null;
-$ligne = $contestee === null ? null : ($ctr14->comparerReel($contestee)[0] ?? null);
 $verifier(
-    $ligne !== null && $ligne['verdict'] === 'INDETERMINE',
-    "un contrat contesté suspend la comparaison au réel au lieu de la trancher",
-    $ligne === null ? 'aucune capacité contestée' : $contestee . ' → ' . $ligne['verdict'],
+    $ctr14->usurpations() === [],
+    "aucune famille n'est portée hors de son domaine gardien",
+    count($ctr14->usurpations()) . ' usurpation(s)',
 );
 
 /* ------------------------------------------------------------------ INV-39 */
@@ -121,6 +121,74 @@ $verifier(
     in_array('responsable', $ecarts['champs_non_etablis'], true),
     "le responsable, qu'aucune fiche n'établit, est déclaré non établi",
     'champs non établis : ' . implode(', ', $ecarts['champs_non_etablis']),
+);
+
+/* ------------------------------------------------------------------ INV-40 */
+echo "\n  INV-40 — une capacité ne porte que les familles dont elle garde le domaine\n";
+
+$verifier(
+    $ecarts['familles'] === 16,
+    "les seize familles de contrat sont relevées à l'Atlas",
+    $ecarts['familles'] . ' famille(s)',
+);
+
+// Le partage n'est pas la faute : trois familles servent deux capacités
+// chacune, et l'Atlas l'énonce dans leur intitulé.
+$partages = $ctr14->partages();
+$verifier(
+    array_keys($partages) === ['CTR-08', 'CTR-10', 'CTR-11'],
+    "les trois familles partagées sont reconnues régulières, non fautives",
+    implode(' · ', array_map(
+        fn ($c, $caps) => $c . ' → ' . implode('/', $caps),
+        array_keys($partages),
+        $partages,
+    )),
+);
+
+$reattribuees = [
+    'CAP-CORE-006' => 'CTR-15',
+    'CAP-CORE-005' => 'CTR-16',
+];
+foreach ($reattribuees as $capacite => $famille) {
+    $f = $ctr14->resoudreCapacite($capacite);
+    $verifier(
+        $f !== null && in_array($famille, $f['contrats'], true),
+        "la réattribution de {$capacite} vers {$famille} est dérivée du Registre",
+        $f === null ? 'fiche absente' : 'contrats : ' . implode(', ', $f['contrats']),
+    );
+}
+
+// Une famille retirée par un Titre postérieur ne doit plus être portée, sans
+// que le texte qui l'attribuait ait été réécrit.
+$sources = $ctr14->resoudreCapacite('CAP-CORE-006');
+$verifier(
+    $sources !== null && !in_array('CTR-09', $sources['contrats'], true),
+    "la famille retirée n'est plus portée, l'article qui l'attribuait demeurant intact",
+);
+
+/* ------------------------------------------------------------------ INV-41 */
+echo "\n  INV-41 — un module déclare la capacité qu'il sert\n";
+
+$modules = $ctr14->modules();
+$verifier(
+    $modules !== [] && $ecarts['modules_non_rattaches'] === [],
+    "tout module présent déclare sa capacité",
+    count($modules) . ' module(s) · non rattachés : '
+        . (implode(', ', $ecarts['modules_non_rattaches']) ?: 'aucun'),
+);
+
+// CTR-10 sert deux capacités : sans la déclaration du module, rien ne dirait
+// laquelle registre-preuves sert réellement.
+$preuves = $ctr14->observer('CAP-CORE-015');
+$audit = $ctr14->observer('CAP-CORE-013');
+$verifier(
+    $preuves['module'] === 'registre-preuves' && $audit['module'] === null,
+    "une famille partagée n'attribue pas le même module aux deux capacités",
+    sprintf(
+        'CAP-CORE-015 → %s · CAP-CORE-013 → %s',
+        (string) ($preuves['module'] ?? 'aucun'),
+        (string) ($audit['module'] ?? 'aucun'),
+    ),
 );
 
 /* --------------------------------------- comparaison Atlas–Registre–réalité */

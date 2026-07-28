@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use Closure;
-use Gamad\RegistreAcces\Ctr05;
+use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,7 +28,7 @@ final class ExigerSession
             return redirect()->guest(route('acces.formulaire'));
         }
 
-        $verdict = (new Ctr05(Magasin::connecter()))->verifierSession($reference);
+        $verdict = (new Ctr16(Magasin::connecter()))->verifierSession($reference);
 
         if (($verdict['valide'] ?? false) !== true) {
             $request->session()->invalidate();

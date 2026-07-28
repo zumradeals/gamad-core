@@ -24,6 +24,15 @@ namespace Gamad\RegistreAutorisation;
  */
 final class Ctr03
 {
+    /**
+     * La capacité souveraine que ce module sert (INV-41).
+     *
+     * Une famille de contrat peut servir deux capacités — `CTR-10` sert
+     * l'audit et l'intégrité. Le numéro de famille ne suffit donc pas à
+     * rattacher un module ; le module le déclare lui-même.
+     */
+    public const CAPACITE = 'CAP-CORE-004';
+
     public function __construct(
         private \PDO $pdo,
     ) {

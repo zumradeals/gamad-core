@@ -7,7 +7,7 @@ namespace Gamad\RegistreSources;
 use Gamad\RegistreNormes\GitBlob;
 
 /**
- * Les trois opérations de lecture du contrat CTR-09 — Registre des sources
+ * Les trois opérations de lecture du contrat CTR-15 — Registre des sources
  * (CAP-CORE-006, conception adoptée par ADOPTION-0032, Titre III, Article 12).
  *
  * Lecture et attestation seulement : aucune écriture applicative du corpus
@@ -28,12 +28,21 @@ use Gamad\RegistreNormes\GitBlob;
  *   INV-11 non-effacement de la provenance — la lignée est tenue en ajout
  *          seul ; aucune relation n'est jamais supprimée (menace M-2).
  *
- * Ce service est le titulaire du contrat CTR-09. CTR-04 (CAP-CORE-007) lui
+ * Ce service est le titulaire du contrat CTR-15. CTR-04 (CAP-CORE-007) lui
  * délègue la résolution des sources : le registre des normes dépend des
  * sources, et non l'inverse (Article 42 du registre des capacités).
  */
-final class Ctr09
+final class Ctr15
 {
+    /**
+     * La capacité souveraine que ce module sert (INV-41).
+     *
+     * Une famille de contrat peut servir deux capacités — `CTR-10` sert
+     * l'audit et l'intégrité. Le numéro de famille ne suffit donc pas à
+     * rattacher un module ; le module le déclare lui-même.
+     */
+    public const CAPACITE = 'CAP-CORE-006';
+
     public function __construct(
         private \PDO $pdo,
         private string $corpus,

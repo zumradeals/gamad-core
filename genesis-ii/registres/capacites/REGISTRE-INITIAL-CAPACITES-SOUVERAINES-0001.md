@@ -1335,3 +1335,78 @@ Le Core déclarait donc des états d'implémentation et de preuve que rien ne re
 ## Article 169 — Non-effet
 
 Le présent Titre ne rend `CAP-CORE-020` ni admise, ni active, n'arbitre aucune divergence, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
+
+---
+
+# TITRE XXVIII — MISE À JOUR POST-ADOPTION : RÉATTRIBUTION DE DEUX FAMILLES DE CONTRAT ET RECTIFICATION DE L'ARTICLE 164
+
+## Article 170 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0045`. Il ne modifie le corps d'aucune disposition des Titres I à XXVII : ceux-ci demeurent au dépôt tels qu'adoptés. Il rectifie un constat de l'Article 164, réattribue deux familles de contrat et inscrit la règle qui rend l'attribution vérifiable.
+
+## Article 171 — L'Article 164 tenait pour collisions trois partages réguliers
+
+L'Article 164 a relevé quatre numéros de contrat « revendiqués deux fois ». Trois de ces quatre relevés étaient erronés.
+
+L'Article 69 de `CORE-ATLAS-0001` ne numérote pas des contrats par capacité : il définit des **familles**, dont trois servent deux capacités par construction, ce que leur intitulé énonce.
+
+| Famille | Intitulé à l'Atlas | Domaine gardien | Capacités servies | Verdict rectifié |
+|---|---|---|---|---|
+| `CTR-08` | Statut produit **ou** realm | `DOM-04` | `CAP-CORE-011`, `CAP-CORE-012` | partage régulier |
+| `CTR-10` | Audit **et** intégrité | `DOM-09` | `CAP-CORE-013`, `CAP-CORE-015` | partage régulier |
+| `CTR-11` | Risque **et** incident | `DOM-10` | `CAP-CORE-017`, `CAP-CORE-018` | partage régulier |
+
+Les six capacités concernées gardent le domaine de la famille qu'elles portent. Le présent Registre est, sur ces trois familles, fidèle à l'Atlas depuis son adoption.
+
+La cause de l'erreur est identifiée : le service `CTR-14` comptait les revendications d'un même numéro sans jamais lire la table des familles de l'Article 69. Il rapportait une arithmétique pour un constat.
+
+## Article 172 — Conséquence sur les huit verdicts `INDETERMINE`
+
+L'Article 165 a suspendu la comparaison au réel de huit capacités. Six de ces suspensions — `CAP-CORE-011`, `CAP-CORE-012`, `CAP-CORE-013`, `CAP-CORE-017`, `CAP-CORE-018` et `CAP-CORE-015` — étaient sans fondement et sont levées.
+
+Elles avaient un coût mesurable : `CAP-CORE-015`, dont le module est livré, prouvé `P3` et vert en intégration continue, était rendue invisible à l'annuaire, qui comptait six capacités codées là où le dépôt en portait huit.
+
+## Article 173 — Deux emprunts réels, et leur réattribution
+
+Deux capacités souveraines étaient dépourvues de famille de contrat et en ont emprunté une hors de leur domaine.
+
+| Capacité | Famille empruntée | Domaine gardien de la famille | Domaine de la capacité | Famille attribuée |
+|---|---|---|---|---|
+| `CAP-CORE-006` — Registre des sources | `CTR-09` — Données et droits | `DOM-07` | `DOM-01` | **`CTR-15`** — Référence de source |
+| `CAP-CORE-005` — Authentification et assurance | `CTR-05` — Cycle de décision | `DOM-05` | `DOM-02` / `DOM-08` | **`CTR-16`** — Preuve de contrôle et assurance |
+
+Les deux réattributions sont inscrites ci-après sous une forme que le service dérive sans interprétation. Une famille retirée n'est pas effacée du texte qui l'attribuait : elle est retirée par une déclaration postérieure, l'ancienne demeurant exacte à sa date.
+
+- **Réattribution :** `CAP-CORE-006` — famille retirée `CTR-09`, famille attribuée `CTR-15`. **Source :** `ADOPTION-0045`.
+- **Réattribution :** `CAP-CORE-005` — famille retirée `CTR-05`, famille attribuée `CTR-16`. **Source :** `ADOPTION-0045`.
+
+Les deux familles `CTR-15` et `CTR-16` sont définies par le Titre XIV de `CORE-ATLAS-0001`, ajouté par le même acte.
+
+L'ordre des deux numéros n'est pas arbitraire : la règle de `ADOPTION-0032`, Art. 2.1 attribue dans l'ordre chronologique d'adoption de la conception qui les définit. La conception de `CAP-CORE-006` a été adoptée par `ADOPTION-0032`, celle de `CAP-CORE-005` par `ADOPTION-0039`. La règle désigne donc `CTR-15` pour la première et `CTR-16` pour la seconde, sans que l'autorité ait à choisir.
+
+`CTR-05` retourne à `CAP-CORE-008` — Registre des décisions, `DOM-05`, qui la revendique depuis l'Article 43. `CTR-09` retourne au domaine `DOM-07` et demeure **sans capacité titulaire**, aucune des vingt ne gardant ce domaine.
+
+## Article 174 — L'emprunt de `CTR-09` n'avait jamais été détecté
+
+L'Article 164 n'a pas relevé l'emprunt de `CTR-09`, et aucun contrôle ne pouvait le faire : `CTR-09` n'est revendiquée qu'une seule fois, et un mécanisme qui ne cherche que les doublons ne voit pas une usurpation solitaire.
+
+`ADOPTION-0032`, Art. 2.1 a attribué `CTR-09` à `CAP-CORE-006` en constatant que « `CTR-01` à `CTR-08` sont pris », sans voir que la table de l'Article 69 va jusqu'à `CTR-14`. L'acte qui a arrêté la règle d'attribution est celui qui l'a enfreinte le premier.
+
+## Article 175 — Règle du domaine gardien et déclaration de rattachement
+
+Deux invariants sont introduits.
+
+- **`INV-40` — une capacité ne porte que les familles dont elle garde le domaine.** Le domaine gardien de la famille, tel que l'Article 69 de l'Atlas l'établit, doit figurer parmi les domaines de la capacité qui la revendique. Un partage entre plusieurs capacités qui satisfont toutes cette condition est régulier ; une revendication qui ne la satisfait pas est une **usurpation**, et elle est nommée telle.
+- **`INV-41` — un module déclare la capacité qu'il sert.** Le numéro de famille ne suffit plus à rattacher un module à une capacité, puisqu'une famille peut en servir deux. Chaque classe de contrat porte donc une constante `CAPACITE`, lue sur le disque et non dans une déclaration du corpus. Un module qui ne la déclare pas, ou qui déclare une capacité ne revendiquant pas sa famille, est signalé.
+
+Deux menaces sont retenues : **`M-44`** — une capacité porte une famille hors de son domaine et personne ne le voit ; **`M-45`** — un module est attribué à la mauvaise capacité par correspondance de numéro.
+
+## Article 176 — Aucun état de capacité n'est modifié
+
+Le présent Titre ne change l'état d'aucune des quatre dimensions, pour aucune des vingt capacités. `CAP-CORE-005`, `CAP-CORE-006` et `CAP-CORE-020` demeurent conception `CONÇUE`, implémentation `PARTIELLEMENT MATÉRIALISÉE`, exploitation `INACTIVE`, preuve `P3 — TESTÉ`.
+
+Le code qui sert `CAP-CORE-005` et `CAP-CORE-006` est renommé pour porter le numéro de famille exact ; son comportement est inchangé et ses gardes l'établissent. Un renommage n'est pas une régression d'état.
+
+## Article 177 — Non-effet
+
+Le présent Titre ne rend aucune capacité admise ni active, n'accepte aucun risque nouveau, ne nomme aucun responsable, ne comble pas l'écart de l'Article 69, ne franchit pas la frontière des accès réservés et ne constate pas `G0`.

@@ -807,3 +807,91 @@ Tout domaine, capacité, concept, contrat, flux et dépendance de Genesis II doi
 Jusqu’à son adoption expresse et son inscription au Registre des adoptions, le présent texte demeure :
 
 > **PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
+
+---
+
+# TITRE XIV — DEUX FAMILLES DE CONTRATS OMISES ET LA RÈGLE DU DOMAINE GARDIEN
+
+> Le présent Titre est ajouté par `ADOPTION-0045`. Il ne modifie le corps d'aucun article des Titres I à XIII, qui demeurent exacts. Il ajoute deux familles à la table de l'Article 69, énonce le critère qui départage un partage légitime d'une usurpation, et corrige un constat erroné de `ADOPTION-0044`.
+
+## Article 121 — Ce que l'Article 69 n'avait pas prévu
+
+La table de l'Article 69 définit quatorze familles de contrats. Elle n'en prévoit aucune pour deux capacités souveraines : `CAP-CORE-006` — Registre des sources, et `CAP-CORE-005` — Authentification et assurance communes. Leurs fiches au Registre initial des capacités décrivent leurs contrats sans leur attribuer de numéro.
+
+Faute de famille, chacune a emprunté celle d'un autre domaine :
+
+| Famille empruntée | Intitulé à l'Article 69 | Domaine gardien | Prise par | Domaine de la capacité | Acte |
+|---|---|---|---|---|---|
+| `CTR-09` | Données et droits | `DOM-07` | `CAP-CORE-006` | `DOM-01` | `ADOPTION-0032`, Art. 2.1 |
+| `CTR-05` | Cycle de décision | `DOM-05` | `CAP-CORE-005` | `DOM-02` / `DOM-08` | `ADOPTION-0039` |
+
+Les deux emprunts procèdent de la même cause : l'Article 69 n'a pas été consulté. `ADOPTION-0032` a constaté que « `CTR-01` à `CTR-08` sont pris » et attribué `CTR-09`, sans voir que la table va jusqu'à `CTR-14`. `ADOPTION-0039` a pris `CTR-05` par correspondance avec le numéro de la capacité — la faute même que la règle d'attribution de `ADOPTION-0032` interdisait.
+
+## Article 122 — `CTR-15` — Référence de source
+
+| Référence | Famille de contrat | Domaine gardien | Objet minimal |
+|---|---|---|---|
+| `CTR-15` | Référence de source | `DOM-01` | Résoudre une source, son authenticité, son statut et sa qualification |
+
+Cette famille est celle de `CAP-CORE-006`. Elle se distingue de `CTR-04` — Référence normative, qui résout un texte, sa version, son statut et son rang : une source n'est pas une norme, et le Registre des sources qualifie l'origine là où le Registre des normes établit l'autorité.
+
+## Article 123 — `CTR-16` — Preuve de contrôle et assurance
+
+| Référence | Famille de contrat | Domaine gardien | Objet minimal |
+|---|---|---|---|
+| `CTR-16` | Preuve de contrôle et assurance | `DOM-02` / `DOM-08` | Établir une session, son niveau d'assurance, son élévation et sa révocation |
+
+Cette famille est celle de `CAP-CORE-005`. Ses deux domaines gardiens sont ceux que la fiche de la capacité déclare : l'authentification touche l'identité et la sécurité technique sans se réduire à l'une ni à l'autre.
+
+## Article 124 — Règle du domaine gardien
+
+Une capacité ne peut porter une famille de contrat dont elle ne garde pas le domaine. Le domaine gardien de la famille doit figurer parmi les domaines de la capacité qui la revendique.
+
+Cette règle complète celle de `ADOPTION-0032`, Art. 2.1 — attribution dans l'ordre chronologique d'adoption, jamais par correspondance de numéro, jamais de réemploi — et la rend vérifiable par un programme. La règle de `ADOPTION-0032` disait comment attribuer ; elle ne disait pas comment constater une attribution fautive.
+
+## Article 125 — Le partage d'une famille n'est pas une collision
+
+Trois familles de l'Article 69 servent chacune deux capacités **par construction**, ce que leur intitulé énonce :
+
+| Famille | Intitulé | Domaine gardien | Capacités servies |
+|---|---|---|---|
+| `CTR-08` | Statut produit **ou** realm | `DOM-04` | `CAP-CORE-011`, `CAP-CORE-012` — toutes deux `DOM-04` |
+| `CTR-10` | Audit **et** intégrité | `DOM-09` | `CAP-CORE-013`, `CAP-CORE-015` — toutes deux `DOM-09` |
+| `CTR-11` | Risque **et** incident | `DOM-10` | `CAP-CORE-017`, `CAP-CORE-018` — toutes deux `DOM-10` |
+
+Chacune satisfait l'Article 124 pour les deux capacités qu'elle sert. Le Registre initial des capacités est, sur ces trois familles, fidèle à l'Atlas.
+
+`ADOPTION-0044`, Art. 3 les a qualifiées de collisions et suspendu à ce titre la comparaison au réel de huit capacités. Ce constat était erroné : il procédait d'un service qui comptait les revendications sans lire la table des familles. `ADOPTION-0044` n'est pas réécrite — un texte adopté ne se réécrit pas ; son erreur est constatée ici et demeure consultable là-bas.
+
+## Article 126 — `CTR-09` demeure au domaine `DOM-07`
+
+La famille `CTR-09` — Données et droits retourne à son domaine gardien `DOM-07`. Aucune des vingt capacités souveraines ne garde ce domaine : la table des concepts rattache `DOM-07` aux « Registres de gouvernance des données », qui ne figurent pas parmi les vingt. `CTR-09` demeure donc définie et sans capacité titulaire, jusqu'à ce qu'une capacité de gouvernance des données soit inscrite.
+
+Une famille sans titulaire n'est pas un défaut. L'écart global de données de l'Article 70 du Registre initial des capacités la prévoyait ; elle en est la trace cartographique.
+
+## Article 127 — Dossier d'évolution
+
+L'Article 107 qualifie de substantiels l'ajout d'un domaine ou d'une capacité, le changement d'une source canonique, d'une frontière ou d'une dépendance structurante. L'ajout d'une famille de contrat n'y figure pas. Le dossier de l'Article 108 est néanmoins produit, la prudence valant mieux que la lettre.
+
+- **Motif :** deux capacités souveraines sans famille de contrat, et deux emprunts qui en résultent.
+- **Sources :** Article 69 du présent Atlas ; Articles 40 et 41 du Registre initial des capacités ; `ADOPTION-0032`, Art. 2.1 ; `ADOPTION-0039` ; `ADOPTION-0044`, Art. 3.
+- **Domaines affectés :** `DOM-01`, `DOM-02`, `DOM-05`, `DOM-07`, `DOM-08`. Aucun domaine n'est créé, retiré, fusionné ni transféré.
+- **Responsabilités :** inchangées. Aucun responsable n'est nommé ici ; l'écart de l'Article 69 du Registre initial des capacités demeure entier.
+- **Données :** aucune donnée n'est créée, migrée ni supprimée. Les index dérivés sont reconstructibles (`INV-5`).
+- **Contrats :** deux familles ajoutées, aucune retirée, aucune fusionnée. `CTR-09` change de titulaire, non de définition.
+- **Risques :** une référence à `CTR-05` ou `CTR-09` écrite avant le présent Titre et lue après lui désignerait la mauvaise capacité. Le risque est traité par l'Article 128.
+- **Migrations :** le code servant les deux familles empruntées est renommé dans le même incrément. Aucun schéma de données n'est touché.
+- **Compatibilités :** aucune interface publiée hors du dépôt ne consomme ces familles ; l'exploitation de toutes les capacités est `INACTIVE`.
+- **Preuves :** la règle de l'Article 124 est éprouvée par la garde de `CAP-CORE-020`, avec contre-épreuve de falsification.
+- **Coûts de sortie :** nuls. Aucune famille n'est retirée ; les seize demeurent définies.
+- **Décision requise :** l'adoption du présent Titre par l'autorité.
+
+## Article 128 — Effet sur l'index de contrôle et sur les références antérieures
+
+Le nombre de familles de contrats est porté de quatorze à **seize**. Cette déclaration prévaut sur la ligne correspondante de l'index de contrôle, qui demeure exacte à sa date.
+
+Toute référence à `CTR-05` antérieure au présent Titre et désignant `CAP-CORE-005` doit être lue comme désignant `CTR-16`. Toute référence à `CTR-09` antérieure au présent Titre et désignant `CAP-CORE-006` doit être lue comme désignant `CTR-15`. Les textes qui les portent ne sont pas réécrits et demeurent exacts à leur date.
+
+## Article 129 — Autorité de modification
+
+L'Article 114 réserve toute modification de l'Atlas canonique au mandat, à la décision et à la procédure de publication applicables. Le présent Titre est un projet tant qu'il n'est pas adopté ; sa fusion dans `main` par l'autorité **est** la décision. L'agent l'a rédigé ; il ne l'adopte pas.
