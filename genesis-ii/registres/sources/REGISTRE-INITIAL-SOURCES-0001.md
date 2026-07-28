@@ -106,3 +106,34 @@ Toute nouvelle source reconnue exige une mise à jour conforme à `SOURCES-0001`
 Le présent texte ne possède une force normative qu'après adoption expresse par l'autorité compétente et inscription au Registre des adoptions. Jusqu'à cette adoption, il demeure :
 
 > **PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
+
+---
+
+# TITRE V — INSCRIPTION DE LA SILSILA `GAMAD ZUMARA`
+
+## Article 12 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0041-SILSILA-SUCCESSION-0001`. Il ne modifie aucune disposition des Titres I à IV, qui demeurent exacts à leur date. Il inscrit une source que le corpus prévoyait sans l'avoir nommée.
+
+## Article 13 — Fondement au rang le plus élevé
+
+L'Article 25 de `SOURCES-0001` place au **bloc patrimonial fondateur** — rang supérieur de toute la hiérarchie normative, au-dessus du bloc constitutionnel — la protection de « la reconnaissance du Fondateur », de « la mission reçue » et de « **la filiation documentée** ».
+
+La silsila de GAMAD relève de cette filiation documentée. Son inscription ne crée pas un rang nouveau : elle nomme une source que le rang 1 protégeait déjà sans la désigner.
+
+## Article 14 — Inscription
+
+| Référence | Titre | Catégorie | Niveau d'authenticité | Statut | Réserve principale |
+|---|---|---|---|---|---|
+| `SRC-0007` | `GAMAD ZUMARA` — silsila de la confrérie | Filiation documentée (`SOURCES-0001`, Art. 25) — bloc patrimonial fondateur, rang `R1` | `AUTH-1 — PROVENANCE DÉCLARÉE` | Source vivante de la filiation ; compétente pour la désignation successorale | Chaîne complète non encore versée au corpus ; l'autorité l'a annoncée et elle demeure due |
+
+## Article 15 — Portée de cette inscription
+
+L'inscription établit que `GAMAD ZUMARA` est une source reconnue du corpus, de rang `R1`, et qu'elle est **compétente pour la désignation successorale** au sens de l'Article 56 du Registre des autorités et mandats.
+
+Elle n'établit ni ne vérifie aucune désignation particulière. Le niveau `AUTH-1 — PROVENANCE DÉCLARÉE` traduit exactement l'état des pièces versées : l'autorité atteste l'origine, la chaîne détaillée n'est pas encore inscrite. Ce niveau est appelé à s'élever lorsqu'elle le sera, par un acte distinct.
+
+## Article 16 — Non-effet
+
+Le présent Titre n'abroge aucun article, ne consacre aucune personne, ne valide aucune désignation et ne constate pas `G0`.
+

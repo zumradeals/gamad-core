@@ -1110,3 +1110,64 @@ Conformément à l'Article 85, la mission prend fin par acte de l'autorité, par
 ## Article 182 — Non-effet
 
 Le présent Titre ne confère à l'agent aucune autorité, aucun mandat, aucun pouvoir d'adoption. Il ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
+
+---
+
+# TITRE XVIII — DIRECTION UNIQUE, POSTES VACANTS ET SUCCESSION PAR LA SILSILA
+
+## Article 183 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0041-SILSILA-SUCCESSION-0001`. Il ne modifie et n'abroge aucune disposition des Titres I à XVII, qui demeurent exacts. **Aucun article n'est retiré du présent Registre.**
+
+## Article 184 — Direction unique, et son fondement
+
+L'autorité institutionnelle de GAMAD, et par voie de conséquence celle du Core, appartient à `AUT-GAMAD-001` — Koné Djakaridja, dit Zakaria le Soufi — et à lui seul. Aucune direction concurrente n'existe, et le présent Registre n'en attribue aucune.
+
+Cette autorité n'est pas auto-déclarée : elle procède de la **mission reçue**, que l'Article 25 de `SOURCES-0001` place au bloc patrimonial fondateur. Le Core en enregistre la traduction institutionnelle ; il n'en est ni la source ni le fondement.
+
+## Article 185 — Occupation par défaut des fonctions vacantes
+
+Le titulaire de `MANDAT-GENESIS-II-0001` occupe **par défaut** toute fonction demeurée vacante au catalogue des Articles 33 à 36, sous réserve d'attribution expresse à un tiers ou de refus de sa part.
+
+Cette occupation est **transitoire et réversible**, dans les termes de l'Article 2 de `ADOPTION-0022` : elle ne crée aucun droit permanent et cesse par l'attribution de la fonction à une personne compétente.
+
+## Article 186 — Dérogation déclarée à l'Article 115
+
+L'Article 115 pose qu'une personne ne doit pas être seule à proposer, adopter et certifier une norme supérieure, ni développer et auditer seule un contrôle.
+
+L'Article 185 y déroge nécessairement. Conformément au mécanisme retenu par `ADOPTION-0022` et à l'arbitrage de `RISK-SEC-0001`, cette dérogation est **déclarée et non dissimulée** : l'Article 115 demeure au Registre, en vigueur, et continue de mesurer l'écart. Un texte abrogé cesse de dire ; un texte dérogé continue d'avertir.
+
+Le risque demeure entier tant que les fonctions ne sont pas pourvues.
+
+## Article 187 — La succession suit la silsila, et elle seule
+
+La succession à `MANDAT-GENESIS-II-0001` suit la source `SRC-0007` — la silsila `GAMAD ZUMARA` — inscrite au bloc patrimonial fondateur, rang `R1`.
+
+**Toute autre voie de désignation est incompétente**, y compris procédurale, contractuelle, majoritaire ou administrative. Une désignation qui ne procéderait pas de cette source ne saurait être reconnue par le Core, quelle que soit sa régularité de forme.
+
+## Article 188 — L'Article 56 est satisfait, non écarté
+
+L'Article 56 dispose que le titulaire ne peut transmettre l'autorité comme un bien privé et que toute succession doit suivre **les sources et actes compétents**.
+
+`SRC-0007` étant inscrite comme source compétente de rang `R1`, une succession qui la suit **satisfait** l'Article 56. Celui-ci demeure en vigueur et conserve toute sa portée : il continue d'exclure les revendications qui ne procéderaient d'aucune source compétente.
+
+L'autorité a examiné l'abrogation de l'Article 56 et l'a écartée, au motif qu'abroger la règle exigeant une source compétente n'établirait pas la compétence de la silsila mais l'absence de toute règle — ouvrant la voie qu'elle entend fermer.
+
+## Article 189 — Aucun successeur n'est désigné
+
+Aucun successeur n'est désigné à la date du présent Titre. La désignation relève de la hiérarchie spirituelle de `GAMAD ZUMARA` et interviendra en son temps, qui n'est pas celui d'un calendrier institutionnel.
+
+Le présent Titre satisfait l'exigence de procédure de succession que l'Article 55 posait depuis le 26 juillet 2026 et qui demeurait due. Les moyens de récupération et le dossier de transmission que le même article réclame demeurent, eux, à établir.
+
+## Article 190 — Ce que le Core ne peut pas faire
+
+Le Core **enregistre** ; il ne **consacre** pas.
+
+Il peut inscrire que `SRC-0007` est la source compétente, consigner une désignation portée à sa connaissance, et refuser toute autre voie. Il ne peut ni valider une désignation spirituelle, ni établir la légitimité d'une personne au sein de la chaîne, ni suppléer à la chaîne elle-même.
+
+Cette limite n'est pas une faiblesse du dispositif : une chaîne de transmission n'a jamais eu besoin d'un instrument technique pour être établie, et prétendre le contraire dénaturerait l'un et l'autre.
+
+## Article 191 — Non-effet
+
+Le présent Titre n'abroge aucun article, ne consacre aucune personne, ne valide aucune désignation, ne confère aucun pouvoir nouveau au-delà de l'occupation transitoire de l'Article 185, et ne constate pas `G0`.
+
