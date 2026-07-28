@@ -961,3 +961,39 @@ Les quatre-vingt-deux normes indexées portent donc le rang `INDETERMINE`, et ce
 ## Article 117 — Non-effet
 
 Le présent Titre ne rend `CAP-CORE-006` ni admise, ni active, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
+
+---
+
+# TITRE XX — MISE À JOUR POST-ADOPTION : ÉTAT DE CONCEPTION DE `CAP-CORE-003` ET DOCTRINE DES GARDES
+
+## Article 118 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0035-CONCEPTION-CAP-CORE-003-0001`. Il ne modifie aucune disposition des Titres I à XIX : ceux-ci demeurent exacts. Il ajoute deux faits postérieurs — l'adoption de la conception de la troisième capacité racine, et l'arbitrage de la doctrine des gardes du dépôt.
+
+## Article 119 — Changement d'état de conception
+
+| Capacité | État avant (Article 31) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-003` — Registre des autorités et mandats | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` |
+
+- **Source :** `ADOPTION-0035`, adoptant `CONCEPTION-CAP-CORE-003-REGISTRE-DES-AUTORITES-MANDATS-0001`.
+- **Contrat :** `CTR-02`, déjà attribué par l'Article 38 du présent Registre.
+- **Invariants introduits :** `INV-12` à `INV-16`, dans la séquence unique du Core.
+
+## Article 120 — Doctrine des gardes du dépôt
+
+L'autorité arrête la règle suivante, jusqu'ici implicite et devenue insuffisante :
+
+> Le dépôt porte **une garde documentaire unique** — le contrôle d'intégrité, indépendant de toute application — et **une garde de comportement par capacité codée**. Une capacité ne peut atteindre le niveau `P3 — TESTÉ` que par une garde qui éprouve son propre contrat.
+
+Le motif est énoncé à l'Article 8 de `ADOPTION-0034` : les gardes existantes éprouvent `CTR-04`, non les autres contrats. **Une capacité n'hérite pas de la preuve d'une autre.** Sous la règle antérieure — deux gardes, quel que soit le nombre de capacités — le niveau `P3` devenait structurellement inatteignable pour dix-neuf capacités sur vingt.
+
+La séparation posée à l'Article 4 de `ADOPTION-0027` demeure entière : la garde documentaire ne doit être ni absorbée par le cadre applicatif, ni réécrite en son sein. Elle demeure unique et indépendante ; ce sont les gardes de comportement qui se multiplient.
+
+## Article 121 — Effet sur les capacités déjà codées
+
+`CAP-CORE-006`, laissée en preuve `P1` par l'Article 115 faute de garde propre, devient éligible au niveau `P3` dès que l'essai prescrit par l'Article 19 de sa conception sera livré et accompagné de sa contre-épreuve. Le présent Titre **ne relève aucun niveau de preuve** : il lève l'obstacle doctrinal, il ne produit pas la preuve.
+
+## Article 122 — Non-effet
+
+Le présent Titre ne rend `CAP-CORE-003` ni implémentée, ni admise, ni active, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
