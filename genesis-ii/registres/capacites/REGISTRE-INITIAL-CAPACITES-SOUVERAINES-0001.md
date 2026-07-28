@@ -1201,3 +1201,66 @@ Une garde qui ne s'exécute pas ne garde rien. Les sept gardes sont désormais p
 ## Article 152 — Non-effet
 
 Le présent Titre ne rend `CAP-CORE-006` ni admise, ni active, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`. L'implémentation demeure `PARTIELLEMENT MATÉRIALISÉE` : l'outil de réindexation prescrit par l'Article 16 de la conception n'est pas livré.
+
+---
+
+# TITRE XXVI — MISE À JOUR POST-ADOPTION : `CAP-CORE-015` ET LA POLITIQUE DES ALGORITHMES DE PREUVE
+
+## Article 153 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0043-CAP-CORE-015-0001`. Il ne modifie aucune disposition des Titres I à XXV : ceux-ci demeurent exacts. Il ajoute deux faits postérieurs — la conception et le premier code de la cinquième capacité racine de l'Article 61, et la **politique des algorithmes de preuve**, que le Core n'avait jamais établie.
+
+## Article 154 — Changement d'état
+
+| Capacité | État avant (Article 31) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-015` — Preuves d'intégrité | Conception `EN CONCEPTION` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0043`. **Contrat :** `CTR-10`, déjà nommé par l'Article 50. **Invariants introduits :** `INV-31` à `INV-35`. **Menaces retenues :** `M-32` à `M-37`.
+
+## Article 155 — Politique des algorithmes de preuve
+
+L'autorité arrête la politique suivante. Elle est **dérivée par le service** (`CTR-10`), qui ne porte aucune politique en constantes : un service décidant de ses propres algorithmes déciderait à la place de l'autorité.
+
+| Code | Libellé | Statut | Fait foi | Motif |
+|---|---|---|---|---|
+| `git-sha1` | Empreinte Git — `sha1("blob " · taille · NUL · contenu)` | `AFFAIBLI` | `oui` | Résistance aux collisions publiquement rompue (2017 ; préfixe choisi, 2020). Demeure l'algorithme de la totalité des déclarations du corpus, donc celui qui fait foi tant qu'aucun acte n'en déclare un autre |
+| `sha256` | Empreinte SHA-256 du contenu | `ADMIS` | `non` | Non affaibli ; calculable sur tout objet. Aucune déclaration du corpus ne le porte encore |
+
+Trois statuts sont définis, et eux seuls : `ADMIS`, `AFFAIBLI`, `RÉVOQUÉ`. Le statut `RÉVOQUÉ` porte la **révocation** que l'Article 50 attend du contrat `CTR-10` : révoquer un algorithme est une décision inscrite, non une opération cryptographique. Aucun algorithme n'est révoqué à ce jour.
+
+## Article 156 — Qu'un algorithme affaibli fasse foi est un constat, non un confort
+
+La combinaison retenue pour `git-sha1` — `AFFAIBLI` et faisant foi — est inconfortable et exacte.
+
+Le déclarer `RÉVOQUÉ` invaliderait les quatre-vingt-huit déclarations en vigueur, et le corpus entier avec elles. Le déclarer `ADMIS` serait faux. L'autorité retient donc le constat juste plutôt que la formulation confortable, et charge le service d'en mesurer l'écart au lieu de le taire.
+
+## Article 157 — Ce que l'inventaire des preuves racines établit
+
+L'Article 50 attend, parmi ses preuves `G0`, un « inventaire des preuves racines ». Il n'existait pas. `CTR-10` le produit, et il établit trois faits que le Core ignorait de lui-même :
+
+- **Un seul algorithme.** Les quatre-vingt-huit objets porteurs d'une empreinte déclarée la portent tous en `git-sha1`, et en lui seul. La double conservation exigée par `INV-32` est satisfaite pour **zéro** objet.
+- **Les actes ne portent aucune preuve.** Quarante-trois actes d'adoption sont sur disque, accompagnés d'un constat d'exécution compagnon — quarante-quatre fichiers au total ; **aucun** ne fait l'objet d'une empreinte déclarée par un autre acte. Le contrôle `C5` vérifie les objets que les actes désignent, jamais les actes qui désignent. La source primaire est le seul objet sans preuve déclarée.
+- **La couverture est partielle.** Cent cinquante fichiers composent le corpus ; quatre-vingt-huit portent une empreinte déclarée.
+
+Ces trois faits ne sont pas des défaillances du présent incrément : ils sont son résultat. Ils étaient vrais avant lui et invisibles.
+
+## Article 158 — Ce que cette capacité ne fait pas, et pourquoi
+
+`CAP-CORE-015` **ne signe rien**. Signer suppose une clé privée ; les clés relèvent exclusivement de l'autorité (`ADOPTION-0025`, Art. 3.a) et `CAP-CORE-016` n'est pas conçue.
+
+Elle **n'horodate rien** au sens d'un tiers de confiance : le Core ne dispose d'aucune horloge de confiance et rend le moment de son propre calcul en le déclarant tel.
+
+En conséquence, quatre des données minimales que l'Article 50 énumère — signature, horodatage, chaîne de confiance, révocation de clé — demeurent **explicitement vides**. Les laisser vides et le dire vaut mieux que les remplir de valeurs sans autorité.
+
+## Article 159 — La menace `M-32` n'est pas contenue
+
+La collision `SHA-1` permettrait de faire adopter un texte préparé avec un jumeau de même empreinte, puis de substituer l'un à l'autre sans que l'empreinte change. Cette menace **n'est pas contenue** par le présent incrément.
+
+Elle suppose un agent capable de soumettre un texte à l'adoption — c'est-à-dire, dans l'état actuel du Core, l'agent qui rédige les projets. Elle n'est donc pas théorique.
+
+Le service la réduit d'un cran : il rend l'écart visible et chiffré là où il était invisible. Il ne l'annule pas. La contenir suppose que l'autorité déclare des empreintes `sha256` dans les actes à venir — décision qui lui appartient et que le présent Titre ne préjuge pas.
+
+## Article 160 — Non-effet
+
+Le présent Titre ne rend `CAP-CORE-015` ni admise, ni active, n'installe aucune clé, ne signe rien, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
