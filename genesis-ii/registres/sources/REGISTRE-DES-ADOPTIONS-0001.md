@@ -69,6 +69,7 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 | `ADOPTION-0025` | **Constat de passage de la Porte constitutionnelle `G0`** | Koné Djakaridja | 27 juillet 2026 | `SIGNÉ — G0 CONSTATÉE` |
 | `ADOPTION-0026` | Adoption de la conception de `CAP-CORE-007` — Registre des normes (premier noyau post-`G0`) | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0027` | Décision technologique du premier noyau `CAP-CORE-007` (Git, PostgreSQL, PHP/Laravel, contrôle Python séparé) | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+| `ADOPTION-0028` | Conception d'implémentation du contrat `CTR-04` — service du Registre des normes | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
 ## Article 5 — Textes en cours de délibération non inscrits
 
