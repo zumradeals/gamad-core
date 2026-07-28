@@ -1151,3 +1151,53 @@ Il transforme un franchissement silencieux en **franchissement constatable**. C'
 ## Article 145 — Non-effet
 
 Le présent Titre ne confère ni ne retire aucun pouvoir, n'empêche aucune opération, ne modifie le corps d'aucun article antérieur et ne constate pas `G0`.
+
+---
+
+# TITRE XXV — MISE À JOUR POST-ADOPTION : `CAP-CORE-006` ATTEINT `P3`
+
+## Article 146 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0042-CAP-CORE-006-P3-0001`. Il ne modifie aucune disposition des Titres I à XXIV : ceux-ci demeurent exacts. Il ajoute un fait postérieur — la livraison de la garde de comportement propre à `CAP-CORE-006`, annoncée par l'Article 19 de la conception adoptée par `ADOPTION-0032` et non livrée par `ADOPTION-0034`.
+
+## Article 147 — Changement d'état
+
+| Capacité | État avant (Titre XIX) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-006` — Registre des sources | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0042`. **Contrat :** `CTR-09`. **Invariants éprouvés :** `INV-1`, `INV-7`, `INV-8`, `INV-9`, `INV-11`.
+
+## Article 148 — Pourquoi la preuve était demeurée à `P1`, et pourquoi elle ne l'est plus
+
+L'Article 115 ci-dessus a consigné le motif retenu par `ADOPTION-0034`, Art. 5 : écrire l'essai prescrit « créerait une **troisième garde**, là où la discipline du dépôt en pose deux ». Le motif n'était pas technique.
+
+Ce motif a cessé de valoir. `ADOPTION-0035`, Art. 2.2 a depuis arrêté la doctrine inverse — **une garde de comportement par capacité codée** — et cinq gardes de comportement ont été livrées à ce titre. La retenue de `ADOPTION-0034` protégeait une règle qui n'existe plus.
+
+`CAP-CORE-006` était en conséquence la **seule capacité codée dépourvue de garde propre**, et la seule à demeurer à `P1` alors que son code était livré. Le présent Titre clôt cet écart.
+
+## Article 149 — Le contrat quitte le module d'une autre capacité
+
+`CTR-09` était jusqu'ici servi par la classe `Ctr04`, à l'intérieur du module de `CAP-CORE-007`. Un contrat porté par le service d'une autre capacité ne peut être éprouvé séparément : c'était la cause matérielle du blocage constaté à l'Article précédent.
+
+`CTR-09` est désormais servi par `core/registre-sources/`, module propre. `CTR-04` lui **délègue** la résolution des sources ; le comportement restitué est inchangé. Le sens de la dépendance devient conforme à l'Article 42 : le registre des normes dépend des sources, jamais l'inverse.
+
+## Article 150 — Portée exacte de la preuve
+
+La preuve `P3` porte sur ce que la garde éprouve réellement, et sur rien de plus :
+
+- `resoudre_source` — résolution par référence canonique, rang fondé ou déclaré indéterminé, réserve restituée ;
+- `verifier_authenticite` — empreinte **recalculée** depuis le fichier et comparée à la déclaration ; invérifiabilité déclarée, jamais présumée concordante ;
+- `resoudre_lignee` — distinction entre source inconnue et source sans lignée.
+
+**Une limite est constatée et non masquée :** le corpus ne déclare à ce jour **aucune supersession** — quatre-vingt-six normes, toutes `EN VIGUEUR`. `resoudre_lignee` est donc exposée et éprouvée dans sa manière de déclarer l'absence, mais la supersession elle-même demeure non exercée, faute de matière. `INV-11` est matérialisé ; il n'est pas encore mis à l'épreuve par un cas réel. Il le sera au premier acte qui remplacera ou abrogera un texte.
+
+## Article 151 — Écart d'intégration continue constaté et corrigé
+
+L'intégration continue n'exécutait que deux des sept gardes du dépôt : le contrôle documentaire et celle de `CTR-04`. Les gardes de `CAP-CORE-001`, `CAP-CORE-003`, `CAP-CORE-004` et `CAP-CORE-005`, livrées depuis `ADOPTION-0035`, n'étaient éprouvées qu'à la main.
+
+Une garde qui ne s'exécute pas ne garde rien. Les sept gardes sont désormais portées en intégration continue.
+
+## Article 152 — Non-effet
+
+Le présent Titre ne rend `CAP-CORE-006` ni admise, ni active, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`. L'implémentation demeure `PARTIELLEMENT MATÉRIALISÉE` : l'outil de réindexation prescrit par l'Article 16 de la conception n'est pas livré.

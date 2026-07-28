@@ -12,6 +12,7 @@ require __DIR__ . '/src/GitBlob.php';
 require __DIR__ . '/src/Db.php';
 require __DIR__ . '/src/Schema.php';
 require __DIR__ . '/src/Ingestion.php';
+require __DIR__ . '/../registre-sources/src/Ctr09.php';
 require __DIR__ . '/src/Ctr04.php';
 
 if (!defined('REGN_CORPUS')) {

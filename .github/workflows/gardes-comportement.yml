@@ -1,0 +1,64 @@
+name: Gardes de comportement — preuves P3
+
+# Exécute la garde de comportement de CHAQUE capacité codée.
+#
+# Doctrine arrêtée par ADOPTION-0035, Art. 2.2 : le dépôt porte une garde
+# documentaire unique et une garde de comportement par capacité codée. Une
+# capacité n'atteint P3 que par une garde éprouvant son propre contrat ; elle
+# n'hérite pas de la preuve d'une autre.
+#
+# Ce workflow constate et corrige un écart : avant lui, l'intégration continue
+# n'exécutait que la garde de CTR-04. Les gardes de CAP-CORE-001, 003, 004 et
+# 005, livrées depuis, n'étaient éprouvées qu'à la main. Une garde qui ne
+# s'exécute pas ne garde rien.
+#
+# Ces gardes sont distinctes du contrôle d'intégrité documentaire (Python) :
+# elles vérifient le COMPORTEMENT des services, non la cohérence des fichiers.
+# La séparation est voulue (ADOPTION-0027, Article 4).
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preuves-p3:
+    name: Preuve P3 — ${{ matrix.capacite }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - capacite: CAP-CORE-001 (identités)
+            garde: core/registre-identites/tests/identite_p3.php
+          - capacite: CAP-CORE-003 (autorités et mandats)
+            garde: core/registre-autorites/tests/mandat_p3.php
+          - capacite: CAP-CORE-004 (autorisation)
+            garde: core/registre-autorisation/tests/autorisation_p3.php
+          - capacite: CAP-CORE-005 (accès)
+            garde: core/registre-acces/tests/authentification_p3.php
+          - capacite: CAP-CORE-006 (sources)
+            garde: core/registre-sources/tests/sources_p3.php
+          - capacite: CAP-CORE-007 (normes)
+            garde: core/registre-normes/tests/temporel_p3.php
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_sqlite
+
+      - name: Exécuter la garde
+        run: php ${{ matrix.garde }}
