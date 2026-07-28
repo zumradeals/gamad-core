@@ -27,6 +27,7 @@ final class Schema
         foreach ([
             'relation_evolution', 'etat_capacite', 'statut', 'version_norme',
             'delegation', 'etat_mandat', 'mandat', 'etat_fonction', 'fonction', 'titulaire',
+            'denomination', 'etat_entite', 'entite',
             'adoption', 'norme', 'source', 'rang_normatif',
         ] as $t) {
             $pdo->exec("DROP TABLE IF EXISTS {$t}");
@@ -110,6 +111,43 @@ final class Schema
                 valeur             TEXT NOT NULL,
                 date_effet         TEXT NOT NULL,
                 adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        // CAP-CORE-001 — identités (CONCEPTION-CAP-CORE-001, Titre II).
+        // AUCUNE colonne de profil, de dossier métier, de réputation ni de
+        // jugement : l'exclusion d'INV-19 est tenue par la STRUCTURE, non par
+        // la discipline. Un registre d'identités souverain qui accumulerait des
+        // jugements sur les personnes deviendrait un instrument de pouvoir sur
+        // elles ; il n'y a pas d'endroit où les mettre.
+        $pdo->exec(<<<SQL
+            CREATE TABLE entite (
+                reference TEXT PRIMARY KEY,
+                type      TEXT NOT NULL
+                    CHECK (type IN ('personne','organisation','produit','realm','agent','service','INDETERMINE')),
+                libelle   TEXT NOT NULL,
+                source    TEXT NOT NULL
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE etat_entite (
+                id                 {$id},
+                entite_reference   TEXT NOT NULL REFERENCES entite(reference),
+                valeur             TEXT NOT NULL,
+                date_effet         TEXT NOT NULL,
+                adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+            )
+        SQL);
+
+        // Dénominations relevées : plusieurs lignes pour une référence signalent
+        // une divergence du corpus, que le service expose sans la trancher.
+        $pdo->exec(<<<SQL
+            CREATE TABLE denomination (
+                id               {$id},
+                entite_reference TEXT NOT NULL REFERENCES entite(reference),
+                libelle          TEXT NOT NULL,
+                source           TEXT NOT NULL
             )
         SQL);
 

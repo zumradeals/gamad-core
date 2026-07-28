@@ -51,6 +51,7 @@ final class Ingestion
         $versions += $this->ingererNormesDeFeuillesStatut();
         $this->ingererEtatsCapacites();
         $fonctions = $this->ingererAutoritesEtMandats();
+        $entites   = $this->ingererIdentites();
 
         return [
             'adoptions' => $adoptions,
@@ -61,6 +62,7 @@ final class Ingestion
             'rangs'     => $rangs,
             'sources'   => $sources,
             'fonctions' => $fonctions,
+            'entites'   => $entites,
             'mandats'   => (int) $this->pdo->query('SELECT count(*) FROM mandat')->fetchColumn(),
             'indetermines' => (int) $this->pdo
                 ->query("SELECT count(*) FROM norme WHERE rang_code = 'INDETERMINE'")->fetchColumn(),
@@ -271,6 +273,154 @@ final class Ingestion
         $mm = $mois[mb_strtolower($m[2], 'UTF-8')] ?? null;
 
         return $mm === null ? null : sprintf('%s-%s-%02d', $m[3], $mm, (int) $m[1]);
+    }
+
+    /**
+     * Dérive les entités que le corpus reconnaît déjà (`CAP-CORE-001`).
+     *
+     * Sept entités, et sept seulement : une personne, deux agents, quatre
+     * produits. Ce chiffre n'est pas une limite du code mais l'état réel du
+     * corpus — aucun dispositif technique ne peuple un registre d'identités,
+     * seuls des actes le font (`M-19`).
+     *
+     * Les dénominations divergentes sont relevées toutes, sans être tranchées :
+     * choisir la dénomination canonique est une qualification réservée à
+     * l'autorité (`ADOPTION-0037`, Art. 3).
+     *
+     * @return int nombre d'entités inscrites
+     */
+    private function ingererIdentites(): int
+    {
+        $insEntite = $this->pdo->prepare('INSERT INTO entite(reference,type,libelle,source) VALUES(?,?,?,?)');
+        $insEtat = $this->pdo->prepare(
+            'INSERT INTO etat_entite(entite_reference,valeur,date_effet,adoption_reference) VALUES(?,?,?,?)'
+        );
+        $insDeno = $this->pdo->prepare(
+            'INSERT INTO denomination(entite_reference,libelle,source) VALUES(?,?,?)'
+        );
+
+        $n = 0;
+
+        // --- La personne : titulaire déjà dérivé du registre des autorités.
+        foreach ($this->pdo->query('SELECT reference, libelle FROM titulaire')->fetchAll() as $t) {
+            $insEntite->execute([
+                $t['reference'], 'personne', $t['libelle'],
+                'genesis-ii/registres/autorites/REGISTRE-INITIAL-AUTORITES-MANDATS-0001.md',
+            ]);
+            $insDeno->execute([$t['reference'], $t['libelle'], 'Registre des autorités, Art. 46']);
+            $n++;
+        }
+
+        // --- Les agents : Article 7 du registre des usages IA.
+        $n += $this->ingererAgents($insEntite, $insDeno);
+
+        // --- Les produits : registre des produits, dénominations et états.
+        $n += $this->ingererProduits($insEntite, $insEtat, $insDeno);
+
+        return $n;
+    }
+
+    private function ingererAgents(\PDOStatement $insEntite, \PDOStatement $insDeno): int
+    {
+        $chemin = 'genesis-ii/registres/ia/REGISTRE-INITIAL-USAGES-IA-0001.md';
+        $texte = (string) @file_get_contents($this->corpus . '/' . $chemin);
+        $n = 0;
+
+        foreach (explode("\n", $texte) as $ligne) {
+            // Forme de l'Article 7 : « - `AGENT-IA-001` — ChatGPT ; »
+            if (preg_match('/^-\s*`(AGENT-IA-\d+)`\s*[—-]\s*(.+?)\s*[;.]\s*$/u', trim($ligne), $m)) {
+                $insEntite->execute([$m[1], 'agent', $this->nettoyer($m[2]), $chemin]);
+                $insDeno->execute([$m[1], $this->nettoyer($m[2]), 'Registre des usages IA, Art. 7']);
+                $n++;
+            }
+        }
+
+        return $n;
+    }
+
+    private function ingererProduits(
+        \PDOStatement $insEntite,
+        \PDOStatement $insEtat,
+        \PDOStatement $insDeno,
+    ): int {
+        $chemin = 'genesis-ii/registres/produits/REGISTRE-INITIAL-PRODUITS-0001.md';
+        $texte = (string) @file_get_contents($this->corpus . '/' . $chemin);
+
+        // Premier passage : toutes les dénominations rencontrées, dans l'ordre.
+        $vues = [];
+        $denominations = [];
+        foreach (explode("\n", $texte) as $ligne) {
+            if (preg_match('/^\|\s*`(PRD-[A-Z0-9-]+)`\s*\|\s*([^|]+?)\s*\|/u', trim($ligne), $m)) {
+                $libelle = $this->nettoyer($m[2]);
+                if ($libelle !== '') {
+                    $denominations[$m[1]][$libelle] = true;
+                }
+            }
+        }
+
+        $n = 0;
+        foreach ($denominations as $reference => $libelles) {
+            $noms = array_keys($libelles);
+            // La PREMIÈRE dénomination rencontrée sert de libellé de travail ;
+            // ce n'est pas une qualification, et toutes sont conservées.
+            $insEntite->execute([$reference, 'produit', $noms[0], $chemin]);
+            foreach ($noms as $nom) {
+                $insDeno->execute([$reference, $nom, 'Registre des produits']);
+            }
+            $vues[$reference] = true;
+            $n++;
+        }
+
+        // Second passage : états initiaux et transitions, fondés sur les actes.
+        $acteInitial = null;
+        foreach ($this->actes as $ref => $a) {
+            if (str_contains(mb_strtoupper($a['texte'], 'UTF-8'), 'PRODUITS')) {
+                $acteInitial = $ref;
+                break;
+            }
+        }
+
+        $article = 0;
+        foreach (explode("\n", $texte) as $ligne) {
+            if (preg_match('/^##\s*Article\s+(\d+)/u', $ligne, $m)) {
+                $article = (int) $m[1];
+                continue;
+            }
+            if (!preg_match('/^\|\s*`(PRD-[A-Z0-9-]+)`\s*\|/u', trim($ligne), $m) || !isset($vues[$m[1]])) {
+                continue;
+            }
+            $c = array_map(fn ($x) => $this->nettoyer(trim($x)), explode('|', trim($ligne, '|')));
+
+            // Article 43 : état initial en 3e colonne, fondé sur l'acte du registre.
+            if ($article === 43 && count($c) >= 3 && $c[2] !== '') {
+                $date = $this->actes[$acteInitial]['date'] ?? null;
+                if ($date !== null) {
+                    $insEtat->execute([$m[1], $c[2], $date, $acteInitial]);
+                }
+            }
+        }
+
+        // Transitions : Titres de mise à jour, valeur d'arrivée en dernière colonne.
+        foreach (preg_split('/^# TITRE /m', $texte) ?: [] as $bloc) {
+            if (!preg_match('/`(ADOPTION-\d{4})[^`]*`/u', $bloc, $src)) {
+                continue;
+            }
+            $date = $this->actes[$src[1]]['date'] ?? null;
+            if ($date === null) {
+                continue;
+            }
+            foreach (explode("\n", $bloc) as $ligne) {
+                if (!preg_match('/^\|\s*`(PRD-[A-Z0-9-]+)`\s*\|/u', trim($ligne), $m) || !isset($vues[$m[1]])) {
+                    continue;
+                }
+                $c = array_map(fn ($x) => $this->nettoyer(trim($x)), explode('|', trim($ligne, '|')));
+                if (count($c) === 4 && $c[3] !== '') {
+                    $insEtat->execute([$m[1], $c[3], $date, $src[1]]);
+                }
+            }
+        }
+
+        return $n;
     }
 
     /**
