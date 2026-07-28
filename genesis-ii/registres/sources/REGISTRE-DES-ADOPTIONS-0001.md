@@ -74,6 +74,7 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 | `ADOPTION-0030` | Second incrément de code du service `CTR-04` (`CAP-CORE-007`) — couche de livraison Laravel autour du cœur adopté | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0031` | Rectification de la portée de la preuve `P3` de `CAP-CORE-007` et dérivation des statuts depuis le corpus | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0032` | Conception de `CAP-CORE-006` — Registre des sources ; attribution du contrat `CTR-09` et arbitrages de cohérence | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+| `ADOPTION-0033` | Rectification d'intégrité : empreinte inexistante d'`ADOPTION-0018`, extension du contrôle `C5` aux feuilles de statut | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
 ## Article 5 — Textes en cours de délibération non inscrits
 
