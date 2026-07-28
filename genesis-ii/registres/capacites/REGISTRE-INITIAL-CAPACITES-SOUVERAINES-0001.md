@@ -848,3 +848,50 @@ Le second incrément expose le contrat `CTR-04` en lecture et attestation seulem
 ## Article 102 — Non-effet
 
 Le présent Titre, comme `ADOPTION-0030` dont il constate l'exécution, ne modifie le corps d'aucun article antérieur, ne fige aucun choix technologique au-delà de ce que `ADOPTION-0027` avait déjà retenu, et n'accepte aucun risque nouveau.
+
+---
+
+# TITRE XVII — RECTIFICATION DE LA PORTÉE DE LA PREUVE `P3` DE `CAP-CORE-007`
+
+## Article 103 — Nature de la présente rectification
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0031-RECTIFICATION-PREUVE-P3-0001`. Il ne modifie aucune disposition des Titres I à XVI : ceux-ci demeurent le texte adopté à leur date. Conformément à l'Article 4 du Registre des adoptions et à la discipline d'ajout seul, il **rectifie par addition** un énoncé de portée devenu inexact, sans réécrire l'article qui le portait.
+
+L'énoncé rectifié est celui de l'Article 96, troisième tiret, qui affirmait que le test de reconstruction temporelle « restitue le statut **réellement en vigueur** à une date passée ». Cet énoncé demeure au Titre XV tel qu'adopté ; le présent Titre en circonscrit la portée véritable.
+
+## Article 104 — Fait rectifié
+
+Jusqu'au commit adopté par `ADOPTION-0031`, la méthode d'ingestion `amorcerFaitsP3()` inscrivait les deux états datés de `CAP-CORE-007` sous forme de **constantes du code source**. Le test `P3` relisait ensuite ces mêmes constantes. Aucun chemin ne reliait un acte d'adoption du corpus à un statut de l'index.
+
+Il en résultait que :
+
+- la table `statut` ne comportait que **deux lignes**, portant sur **une seule** des soixante-sept normes indexées ; les soixante-six autres — dont l'`ACTE-DE-CONSTAT-G0-0001` lui-même — étaient restituées sans statut et donc réputées non en vigueur ;
+- une altération du corpus (date d'adoption modifiée, acte falsifié) **n'aurait produit aucun échec du test**.
+
+Ce second point a été établi par l'expérience, et non par le raisonnement : le code antérieur, exécuté contre un corpus délibérément falsifié — date d'`ADOPTION-0026` déplacée du 27 au 30 juillet 2026 — a déclaré la preuve `ÉTABLIE` (code de sortie `0`). Le code rectifié, contre le même corpus falsifié, déclare la preuve `NON ÉTABLIE` (code de sortie `1`).
+
+## Article 105 — Portée restreinte reconnue pour le passé
+
+L'autorité reconnaît que la preuve `P3` constatée par `ADOPTION-0029` et reconduite par `ADOPTION-0030` était de **portée restreinte** : elle établissait la correction de la résolution temporelle — la sélection du statut le plus récent antérieur à une date donnée — et elle seule. Elle n'établissait pas la reconstruction depuis le corpus.
+
+Le niveau de preuve `P3 — TESTÉ` n'est **pas rétrogradé** : le comportement éprouvé satisfaisait bien la définition de l'Article 17 (« comportement ou procédure vérifié par essai reproductible »). C'est l'énoncé de sa portée qui excédait ce qui était prouvé. La rectification porte sur l'énoncé, non sur le niveau.
+
+## Article 106 — Portée désormais acquise
+
+Le commit adopté par `ADOPTION-0031` dérive les statuts du corpus lui-même :
+
+| Origine | Avant | Après |
+|---|---|---|
+| Statut d'une norme | aucun (sauf `CAP-CORE-007`, en dur) | acte le plus récent qui lie le fichier — libellé et date lus à l'index |
+| États de conception de `CAP-CORE-007` | deux constantes du code | tableau de l'Article 31, puis chaque Titre de mise à jour post-adoption et son acte source |
+| Lignes de la table `statut` | 2, sur 1 norme | 68, sur la totalité des versions indexées |
+
+La preuve `P3` porte désormais sur la reconstruction temporelle **dérivée du corpus**, et sa capacité à échouer est démontrée. Sa portée demeure néanmoins bornée à l'état de conception de `CAP-CORE-007` — seule capacité disposant à ce jour d'une conception adoptée. Le présent Titre ne prétend pas au-delà.
+
+## Article 107 — Écart signalé subsistant
+
+La table `statut` accueille aujourd'hui deux vocabulaires distincts : le statut d'une norme (`EN VIGUEUR`, `AMENDE`, `REMPLACE`, `ABROGE`) et l'état de conception d'une capacité (`EN CONCEPTION`, `CONÇUE`). Leur cohabitation dans une même colonne est un défaut de modèle, signalé et non corrigé par le présent acte. Sa correction relève de la conception de `CAP-CORE-006` et de `CAP-CORE-020`, où le rang et l'identité des normes seront eux-mêmes fondés. Un libellé non reconnu produit désormais la valeur `INDETERMINE` : le service déclare son ignorance plutôt que de présumer une norme en vigueur.
+
+## Article 108 — Non-effet
+
+Le présent Titre ne rend `CAP-CORE-007` ni admise, ni active, ne modifie le corps d'aucun article antérieur et n'accepte aucun risque nouveau. Il ne constate pas `G0`.
