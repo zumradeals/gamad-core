@@ -71,6 +71,7 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 | `ADOPTION-0027` | Décision technologique du premier noyau `CAP-CORE-007` (Git, PostgreSQL, PHP/Laravel, contrôle Python séparé) | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0028` | Conception d'implémentation du contrat `CTR-04` — service du Registre des normes | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 | `ADOPTION-0029` | Premier incrément de code du service `CTR-04` (`CAP-CORE-007` — preuve `P3` établie) | Koné Djakaridja | 27 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+| `ADOPTION-0030` | Second incrément de code du service `CTR-04` (`CAP-CORE-007`) — couche de livraison Laravel autour du cœur adopté | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
 ## Article 5 — Textes en cours de délibération non inscrits
 
