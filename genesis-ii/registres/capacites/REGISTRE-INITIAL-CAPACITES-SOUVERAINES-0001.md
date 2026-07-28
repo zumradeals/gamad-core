@@ -1035,3 +1035,41 @@ Quatre verdicts sont rendus, dont un seul affirme une vérification : `VÉRIFIÉ
 ## Article 128 — Non-effet
 
 Le présent Titre ne nomme personne, n'étend aucun pouvoir, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
+
+---
+
+# TITRE XXII — MISE À JOUR POST-ADOPTION : CONCEPTION ET PREMIER CODE DE `CAP-CORE-001`
+
+## Article 129 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0038-CAP-CORE-001-0001`. Il ne modifie aucune disposition des Titres I à XXI. Il ajoute un fait postérieur — la conception et le premier code de la quatrième capacité racine, livrés en un seul incrément sous `MISSION-AI-GENESIS-II-CODE-0001`.
+
+## Article 130 — Changement d'état
+
+| Capacité | État avant (Article 31) | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-001` — Identity Registry | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0038`, adoptant conception et premier incrément de code.
+- **Contrat `CTR-01` :** trois opérations livrées.
+- **Invariants introduits :** `INV-17` à `INV-21`.
+
+## Article 131 — Filiation constatée : `CAP-CORE-001` succède à `GAMAD ID`
+
+`ADOPTION-0023` a placé le produit `PRD-GAMAD-001` — GAMAD ID — à l'état `DISSOUS — IDENTITÉ RENDUE AU CORE` (Article 154 du Registre des produits).
+
+`CAP-CORE-001` recueille cette fonction. La capacité d'identité n'est donc pas une ambition nouvelle du Core : elle lui a été **rendue** par la dissolution du produit qui la portait. Cette filiation, jusqu'ici non inscrite, est constatée par le présent Titre.
+
+## Article 132 — Le registre des identités compte sept entrées
+
+Le service dérive sept entités, et sept seulement : une personne (`AUT-GAMAD-001`), deux agents (`AGENT-IA-001`, `AGENT-IA-002`), quatre produits (`PRD-GAMAD-001` à `004`).
+
+Ce chiffre n'est pas une limite technique : c'est l'état réel du corpus. **Aucun dispositif ne peuple un registre d'identités ; seuls des actes le font.** GAMAD elle-même, comme organisation, n'y figure pas — le corpus ne la déclare nulle part comme entité.
+
+## Article 133 — Portée limitée
+
+`CAP-CORE-001` établit *qui existe* aux yeux du Core. Elle ne permet à personne de se connecter : prouver qu'on est cette entité relève de `CAP-CORE-005`, et savoir ce qu'on peut faire de `CAP-CORE-004`, toutes deux `À ÉTABLIR`. La capacité n'est ni admise, ni active au sens de l'exploitation.
+
+## Article 134 — Non-effet
+
+Le présent Titre ne crée aucune identité, ne nomme personne, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque nouveau et ne constate pas `G0`.
