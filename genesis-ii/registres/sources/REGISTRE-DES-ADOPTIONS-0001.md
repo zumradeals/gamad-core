@@ -118,6 +118,8 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 
 | `ADOPTION-0059` | Seconde inscription de décisions ouvertes — Titre XVI du Registre initial des décisions, `DECISION-0026` à `DECISION-0049` portées à la forme dérivable de l'Article 153 | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
+| `ADOPTION-0060` | Arbitrage de `DECISION-0044` — l'admission d'une implémentation souveraine relève de `CTR-14` ; Titre XVII du Registre initial des décisions et première clôture rendue dans la forme de l'Article 154 | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
 ## Article 5 — Textes en cours de délibération non inscrits
 
 `MATRICE-INITIALE-LOI-PREUVE-0001` et `REGISTRE-INITIAL-USAGES-IA-0001`, ainsi que tout texte produit dans le cadre des Phases 1 à 4 en cours, portent le statut `PROJET NORMATIF — EN COURS DE DÉLIBÉRATION` et ne figurent pas dans ce tableau tant qu'ils ne sont pas adoptés.
