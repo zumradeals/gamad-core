@@ -120,6 +120,8 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 
 | `ADOPTION-0060` | Arbitrage de `DECISION-0044` — l'admission d'une implémentation souveraine relève de `CTR-14` ; Titre XVII du Registre initial des décisions et première clôture rendue dans la forme de l'Article 154 | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
+| `ADOPTION-0061` | Arbitrage de `DECISION-0007` et `DECISION-0045` — l'autorité de décision est unique et transitoire pour toutes les classes et tous les niveaux de risque ; Titre XVIII du Registre initial des décisions | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
 ## Article 5 — Textes en cours de délibération non inscrits
 
 `MATRICE-INITIALE-LOI-PREUVE-0001` et `REGISTRE-INITIAL-USAGES-IA-0001`, ainsi que tout texte produit dans le cadre des Phases 1 à 4 en cours, portent le statut `PROJET NORMATIF — EN COURS DE DÉLIBÉRATION` et ne figurent pas dans ce tableau tant qu'ils ne sont pas adoptés.
