@@ -1042,3 +1042,73 @@ Elle ne franchit pas les exclusions de mission de l'Article 4 du Registre crypto
 Elle n'établit ni solution de coffre, ni détenteur, ni seuil, ni fréquence de rotation, ni politique de clés racines — l'Article 51 les range parmi ses décisions ouvertes.
 
 Le présent Titre est un projet tant qu'il n'est pas adopté ; sa fusion dans `main` par l'autorité **est** la décision (Article 129).
+
+---
+
+# TITRE XX — UN TREIZIÈME DOMAINE, UNE VINGT ET UNIÈME CAPACITÉ, UNE VINGT ET UNIÈME FAMILLE
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0064`. Aucun article ni tableau préexistant n'est réécrit ni supprimé. Les Articles 44, 46 et 69 demeurent entiers ; le présent Titre les complète, conformément au mécanisme que l'Article 44 prévoit lui-même.
+
+## Article 144 — Ce que les douze domaines ne portaient pas
+
+Les douze domaines de l'Article 31 répondent à des questions d'existence, d'autorité, de norme, de contrat, de donnée, de sécurité, de preuve, de risque, d'ingénierie et d'agent artificiel.
+
+**Aucun ne répond à la question « ceci correspond-il à cela, dans ce contexte, sous cette politique ? »**
+
+`DOM-02` établit qu'une entité existe et ne l'évalue jamais — l'Article 33 range expressément parmi ses données exclues le « jugement moral ou spirituel » et l'« agrégation transversale implicite ». `DOM-07` gouverne les finalités et les droits attachés aux données ; il ne produit aucun résultat. Loger la qualification dans l'un ou l'autre ferait porter à un domaine une mission qui n'est pas la sienne, et l'Atlas a déjà payé deux fois le prix de cette approximation : les Titres XIV et XV relèvent deux familles portées hors de leur domaine, dont l'une avait échappé à trois actes.
+
+## Article 145 — DOM-13 : Qualification et appariement
+
+Créé selon l'Article 44, qui exige d'un domaine nouveau qu'il explicite sa mission, les responsabilités non couvertes, les frontières, les sources canoniques, les contrats, les données, les dépendances et les effets sur les domaines existants.
+
+**Mission :** transformer, pour une finalité autorisée et déclarée, les identités, qualifications, besoins, offres, ressources et règles de l'écosystème en correspondances utiles, explicables, temporaires et révocables.
+
+**Responsabilités non couvertes ailleurs :** la qualification d'une entité pour une finalité ; l'appariement de deux objets sous une politique versionnée ; la construction et l'expiration d'un segment ; l'explication d'un résultat ; la mesure des écarts et des biais d'une politique.
+
+**Concepts principaux :** entité, offre, besoin, audience, segment, critère, politique de matching, contexte, résultat, activation, pertinence, confiance, facteur non établi, expiration.
+
+**Sources canoniques :** les politiques de matching adoptées, et les contrats des domaines gardiens des données consommées. Le domaine ne détient aucune source de données propre.
+
+**Capacités associées :** Moteur de Matching GAMAD.
+
+**Contrats attendus :** qualification d'une entité ; calcul d'une correspondance ; construction et activation d'un segment ; explication d'un résultat ; mesure d'une activation ; comparaison de politiques.
+
+**Données exclues :** jugement moral, spirituel ou de valeur humaine globale ; réputation générale non sourcée ; opinion privée sans rapport avec la finalité ; donnée intime non nécessaire ; profil transversal implicite ; toute donnée obtenue en violation d'une règle ou d'un consentement applicable ; et **la liste nominative d'un segment livrée par défaut à un consommateur**.
+
+**Frontière avec `DOM-02` :** `DOM-02` établit qui existe ; `DOM-13` évalue ce qui correspond. Le second consomme les références du premier et n'en produit aucune.
+
+**Frontière avec `DOM-07` :** `DOM-07` autorise l'usage d'une donnée pour une finalité ; `DOM-13` calcule sous cette autorisation. La première est une permission, la seconde un résultat.
+
+**Frontière produit :** un satellite peut opérer, présenter ou financer le moteur sans en devenir propriétaire institutionnel (Article 47).
+
+**Effets sur les domaines existants :** aucune mission n'est retirée à aucun domaine. `DOM-02`, `DOM-03`, `DOM-04`, `DOM-07`, `DOM-10` deviennent des dépendances déclarées de `DOM-13`, consommées par contrat et jamais par captation libre (Article 74).
+
+## Article 146 — L'identifiant `CAP-CORE-021`
+
+L'Article 46 propose `CAP-CORE-001` à `CAP-CORE-020` et n'épuise pas la série : l'Article 45 énonce que l'inventaire reprend les capacités constitutionnellement identifiées **à sa date**, et l'Article 49 prévoit l'admission ultérieure d'une capacité par l'analyse de la Charte.
+
+| Identifiant | Capacité constitutionnelle | Domaine principal | Finalité commune |
+|---|---|---|---|
+| `CAP-CORE-021` | Moteur de Matching GAMAD | `DOM-13` | Qualifier et apparier sous finalité autorisée, politique versionnée et durée déterminée |
+
+L'identifiant est attribué. **Il ne vaut ni admission, ni conformité, ni mise en service** : l'Article 4 du Registre initial des capacités souveraines distingue l'inscription de l'admission, et le Titre XXXIX de ce Registre inscrit la capacité au seul état que le corpus peut prouver.
+
+## Article 147 — `CTR-21` — Qualification et appariement
+
+La numérotation suit la règle de `ADOPTION-0032`, Art. 2.1 : le dernier numéro attribué était `CTR-20`.
+
+| Référence | Famille de contrat | Domaine gardien | Objet minimal |
+|---|---|---|---|
+| `CTR-21` | Qualification et appariement | `DOM-13` | Qualifier une entité, une offre ou un besoin pour une finalité déclarée, et restituer une correspondance explicable, temporaire et révocable |
+
+`CAP-CORE-021` garde `DOM-13`, domaine gardien de `CTR-21`. **`INV-40` est satisfait** sans réattribution, et la famille n'est revendiquée par aucune autre capacité.
+
+Elle ne recouvre pas `CTR-09` — Données et droits, gardée par `DOM-07` : `CTR-09` encadre la finalité, le partage, le droit et la suppression d'une **donnée** ; `CTR-21` produit une **correspondance** sous cette finalité. La première autorise, la seconde calcule.
+
+Elle ne recouvre pas `CTR-01` — Référence d'identité : `CTR-01` établit qu'une entité existe et quel est son statut minimal ; `CTR-21` évalue si elle correspond, et ne modifie jamais ce que `CTR-01` établit.
+
+## Article 148 — Ce que le présent Titre ne fait pas
+
+Il n'admet aucune capacité, ne rend aucune capacité active, ne nomme ni responsable ni opérateur, n'autorise aucun contexte de matching, n'inscrit aucun critère, n'engage aucun consommateur, ne code rien, ne modifie l'état d'aucune des vingt capacités antérieures, ne retire aucune mission à aucun domaine, ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3) et ne constate pas `G0`.
+
+L'Article 51 de la Charte demeure entier : une fonctionnalité ne devient pas capacité du Core parce qu'elle a été codée, déployée ou largement utilisée. Le présent Titre attribue une référence à une capacité **qui n'est pas encore codée**, précisément pour que l'ordre inverse ne se produise pas.

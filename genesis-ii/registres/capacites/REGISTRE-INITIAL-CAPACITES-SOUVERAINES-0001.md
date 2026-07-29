@@ -1902,3 +1902,129 @@ Demeurent ouvertes `DECISION-0046` — la proportionnalité exigée d'une capaci
 Le présent Titre ne constate pas `G0`, ne lève et ne requalifie aucune réserve de `G0`, ne rend l'audit ni indépendant ni suffisant, ne nomme aucun opérateur, n'établit aucune surveillance, ne teste aucune restauration, n'accepte aucun risque nouveau, ne modifie le corps d'aucun article antérieur, ne crée ni ne supprime aucune famille de contrat et ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3).
 
 Que les vingt capacités soient `ADMISE` et `ACTIVE` signifie que l'autorité en répond. Cela ne signifie pas qu'elles sont surveillées, sauvegardées ou restaurables — l'Article 229 dit exactement le contraire.
+
+---
+
+# TITRE XXXIX — RÉVISION DE `CAP-CORE-001` ET INSCRIPTION D'UNE VINGT ET UNIÈME CAPACITÉ
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0064`. Aucun article ni tableau des Titres I à XXXVIII n'est réécrit ni supprimé. Le tableau de l'Article 31 demeure entier ; la capacité inscrite par l'Article 240 l'est **hors de ce tableau**, à une forme dérivable que le service relève.
+
+## Article 235 — Nature de la présente mise à jour
+
+Le présent Titre constate les conséquences d'exécution de `ADOPTION-0064`.
+
+L'autorité adopte la **révision doctrinale, normative et technique de `CAP-CORE-001`** et **inscrit** `CAP-CORE-021` — Moteur de Matching GAMAD. Les deux actes sont liés : le second ne peut être conçu jusqu'au bout sans le premier, un moteur d'appariement travaillant sur des comptes locaux non rapprochés comptant plusieurs fois la même personne.
+
+## Article 236 — Ce que la révision de `CAP-CORE-001` dépasse, et ce qu'elle maintient
+
+La conception adoptée par `ADOPTION-0038` n'est ni réécrite, ni retirée, ni corrigée. Elle demeure le texte qui a établi `INV-17` à `INV-21` et constaté sept entités au 29 juillet 2026.
+
+**Deux de ses dispositions, et deux seulement, sont dépassées :**
+
+| Disposition | Ce qu'elle portait | Ce qui la dépasse |
+|---|---|---|
+| Article 11 — lecture seule | « Créer, corriger, fusionner ou clore une identité demeure un acte signé » | L'acte signé porte désormais sur la **politique d'inscription**, non sur chaque identité |
+| Article 13 — `M-19` | « Aucun dispositif technique ne peuple un registre d'identités : seuls des actes le font » | Vrai du corpus documentaire, faux d'un registre d'identités souverain |
+
+**Tout le reste est maintenu**, et `INV-19` en tête : ni profil universel, ni dossier métier détaillé, ni réputation globale, ni jugement moral ou spirituel, ni agrégation transversale implicite. Reconnaître davantage d'entités et conserver moins de données sur chacune n'est pas une contradiction : c'est la définition d'un registre d'identités, par opposition à un profil.
+
+L'Article 9 de la conception initiale — « le registre contiendra sept entrées » — demeure exact **à sa date**. C'était un constat sur le corpus, non une doctrine de périmètre, et le présent Titre ne prétend pas le contraire.
+
+## Article 237 — Les invariants introduits
+
+`INV-73` à `INV-80`, portés par `CONCEPTION-CAP-CORE-001-REVISION-PERIMETRE-0002` :
+
+| Invariant | Énoncé |
+|---|---|
+| `INV-73` | Deux régimes de vérité — `DÉRIVÉ_DU_CORPUS` et `INSCRIT_AU_REGISTRE` — jamais mêlés |
+| `INV-74` | Toute entité durable peut recevoir une référence canonique, sous un type déclaré jamais présumé |
+| `INV-75` | Un produit détient un compte local, jamais une identité souveraine concurrente |
+| `INV-76` | La clôture d'un compte ne clôt jamais l'identité |
+| `INV-77` | Toute relation porte un type, un état, une source, une durée et une classification ; aucune n'est présumée |
+| `INV-78` | L'assurance ne se déduit d'aucun usage ; elle procède d'un événement de preuve de `CAP-CORE-005` |
+| `INV-79` | Écriture gouvernée sous six conditions cumulatives, jamais un CRUD libre |
+| `INV-80` | Un doublon probable est signalé, jamais fusionné d'office |
+
+Menaces retenues : `M-76` à `M-85`.
+
+## Article 238 — `INV-73` est ce que la révision a trouvé, et non ce qu'elle cherchait
+
+`INV-5` établit que la base est un index dérivé, jamais autoritatif : les fichiers Git sont la source de vérité. Cela demeure exact des sept entités que le corpus déclare.
+
+Cela ne peut pas être exact d'une personne inscrite par un produit : **aucun fichier du corpus ne la déclare, et aucun ne la déclarera.** Pour cette classe d'entités, le registre est la source.
+
+La conséquence est concrète et elle est datée d'aujourd'hui : le module admis reconstruit intégralement son index depuis le corpus. **Ouvrir l'écriture sans poser `INV-73` d'abord ferait détruire, à la première réindexation, toute identité inscrite** — c'est `M-84`, et ce n'est pas une menace hypothétique mais la description de ce que le code existant ferait.
+
+`INV-5` n'est pas abrogé. Il est **borné à son domaine de vérité**, et l'était implicitement depuis l'origine.
+
+## Article 239 — Aucun état de `CAP-CORE-001` ne change
+
+| Capacité | État avant | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-001` — Identity Registry | Conception `CONÇUE` ; implémentation `ADMISE` ; exploitation `ACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation `ADMISE` ; exploitation `ACTIVE` ; preuve `P3 — TESTÉ` — **inchangés** |
+
+- **Source :** `ADOPTION-0064`. **Invariants engagés :** `INV-73` à `INV-80`. **Garde :** `core/registre-identites/tests/identite_p3.php`.
+
+Adopter une conception révisée ne code rien et n'éprouve rien. L'implémentation admise le demeure **au titre de la conception initiale** ; elle ne couvre pas le périmètre révisé, et le corpus ne prétendra pas qu'elle le couvre.
+
+L'admission de `ADOPTION-0063` deviendra **caduque** à la première modification du module (`INV-68`). Le module n'est pas modifié par le présent acte : elle ne l'est donc pas encore. Quand elle le sera, ce sera le mécanisme qui fonctionne et non une faute (Article 231), et la réinscription relèvera de l'autorité au moment qu'elle choisira.
+
+## Article 240 — Inscription de `CAP-CORE-021`
+
+L'Article 4 distingue l'inscription de l'admission : l'inscription établit l'existence normative et le suivi d'une capacité ; elle ne vaut ni admission d'une implémentation, ni autorisation de mise en service, ni certification de conformité. C'est une inscription, et rien de plus.
+
+- **Inscription :** `CAP-CORE-021` — Moteur de Matching GAMAD. **Domaine :** `DOM-13`. **Criticité :** `CRITIQUE`. **Conception :** `CONÇUE`. **Implémentation :** `NON COMMENCÉE`. **Exploitation :** `INACTIVE`. **Preuve :** `NON ÉTABLI`. **Source :** `ADOPTION-0064`.
+
+Le tableau de l'Article 31 n'est pas modifié : il est un texte adopté, et le corpus se corrige par ajout. L'inscription ci-dessus est portée à une **forme dérivable**, que le service de `CTR-14` relève au même titre que les lignes de ce tableau — faute de quoi la capacité serait inscrite en prose, donc invisible au contrôle, ce que `ADOPTION-0059` a précisément réparé pour les décisions.
+
+L'Atlas reçoit du même acte l'identifiant `CAP-CORE-021`, le domaine `DOM-13` et la famille `CTR-21` (Titre XX de `CORE-ATLAS-0001`). Les deux sources concordent, et le service le vérifie.
+
+## Article 241 — CAP-CORE-021 : Moteur de Matching GAMAD
+
+- **Mission :** transformer, pour une finalité autorisée et déclarée, les identités, qualifications, besoins, offres, ressources et règles de l'écosystème en correspondances utiles, explicables, temporaires et révocables, au bénéfice de plusieurs plateformes, satellites, institutions ou partenaires autorisés.
+- **Domaine principal :** `DOM-13`.
+- **Criticité proposée :** `CRITIQUE`.
+- **Fondements :** `CORE-CHARTER-0001`, Articles 5, 21, 47 à 51 et 86 ; `CORE-ATLAS-0001`, Titre XX ; `CONCEPTION-CAP-CORE-021-MOTEUR-DE-MATCHING-0001`.
+- **État actuel :** conception adoptée ; aucun module, aucune garde, aucun consommateur, aucune politique, aucun contexte autorisé.
+- **Autorité institutionnelle :** à établir par mandat.
+- **Responsable / opérateur :** non désignés. Les sept fonctions de gouvernance de la capacité sont vacantes.
+- **Données minimales :** référence de matching, contexte, version de politique, critères retenus, pertinence, confiance, facteurs favorables, défavorables et non établis, obligations, date d'expiration, consommateur, finalité.
+- **Données exclues :** jugement moral, spirituel ou de valeur humaine globale ; réputation générale non sourcée ; opinion privée sans rapport avec la finalité ; donnée intime non nécessaire ; profil transversal implicite ; liste nominative d'un segment livrée par défaut.
+- **Contrats attendus :** `CTR-21`, qualification d'une entité, calcul d'une correspondance, construction et activation d'un segment, explication d'un résultat, mesure d'une activation, comparaison de politiques.
+- **Consommateurs attendus :** satellites admis, portail, institutions et partenaires sous contrat. **Aucun n'existe à ce jour.**
+- **Dépendances :** identité `CAP-CORE-001` révisée, organisations `CAP-CORE-002`, mandats `CAP-CORE-003`, autorisation `CAP-CORE-004`, assurance `CAP-CORE-005`, contrats `CAP-CORE-009`, audit `CAP-CORE-013`, risques `CAP-CORE-017`, incidents `CAP-CORE-018`.
+- **Risques principaux :** profilage excessif, réutilisation cachée d'un segment, score tenu pour vérité, biais de données, export de la base, capture commerciale, critère interdit, boucle d'auto-renforcement, politique sans version, activation permanente.
+- **Contrôles requis :** finalité obligatoire et consommateur identifié, liste close de critères par contexte, politique versionnée, expiration automatique, interdiction d'export brut par défaut, explication minimale, tests de biais et de couverture, journalisation, séparation entre recommandation et décision, audit indépendant des politiques sensibles.
+- **Preuves attendues :** garde de comportement propre éprouvant les refus, contre-épreuve de falsification avec témoin, deux consommateurs pilotes réels, tests de biais, procédure de correction et de réexamen, plan de retrait d'un modèle et d'un consommateur.
+- **Décisions ouvertes :** `DECISION-0056` à `DECISION-0059` — contextes autorisés, critères autorisés et interdits par contexte, stratégie de segment, gouvernance des modèles statistiques.
+
+## Article 242 — L'épreuve des quatre critères de l'Article 48 de la Charte
+
+L'Article 48 exige qu'une capacité rejoignant le Core démontre son caractère **commun, durable, transversal et souverain**. Un seul est démontré.
+
+| Critère | État |
+|---|---|
+| Commun | Argumenté, **non démontré** — aucun consommateur n'existe |
+| Durable | Argumenté — la qualification pour une finalité est un besoin permanent |
+| Transversal | Argumenté, **non démontré** — il le sera quand deux consommateurs distincts consommeront les mêmes contrats |
+| Souverain | **Démontré, par la négative** — un moteur logé dans une plateforme commerciale ferait de la connaissance qualifiée de l'écosystème la propriété de cette plateforme, contre l'Article 5 de la Charte et l'Article 21 de l'Atlas |
+
+C'est la raison pour laquelle le présent Titre **inscrit** sans admettre. L'admission exigera la démonstration des trois critères restants, et l'Article 86 de la Charte y ajoute une autorité, des contrats, une gouvernance de données, une sécurité, une continuité et une stratégie de sortie — dont aucune n'est établie.
+
+L'inscription est faite **avant** tout code, et c'est délibéré : l'Article 51 de la Charte oppose un refus à la fonctionnalité qui demanderait son admission après avoir été codée et déployée. L'ordre des travaux détermine ici l'issue institutionnelle.
+
+## Article 243 — Ce que le présent Titre ne comble pas
+
+La révision de `CAP-CORE-001` **n'est pas codée**. Le module admis sert la conception initiale ; le périmètre révisé n'a ni table, ni commande, ni garde. Tant que `DECISION-0050` — la politique d'inscription initiale — n'est pas rendue, `INV-79` refuse toute écriture et la révision demeure sans effet pratique. Elle est adoptée pour que le code puisse suivre, non parce qu'il l'a précédée.
+
+`CAP-CORE-021` n'a ni module, ni garde, ni responsable, ni opérateur, ni consommateur, ni politique, ni contexte autorisé. Ses sept fonctions de gouvernance sont vacantes, et le présent Titre n'en pourvoit aucune.
+
+La fonction `AUDIT` demeure **non indépendante** : `RISK-SEC-0001` est inchangé, sans terme fixe. `INV-88`, que la conception du Matching pose, est un invariant **déclaré et non tenu**, et il est inscrit comme tel plutôt que passé sous silence.
+
+Demeurent ouvertes `DECISION-0046` à `DECISION-0049`, auxquelles le présent acte en ajoute dix, `DECISION-0050` à `DECISION-0059`.
+
+## Article 244 — Non-effet
+
+Le présent Titre ne constate pas `G0`, ne lève et ne requalifie aucune réserve de `G0`, ne rend l'audit ni indépendant ni suffisant, n'admet aucune capacité, ne rend `CAP-CORE-021` ni implémentée ni active, ne modifie l'état d'aucune des vingt capacités antérieures, ne nomme aucun opérateur ni responsable, n'inscrit aucune identité, n'adopte aucune politique d'inscription ni aucune politique de matching, n'autorise aucun contexte, n'engage aucun consommateur, n'accepte aucun risque nouveau, ne modifie le corps d'aucun article antérieur et ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3).
+
+Qu'une capacité soit **inscrite** signifie que le corpus la suit. Cela ne signifie pas qu'elle existe, qu'elle sert, ni que quiconque en répond.
