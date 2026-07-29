@@ -1747,3 +1747,60 @@ La fonction `AUDIT` demeure **non indépendante** : `RISK-SEC-0001` est inchang�
 Le présent Titre ne rend aucune capacité admise ni active, n'opère aucun déploiement, n'accepte aucun risque, ne nomme aucun responsable, ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3) et **ne constate pas `G0`**.
 
 Que les vingt capacités atteignent `P3 — TESTÉ` signifie que chacune porte une garde éprouvant son propre contrat. Cela ne signifie ni qu'elles sont exploitées, ni qu'elles sont admises, ni que les écarts qu'elles constatent sont comblés — la plupart d'entre elles ont précisément pour objet de nommer ce qui manque.
+
+---
+
+# TITRE XXXVII — MISE À JOUR POST-ADOPTION : LE DOSSIER D'ADMISSION, PORTÉ PAR `CAP-CORE-020`
+
+## Article 222 — Nature de la présente mise à jour
+
+Le présent Titre constate les conséquences d'exécution de `ADOPTION-0062`. Il ne modifie le corps d'aucune disposition des Titres I à XXXVI.
+
+`ADOPTION-0060` a arbitré que l'admission d'une implémentation souveraine — son inscription, sa mention d'audit et son retrait — relève de la famille `CTR-14`, portée par `CAP-CORE-020`. L'incrément adopté par `ADOPTION-0062` en tire la conséquence de code : le service assemble le **dossier d'admission** décrit par `CONCEPTION-CONTROLE-ADMISSION-0001`, adoptée par `ADOPTION-0058`.
+
+## Article 223 — Ce que le service fait, et ce qu'il refuse de faire
+
+Le service dérive les **neuf pièces** que l'Article 13 de la conception déclare dérivables, et déclare `NON DÉRIVABLE — appréciation humaine` les **quatre questions** que son Article 14 place hors de portée de tout service : la complétude au regard de l'objet d'une famille, la proportionnalité des contrôles, l'identité du responsable, l'opportunité.
+
+`INV-72` lui interdit de conclure. Le dossier ne porte ni avis, ni suffisance, ni proposition d'admission : **un dossier complet ne vaut pas admission ; il la rend examinable.** La précaution est celle qu'`ADOPTION-0057` avait déjà retenue pour le service d'audit, qui ne prononce aucune levée — le concepteur ne s'audite pas, et un service écrit par lui ne conclut pas sur son ouvrage.
+
+La qualité de l'audit n'est pas recalculée ici : elle est **consommée** de `CAP-CORE-013`, seule capacité dont c'est la mission. Deux analyseurs du même fait finiraient par diverger, et le corpus porterait alors deux vérités sur l'indépendance de son propre audit.
+
+## Article 224 — État dérivé des vingt dossiers
+
+Décomptes dérivés par `Ctr14::admissions()` et `Ctr14::dossierAdmission()`, selon la règle d'`ADOPTION-0054` :
+
+| | Constat |
+|---|---|
+| Admissions inscrites à la forme de l'Article 174 du Registre initial des décisions | **0** |
+| Dossiers assemblés | **20** |
+| Dossiers complets | **19** |
+| Dossiers incomplets | **1** — `CAP-CORE-007`, faute de contre-épreuve déclarée à son acte adoptant |
+| Capacités recevables à l'admission | **0** — les vingt sont `PARTIELLEMENT MATÉRIALISÉE` (`INV-69`) |
+| Dossiers portant la mention d'audit non indépendant | **20** (`INV-70`) |
+
+Le dossier incomplet est un **fait historique du corpus, non un défaut du service** : `ADOPTION-0029` a adopté le premier incrément codé avant que `ADOPTION-0032`, Art. 3 n'exige une contre-épreuve de falsification. La contre-épreuve existe — `ADOPTION-0031` l'a produite — mais non à l'acte où l'Article 13 la fait chercher. Un service qui irait la prendre ailleurs ferait disparaître l'anomalie au lieu de la montrer.
+
+## Article 225 — Changement d'état
+
+| Capacité | État avant | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-020` — Annuaire des capacités et Atlas | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` |
+
+- **Source :** `ADOPTION-0062`. **Contrat :** `CTR-14`. **Invariants matérialisés :** `INV-67` à `INV-72`, introduits par `ADOPTION-0058`. **Garde :** `core/registre-annuaire/tests/annuaire_p3.php`.
+
+**Aucune des quatre dimensions ne change**, pour aucune des vingt capacités. L'incrément étend un service déjà `P3 — TESTÉ` ; il ne fait franchir aucun seuil. L'état est constaté inchangé plutôt que tu, afin qu'aucun lecteur ne prête à l'incrément un effet qu'il n'a pas.
+
+## Article 226 — Ce que le présent Titre ne comble pas
+
+Des quatre décisions nées de l'Article 11 d'`ADOPTION-0058`, une seule est close : `DECISION-0045` — qui prononce l'admission — l'a été par `ADOPTION-0061`, qui a déclaré l'autorité de décision unique et transitoire. **Trois demeurent ouvertes** : `DECISION-0046` — la proportionnalité exigée d'une capacité `RACINE` ; `DECISION-0047` — le sens de la complétude au regard de l'objet d'une famille ; `DECISION-0048` — la condition de réexamen sous audit non indépendant. Ce décompte est dérivé par `Ctr05`, qui relève 49 décisions inscrites, 44 ouvertes et 5 closes, aucune clôture ne désignant un acte absent.
+
+Le service ne les tranche pas et ne peut pas les trancher. Deux d'entre elles sont, mot pour mot, des questions que l'Article 14 déclare non dérivables : `DECISION-0046` est la proportionnalité, `DECISION-0047` la complétude. La troisième — `DECISION-0048`, la condition de réexamen — ne figure pas à l'Article 14, mais suppose de fixer un terme à un audit non indépendant, ce qu'aucun service ne peut faire. Le code les rend visibles ; il ne les résout pas.
+
+La clôture de `DECISION-0045` ne change rien à la retenue du service : elle nomme **qui** prononce l'admission — l'autorité, seule — et confirme par là qu'un service ne la prononce pas. `INV-72` en sort renforcé, non allégé.
+
+La fonction `AUDIT` demeure **non indépendante** : `RISK-SEC-0001` est inchangé, sans terme fixe. `INV-70` en tire la seule conséquence qu'un service puisse en tirer — la mention est portée à chaque dossier.
+
+## Article 227 — Non-effet
+
+Le présent Titre **n'admet aucune implémentation** et n'en présente aucune à l'admission. Il ne rend aucune capacité admise ni active, n'inscrit aucune admission, ne nomme aucun responsable, ne fixe aucune condition de réexamen, n'arbitre aucune divergence, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque, ne lève et ne requalifie aucune réserve de `G0`, ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3) et **ne constate pas `G0`**.
