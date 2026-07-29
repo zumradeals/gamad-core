@@ -2028,3 +2028,96 @@ Demeurent ouvertes `DECISION-0046` à `DECISION-0049`, auxquelles le présent ac
 Le présent Titre ne constate pas `G0`, ne lève et ne requalifie aucune réserve de `G0`, ne rend l'audit ni indépendant ni suffisant, n'admet aucune capacité, ne rend `CAP-CORE-021` ni implémentée ni active, ne modifie l'état d'aucune des vingt capacités antérieures, ne nomme aucun opérateur ni responsable, n'inscrit aucune identité, n'adopte aucune politique d'inscription ni aucune politique de matching, n'autorise aucun contexte, n'engage aucun consommateur, n'accepte aucun risque nouveau, ne modifie le corps d'aucun article antérieur et ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3).
 
 Qu'une capacité soit **inscrite** signifie que le corpus la suit. Cela ne signifie pas qu'elle existe, qu'elle sert, ni que quiconque en répond.
+
+---
+
+# TITRE XL — LE CIBLAGE EST UNIQUE, ET L'ÉCOSYSTÈME PARTAGE SA BASE AVEC LE CORE
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0065`. Aucun article ni tableau des Titres I à XXXIX n'est réécrit ni supprimé.
+
+## Article 245 — Nature de la présente mise à jour
+
+Le présent Titre constate les conséquences d'exécution de `ADOPTION-0065`, par lequel l'autorité rend `DECISION-0058` et pose la doctrine de circulation des données dans l'écosystème.
+
+Il n'admet aucune capacité, ne modifie l'état d'aucune et ne code rien.
+
+## Article 246 — `INV-89` — Le ciblage est unique
+
+> **`CAP-CORE-021` est le seul moteur d'appariement et de ciblage de l'écosystème GAMAD. Aucun satellite, produit ou partenaire n'en construit un second.**
+
+Un satellite qui veut cibler, qualifier, segmenter ou recommander **consomme `CTR-21`**. Il ne réimplémente ni les critères, ni les politiques, ni les scores.
+
+Wasplex n'est pas l'exception qui fonde la règle : c'est le premier cas d'usage nommé, et rien de plus. G-Business, G-Search, Zumra, G-Docs, GamaDrive, le portail et tout satellite futur relèvent du même invariant, aux mêmes conditions.
+
+Le motif n'est pas l'économie de code. Un moteur de ciblage détenu par une plateforme fait de la connaissance qualifiée de l'écosystème la propriété de cette plateforme — l'Article 5 de la Charte et l'Article 21 de l'Atlas s'y opposent, et l'Article 51 refuse l'admission à la fonctionnalité qui aurait été codée d'abord.
+
+## Article 247 — `INV-90` — Toute application de l'écosystème partage sa base avec le Core
+
+> **Toute application admise dans l'écosystème GAMAD partage sa base et ses données avec le Core et ses capacités, par contrat déclaré et sous finalité déclarée.**
+
+Le partage n'est pas une faveur consentie au cas par cas : c'est la contrepartie de l'appartenance. Une application qui consomme les identités, les autorisations, les mandats et le ciblage du Core sans jamais rien lui rendre serait un consommateur de la souveraineté d'autrui.
+
+Ce que le partage rend possible est précisément ce que la fragmentation empêchait : une même personne reconnue à travers les produits, un mandat portable, une révocation qui se propage, une audience qualifiée sur des entités réelles plutôt que sur des comptes locaux non rapprochés.
+
+## Article 248 — `INV-91` — Partager n'est pas céder, et le Core ne devient pas un profil universel
+
+C'est la limite sans laquelle l'Article 247 détruirait `INV-19`.
+
+> **Le satellite demeure gardien de ses données métier. Le Core y accède par contrat, sous finalité déclarée, et ne retient que le minimum commun.**
+
+Trois conséquences, tenues par la structure et non par la discipline :
+
+1. **Le Core lit ; il n'absorbe pas.** L'accès s'exerce par les contrats du domaine gardien compétent. Une copie intégrale de la base d'un satellite dans le Core n'est pas un partage : c'est une captation, et l'Article 74 de l'Atlas la nomme écart architectural.
+2. **Ce que le Core retient demeure minimal.** `CAP-CORE-001` conserve l'identifiant, le type, l'état, l'assurance, la source et les liens minimaux — jamais les fichiers, les messages, les documents, les campagnes, les recherches ni les contenus. Le schéma ne prévoit aucune colonne pour eux.
+3. **Aucune donnée n'est utilisable du seul fait d'être accessible.** La finalité, la durée, la classification et les consommateurs autorisés demeurent déclarés (`INV-82`, `INV-83`).
+
+Un Core qui absorberait les bases de ses satellites deviendrait le dossier universel que `M-86` désigne et que l'Article 36 exclut depuis l'origine. **Le partage est un droit d'accès gouverné, non un transfert de propriété.**
+
+## Article 249 — `INV-92` — Le partage est réciproque, et asymétrique
+
+Le satellite donne au Core l'accès à sa base, sous contrat. Il reçoit du Core **un résultat qualifié** — une référence canonique, un état, un niveau d'assurance, une référence de segment, une correspondance expliquée.
+
+Il ne reçoit pas la base du Core. `INV-86` demeure entier : ni la liste nominative d'un segment, ni les raisons profondes de chaque qualification, ni les relations d'une identité dans un autre produit, ni les risques, ni les incidents, ni les restrictions.
+
+L'asymétrie n'est pas une défiance envers les satellites. Elle est ce qui protège **les personnes** dont les satellites détiennent les données : ce qu'un produit confie au Core ne doit pas ressortir par un autre produit.
+
+## Article 250 — Ce que la doctrine ne change pas de l'admission de `CAP-CORE-021`
+
+`INV-89` rend le caractère **commun** et **transversal** du Matching **obligatoire**. Il ne les rend pas **démontrés**.
+
+L'Article 48 de la Charte exige une démonstration, et une démonstration est un fait, non une règle. La capacité demeure donc `INSCRITE` et non `ADMISE` tant que deux consommateurs réels n'auront pas consommé les mêmes contrats, et l'Article 242 conserve toute sa portée.
+
+Cette distinction n'est pas une réserve de style. Décréter qu'une capacité est commune et l'observer commune sont deux choses ; un corpus qui les confondrait admettrait sur une intention.
+
+## Article 251 — Menaces retenues
+
+Le dernier numéro attribué est `M-95`. Le présent Titre retient `M-96` à `M-99`.
+
+| Menace | Énoncé | Traitement |
+|---|---|---|
+| `M-96` | Un satellite construit son propre moteur de ciblage et demande ensuite son admission | `INV-89` ; Article 51 de la Charte |
+| `M-97` | Le partage est lu comme un transfert de propriété, et le Core absorbe les bases des satellites | `INV-91` |
+| `M-98` | Un satellite obtient par le Core les données qu'un autre satellite lui a confiées | `INV-92`, `INV-86` |
+| `M-99` | Le caractère commun d'une capacité est tenu pour démontré parce qu'il a été décrété | `INV-90` ; Article 250 |
+
+`M-97` est la menace propre au présent Titre. Elle naît de l'Article 247 lui-même : une doctrine de partage énoncée sans l'Article 248 produirait exactement le dossier universel que le corpus s'interdit depuis `ADOPTION-0038`.
+
+## Article 252 — Aucun état de capacité ne change
+
+Le présent Titre ne modifie l'état d'aucune des vingt et une capacités, sur aucune des quatre dimensions. `CAP-CORE-021` demeure conception `CONÇUE`, implémentation `NON COMMENCÉE`, exploitation `INACTIVE`, preuve `NON ÉTABLI`.
+
+Une doctrine n'est pas un code. Ce Titre dit ce que le ciblage et le partage devront être ; il n'établit ni l'un ni l'autre.
+
+## Article 253 — Ce que le présent Titre ne comble pas
+
+Aucun contrat de partage n'est écrit. Aucune finalité n'est autorisée. Aucun satellite n'est engagé — l'écosystème compte à ce jour un produit officiel reconnu, un produit dissous et deux familles de produits partenaires, dont aucun ne consomme quoi que ce soit.
+
+`CAP-CORE-021` n'a ni module, ni garde, ni responsable, ni opérateur, ni politique. Les sept fonctions de gouvernance de sa capacité demeurent vacantes.
+
+Le décret de travail du 29 juillet 2026 réserve GamaDrive et l'ouverture du premier chantier satellite : le présent Titre ne l'ouvre pas.
+
+## Article 254 — Non-effet
+
+Le présent Titre ne constate pas `G0`, ne lève aucune réserve, n'admet aucune capacité, ne rend `CAP-CORE-021` ni implémentée ni active, ne modifie l'état d'aucune capacité, ne nomme aucun responsable ni opérateur, n'engage aucun satellite, n'autorise aucune finalité, n'ouvre aucun accès à aucune base, n'inscrit aucune identité, n'accepte aucun risque nouveau, ne modifie le corps d'aucun article antérieur et ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3).
+
+Qu'une application **doive** partager sa base avec le Core ne signifie ni qu'elle le fasse, ni que le Core sache la lire, ni qu'un contrat existe pour cela.

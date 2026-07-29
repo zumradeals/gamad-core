@@ -128,6 +128,8 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 
 | `ADOPTION-0064` | Révision de la loi de `CAP-CORE-001` — Identity Registry ouvert aux personnes, organisations et acteurs des produits, écriture gouvernée par politique (`INV-73` à `INV-80`) — et inscription de `CAP-CORE-021`, Moteur de Matching GAMAD, avec le domaine `DOM-13` et la famille `CTR-21` ; Titre XXXIX du Registre initial des capacités souveraines, Titre XX de l'Atlas, Titre XIX du Registre initial des décisions | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
+| `ADOPTION-0065` | `DECISION-0058` rendue — l'activation d'un segment se fait par contrat et non par export ; le ciblage de l'écosystème est unique (`INV-89`) et toute application admise partage sa base et ses données avec le Core, qui y accède sans les absorber (`INV-90` à `INV-92`) ; Titre XL du Registre initial des capacités souveraines et Titre XX du Registre initial des décisions | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
 ## Article 5 — Textes en cours de délibération non inscrits
 
 `MATRICE-INITIALE-LOI-PREUVE-0001` et `REGISTRE-INITIAL-USAGES-IA-0001`, ainsi que tout texte produit dans le cadre des Phases 1 à 4 en cours, portent le statut `PROJET NORMATIF — EN COURS DE DÉLIBÉRATION` et ne figurent pas dans ce tableau tant qu'ils ne sont pas adoptés.
