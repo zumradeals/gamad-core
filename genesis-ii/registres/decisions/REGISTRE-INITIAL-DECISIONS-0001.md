@@ -1026,3 +1026,63 @@ La cadence du lot appartient à l'autorité : par séance, par jour, par thème 
 ## Article 166 — Non-effet
 
 Le présent Titre ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, ne nomme aucun responsable et ne constate pas `G0`.
+
+---
+
+# TITRE XV — MISE À JOUR POST-ADOPTION : LE CONTRÔLE D'ADMISSION
+
+## Article 167 — Nature de la présente mise à jour
+
+Le présent Titre est ajouté par `ADOPTION-0058`. Il ne modifie le corps d'aucune disposition des Titres I à XIV.
+
+Il définit le **contrôle d'admission** que l'Article 27 du Registre initial des capacités souveraines exige de chaque fiche de capacité, et qu'aucun texte du corpus n'avait défini.
+
+## Article 168 — Pourquoi maintenant
+
+L'Article 14 du Registre initial des capacités souveraines énumère les états `IMPLÉMENTÉE NON ADMISE` et `ADMISE`, puis conclut qu'aucune implémentation ne peut être déclarée `ADMISE` « car `G0` n'est pas constatée ».
+
+Cette impossibilité était motivée par un fait daté. Le fait a changé : `G0` est constatée par `ADOPTION-0025` le 27 juillet 2026. L'admission est devenue possible sans jamais avoir été définie.
+
+Les vingt capacités souveraines sont codées et éprouvées, et **aucune n'a jamais porté ni `IMPLÉMENTÉE NON ADMISE` ni `ADMISE`** — les vingt demeurent `PARTIELLEMENT MATÉRIALISÉE`. Le présent Titre ne rapproche aucune d'elles de l'admission : il rend mesurable la distance qui l'en sépare.
+
+## Article 169 — `INV-67` — L'admission est un troisième terme
+
+L'adoption fixe un contenu. La publication le rend accessible. L'admission déclare qu'une implémentation peut être invoquée par un tiers, et sous quelle responsabilité.
+
+Une adoption n'emporte aucune admission. À défaut, chaque fusion admettrait tacitement ce qu'elle porte, et nul n'aurait jugé.
+
+## Article 170 — `INV-68` — Une admission nomme un commit et ne lui survit pas
+
+L'admission porte sur une version identifiée, conformément à l'Article 54. Le commit suivant qui touche le module admis n'hérite pas de l'admission : l'implémentation retombe à `IMPLÉMENTÉE NON ADMISE` jusqu'à une admission nouvelle et expresse.
+
+## Article 171 — `INV-69` — Nul ne se présente à l'admission depuis un état partiel
+
+Le passage de `PARTIELLEMENT MATÉRIALISÉE` à `IMPLÉMENTÉE NON ADMISE` est un constat de **complétude**, non de qualité, et il précède l'admission sans la préjuger.
+
+La complétude se mesure à l'**objet de la famille de contrat servie**, non à ce que le service a choisi d'offrir. Une exclusion de mission déclarée appartient au périmètre et ne compte pas comme manque ; une opération que l'objet de la famille promet et que le service n'offre pas est un manque.
+
+## Article 172 — `INV-70` — Une admission déclare la qualité de l'audit sous lequel elle est prononcée
+
+L'Article 59 range la revue d'audit parmi les revues exigibles. `RISK-SEC-0001` constate que la fonction d'audit n'est pas indépendante et que son réexamen n'a aucun terme fixe.
+
+Une admission peut être prononcée dans ces conditions — le corpus a déjà tranché ce cas en levant un écart de `G0` « par décision documentée, non par résolution technique complète ». Elle **mentionne alors, dans son inscription, que l'audit n'était pas distinct de la production**.
+
+Le présent article n'ajoute aucune valeur à l'énumération de l'Article 14 : l'état demeure `ADMISE`, et c'est l'inscription qui porte la mention.
+
+## Article 173 — `INV-71` et `INV-72` — Ce que l'admission n'emporte pas
+
+`INV-71` — l'admission n'active rien. `ADMISE` est un état d'implémentation ; `ACTIVE` est un état d'exploitation, que l'Article 15 du Registre des capacités subordonne à autorisation, opérateur, contrats, contrôles, surveillance, sauvegarde, restauration et preuves proportionnés. Une implémentation admise et inexploitée est un état régulier.
+
+`INV-72` — un service peut dériver le dossier d'admission ; il ne prononce, ne propose et ne qualifie aucune admission. Un service écrit par le concepteur ne conclut pas sur l'ouvrage du concepteur.
+
+## Article 174 — Forme d'une inscription d'admission
+
+Une admission est inscrite par une ligne de la forme suivante :
+
+> `- **Admission :** ` + `` `CAP-CORE-0NN` `` + `. **Commit admis :** ` + `` `<empreinte>` `` + `. **Famille :** ` + `` `CTR-NN` `` + `. **Responsable :** <nom>. **Audit :** <indépendant | non indépendant>. **Réexamen :** <condition ou terme>.`
+
+Le retrait d'une admission s'inscrit de la même forme, avec son motif. Une admission qui cesserait sans inscription serait perpétuelle en fait, ce que l'Article 27 interdit en exigeant révocation et sortie.
+
+## Article 175 — Non-effet
+
+Le présent Titre n'admet aucune implémentation, ne rend aucune capacité admise ni active, ne modifie aucun état, ne livre aucun code, ne nomme aucun responsable, ne lève aucune réserve, ne rend l'audit ni indépendant ni suffisant et ne constate pas `G0`.
