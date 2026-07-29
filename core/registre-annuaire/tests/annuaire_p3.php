@@ -127,8 +127,8 @@ $verifier(
 echo "\n  INV-40 — une capacité ne porte que les familles dont elle garde le domaine\n";
 
 $verifier(
-    $ecarts['familles'] === 18,
-    "les dix-huit familles de contrat sont relevées à l'Atlas",
+    $ecarts['familles'] === 20,
+    "les vingt familles de contrat sont relevées à l'Atlas",
     $ecarts['familles'] . ' famille(s)',
 );
 
@@ -188,11 +188,16 @@ $verifier(
 );
 
 // CTR-10 sert deux capacités : sans la déclaration du module, rien ne dirait
-// laquelle registre-preuves sert réellement.
+// laquelle registre-preuves sert réellement. Depuis ADOPTION-0057, les deux
+// capacités du partage portent chacune leur module — l'intégrité atteste d'un
+// objet, l'audit atteste d'un acte —, et c'est la DISTINCTION des modules, non
+// l'absence de l'un d'eux, qui établit qu'un partage ne les confond pas.
 $preuves = $ctr14->observer('CAP-CORE-015');
 $audit = $ctr14->observer('CAP-CORE-013');
 $verifier(
-    $preuves['module'] === 'registre-preuves' && $audit['module'] === null,
+    $preuves['module'] === 'registre-preuves'
+        && $audit['module'] === 'registre-audit'
+        && $preuves['module'] !== $audit['module'],
     "une famille partagée n'attribue pas le même module aux deux capacités",
     sprintf(
         'CAP-CORE-015 → %s · CAP-CORE-013 → %s',
@@ -224,9 +229,20 @@ $verifier(
     sprintf('module=%s garde=%s ci=%s', (string) $observe['module'], (string) $observe['garde'], $observe['garde_en_ci'] ? 'oui' : 'non'),
 );
 
+// Ce décompte a longtemps été éprouvé comme « ni nul ni total » : tant qu'une
+// capacité restait à coder, un service qui aurait répondu « toutes » se serait
+// trahi. Depuis ADOPTION-0057 les vingt sont codées, et la borne haute cesse
+// d'être un signal — la conserver ferait échouer la preuve sur un fait vrai.
+// Ce qui demeure éprouvable est que le décompte soit DÉRIVÉ : il doit valoir
+// exactement le nombre de modules observés, et jamais le total présumé.
 $verifier(
-    $ecarts['capacites_codees'] > 0 && $ecarts['capacites_codees'] < $ecarts['capacites'],
-    "le décompte des capacités codées est chiffré, ni nul ni total",
+    $ecarts['capacites_codees'] > 0
+        && $ecarts['capacites_codees'] <= $ecarts['capacites']
+        && $ecarts['capacites_codees'] === count(array_filter(
+            $ctr14->modules(),
+            static fn (array $m): bool => $m['capacite'] !== null,
+        )),
+    "le décompte des capacités codées est dérivé des modules observés, non présumé",
     sprintf('%d capacité(s) codée(s) sur %d', $ecarts['capacites_codees'], $ecarts['capacites']),
 );
 
@@ -245,8 +261,8 @@ $verifier(
 // acte qui les cite peut les relire du corpus au lieu de les reconstituer.
 $parCriticite = $ctr14->parCriticite();
 $attendus = [
-    'RACINE'   => ['total' => 10, 'codees' => 9],
-    'CRITIQUE' => ['total' => 10, 'codees' => 7],
+    'RACINE'   => ['total' => 10, 'codees' => 10],
+    'CRITIQUE' => ['total' => 10, 'codees' => 10],
 ];
 foreach ($attendus as $criticite => $attendu) {
     $releve = $parCriticite[$criticite] ?? null;

@@ -67,6 +67,14 @@ jobs:
             garde: core/registre-incidents/tests/incidents_p3.php
           - capacite: CAP-CORE-019 (sauvegarde et restauration)
             garde: core/registre-continuite/tests/continuite_p3.php
+          - capacite: CAP-CORE-010 (lexique canonique)
+            garde: core/registre-lexique/tests/lexique_p3.php
+          - capacite: CAP-CORE-013 (audit commun)
+            garde: core/registre-audit/tests/audit_p3.php
+          - capacite: CAP-CORE-014 (journal d'événements)
+            garde: core/registre-evenements/tests/evenements_p3.php
+          - capacite: CAP-CORE-016 (secrets et clés)
+            garde: core/registre-secrets/tests/secrets_p3.php
           - capacite: CAP-CORE-020 (annuaire et Atlas)
             garde: core/registre-annuaire/tests/annuaire_p3.php
 

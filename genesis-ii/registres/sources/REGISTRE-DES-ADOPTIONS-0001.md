@@ -110,6 +110,10 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 
 | `ADOPTION-0055` | Second acte de lot — domaine `DOM-10` : famille `CTR-18`, et premier code de `CAP-CORE-017`, `CAP-CORE-018` et `CAP-CORE-019` | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
+| `ADOPTION-0056` | Rectification du décompte des familles de contrat affirmé par l'Article 133 de `CORE-ATLAS-0001` et repris par l'Article 9 d'`ADOPTION-0055` | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
+| `ADOPTION-0057` | Troisième acte de lot — les quatre dernières capacités : familles `CTR-19` et `CTR-20`, et premier code de `CAP-CORE-010`, `CAP-CORE-013`, `CAP-CORE-014` et `CAP-CORE-016` | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
 ## Article 5 — Textes en cours de délibération non inscrits
 
 `MATRICE-INITIALE-LOI-PREUVE-0001` et `REGISTRE-INITIAL-USAGES-IA-0001`, ainsi que tout texte produit dans le cadre des Phases 1 à 4 en cours, portent le statut `PROJET NORMATIF — EN COURS DE DÉLIBÉRATION` et ne figurent pas dans ce tableau tant qu'ils ne sont pas adoptés.
