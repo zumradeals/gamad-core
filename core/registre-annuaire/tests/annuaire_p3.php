@@ -312,6 +312,19 @@ $verifier(
 
 $dossier = $ctr14->dossierAdmission('CAP-CORE-020');
 
+// Deux des neuf pièces se dérivent du DÉPÔT et non du corpus : le commit qui a
+// introduit le module, et l'acte qui a déclaré cette empreinte (INV-68). Un
+// clone superficiel ne porte pas cette histoire ; le service le déclare alors
+// non dérivable, à juste titre, et les vingt dossiers paraissent incomplets.
+// La cause est nommée ici pour qu'elle ne soit pas cherchée dans le code.
+$verifier(
+    $dossier['pieces']['commit_presente'] !== null && $dossier['pieces']['acte_adoptant'] !== null,
+    "l'histoire du dépôt est disponible — sans elle, INV-68 n'est pas dérivable",
+    $dossier['pieces']['commit_presente'] === null
+        ? 'aucun commit dérivable : clone superficiel, ou corpus hors dépôt Git'
+        : 'acte adoptant résolu : ' . var_export($dossier['pieces']['acte_adoptant'], true),
+);
+
 $piecesAttendues = [
     'identite', 'commit_presente', 'acte_adoptant', 'garde', 'contre_epreuve',
     'concordance', 'ecarts_ouverts', 'exclusions_de_mission', 'audit',
