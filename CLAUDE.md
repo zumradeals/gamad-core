@@ -131,6 +131,24 @@ d'un défaut** que l'un d'eux a introduit : la rectification a son acte propre.
 
 La cadence appartient à l'autorité. Un lot d'un seul incrément demeure régulier.
 
+### Les chiffres d'un acte sont dérivés, jamais écrits de mémoire
+
+`ADOPTION-0054` : tout décompte cité dans un acte — capacités codées, familles
+de contrat, gardes, décisions ouvertes — doit être **relu du corpus** par le
+service qui le dérive, jamais reconstitué de mémoire. `ADOPTION-0053` a affirmé
+« sept des huit `RACINE` » là où le corpus en porte dix, dont huit codées.
+
+Interroge le service avant d'écrire un nombre :
+
+```bash
+php -r 'require "core/registre-annuaire/src/Ctr14.php";
+  print_r((new Gamad\RegistreAnnuaire\Ctr14(__DIR__))->parCriticite());'
+```
+
+Et relève les sorties de gardes **une par une**, jamais par une boucle où `$?`
+suivrait une substitution de commande — `echo "$(basename $g) = $?"` rapporte le
+code de `basename`, donc `0` quoi qu'il advienne.
+
 ---
 
 ## 6. Carte du dépôt
