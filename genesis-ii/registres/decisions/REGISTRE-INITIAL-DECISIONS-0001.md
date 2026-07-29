@@ -1244,3 +1244,66 @@ Il ne tranche pas davantage `DECISION-0019`, dont le point 6 de ce même Article
 ## Article 190 — Non-effet
 
 Le présent Titre n'admet aucune implémentation, n'en présente aucune à l'admission, ne rend aucune capacité admise ni active, ne modifie aucun état, ne livre aucun code, ne modifie l'Atlas ni aucune de ses tables, ne nomme aucun responsable, n'accepte aucun risque, ne lève aucune réserve, ne rend l'audit ni indépendant ni suffisant et ne constate pas `G0`.
+
+---
+
+# TITRE XVIII — ARBITRAGE : L'AUTORITÉ DE DÉCISION, UNIQUE ET TRANSITOIRE
+
+## Article 191 — Nature de la présente mise à jour
+
+Le présent Titre est ajouté par `ADOPTION-0061`. Il ne modifie le corps d'aucune disposition des Titres I à XVII, et n'efface aucune ligne d'inscription.
+
+Il tranche `DECISION-0007` et `DECISION-0045`, inscrites et demeurées ouvertes.
+
+## Article 192 — La décision
+
+Koné Djakaridja, dit Zakaria le Soufi, exerce **seul et à titre transitoire** l'autorité de décision pour **toutes les classes de décisions** de l'Article 41 à l'Article 55 et pour **tous les niveaux de risque**, et il en répond seul.
+
+Il prononce en particulier l'admission d'une implémentation souveraine au sens du Titre XV, et en répond.
+
+L'Article 137 exige que les autorités compétentes soient confirmées « par actes et mandats, **sans nomination implicite** ». La présente nomination est expresse, et elle ne s'étend qu'à ce qu'elle nomme.
+
+## Article 193 — Cette décision confirme, elle n'innove pas
+
+`ADOPTION-0022` a déjà attribué à ce titulaire, à titre transitoire, les quatre fonctions du Core demeurées vacantes, dont `FCT-CORE-021` — l'autorité d'audit et de contrôle.
+
+Le présent Titre ne crée donc ni fonction, ni pouvoir, ni titulaire. Il étend expressément aux **classes de décisions** ce que `ADOPTION-0022` avait arrêté pour les **fonctions**, et il l'arrête dans les mêmes termes : seul, et transitoire.
+
+## Article 194 — La condition de réexamen n'est pas inventée
+
+Le caractère transitoire n'est pas une formule. Il porte la condition déjà adoptée, sans terme fixe et sans en créer un nouveau :
+
+> « dès qu'une seconde personne de confiance sera disponible » — engagement de l'Article 1 d'`ADOPTION-0022`, repris par `REGISTRE-INITIAL-EXCEPTIONS-SECURITE-0001`.
+
+`DECISION-0032` — décider si une condition tient lieu d'échéance ou si un terme est fixé — demeure ouverte, et le présent Titre ne la préjuge pas.
+
+## Article 195 — Conséquence obligatoire sur toute admission
+
+`INV-70` oblige une admission prononcée sans audit distinct de la production à le mentionner dans son inscription.
+
+Cette obligation devient, par l'effet du présent Titre, **la règle et non l'exception** : tant que l'autorité de décision et la fonction `FCT-CORE-021` sont le même titulaire, aucune admission ne peut être prononcée sans porter cette mention. Une inscription d'admission qui l'omettrait serait irrégulière.
+
+Le présent Titre ne lève ni ne diminue `RISK-SEC-0001`. Concentrer la décision ne répare pas la non-indépendance de l'audit : cela en fixe la portée, et oblige chaque acte à la dire.
+
+## Article 196 — Clôtures
+
+- **Décision close :** `DECISION-0007` — **Par :** `ADOPTION-0061`.
+- **Décision close :** `DECISION-0045` — **Par :** `ADOPTION-0061`.
+
+Les lignes d'ouverture demeurent et ne sont pas effacées : la clôture s'y ajoute (`INV-47`, Article 154).
+
+## Article 197 — Ce que la présente décision ne tranche pas
+
+Elle nomme **qui décide**, et rien d'autre. Demeurent ouvertes, faute d'avoir été énoncées :
+
+- `DECISION-0009` — les pouvoirs d'acceptation de risque, durées maximales, compensations et conditions de réexamen ;
+- `DECISION-0010` — les pouvoirs, durées et revues postérieures des décisions d'urgence ;
+- `DECISION-0011` — les habilitations, délais, effets suspensifs et **autorités de recours** en matière de contestation ;
+- `DECISION-0018` — la nomination ou la déclaration expresse de vacance des responsables, opérateurs, auditeurs et pouvoirs de suspension, qui ne sont pas des autorités de décision ; `FCT-CORE-003` demeure `VACANTE` ;
+- `DECISION-0046`, `DECISION-0047`, `DECISION-0048` — qui portent sur le contenu de l'admission, non sur qui la prononce.
+
+`DECISION-0011` mérite d'être relevée : une autorité unique rend le recours structurellement difficile, puisque l'autorité de recours serait celle dont la décision est contestée. Le présent Titre ne le résout pas et ne le dissimule pas.
+
+## Article 198 — Non-effet
+
+Le présent Titre n'admet aucune implémentation, ne rend aucune capacité admise ni active, ne modifie aucun état, ne livre aucun code, ne crée aucune fonction, ne modifie aucun mandat, n'accepte aucun risque nouveau, ne lève ni ne diminue `RISK-SEC-0001`, ne rend l'audit ni indépendant ni suffisant, ne fixe aucun terme et ne constate pas `G0`.
