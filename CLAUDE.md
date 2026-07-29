@@ -1,247 +1,247 @@
 # GAMAD Core — Genesis II · Contexte pour Claude Code
 
-Document non normatif d'accueil. Il oriente tout agent Claude Code travaillant
-sur ce dépôt. Il ne modifie aucun texte adopté et n'a aucune valeur d'autorité.
+Document non normatif d’accueil destiné à tout agent humain ou artificiel travaillant sur ce dépôt.
+
+La source normative supérieure de conduite du travail est :
+
+```text
+genesis-ii/lois/LOI-PRIMAUTE-EXECUTION-VETO-DIRIGEANT-0001.md
+```
+
+Son acte d’adoption est :
+
+```text
+genesis-ii/registre/ADOPTION-0065-LOI-PRIMAUTE-EXECUTION-VETO-DIRIGEANT-0001.md
+```
+
+La fusion de la branche qui porte ces textes dans `main` par l’autorité constitue leur adoption.
 
 ---
 
-## 0. DÉCRET DE TRAVAIL — 29 juillet 2026
+# 0. RÈGLE SUPÉRIEURE — CODE D’ABORD
 
-**Prononcé par l'autorité, Koné Djakaridja dit Zakaria le Soufi. Il prime sur
-tous les textes, y compris le présent document et les actes adoptés, pour tout
-ce qui touche la conduite du travail. Toute IA travaillant sur ce dépôt
-l'applique AVANT toute autre règle.**
+Pour toute future implémentation :
 
-1. **Le code prime.** Aucun texte, acte, registre ou procédure ne conditionne,
-   ne retarde ni ne bloque la production de code.
-2. **Pas d'acte d'adoption pour coder et fusionner.** L'agent code sur une
-   branche et fusionne. Les sections 4 et 5 ci-dessous — cycle
-   concevoir → faire adopter → coder, actes, Titres, empreintes déclarées — sont
-   **suspendues** jusqu'à décision contraire de l'autorité.
-3. **Infrastructure : GitHub et ce VPS, exclusivement.** Ni Railway, ni aucun
-   autre hébergeur. La console est déjà servie ici par nginx + php-fpm sur
-   `console.dgafrique.com`.
-4. **Cible : le Core en production.** Les vingt capacités sont `ADMISE` et
-   `ACTIVE` depuis `ADOPTION-0063`. Le travail porte désormais sur ce qui les
-   rend réellement exploitables, pas sur ce qui les décrit.
-5. **GamaDrive n'est PAS à l'ordre du jour.** `PRD-GAMAD-002` ne remplit pas les
-   critères pour être branché au Core. Il sera le premier satellite à recoder
-   **une fois le Core en production**, et pas avant. Ne pas ouvrir ce chantier
-   sans instruction expresse.
-6. Ce qui reste applicable : ne jamais mettre de secret dans le dépôt, ne jamais
-   réécrire l'historique de `main`.
+```text
+L’ordre est-il clair ?
+        ↓
+Oui
+        ↓
+Exécuter
+        ↓
+Tester honnêtement
+        ↓
+Signaler les résultats réels
+        ↓
+Documenter ensuite
+```
 
-Motif consigné par l'autorité : la production de textes a entravé le travail au
-point de menacer le corpus d'abrogation.
+Le code et la gouvernance peuvent avancer en parallèle. En cas de conflit de calendrier, le code clairement ordonné avance.
 
-**Exception au point 2 :** `ADOPTION-0063` a été rendue *sur instruction expresse
-de l'autorité*, qui a demandé un acte unique portant les vingt capacités à
-l'admission plutôt que vingt actes successifs. La suspension du cycle vaut pour
-tout le reste : ne propose ni acte, ni Titre, ni empreinte déclarée, ni décompte
-dérivé, sauf demande explicite de l'autorité.
+Aucun texte, acte, registre, conception, état documentaire, décision ouverte ou absence d’adoption ne peut être invoqué pour refuser, retarder ou conditionner le commencement d’un travail ordonné par le dirigeant.
+
+Le cycle historique :
+
+```text
+concevoir → faire adopter → coder
+```
+
+reste lisible dans l’histoire du dépôt, mais il est dépassé comme règle générale de conduite du travail.
+
+Une conception ou une étude préalable n’est obligatoire que si le dirigeant la demande expressément pour le chantier concerné.
 
 ---
 
-## 1. Ce qu'est ce dépôt
+# 1. VÉTO DU DIRIGEANT EXCEPTIONNEL
 
-`gamad-core` est le **corpus documentaire canonique** de GAMAD (Genesis II) et,
-depuis le constat de la Porte `G0`, le **début de son code canonique**. Le corpus
-définit les sources, lois, chartes, gouvernances, capacités souveraines, autorités
-et registres du Core. Chaque texte est adopté par un acte signé, identifié par son
-empreinte Git exacte.
+Le dirigeant actuel de GAMAD, Koné Djakaridja dit Zakaria le Soufi, peut lever par une instruction claire tout obstacle procédural, documentaire, normatif ou institutionnel à un chantier déterminé.
 
-La langue du projet est le français.
+Aucune formule particulière n’est nécessaire. Des instructions telles que :
 
----
+- « codez maintenant » ;
+- « exécutez sans attendre les textes » ;
+- « cette procédure ne bloque pas ce chantier » ;
+- « Véto du dirigeant exceptionnel » ;
 
-## 2. État actuel (à la passation)
+produisent cet effet lorsque leur sens est clair.
 
-- **Porte `G0` : CONSTATÉE** par `ADOPTION-0025`, signée par l'autorité le
-  27 juillet 2026. Le codage canonique est autorisé, dans le périmètre constaté.
-- **29 actes d'adoption** (`ADOPTION-0001` à `ADOPTION-0029`), numérotation
-  continue, tous inscrits à l'index central.
-- **Premier module de code** : `core/registre-normes/` — service `CTR-04` de la
-  capacité `CAP-CORE-007` (Registre des normes). État : conception `CONÇUE`,
-  implémentation `PARTIELLEMENT MATÉRIALISÉE`, exploitation `INACTIVE`,
-  preuve `P3 — TESTÉ`.
-- **Réserves ouvertes maintenues** (`ADOPTION-0025`, Art. 3) : inventaire des
-  accès et secrets détenu exclusivement par l'autorité ; AUDIT non indépendant ;
-  aucun produit certifié ; Wasplex et IKOMA hors GAMAD.
+L’agent n’évalue pas si l’ordre est opportun. Il exécute dans le périmètre demandé.
 
----
+Il peut et doit signaler :
 
-## 3. Règles NON NÉGOCIABLES
+- une impossibilité technique réelle ;
+- un accès manquant ;
+- un test échoué ;
+- une erreur ;
+- un risque ;
+- une conséquence irréversible ;
+- une différence entre l’objectif et le résultat.
 
-1. **L'agent n'est pas une autorité.** `ADOPTION-0024`, Article 3 : Claude
-   conçoit, vérifie et code **sous instruction** ; il **ne constate, n'adopte
-   et ne signe jamais**. Seul Koné Djakaridja, dit Zakaria le Soufi, adopte et
-   signe. Le concepteur ne s'audite pas : ta vérification est une assistance
-   subordonnée à l'AUDIT humain.
-2. **Deux gardes doivent être vertes avant toute fusion dans `main`** (voir §4).
-3. **On ne réécrit jamais le corps d'un texte adopté.** Toute modification d'un
-   registre adopté se fait par **ajout** (un nouveau Titre en fin de fichier),
-   jamais en éditant un article ou un tableau existant. L'acte qui adopte
-   l'ajout déclare la **nouvelle empreinte Git** du fichier dans son
-   « Constat d'exécution » ; cette déclaration la plus récente prévaut.
-4. **L'historique de `main` ne se réécrit pas.** Fusions en `--no-ff`, messages
-   explicites (jamais les commentaires `#` de l'éditeur).
-5. **Frontière des accès réservés (infranchissable par l'agent).** Secrets,
-   clés, `DATABASE_URL`, comptes VPS, hébergement : domaine **exclusif** de
-   l'autorité (`ADOPTION-0025`, Art. 3.a). Ne manipule aucun secret, ne les
-   mets jamais dans le dépôt. Le déploiement est l'acte de l'autorité ; tu
-   guides, tu ne déploies pas à sa place.
+Ces signalements ne constituent pas un contre-véto.
 
 ---
 
-## 4. Les deux gardes (à lancer avant toute fusion dans `main`)
+# 2. LE VÉTO GOUVERNE L’ACTION, PAS LA VÉRITÉ
+
+Il est interdit de :
+
+- déclarer réussi un test qui a échoué ;
+- déclarer codée une capacité qui ne l’est pas ;
+- déclarer effectué un déploiement qui ne l’est pas ;
+- cacher une erreur ou un risque connu ;
+- inventer ou modifier une preuve ;
+- inscrire un secret dans le dépôt ;
+- réécrire l’historique de `main`.
+
+Les tests, gardes et audits témoignent de la réalité. Ils ne décident pas de l’opportunité du chantier à la place du dirigeant.
+
+Un test échoué commande une correction ou un compte rendu fidèle. Il ne justifie pas l’abandon silencieux du travail.
+
+---
+
+# 3. PROTOCOLE DE TRAVAIL OBLIGATOIRE
+
+Lorsqu’un ordre est clair :
+
+1. comprendre le résultat demandé ;
+2. inspecter le dépôt et l’existant ;
+3. choisir une architecture défendable ;
+4. coder ;
+5. écrire ou adapter les migrations ;
+6. exécuter les tests pertinents ;
+7. corriger autant que possible ;
+8. signaler les résultats réels ;
+9. documenter ensuite ou en parallèle.
+
+Ne demande pas une autorisation déjà donnée.
+
+Ne remplace pas le code demandé par :
+
+- une nouvelle Constitution ;
+- un acte spontané ;
+- une longue note doctrinale ;
+- une série de décisions ouvertes ;
+- une demande de validation de chaque étape.
+
+Lorsque l’ambiguïté empêche réellement de choisir entre des résultats incompatibles, pose au plus une question précise. Pour une ambiguïté secondaire, choisis l’option la plus réversible et poursuis.
+
+---
+
+# 4. BRANCHES, INTÉGRATION ET DOCUMENTATION
+
+Travaille sur une branche dédiée `agent/...`, sauf instruction contraire.
+
+La production de code, les commits, les branches et les propositions de fusion ne requièrent pas un acte préalable.
+
+La documentation doit décrire honnêtement l’ordre réel :
+
+```text
+code produit
+→ tests exécutés
+→ résultats observés
+→ gouvernance et textes de constat
+```
+
+Elle ne doit pas présenter comme préalable un texte rédigé après l’implémentation.
+
+Les textes adoptés ne sont pas réécrits silencieusement. Le corpus progresse par ajout, constat, supersession ou nouvelle loi.
+
+La fusion dans `main`, la mise en production et les actions externes suivent l’instruction du dirigeant. Une action irréversible non clairement comprise dans l’ordre doit être signalée avant son exécution.
+
+---
+
+# 5. GARDES ET TESTS
+
+Avant de présenter un travail comme terminé :
+
+- exécute les tests propres aux modules modifiés ;
+- exécute la garde documentaire lorsque le corpus a été touché ;
+- exécute les gardes transversales affectées ;
+- relève chaque sortie réelle ;
+- signale les dépendances ou outils absents.
+
+Commandes de référence :
 
 ```bash
-# Garde 1 — intégrité documentaire (Python, indépendante de l'application)
-python3 outils/verifier-integrite.py        # doit sortir 0
-
-# Garde 2 — comportement du service : preuve P3 de reconstruction temporelle
-php core/registre-normes/tests/temporel_p3.php   # doit sortir 0
+python3 outils/verifier-integrite.py
+php core/registre-identites/tests/identite_p3.php
+php core/registre-annuaire/tests/annuaire_p3.php
+php core/registre-contrats/tests/contrats_p3.php
 ```
 
-Les gardes sont **séparées à dessein** (`ADOPTION-0027`, Art. 4) : le contrôle
-Python vérifie la cohérence des fichiers ; les tests PHP vérifient le
-comportement du code. **Ne réécris jamais le contrôle Python dans le cadre
-applicatif** — un contrôle couplé à ce qu'il vérifie perd sa valeur.
+Cette liste n’est pas exhaustive. Le dépôt contient une garde de comportement par capacité codée.
 
-**Doctrine arrêtée par `ADOPTION-0035`, Art. 2.2 :** le dépôt porte **une garde
-documentaire unique** et **une garde de comportement par capacité codée**. Une
-capacité ne peut atteindre `P3 — TESTÉ` que par une garde éprouvant son propre
-contrat — une capacité n'hérite pas de la preuve d'une autre. Le nombre de
-gardes croît donc avec les capacités ; la garde documentaire, elle, reste unique
-et indépendante.
-
-**Toute garde livrée au titre d'une preuve `P3` doit être accompagnée d'une
-contre-épreuve de falsification** (`ADOPTION-0032`, Art. 3) : altérer
-délibérément une copie du corpus hors dépôt et constater que le test échoue.
-L'acte déclare les deux exécutions. Un test qui ne peut pas échouer ne prouve
-rien.
+Une preuve `P3` doit pouvoir échouer sur une falsification ciblée. Un test qui ne peut pas échouer ne prouve rien.
 
 ---
 
-## 5. Le cycle de travail (discipline post-`G0`, Article 63)
+# 6. ÉTAT ACTUEL DU CORE
 
-Pour toute évolution : **concevoir → faire adopter → coder**, invariants avant
-technologie. Concrètement :
+À la date de la présente mise à jour :
 
-1. Travaille sur une **branche dédiée** (`agent/…`), jamais directement sur `main`.
-2. Rédige un **projet** (conception, décision, ou code) — statut
-   `PROJET NORMATIF`, non signé.
-3. Prépare le **registre d'adoption** correspondant (`ADOPTION-00NN`) :
-   déclare l'empreinte Git du contenu adopté, ajoute **une ligne** à l'index
-   `genesis-ii/registres/sources/REGISTRE-DES-ADOPTIONS-0001.md` (Article 4,
-   ajout seul), numérotation continue.
-4. Lance les **deux gardes** → 0.
-5. **Demande l'autorisation de l'autorité.** La fusion `--no-ff` dans `main`
-   **est** l'acte d'adoption : elle appartient à l'autorité, pas à toi.
-6. Après fusion, relance les deux gardes sur `main`.
+- vingt capacités historiques possèdent un module et une garde `P3` ;
+- elles ont été admises et déclarées `ACTIVE` à titre exceptionnel par `ADOPTION-0063` ;
+- cette déclaration ne signifie pas qu’elles sont toutes réellement déployées, surveillées ou restaurables ;
+- `CAP-CORE-021 — Moteur de Matching GAMAD` est inscrite et conçue, mais son implémentation est `NON COMMENCÉE` ;
+- la loi révisée de `CAP-CORE-001 — Identity Registry` est adoptée, mais son nouveau périmètre utilisateurs/organisations reste à coder ;
+- certaines admissions peuvent être caduques lorsqu’un module évolue ; cette caducité ne bloque ni le code ni l’intégration.
 
-Le code est identifié par son **commit** (empreinte de l'incrément entier),
-déclaré dans l'acte qui l'adopte.
-
-### L'acte de lot (`ADOPTION-0052`, Titre XIV du Registre des décisions)
-
-Un acte peut adopter **plusieurs incréments à la fois**. C'est la voie normale
-dès qu'une séance en produit plus d'un : elle supprime la redite, jamais une
-garantie.
-
-Chaque incrément est énuméré séparément dans l'acte, sous cette forme exacte :
-
-```
-- **Incrément :** <objet>. **Commit :** `<sha>`. **Capacité :** `CAP-CORE-0NN`. **Garde :** `<chemin>`.
-```
-
-`INV-51` — **ce qu'un acte de lot n'énumère pas, il ne l'adopte pas**, même si
-la fusion l'a porté dans `main`. La garde de `CAP-CORE-008` vérifie que chaque
-incrément énuméré nomme une capacité qui existe et une garde qui existe **et
-qui est exécutée en intégration continue**.
-
-Ce que le lot ne change pas, et que tu dois produire **par incrément** :
-sa garde de comportement propre, sa contre-épreuve de falsification avec
-témoin, son Titre de constat d'état au Registre des capacités, l'ajout seul et
-l'empreinte exacte. Un lot ne mêle jamais des incréments à la **rectification
-d'un défaut** que l'un d'eux a introduit : la rectification a son acte propre.
-
-La cadence appartient à l'autorité. Un lot d'un seul incrément demeure régulier.
-
-### Les chiffres d'un acte sont dérivés, jamais écrits de mémoire
-
-`ADOPTION-0054` : tout décompte cité dans un acte — capacités codées, familles
-de contrat, gardes, décisions ouvertes — doit être **relu du corpus** par le
-service qui le dérive, jamais reconstitué de mémoire. `ADOPTION-0053` a affirmé
-« sept des huit `RACINE` » là où le corpus en porte dix, dont huit codées.
-
-Interroge le service avant d'écrire un nombre :
-
-```bash
-php -r 'require "core/registre-annuaire/src/Ctr14.php";
-  print_r((new Gamad\RegistreAnnuaire\Ctr14(__DIR__))->parCriticite());'
-```
-
-Et relève les sorties de gardes **une par une**, jamais par une boucle où `$?`
-suivrait une substitution de commande — `echo "$(basename $g) = $?"` rapporte le
-code de `basename`, donc `0` quoi qu'il advienne.
+Le travail utile porte désormais sur la matérialisation réelle, l’exploitation, la sécurité, la surveillance, la sauvegarde et la restauration.
 
 ---
 
-## 6. Carte du dépôt
+# 7. FRONTIÈRES À RESPECTER
 
-- `genesis-ii/` — le corpus canonique (textes adoptés, registres, actes).
-  - `registre/ADOPTION-*.md` — les actes d'adoption (source primaire).
-  - `registres/sources/REGISTRE-DES-ADOPTIONS-0001.md` — l'index central (dérivé).
-  - `registres/capacites/REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001.md` — les
-    20 capacités souveraines et leur ordre de dépendance (Article 61).
-  - `conception/` — les projets et actes de conception du code.
-  - `audit/` — dossier d'audit `G0` et acte de constat.
-- `outils/verifier-integrite.py` — **garde 1** (contrôle documentaire).
-- `core/registre-normes/` — **premier module de code** (service `CTR-04`).
-- `.github/workflows/` — les deux gardes en intégration continue.
+Demeurent non négociables :
+
+1. ne jamais mettre un secret dans Git ;
+2. ne jamais inventer une preuve ou un résultat ;
+3. ne jamais réécrire l’historique de `main` ;
+4. ne jamais masquer une erreur au dirigeant ;
+5. ne jamais étendre ses propres permissions ;
+6. ne jamais déployer ou détruire des données réelles sans que l’ordre couvre clairement cette action ;
+7. respecter les contraintes techniques et de sécurité des plateformes utilisées.
+
+Ces frontières protègent GAMAD. Elles ne rétablissent pas la méthode « texte d’abord ».
 
 ---
 
-## 7. Le premier module : `core/registre-normes/`
+# 8. IDENTITÉ ET MATCHING
 
-Service `CTR-04` en **lecture et attestation seulement** (aucune écriture du
-corpus). Les fichiers Git restent la source de vérité ; la base n'est qu'un
-**index dérivé, reconstructible**. Voir `core/registre-normes/README.md`.
+`CAP-CORE-001` doit reconnaître les personnes utilisant les produits, les organisations et leurs relations minimales, sans absorber leurs profils métier.
 
-Invariants portés (à ne jamais violer) :
-`INV-1` empreinte exacte · `INV-3` historique en ajout seul (aucun `UPDATE`/
-`DELETE` sur `statut`, `adoption`, `relation_evolution`) · `INV-4` adoption
-distincte de la publication · `INV-5` index dérivé, jamais autoritatif ·
-`INV-6` supersession traçable.
+Principe :
 
-Exécution locale (aucun secret) :
-```bash
-php core/registre-normes/tests/temporel_p3.php               # preuve P3
-php -S 127.0.0.1:8080 -t core/registre-normes/public          # tableau de bord
+> Le produit connaît l’usage. L’organisation connaît sa structure. Le Core connaît l’identité.
+
+`CAP-CORE-021` dépend de cette identité canonique commune.
+
+Principe du Matching :
+
+> Le Moteur de Matching GAMAD transforme la connaissance autorisée de l’écosystème en correspondances utiles entre les personnes, les organisations, les besoins, les offres et les institutions.
+
+Wasplex peut en être un consommateur majeur, mais la capacité appartient au Core et doit pouvoir alimenter plusieurs plateformes.
+
+---
+
+# 9. EN CAS DE BLOCAGE
+
+Ne rédige pas un texte pour expliquer pourquoi tu ne codes pas.
+
+Applique l’ordre suivant :
+
+```text
+faire tout ce qui est possible
+→ isoler le blocage réel
+→ apporter la preuve
+→ proposer la solution la plus directe
+→ poursuivre dès que le blocage est levé
 ```
 
----
+La formule de conduite est :
 
-## 8. Ce qui reste à faire (pistes, à valider par l'autorité)
-
-- **Déploiement VPS / Railway** — acte de l'autorité. Premier regard en SQLite
-  (aucun secret) ; persistance PostgreSQL ensuite (`DATABASE_URL` = secret à
-  consigner au registre d'accès de l'autorité, jamais dans le dépôt).
-- **Couche de livraison Laravel** — `ADOPTION-0027` a retenu Laravel ; le premier
-  incrément a livré le cœur en PHP portable (`ADOPTION-0029`, Art. 1). Ajouter la
-  couche Laravel autour du cœur existant, sans le réécrire, est un incrément
-  naturel — à faire adopter.
-- **Capacités racines suivantes** (Article 61 du registre des capacités) :
-  `CAP-CORE-006` sources, `CAP-CORE-003` autorités, `CAP-CORE-001` identité,
-  `CAP-CORE-015` preuves d'intégrité. L'ordre exact est une décision de
-  l'autorité (Article 83).
-
----
-
-## 9. En cas de doute
-
-Si une action est difficilement réversible, tournée vers l'extérieur, ou touche
-un secret / un accès / un déploiement : **arrête-toi et demande à l'autorité**.
-Le corpus vaut par sa vérité sur lui-même ; ne publie jamais un état que les deux
-gardes ne confirment pas.
+> **Le dirigeant ordonne.**  
+> **L’ingénierie construit.**  
+> **Les tests disent la vérité.**  
+> **La gouvernance accompagne et constate.**  
+> **Aucun texte ne paralyse la naissance ni l’évolution du Core.**
