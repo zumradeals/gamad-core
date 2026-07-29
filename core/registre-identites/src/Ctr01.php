@@ -7,77 +7,43 @@ namespace Gamad\RegistreIdentites;
 /**
  * Contrat CTR-01 — Identity Registry (CAP-CORE-001).
  *
- * Conception initiale adoptée par ADOPTION-0038 ; loi révisée adoptée par
- * ADOPTION-0064 ; politique d'inscription et échelle d'assurance arrêtées par
- * ADOPTION-0066.
+ * Les trois lectures historiques sont conservées. Les entités du corpus sont
+ * lues depuis l'index reconstructible ; les inscriptions et leurs événements
+ * sont lues et écrites dans un registre persistant séparé (INV-73).
  *
- * ------------------------------------------------------------------------
- * CE QUE LA RÉVISION A CHANGÉ, ET CE QU'ELLE N'A PAS CHANGÉ
- * ------------------------------------------------------------------------
- *
- * Les trois opérations d'origine — `resoudreIdentite`, `resoudreInventaire`,
- * `resoudreDenominations` — conservent leur signature et leur sémantique.
- * L'évolution est strictement additive (ADOPTION-0066, Art. 215) : la famille
- * `CTR-01` garde son numéro, aucun consommateur n'est affecté.
- *
- * Deux dispositions de la conception initiale sont dépassées, et deux
- * seulement : son Article 11 — « créer une identité demeure un acte signé » —
- * et son `M-19`. L'acte signé porte désormais sur la POLITIQUE d'inscription.
- *
- * INV-19 demeure entier. Le périmètre s'ouvre aux personnes, organisations et
- * acteurs des produits ; il ne s'ouvre à AUCUNE donnée nouvelle sur eux. Il
- * n'existe toujours aucune colonne de profil, de contenu, de dossier métier,
- * de réputation ni de jugement — donc aucune opération ne peut en restituer.
- *
- * ------------------------------------------------------------------------
- * INV-73 — LES DEUX RÉGIMES
- * ------------------------------------------------------------------------
- *
- * `DÉRIVÉ_DU_CORPUS` : les entités que le corpus déclare. Le corpus l'emporte,
- * toujours ; une divergence est un défaut de la base (INV-5).
- *
- * `INSCRIT_AU_REGISTRE` : les entités qu'aucun fichier ne déclare. Le registre
- * est leur source. Elles vivent dans un magasin que l'ingestion n'atteint
- * jamais (voir SchemaInscription).
- *
- * Aucune opération ne convertit un régime en l'autre.
+ * Aucune colonne de profil, dossier métier, réputation ou jugement n'existe
+ * dans le magasin. Le Core connaît l'identité minimale ; les produits gardent
+ * l'usage et CAP-CORE-002 garde les dossiers d'organisation.
  */
 final class Ctr01
 {
-    /**
-     * La capacité souveraine que ce module sert (INV-41).
-     *
-     * Une famille de contrat peut servir deux capacités — `CTR-10` sert
-     * l'audit et l'intégrité. Le numéro de famille ne suffit donc pas à
-     * rattacher un module ; le module le déclare lui-même.
-     */
     public const CAPACITE = 'CAP-CORE-001';
+    public const DERIVE = 'DÉRIVÉ_DU_CORPUS';
+    public const INSCRIT = 'INSCRIT_AU_REGISTRE';
 
-    public const DERIVE   = 'DÉRIVÉ_DU_CORPUS';
-    public const INSCRIT  = 'INSCRIT_AU_REGISTRE';
+    private \PDO $registre;
 
+    /**
+     * `$registre` doit être une connexion persistante distincte en
+     * exploitation. Le repli sur `$index` maintient les anciens appelants et
+     * permet de prouver que même en cohabitation Schema::create() ne supprime
+     * pas les tables persistantes.
+     */
     public function __construct(
-        private \PDO $pdo,
+        private \PDO $index,
+        ?\PDO $registre = null,
     ) {
+        $this->registre = $registre ?? $index;
+        SchemaInscription::migrer($this->registre);
     }
 
-    // ==================================================================
-    // LECTURES D'ORIGINE — signatures et sémantique inchangées
-    // ==================================================================
+    // ------------------------------------------------------------------
+    // Lectures historiques, signatures conservées
 
-    /**
-     * Résout une entité et son état, éventuellement à une date passée.
-     * Une entité dissoute demeure consultable (INV-21).
-     *
-     * Cherche d'abord l'index dérivé, puis le magasin d'inscription. L'ordre
-     * n'est pas indifférent : une entité que le corpus déclare est TOUJOURS
-     * restituée depuis le corpus (INV-5), et le magasin ne peut pas la couvrir.
-     *
-     * @return array<string,mixed>|null
-     */
+    /** @return array<string,mixed>|null */
     public function resoudreIdentite(string $reference, ?string $date = null): ?array
     {
-        $st = $this->pdo->prepare('SELECT reference, type, libelle, source FROM entite WHERE reference = ?');
+        $st = $this->index->prepare('SELECT reference, type, libelle, source FROM entite WHERE reference = ?');
         $st->execute([$reference]);
         $e = $st->fetch();
 
@@ -99,25 +65,19 @@ final class Ctr01
         return $this->resoudreInscrite($reference, $date);
     }
 
-    /**
-     * Inventaire des entités connues, éventuellement d'un seul type.
-     *
-     * @return list<array<string,mixed>>
-     */
+    /** @return list<array<string,mixed>> */
     public function resoudreInventaire(?string $type = null): array
     {
+        $lignes = [];
+
         $sql = 'SELECT reference, type, libelle FROM entite';
         $args = [];
         if ($type !== null) {
             $sql .= ' WHERE type = ?';
             $args[] = $type;
         }
-        $sql .= ' ORDER BY type, reference';
-
-        $st = $this->pdo->prepare($sql);
+        $st = $this->index->prepare($sql);
         $st->execute($args);
-
-        $lignes = [];
         foreach ($st->fetchAll() as $e) {
             $etat = $this->etatDerive((string) $e['reference'], null);
             $lignes[] = [
@@ -135,9 +95,7 @@ final class Ctr01
             $sql .= ' WHERE type = ?';
             $args[] = $type;
         }
-        $sql .= ' ORDER BY type, reference';
-
-        $st = $this->pdo->prepare($sql);
+        $st = $this->registre->prepare($sql);
         $st->execute($args);
         foreach ($st->fetchAll() as $e) {
             $lignes[] = [
@@ -149,19 +107,14 @@ final class Ctr01
             ];
         }
 
+        usort($lignes, static fn (array $a, array $b): int =>
+            [$a['type'], $a['reference']] <=> [$b['type'], $b['reference']]
+        );
+
         return $lignes;
     }
 
-    /**
-     * Dénominations portées par une même référence dans le corpus.
-     *
-     * Le service SIGNALE les divergences, il ne les tranche pas : retenir une
-     * dénomination canonique est une qualification, réservée à l'autorité
-     * (ADOPTION-0037, Art. 3). `divergente` vaut vrai dès qu'une référence
-     * porte plus d'une dénomination.
-     *
-     * @return list<array<string,mixed>>
-     */
+    /** @return list<array<string,mixed>> */
     public function resoudreDenominations(?string $reference = null): array
     {
         $sql = 'SELECT entite_reference, libelle, source FROM denomination';
@@ -172,9 +125,8 @@ final class Ctr01
         }
         $sql .= ' ORDER BY entite_reference, id';
 
-        $st = $this->pdo->prepare($sql);
+        $st = $this->index->prepare($sql);
         $st->execute($args);
-
         $par = [];
         foreach ($st->fetchAll() as $d) {
             $par[$d['entite_reference']][$d['libelle']] = $d['source'];
@@ -193,22 +145,13 @@ final class Ctr01
         return $lignes;
     }
 
-    // ==================================================================
-    // LECTURES AJOUTÉES PAR LA LOI RÉVISÉE
-    // ==================================================================
+    // ------------------------------------------------------------------
+    // Lectures révisées
 
-    /**
-     * Le régime de vérité d'une entité (INV-73).
-     *
-     * `reconstructible` dit si une réindexation la reproduirait. Une entité
-     * inscrite ne l'est PAS, et c'est le fait que le corpus doit connaître :
-     * sa sauvegarde n'est pas le dépôt Git.
-     *
-     * @return array<string,mixed>|null
-     */
+    /** @return array<string,mixed>|null */
     public function resoudreRegimeVerite(string $reference): ?array
     {
-        $st = $this->pdo->prepare('SELECT source FROM entite WHERE reference = ?');
+        $st = $this->index->prepare('SELECT source FROM entite WHERE reference = ?');
         $st->execute([$reference]);
         $e = $st->fetch();
         if ($e !== false) {
@@ -220,14 +163,13 @@ final class Ctr01
             ];
         }
 
-        $st = $this->pdo->prepare('SELECT source_inscription FROM identite_inscrite WHERE reference = ?');
+        $st = $this->registre->prepare(
+            'SELECT source_inscription FROM identite_inscrite WHERE reference = ?'
+        );
         $st->execute([$reference]);
         $i = $st->fetch();
-        if ($i === false) {
-            return null;
-        }
 
-        return [
+        return $i === false ? null : [
             'reference'       => $reference,
             'regime'          => self::INSCRIT,
             'reconstructible' => false,
@@ -236,77 +178,60 @@ final class Ctr01
     }
 
     /**
-     * Relations d'usage d'une identité avec des produits.
-     *
-     * `$appelant` filtre sur le produit qui interroge : un produit ne voit que
-     * SES relations. Passer `null` restitue tout et n'est légitime que pour une
-     * autorité habilitée — l'évaluation de cette habilitation relève de
-     * `CAP-CORE-004`, que le présent service ne remplace pas.
-     *
-     * Une relation expirée n'est JAMAIS restituée comme active : son état est
-     * recalculé sur la date demandée, et jamais lu tel quel.
+     * Un produit voit uniquement ses propres relations. Il n'existe pas de
+     * valeur `null` signifiant « tout voir » : une vue transversale doit être
+     * construite par CAP-CORE-004, produit par produit, après autorisation.
      *
      * @return list<array<string,mixed>>
      */
     public function resoudreLiensProduits(
         string $reference,
-        ?string $appelant = null,
+        string $produitAppelant,
         ?string $relationType = null,
         ?string $date = null,
     ): array {
-        $sql = 'SELECT produit_reference, relation_type, etat, source, date_debut, date_fin, classification
-                FROM relation_produit WHERE identite_reference = ?';
-        $args = [$reference];
-        if ($appelant !== null) {
-            $sql .= ' AND produit_reference = ?';
-            $args[] = $appelant;
-        }
+        $sql = 'SELECT * FROM relation_produit
+                WHERE identite_reference = ? AND produit_reference = ?';
+        $args = [$reference, $produitAppelant];
         if ($relationType !== null) {
             $sql .= ' AND relation_type = ?';
             $args[] = $relationType;
         }
-        $sql .= ' ORDER BY date_debut, id';
+        $sql .= ' ORDER BY date_debut, reference';
 
-        $st = $this->pdo->prepare($sql);
+        $st = $this->registre->prepare($sql);
         $st->execute($args);
-
         $jour = $date ?? date('Y-m-d');
         $lignes = [];
         foreach ($st->fetchAll() as $r) {
+            if ((string) $r['date_debut'] > $jour) {
+                continue;
+            }
+            $cycle = $this->etatRelation((string) $r['reference'], $jour);
             $lignes[] = [
-                'produit_reference' => $r['produit_reference'],
-                'relation_type'     => $r['relation_type'],
-                'etat'              => $this->etatRelation($r, $jour),
-                'source'            => $r['source'],
-                'date_debut'        => $r['date_debut'],
-                'date_fin'          => $r['date_fin'],
-                'classification'    => $r['classification'],
+                'reference'          => $r['reference'],
+                'produit_reference'  => $r['produit_reference'],
+                'relation_type'      => $r['relation_type'],
+                'etat'               => $cycle['etat'],
+                'assurance'          => $r['niveau_assurance'],
+                'source'             => $r['source'],
+                'date_debut'         => $r['date_debut'],
+                'date_fin'           => $cycle['date_fin'],
+                'classification'     => $r['classification'],
             ];
         }
 
         return $lignes;
     }
 
-    /**
-     * Relations d'une identité avec des organisations.
-     *
-     * `mandat_reference` vaut `null` tant qu'aucun mandat n'est vérifié par
-     * `CAP-CORE-003`. Le service restitue alors `opposable = false` : une
-     * relation REPRESENTANT ou DIRIGEANT sans mandat est un lien inscrit, non
-     * une représentation. Les deux faits sont restitués séparément, et le
-     * premier n'est jamais présenté comme valant le second (INV-77).
-     *
-     * @return list<array<string,mixed>>
-     */
+    /** @return list<array<string,mixed>> */
     public function resoudreLiensOrganisations(
         string $reference,
         ?string $organisation = null,
         ?string $relationType = null,
         ?string $date = null,
     ): array {
-        $sql = 'SELECT organisation_reference, relation_type, etat, mandat_reference, source,
-                       date_debut, date_fin, classification
-                FROM relation_organisation WHERE identite_reference = ?';
+        $sql = 'SELECT * FROM relation_organisation WHERE identite_reference = ?';
         $args = [$reference];
         if ($organisation !== null) {
             $sql .= ' AND organisation_reference = ?';
@@ -316,552 +241,721 @@ final class Ctr01
             $sql .= ' AND relation_type = ?';
             $args[] = $relationType;
         }
-        $sql .= ' ORDER BY date_debut, id';
+        $sql .= ' ORDER BY date_debut, reference';
 
-        $st = $this->pdo->prepare($sql);
+        $st = $this->registre->prepare($sql);
         $st->execute($args);
-
         $jour = $date ?? date('Y-m-d');
         $lignes = [];
         foreach ($st->fetchAll() as $r) {
-            $aMandat = in_array($r['relation_type'], PolitiqueInscription::RELATIONS_A_MANDAT, true);
+            if ((string) $r['date_debut'] > $jour) {
+                continue;
+            }
+            $cycle = $this->etatRelation((string) $r['reference'], $jour);
+            $requiertMandat = in_array(
+                $r['relation_type'],
+                PolitiqueInscription::RELATIONS_A_MANDAT,
+                true,
+            );
             $lignes[] = [
-                'organisation_reference' => $r['organisation_reference'],
-                'relation_type'          => $r['relation_type'],
-                'etat'                   => $this->etatRelation($r, $jour),
-                'mandat_reference'       => $r['mandat_reference'],
-                'opposable'              => !$aMandat || $r['mandat_reference'] !== null,
-                'source'                 => $r['source'],
-                'date_debut'             => $r['date_debut'],
-                'date_fin'               => $r['date_fin'],
-                'classification'         => $r['classification'],
+                'reference'                => $r['reference'],
+                'organisation_reference'   => $r['organisation_reference'],
+                'relation_type'            => $r['relation_type'],
+                'etat'                     => $cycle['etat'],
+                'assurance'                => $r['niveau_assurance'],
+                'mandat_reference'         => $r['mandat_reference'],
+                'mandat_verifie'           => (bool) $r['mandat_verifie'],
+                'opposable'                => !$requiertMandat || (bool) $r['mandat_verifie'],
+                'source'                   => $r['source'],
+                'date_debut'               => $r['date_debut'],
+                'date_fin'                 => $cycle['date_fin'],
+                'classification'           => $r['classification'],
             ];
         }
 
         return $lignes;
     }
 
-    /**
-     * Retrouve la référence canonique depuis le sujet local d'un produit.
-     *
-     * Réservée au produit concerné : l'appelant DOIT nommer le produit, et le
-     * service ne cherche que dans les relations de ce produit. Un produit ne
-     * résout pas les sujets locaux d'un autre.
-     *
-     * Le sujet local est opaque au Core : il n'est jamais interprété, jamais
-     * restitué à un tiers, et ne sert qu'à cette correspondance.
-     *
-     * @return array<string,mixed>|null
-     */
-    public function resoudreIdentiteDepuisSujetProduit(string $produit, string $sujetLocalOpaque): ?array
-    {
-        $st = $this->pdo->prepare(
-            'SELECT identite_reference FROM relation_produit
+    /** @return array<string,mixed>|null */
+    public function resoudreIdentiteDepuisSujetProduit(
+        string $produit,
+        string $sujetLocalOpaque,
+        ?string $date = null,
+    ): ?array {
+        $st = $this->registre->prepare(
+            'SELECT identite_reference, reference FROM relation_produit
              WHERE produit_reference = ? AND sujet_local_opaque = ?
-             ORDER BY date_debut DESC, id DESC LIMIT 1'
+             ORDER BY date_debut DESC, reference DESC'
         );
         $st->execute([$produit, $sujetLocalOpaque]);
-        $r = $st->fetch();
-        if ($r === false) {
-            return null;
+        $jour = $date ?? date('Y-m-d');
+        foreach ($st->fetchAll() as $r) {
+            if ($this->etatRelation((string) $r['reference'], $jour)['etat'] !== 'ACTIVE') {
+                continue;
+            }
+            $reference = (string) $r['identite_reference'];
+            $identite = $this->resoudreIdentite($reference);
+
+            return [
+                'reference' => $reference,
+                'etat'      => $identite['etat'] ?? null,
+                'assurance' => $this->resoudreAssurance($reference)['niveau'],
+            ];
         }
 
-        $reference = (string) $r['identite_reference'];
-
-        // Exposition minimale (loi révisée, Art. 30) : le produit reçoit le
-        // résultat nécessaire, et lui seul. Ni les organisations liées, ni les
-        // autres produits utilisés, ni les rapprochements.
-        return [
-            'reference' => $reference,
-            'etat'      => $this->etatInscrit($reference, null),
-            'assurance' => $this->resoudreAssurance($reference)['niveau'],
-        ];
+        return null;
     }
 
-    /**
-     * Niveau d'assurance courant, et les événements qui l'établissent.
-     *
-     * INV-78 — le niveau procède EXCLUSIVEMENT d'un événement de preuve. Il ne
-     * se déduit ni du nombre de produits utilisés, ni de l'ancienneté, ni du
-     * volume d'activité. Une identité sans événement est `A0` : non pas
-     * « faible parce que peu active », mais « non établie faute de preuve ».
-     *
-     * @return array<string,mixed>
-     */
-    public function resoudreAssurance(string $reference): array
+    /** @return array<string,mixed> */
+    public function resoudreAssurance(string $reference, ?string $date = null): array
     {
-        $st = $this->pdo->prepare(
-            'SELECT niveau, preuve, source, date_effet FROM evenement_assurance
-             WHERE identite_reference = ? ORDER BY date_effet, id'
-        );
-        $st->execute([$reference]);
-        $evenements = $st->fetchAll();
-
-        $niveau = 'A0';
-        foreach ($evenements as $e) {
-            if (PolitiqueInscription::auMoins((string) $e['niveau'], $niveau)) {
-                $niveau = (string) $e['niveau'];
-            }
+        $sql = 'SELECT niveau, preuve_reference, source, producteur, date_effet
+                FROM evenement_assurance_identite WHERE identite_reference = ?';
+        $args = [$reference];
+        if ($date !== null) {
+            $sql .= ' AND date_effet <= ?';
+            $args[] = $date;
         }
-
+        $sql .= ' ORDER BY date_effet, id';
+        $st = $this->registre->prepare($sql);
+        $st->execute($args);
+        $evenements = $st->fetchAll();
         $dernier = $evenements === [] ? null : $evenements[count($evenements) - 1];
 
         return [
-            'reference'   => $reference,
-            'niveau'      => $niveau,
-            'source'      => $dernier['source'] ?? null,
-            'date_effet'  => $dernier['date_effet'] ?? null,
-            'evenements'  => array_map(
+            'reference'  => $reference,
+            'niveau'     => $dernier['niveau'] ?? 'A0',
+            'source'     => $dernier['source'] ?? null,
+            'date_effet' => $dernier['date_effet'] ?? null,
+            'evenements' => array_map(
                 static fn (array $e): array => [
-                    'niveau'     => $e['niveau'],
-                    'preuve'     => $e['preuve'],
-                    'date_effet' => $e['date_effet'],
+                    'niveau'            => $e['niveau'],
+                    'preuve_reference'  => $e['preuve_reference'],
+                    'source'            => $e['source'],
+                    'producteur'        => $e['producteur'],
+                    'date_effet'        => $e['date_effet'],
                 ],
                 $evenements,
             ),
         ];
     }
 
-    /**
-     * Cette identité peut-elle servir à CETTE fin ?
-     *
-     * La question n'est pas « cette identité est-elle de bonne qualité ? ».
-     * Un service qui y répondrait noterait les personnes, ce qu'INV-19 exclut.
-     * Celui-ci confronte un état et un niveau à une exigence déclarée, et
-     * ÉNUMÈRE ce qui manque plutôt que de rendre un verdict opaque.
-     *
-     * @return array<string,mixed>
-     */
+    /** @return array<string,mixed> */
     public function resoudreEtatUtilisable(string $reference, string $finalite): array
     {
-        $manque = [];
-
         $exige = PolitiqueInscription::FINALITES[$finalite] ?? null;
         if ($exige === null) {
             return [
                 'utilisable' => false,
-                'motif'      => 'FINALITE_INCONNUE',
-                'exigences_non_satisfaites' => ['finalité `' . $finalite . '` absente de la liste close'],
+                'motif' => 'FINALITE_INCONNUE',
+                'exigences_non_satisfaites' => ["finalité `{$finalite}` hors liste close"],
             ];
         }
 
-        if ($this->resoudreIdentite($reference) === null) {
+        $identite = $this->resoudreIdentite($reference);
+        if ($identite === null) {
             return [
                 'utilisable' => false,
-                'motif'      => 'IDENTITE_INCONNUE',
-                'exigences_non_satisfaites' => ['aucune entité ne porte cette référence'],
+                'motif' => 'IDENTITE_INCONNUE',
+                'exigences_non_satisfaites' => ['aucune identité ne porte cette référence'],
             ];
         }
 
-        $etat = $this->etatCourant($reference);
-        if ($etat !== null && !in_array($etat, ['ACTIVE', 'VERIFIEE'], true)) {
-            $manque[] = 'état `' . $etat . '` incompatible avec un usage';
+        $manque = [];
+        if (!in_array($identite['etat'], ['ACTIVE', 'VERIFIEE'], true)) {
+            $manque[] = 'état incompatible avec la finalité';
         }
-
-        $niveau = $this->resoudreAssurance($reference)['niveau'];
+        $niveau = (string) $this->resoudreAssurance($reference)['niveau'];
         if (!PolitiqueInscription::auMoins($niveau, $exige)) {
-            $manque[] = 'assurance `' . $niveau . '` inférieure au niveau `' . $exige . '` exigé';
+            $manque[] = "assurance `{$niveau}` inférieure à `{$exige}`";
         }
-
         if (in_array($finalite, PolitiqueInscription::FINALITES_A_MANDAT, true)) {
-            $opposables = array_filter(
+            $avecMandat = array_filter(
                 $this->resoudreLiensOrganisations($reference),
-                static fn (array $r): bool => $r['opposable'] && $r['etat'] === 'ACTIVE'
+                static fn (array $r): bool => $r['etat'] === 'ACTIVE'
+                    && $r['opposable'] === true
                     && in_array($r['relation_type'], PolitiqueInscription::RELATIONS_A_MANDAT, true),
             );
-            if ($opposables === []) {
+            if ($avecMandat === []) {
                 $manque[] = 'aucun mandat vérifié par CAP-CORE-003';
             }
         }
 
         return [
             'utilisable' => $manque === [],
-            'motif'      => $manque === [] ? 'SATISFAITE' : 'EXIGENCES_NON_SATISFAITES',
-            'finalite'   => $finalite,
-            'assurance'  => $niveau,
+            'motif' => $manque === [] ? 'SATISFAITE' : 'EXIGENCES_NON_SATISFAITES',
+            'finalite' => $finalite,
+            'assurance' => $niveau,
             'exigences_non_satisfaites' => array_values($manque),
         ];
     }
 
-    /**
-     * Rapprochements proposés entre deux références.
-     *
-     * INV-80 — le service SIGNALE ; il ne fusionne pas. Un rapprochement naît
-     * à l'état `PROPOSE` et ne quitte cet état que par une décision nommant
-     * son décideur.
-     *
-     * @return list<array<string,mixed>>
-     */
+    /** @return list<array<string,mixed>> */
     public function resoudreRapprochementsProposes(?string $reference = null): array
     {
-        $sql = 'SELECT reference_a, reference_b, preuves, etat, decideur, date_effet FROM rapprochement';
+        $sql = 'SELECT * FROM rapprochement_identite';
         $args = [];
         if ($reference !== null) {
             $sql .= ' WHERE reference_a = ? OR reference_b = ?';
             $args = [$reference, $reference];
         }
-        $sql .= ' ORDER BY date_effet, id';
-
-        $st = $this->pdo->prepare($sql);
+        $sql .= ' ORDER BY date_effet, reference';
+        $st = $this->registre->prepare($sql);
         $st->execute($args);
 
-        return array_map(
-            static fn (array $r): array => [
-                'reference_a' => $r['reference_a'],
-                'reference_b' => $r['reference_b'],
-                'preuves'     => array_values(array_filter(explode('|', (string) $r['preuves']))),
-                'etat'        => $r['etat'],
-                'decideur'    => $r['decideur'],
-                'date_effet'  => $r['date_effet'],
-            ],
-            $st->fetchAll(),
-        );
+        return array_map(static fn (array $r): array => [
+            'reference'     => $r['reference'],
+            'reference_a'   => $r['reference_a'],
+            'reference_b'   => $r['reference_b'],
+            'qualification' => $r['qualification'],
+            'preuves'       => array_values(array_filter(explode('|', (string) $r['preuves']))),
+            'etat'          => $r['etat'],
+            'decideur'      => $r['decideur'],
+            'date_effet'    => $r['date_effet'],
+        ], $st->fetchAll());
     }
 
-    // ==================================================================
-    // COMMANDES GOUVERNÉES — INV-79
-    // ==================================================================
+    /**
+     * Diagnostic interne utilisé par la garde et par l'exploitation. Il ne
+     * répare jamais silencieusement une falsification.
+     *
+     * @return array{valide:bool,ecarts:list<string>}
+     */
+    public function verifierIntegritePersistante(): array
+    {
+        $ecarts = [];
+
+        $st = $this->registre->query(
+            "SELECT r.reference FROM rapprochement_identite r
+             WHERE r.etat = 'VALIDEE' AND (r.decideur IS NULL OR r.decideur = '')"
+        );
+        foreach ($st->fetchAll() as $r) {
+            $ecarts[] = "rapprochement {$r['reference']} validé sans décideur";
+        }
+
+        $st = $this->registre->query(
+            'SELECT i.reference, a.niveau
+             FROM identite_inscrite i
+             JOIN evenement_assurance_identite a ON a.identite_reference = i.reference
+             WHERE i.provisoire = 1'
+        );
+        foreach ($st->fetchAll() as $r) {
+            if (PolitiqueInscription::auMoins((string) $r['niveau'], 'A2')) {
+                $ecarts[] = "identité provisoire {$r['reference']} portée au niveau {$r['niveau']}";
+            }
+        }
+
+        foreach (['relation_produit', 'relation_organisation'] as $table) {
+            $st = $this->registre->query(
+                "SELECT r.reference, r.date_debut, e.date_effet
+                 FROM {$table} r
+                 JOIN evenement_relation_identite e ON e.relation_reference = r.reference
+                 WHERE e.evenement_type = 'CLOTURE' AND e.date_effet < r.date_debut"
+            );
+            foreach ($st->fetchAll() as $r) {
+                $ecarts[] = "relation {$r['reference']} close avant sa date de début";
+            }
+        }
+
+        return ['valide' => $ecarts === [], 'ecarts' => $ecarts];
+    }
+
+    // ------------------------------------------------------------------
+    // Commandes gouvernées
 
     /**
-     * Inscrit une identité selon une politique adoptée.
-     *
-     * Les six conditions cumulatives d'INV-79 sont vérifiées AVANT toute
-     * écriture, et le refus est la position par défaut (Article 19 de l'Atlas).
-     * Une commande qui ne les satisfait pas ne s'exécute pas : elle ne
-     * s'exécute pas partiellement non plus.
-     *
      * @param array<string,mixed> $dossier
-     * @return array<string,mixed> l'identité inscrite, ou `['refus' => motif]`
+     * @return array<string,mixed>
      */
     public function inscrireIdentite(array $dossier): array
     {
-        $canal      = (string) ($dossier['canal'] ?? '');
-        $type       = (string) ($dossier['type'] ?? '');
-        $producteur = (string) ($dossier['producteur'] ?? '');
-        $politique  = (string) ($dossier['politique'] ?? '');
-        $preuve     = (string) ($dossier['preuve'] ?? '');
-        $libelle    = (string) ($dossier['libelle'] ?? '');
+        $controle = $this->controlerInscription($dossier);
+        if (isset($controle['refus'])) {
+            return $controle;
+        }
+
+        $canal = (string) $dossier['canal'];
+        $type = (string) $dossier['type'];
+        $producteur = (string) $dossier['producteur'];
+        $politique = (string) $dossier['politique'];
+        $source = (string) $dossier['source'];
+        $preuve = (string) $dossier['preuve'];
+        $libelle = trim((string) $dossier['libelle']);
         $classification = (string) ($dossier['classification'] ?? 'INTERNE');
         $date = (string) ($dossier['date'] ?? date('Y-m-d'));
-
-        // 2. La politique d'inscription est nommée. Sans elle, rien ne s'écrit.
-        if ($politique === '') {
-            return $this->refus('POLITIQUE_ABSENTE', 'aucune politique d\'inscription nommée (INV-79)');
+        $provisoire = (bool) ($dossier['provisoire'] ?? false);
+        $etat = $provisoire ? 'PROVISOIRE' : 'ACTIVE';
+        $niveau = (string) PolitiqueInscription::CANAUX[$canal]['assurance'];
+        if ($provisoire && PolitiqueInscription::auMoins($niveau, 'A2')) {
+            $niveau = PolitiqueInscription::PLAFOND_PROVISOIRE;
         }
 
-        // 1. Le canal est autorisé, et il est compétent pour ce type.
-        $regle = PolitiqueInscription::CANAUX[$canal] ?? null;
-        if ($regle === null) {
-            return $this->refus('CANAL_NON_AUTORISE', "canal `{$canal}` absent de la politique (ADOPTION-0066, Art. 212)");
-        }
-        if (!in_array($type, $regle['types'], true)) {
-            return $this->refus(
-                'TYPE_NON_AUTORISE',
-                "le canal `{$canal}` n'inscrit pas le type `{$type}` (ADOPTION-0066, Art. 212)"
+        return $this->transaction($this->registre, function () use (
+            $type,
+            $libelle,
+            $provisoire,
+            $canal,
+            $producteur,
+            $politique,
+            $source,
+            $preuve,
+            $classification,
+            $date,
+            $etat,
+            $niveau,
+        ): array {
+            $reference = $this->allouerReference($type);
+            $this->registre->prepare(
+                'INSERT INTO identite_inscrite
+                 (reference,type,libelle,regime,provisoire,canal,producteur,
+                  politique_inscription,source_inscription,preuve_reference,
+                  classification,date_creation)
+                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
+            )->execute([
+                $reference, $type, $libelle, self::INSCRIT, $provisoire ? 1 : 0,
+                $canal, $producteur, $politique, $source, $preuve,
+                $classification, $date,
+            ]);
+            $this->inscrireEvenementIdentite(
+                $reference, 'CREATION', null, $etat, $source, $preuve,
+                $politique, $producteur, $date,
             );
-        }
+            $this->registre->prepare(
+                'INSERT INTO evenement_assurance_identite
+                 (identite_reference,niveau,preuve_reference,source,producteur,date_effet)
+                 VALUES(?,?,?,?,?,?)'
+            )->execute([$reference, $niveau, $preuve, $source, $producteur, $date]);
 
-        // 4. Le producteur est nommé, et les canaux réservés exigent l'autorité.
-        if ($producteur === '') {
-            return $this->refus('PRODUCTEUR_ABSENT', 'aucun producteur nommé (INV-79)');
-        }
-        if (in_array($canal, PolitiqueInscription::CANAUX_RESERVES, true)
-            && $producteur !== PolitiqueInscription::AUTORITE_INSCRIPTION) {
-            return $this->refus(
-                'CANAL_RESERVE',
-                "le canal `{$canal}` est exercé par l'autorité d'inscription seule (ADOPTION-0066, Art. 214)"
-            );
-        }
-
-        // 6. Une preuve est laissée. Une inscription sans preuve n'en est pas une.
-        if ($preuve === '') {
-            return $this->refus('PREUVE_ABSENTE', 'aucune preuve d\'inscription (INV-79)');
-        }
-        if ($libelle === '') {
-            return $this->refus('LIBELLE_ABSENT', 'aucune dénomination fournie');
-        }
-
-        // 5. Les valeurs hors liste close sont refusées.
-        if (!in_array($classification, PolitiqueInscription::CLASSIFICATIONS, true)) {
-            return $this->refus('CLASSIFICATION_INCONNUE', "classification `{$classification}` hors liste close");
-        }
-
-        $reference = $this->allouerReference($type);
-
-        $this->pdo->prepare(
-            'INSERT INTO identite_inscrite
-             (reference,type,libelle,regime,canal,producteur,politique_inscription,source_inscription,classification,date_creation)
-             VALUES(?,?,?,?,?,?,?,?,?,?)'
-        )->execute([
-            $reference, $type, $libelle, self::INSCRIT, $canal, $producteur,
-            $politique, $preuve, $classification, $date,
-        ]);
-
-        // 3. Un événement de cycle est produit, en ajout seul.
-        $this->inscrireEvenement($reference, 'CREATION', null, 'ACTIVE', $preuve, $politique, $producteur, $date);
-
-        // L'assurance INITIALE est celle du canal, et jamais davantage (INV-78).
-        $this->pdo->prepare(
-            'INSERT INTO evenement_assurance(identite_reference,niveau,preuve,source,date_effet) VALUES(?,?,?,?,?)'
-        )->execute([$reference, $regle['assurance'], $preuve, "canal {$canal}", $date]);
-
-        return [
-            'reference' => $reference,
-            'etat'      => 'ACTIVE',
-            'assurance' => $regle['assurance'],
-            'regime'    => self::INSCRIT,
-        ];
+            return [
+                'reference' => $reference,
+                'type' => $type,
+                'etat' => $etat,
+                'assurance' => $niveau,
+                'regime' => self::INSCRIT,
+            ];
+        });
     }
 
     /**
-     * Rattache une identité à un produit par une relation d'usage.
-     *
-     * Le rattachement ne modifie NI l'identité, NI son assurance : utiliser un
-     * produit ne prouve rien sur celui qui l'utilise (INV-78).
-     *
+     * @param array<string,mixed> $dossier
      * @return array<string,mixed>
      */
     public function rattacherProduit(
         string $reference,
         string $produit,
         string $relationType,
-        string $preuve,
-        ?string $sujetLocalOpaque = null,
-        string $classification = 'INTERNE',
-        ?string $date = null,
+        array $dossier,
     ): array {
-        if ($this->resoudreIdentite($reference) === null) {
-            return $this->refus('IDENTITE_INCONNUE', "aucune entité ne porte `{$reference}`");
+        if (!$this->estType($reference, null)) {
+            return $this->refus('IDENTITE_INCONNUE', "identité `{$reference}` inconnue");
+        }
+        if (!$this->estType($produit, 'produit')) {
+            return $this->refus('PRODUIT_INCONNU', "produit `{$produit}` inconnu");
         }
         if (!in_array($relationType, PolitiqueInscription::RELATIONS_PRODUIT, true)) {
-            return $this->refus('RELATION_NON_AUTORISEE', "type `{$relationType}` hors liste close (loi révisée, Art. 21)");
+            return $this->refus('RELATION_NON_AUTORISEE', "relation `{$relationType}` hors liste close");
         }
-        if ($preuve === '') {
-            return $this->refus('PREUVE_ABSENTE', 'aucune source pour la relation (INV-77)');
+        $g = $this->controlerGouvernance($dossier);
+        if (isset($g['refus'])) {
+            return $g;
         }
+        $producteur = (string) $dossier['producteur'];
+        if ($producteur !== $produit && $producteur !== PolitiqueInscription::AUTORITE_INSCRIPTION) {
+            return $this->refus('PRODUCTEUR_INCOMPETENT', 'seul le produit concerné ou l’autorité peut rattacher');
+        }
+
+        $relation = 'LNK-PRD-' . strtoupper(bin2hex(random_bytes(8)));
+        $date = (string) ($dossier['date_debut'] ?? date('Y-m-d'));
+        if (!$this->dateValide($date)) {
+            return $this->refus('DATE_INVALIDE', 'date_debut doit suivre YYYY-MM-DD');
+        }
+        $classification = (string) ($dossier['classification'] ?? 'INTERNE');
         if (!in_array($classification, PolitiqueInscription::CLASSIFICATIONS, true)) {
-            return $this->refus('CLASSIFICATION_INCONNUE', "classification `{$classification}` hors liste close");
+            return $this->refus('CLASSIFICATION_INCONNUE', 'classification hors liste close');
         }
+        $assurance = (string) $this->resoudreAssurance($reference, $date)['niveau'];
 
-        $jour = $date ?? date('Y-m-d');
-        $this->pdo->prepare(
-            'INSERT INTO relation_produit
-             (identite_reference,produit_reference,relation_type,etat,sujet_local_opaque,source,date_debut,date_fin,classification)
-             VALUES(?,?,?,?,?,?,?,NULL,?)'
-        )->execute([$reference, $produit, $relationType, 'ACTIVE', $sujetLocalOpaque, $preuve, $jour, $classification]);
+        return $this->transaction($this->registre, function () use (
+            $relation, $reference, $produit, $relationType, $dossier,
+            $date, $classification, $assurance, $producteur,
+        ): array {
+            $this->registre->prepare(
+                'INSERT INTO relation_produit
+                 (reference,identite_reference,produit_reference,relation_type,
+                  sujet_local_opaque,niveau_assurance,source,preuve_reference,
+                  politique_inscription,producteur,date_debut,classification)
+                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
+            )->execute([
+                $relation, $reference, $produit, $relationType,
+                $dossier['sujet_local_opaque'] ?? null, $assurance,
+                $dossier['source'], $dossier['preuve'], $dossier['politique'],
+                $producteur, $date, $classification,
+            ]);
+            $this->inscrireEvenementRelation(
+                $relation, 'PRODUIT', 'RATTACHEMENT', 'ACTIVE',
+                (string) $dossier['source'], (string) $dossier['preuve'],
+                $producteur, $date,
+            );
+            $etat = $this->etatCourant($reference);
+            $this->inscrireEvenementIdentite(
+                $reference, 'RATTACHEMENT_PRODUIT', $etat, $etat ?? 'ACTIVE',
+                (string) $dossier['source'], (string) $dossier['preuve'],
+                (string) $dossier['politique'], $producteur, $date,
+            );
 
-        $this->inscrireEvenement($reference, 'RATTACHEMENT_PRODUIT', null, 'ACTIVE', $preuve, null, $produit, $jour);
-
-        return [
-            'identite_reference' => $reference,
-            'produit_reference'  => $produit,
-            'relation_type'      => $relationType,
-            'etat'               => 'ACTIVE',
-            'date_debut'         => $jour,
-        ];
+            return [
+                'reference' => $relation,
+                'identite_reference' => $reference,
+                'produit_reference' => $produit,
+                'relation_type' => $relationType,
+                'etat' => 'ACTIVE',
+                'assurance' => $assurance,
+                'date_debut' => $date,
+            ];
+        });
     }
 
     /**
-     * Rattache une identité à une organisation.
-     *
-     * `mandat_reference` demeure `null` sauf mandat vérifié par `CAP-CORE-003`.
-     * Le service NE VÉRIFIE PAS le mandat — ce n'est pas son domaine — et ne
-     * l'invente donc jamais : il inscrit ce qu'on lui donne et restitue
-     * l'absence comme une absence.
-     *
+     * @param array<string,mixed> $dossier
      * @return array<string,mixed>
      */
     public function rattacherOrganisation(
         string $reference,
         string $organisation,
         string $relationType,
-        string $preuve,
-        ?string $mandatReference = null,
-        string $classification = 'INTERNE',
-        ?string $date = null,
+        array $dossier,
     ): array {
-        if ($this->resoudreIdentite($reference) === null) {
-            return $this->refus('IDENTITE_INCONNUE', "aucune entité ne porte `{$reference}`");
+        if (!$this->estType($reference, null)) {
+            return $this->refus('IDENTITE_INCONNUE', "identité `{$reference}` inconnue");
+        }
+        if (!$this->estType($organisation, 'organisation')) {
+            return $this->refus('ORGANISATION_INCONNUE', "organisation `{$organisation}` inconnue");
         }
         if (!in_array($relationType, PolitiqueInscription::RELATIONS_ORGANISATION, true)) {
-            return $this->refus('RELATION_NON_AUTORISEE', "type `{$relationType}` hors liste close (loi révisée, Art. 21)");
+            return $this->refus('RELATION_NON_AUTORISEE', "relation `{$relationType}` hors liste close");
         }
-        if ($preuve === '') {
-            return $this->refus('PREUVE_ABSENTE', 'aucune source pour la relation (INV-77)');
+        $g = $this->controlerGouvernance($dossier);
+        if (isset($g['refus'])) {
+            return $g;
         }
+        $producteur = (string) $dossier['producteur'];
+        if ($producteur !== $organisation && $producteur !== PolitiqueInscription::AUTORITE_INSCRIPTION) {
+            return $this->refus('PRODUCTEUR_INCOMPETENT', 'seule l’organisation concernée ou l’autorité peut rattacher');
+        }
+
+        $relation = 'LNK-ORG-' . strtoupper(bin2hex(random_bytes(8)));
+        $date = (string) ($dossier['date_debut'] ?? date('Y-m-d'));
+        if (!$this->dateValide($date)) {
+            return $this->refus('DATE_INVALIDE', 'date_debut doit suivre YYYY-MM-DD');
+        }
+        $classification = (string) ($dossier['classification'] ?? 'INTERNE');
         if (!in_array($classification, PolitiqueInscription::CLASSIFICATIONS, true)) {
-            return $this->refus('CLASSIFICATION_INCONNUE', "classification `{$classification}` hors liste close");
+            return $this->refus('CLASSIFICATION_INCONNUE', 'classification hors liste close');
         }
+        $mandat = isset($dossier['mandat_reference']) && $dossier['mandat_reference'] !== ''
+            ? (string) $dossier['mandat_reference'] : null;
+        // CAP-CORE-001 conserve éventuellement la référence fournie, mais ne
+        // certifie jamais lui-même un pouvoir de représentation. Une future
+        // intégration explicite avec CAP-CORE-003 pourra produire cette preuve.
+        $mandatVerifie = false;
+        $assurance = (string) $this->resoudreAssurance($reference, $date)['niveau'];
 
-        $jour = $date ?? date('Y-m-d');
-        $this->pdo->prepare(
-            'INSERT INTO relation_organisation
-             (identite_reference,organisation_reference,relation_type,etat,mandat_reference,source,date_debut,date_fin,classification)
-             VALUES(?,?,?,?,?,?,?,NULL,?)'
-        )->execute([$reference, $organisation, $relationType, 'ACTIVE', $mandatReference, $preuve, $jour, $classification]);
+        return $this->transaction($this->registre, function () use (
+            $relation, $reference, $organisation, $relationType, $dossier,
+            $date, $classification, $mandat, $mandatVerifie, $assurance, $producteur,
+        ): array {
+            $this->registre->prepare(
+                'INSERT INTO relation_organisation
+                 (reference,identite_reference,organisation_reference,relation_type,
+                  mandat_reference,mandat_verifie,niveau_assurance,source,
+                  preuve_reference,politique_inscription,producteur,date_debut,classification)
+                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'
+            )->execute([
+                $relation, $reference, $organisation, $relationType, $mandat,
+                $mandatVerifie ? 1 : 0, $assurance, $dossier['source'],
+                $dossier['preuve'], $dossier['politique'], $producteur,
+                $date, $classification,
+            ]);
+            $this->inscrireEvenementRelation(
+                $relation, 'ORGANISATION', 'RATTACHEMENT', 'ACTIVE',
+                (string) $dossier['source'], (string) $dossier['preuve'],
+                $producteur, $date,
+            );
+            $etat = $this->etatCourant($reference);
+            $this->inscrireEvenementIdentite(
+                $reference, 'RATTACHEMENT_ORGANISATION', $etat, $etat ?? 'ACTIVE',
+                (string) $dossier['source'], (string) $dossier['preuve'],
+                (string) $dossier['politique'], $producteur, $date,
+            );
 
-        $this->inscrireEvenement($reference, 'RATTACHEMENT_ORGANISATION', null, 'ACTIVE', $preuve, null, $organisation, $jour);
-
-        return [
-            'identite_reference'     => $reference,
-            'organisation_reference' => $organisation,
-            'relation_type'          => $relationType,
-            'mandat_reference'       => $mandatReference,
-            'opposable'              => !in_array($relationType, PolitiqueInscription::RELATIONS_A_MANDAT, true)
-                || $mandatReference !== null,
-            'etat'                   => 'ACTIVE',
-        ];
+            return [
+                'reference' => $relation,
+                'identite_reference' => $reference,
+                'organisation_reference' => $organisation,
+                'relation_type' => $relationType,
+                'etat' => 'ACTIVE',
+                'assurance' => $assurance,
+                'mandat_reference' => $mandat,
+                'mandat_verifie' => $mandatVerifie,
+                'opposable' => !in_array(
+                    $relationType,
+                    PolitiqueInscription::RELATIONS_A_MANDAT,
+                    true,
+                ) || $mandatVerifie,
+            ];
+        });
     }
 
     /**
-     * Clôt une relation d'usage à un produit.
-     *
-     * INV-76 — la clôture d'un compte ne clôt JAMAIS l'identité. La relation
-     * reçoit une date de fin ; l'identité n'est pas touchée, et son état
-     * demeure celui que ses propres événements établissent.
-     *
-     * La ligne de relation reçoit ici sa date de fin : c'est le seul `UPDATE`
-     * du module, et il n'efface rien — la date de début, la source et la
-     * classification demeurent, et l'événement de retrait est ajouté.
-     *
+     * @param array<string,mixed> $dossier
      * @return array<string,mixed>
      */
     public function cloreRelationProduit(
-        string $reference,
-        string $produit,
+        string $relation,
         string $dateFin,
-        string $motif,
+        array $dossier,
     ): array {
-        $st = $this->pdo->prepare(
-            'SELECT id FROM relation_produit
-             WHERE identite_reference = ? AND produit_reference = ? AND date_fin IS NULL
-             ORDER BY date_debut DESC, id DESC LIMIT 1'
-        );
-        $st->execute([$reference, $produit]);
+        $g = $this->controlerGouvernance($dossier);
+        if (isset($g['refus'])) {
+            return $g;
+        }
+        $st = $this->registre->prepare('SELECT * FROM relation_produit WHERE reference = ?');
+        $st->execute([$relation]);
         $r = $st->fetch();
         if ($r === false) {
-            return $this->refus('RELATION_INTROUVABLE', "aucune relation active entre `{$reference}` et `{$produit}`");
+            return $this->refus('RELATION_INTROUVABLE', "relation `{$relation}` inconnue");
         }
-        if ($motif === '') {
-            return $this->refus('MOTIF_ABSENT', 'aucun motif de clôture');
+        if (!$this->dateValide($dateFin)) {
+            return $this->refus('DATE_INVALIDE', 'date_fin doit suivre YYYY-MM-DD');
+        }
+        $producteur = (string) $dossier['producteur'];
+        if ($producteur !== $r['produit_reference']
+            && $producteur !== PolitiqueInscription::AUTORITE_INSCRIPTION) {
+            return $this->refus('PRODUCTEUR_INCOMPETENT', 'seul le produit concerné ou l’autorité peut clore');
+        }
+        if ($dateFin < $r['date_debut']) {
+            return $this->refus('DATE_INVALIDE', 'la clôture précède le rattachement');
+        }
+        if ($this->etatRelation($relation, $dateFin)['etat'] !== 'ACTIVE') {
+            return $this->refus('RELATION_DEJA_CLOSE', 'la relation n’est plus active');
         }
 
-        $this->pdo->prepare('UPDATE relation_produit SET date_fin = ?, etat = ? WHERE id = ?')
-            ->execute([$dateFin, 'CLOSE', $r['id']]);
+        return $this->transaction($this->registre, function () use (
+            $relation, $dateFin, $dossier, $r, $producteur,
+        ): array {
+            $this->inscrireEvenementRelation(
+                $relation, 'PRODUIT', 'CLOTURE', 'CLOSE',
+                (string) $dossier['source'], (string) $dossier['preuve'],
+                $producteur, $dateFin,
+            );
+            $etat = $this->etatCourant((string) $r['identite_reference']);
+            $this->inscrireEvenementIdentite(
+                (string) $r['identite_reference'], 'RETRAIT_PRODUIT',
+                $etat, $etat ?? 'ACTIVE', (string) $dossier['source'],
+                (string) $dossier['preuve'], (string) $dossier['politique'],
+                $producteur, $dateFin,
+            );
 
-        $this->inscrireEvenement($reference, 'RETRAIT_PRODUIT', 'ACTIVE', 'CLOSE', $motif, null, $produit, $dateFin);
-
-        $identite = $this->resoudreIdentite($reference);
-
-        return [
-            'identite_reference' => $reference,
-            'produit_reference'  => $produit,
-            'relation_etat'      => 'CLOSE',
-            'date_fin'           => $dateFin,
-            // INV-76 : ce que la clôture n'a pas touché, et qu'on montre.
-            'identite_etat'      => $identite['etat'] ?? null,
-        ];
+            return [
+                'reference' => $relation,
+                'relation_etat' => 'CLOSE',
+                'date_fin' => $dateFin,
+                'identite_reference' => $r['identite_reference'],
+                'identite_etat' => $etat,
+            ];
+        });
     }
 
     /**
-     * Propose un rapprochement entre deux références.
-     *
-     * INV-80 — jamais `VALIDE`. Un rapprochement naît `PROPOSE`, exige des
-     * preuves ÉNUMÉRÉES, et ne quitte cet état que par une décision nommant
-     * son décideur. Un score seul n'est pas une preuve, et la commande refuse
-     * une liste vide.
-     *
      * @param list<string> $preuves
+     * @param array<string,mixed> $dossier
      * @return array<string,mixed>
      */
-    public function proposerRapprochement(string $referenceA, string $referenceB, array $preuves): array
-    {
+    public function proposerRapprochement(
+        string $referenceA,
+        string $referenceB,
+        array $preuves,
+        array $dossier,
+    ): array {
         if ($referenceA === $referenceB) {
-            return $this->refus('REFERENCES_IDENTIQUES', 'un rapprochement suppose deux références distinctes');
+            return $this->refus('REFERENCES_IDENTIQUES', 'deux références distinctes sont requises');
         }
-        foreach ([$referenceA, $referenceB] as $ref) {
-            if ($this->resoudreIdentite($ref) === null) {
-                return $this->refus('IDENTITE_INCONNUE', "aucune entité ne porte `{$ref}`");
-            }
+        if (!$this->estType($referenceA, null) || !$this->estType($referenceB, null)) {
+            return $this->refus('IDENTITE_INCONNUE', 'une des références est inconnue');
         }
-        $preuves = array_values(array_filter(array_map('trim', $preuves), static fn (string $p): bool => $p !== ''));
+        $g = $this->controlerGouvernance($dossier);
+        if (isset($g['refus'])) {
+            return $g;
+        }
+        $qualification = (string) ($dossier['qualification'] ?? 'CORRESPONDANCE_POSSIBLE');
+        if (!in_array($qualification, PolitiqueInscription::QUALIFICATIONS_RAPPROCHEMENT, true)) {
+            return $this->refus('QUALIFICATION_INCONNUE', 'qualification hors liste close');
+        }
+        if ($qualification === 'AUCUNE_CORRESPONDANCE') {
+            return [
+                'reference_a' => $referenceA,
+                'reference_b' => $referenceB,
+                'qualification' => $qualification,
+                'etat' => 'AUCUNE_ACTION',
+            ];
+        }
+        $preuves = array_values(array_filter(
+            array_map(static fn (mixed $p): string => trim((string) $p), $preuves),
+        ));
         if ($preuves === []) {
-            return $this->refus('PREUVES_ABSENTES', 'aucune preuve énumérée : une probabilité ne rapproche pas (INV-80)');
+            return $this->refus('PREUVES_ABSENTES', 'une probabilité seule ne suffit pas');
         }
 
-        $jour = date('Y-m-d');
-        $this->pdo->prepare(
-            'INSERT INTO rapprochement(reference_a,reference_b,preuves,etat,decideur,date_effet)
-             VALUES(?,?,?,?,NULL,?)'
-        )->execute([$referenceA, $referenceB, implode('|', $preuves), 'PROPOSE', $jour]);
+        $reference = 'RAP-' . strtoupper(bin2hex(random_bytes(8)));
+        $date = (string) ($dossier['date'] ?? date('Y-m-d'));
+        if (!$this->dateValide($date)) {
+            return $this->refus('DATE_INVALIDE', 'date doit suivre YYYY-MM-DD');
+        }
+        $this->registre->prepare(
+            'INSERT INTO rapprochement_identite
+             (reference,reference_a,reference_b,qualification,preuves,etat,
+              decideur,source,politique_inscription,producteur,date_effet)
+             VALUES(?,?,?,?,?,\'VALIDATION_REQUISE\',NULL,?,?,?,?)'
+        )->execute([
+            $reference, $referenceA, $referenceB, $qualification,
+            implode('|', $preuves), $dossier['source'], $dossier['politique'],
+            $dossier['producteur'], $date,
+        ]);
 
         return [
+            'reference' => $reference,
             'reference_a' => $referenceA,
             'reference_b' => $referenceB,
-            'preuves'     => $preuves,
-            'etat'        => 'PROPOSE',
-            'decideur'    => null,
+            'qualification' => $qualification,
+            'preuves' => $preuves,
+            'etat' => 'VALIDATION_REQUISE',
+            'decideur' => null,
         ];
     }
 
-    /**
-     * Inscrit un événement d'assurance — le SEUL chemin d'écriture du niveau.
-     *
-     * INV-78 : aucune autre commande n'écrit dans `evenement_assurance`, et il
-     * n'existe pas de colonne d'assurance ailleurs. Un produit qui voudrait
-     * élever le niveau d'un de ses utilisateurs n'a aucun moyen de le faire.
-     *
-     * @return array<string,mixed>
-     */
+    /** @return array<string,mixed> */
     public function inscrireEvenementAssurance(
         string $reference,
         string $niveau,
         string $preuve,
         string $source,
         ?string $date = null,
+        string $producteur = 'CAP-CORE-005',
     ): array {
         if (!isset(PolitiqueInscription::ASSURANCE[$niveau])) {
-            return $this->refus('NIVEAU_INCONNU', "niveau `{$niveau}` hors échelle (ADOPTION-0066, Art. 213)");
+            return $this->refus('NIVEAU_INCONNU', "niveau `{$niveau}` hors échelle A0–A3");
         }
-        if ($this->resoudreIdentite($reference) === null) {
-            return $this->refus('IDENTITE_INCONNUE', "aucune entité ne porte `{$reference}`");
+        if (!$this->estType($reference, null)) {
+            return $this->refus('IDENTITE_INCONNUE', "identité `{$reference}` inconnue");
         }
         if ($preuve === '' || $source === '') {
-            return $this->refus('PREUVE_ABSENTE', 'un niveau d\'assurance sans preuve ni source n\'est pas inscriptible (INV-78)');
+            return $this->refus('PREUVE_ABSENTE', 'preuve et source sont obligatoires');
+        }
+        if (!in_array($producteur, ['CAP-CORE-005', PolitiqueInscription::AUTORITE_INSCRIPTION], true)) {
+            return $this->refus('PRODUCTEUR_INCOMPETENT', 'l’assurance relève de CAP-CORE-005 ou de l’autorité');
+        }
+        $identite = $this->resoudreInscrite($reference, null);
+        if (($identite['provisoire'] ?? false)
+            && PolitiqueInscription::auMoins($niveau, 'A2')) {
+            return $this->refus('ASSURANCE_PROVISOIRE_DEPASSEE', 'une identité provisoire reste au plus A1');
         }
 
         $jour = $date ?? date('Y-m-d');
-        $this->pdo->prepare(
-            'INSERT INTO evenement_assurance(identite_reference,niveau,preuve,source,date_effet) VALUES(?,?,?,?,?)'
-        )->execute([$reference, $niveau, $preuve, $source, $jour]);
-
-        $this->inscrireEvenement($reference, 'VERIFICATION', null, 'ACTIVE', $preuve, null, $source, $jour);
+        if (!$this->dateValide($jour)) {
+            return $this->refus('DATE_INVALIDE', 'date doit suivre YYYY-MM-DD');
+        }
+        $this->registre->prepare(
+            'INSERT INTO evenement_assurance_identite
+             (identite_reference,niveau,preuve_reference,source,producteur,date_effet)
+             VALUES(?,?,?,?,?,?)'
+        )->execute([$reference, $niveau, $preuve, $source, $producteur, $jour]);
 
         return $this->resoudreAssurance($reference);
     }
 
-    // ==================================================================
-    // interne
-    // ==================================================================
+    // ------------------------------------------------------------------
+    // Internes
 
-    /** @return array<string,mixed> */
-    private function refus(string $motif, string $detail): array
+    /** @param array<string,mixed> $dossier @return array<string,mixed> */
+    private function controlerInscription(array $dossier): array
     {
-        return ['refus' => $motif, 'detail' => $detail];
+        foreach (['canal', 'type', 'producteur', 'politique', 'source', 'preuve', 'libelle'] as $champ) {
+            if (trim((string) ($dossier[$champ] ?? '')) === '') {
+                return $this->refus('DOSSIER_INCOMPLET', "champ `{$champ}` absent");
+            }
+        }
+        $canal = (string) $dossier['canal'];
+        $type = (string) $dossier['type'];
+        $producteur = (string) $dossier['producteur'];
+        $regle = PolitiqueInscription::CANAUX[$canal] ?? null;
+        if ($regle === null) {
+            return $this->refus('CANAL_NON_AUTORISE', "canal `{$canal}` hors politique");
+        }
+        if (!in_array($type, $regle['types'], true)) {
+            return $this->refus('TYPE_NON_AUTORISE', "le canal `{$canal}` n’inscrit pas `{$type}`");
+        }
+        if (in_array($canal, PolitiqueInscription::CANAUX_RESERVES, true)
+            && $producteur !== PolitiqueInscription::AUTORITE_INSCRIPTION) {
+            return $this->refus('CANAL_RESERVE', 'ce canal relève de l’autorité');
+        }
+        if ($canal === 'PRODUIT_RECONNU' && !$this->produitReconnu($producteur)) {
+            return $this->refus('PRODUCTEUR_INCOMPETENT', 'le producteur n’est pas un produit reconnu');
+        }
+        if ($canal === 'ORGANISATION_RECONNUE' && !$this->estType($producteur, 'organisation')) {
+            return $this->refus('PRODUCTEUR_INCOMPETENT', 'le producteur n’est pas une organisation inscrite');
+        }
+        $classification = (string) ($dossier['classification'] ?? 'INTERNE');
+        if (!in_array($classification, PolitiqueInscription::CLASSIFICATIONS, true)) {
+            return $this->refus('CLASSIFICATION_INCONNUE', 'classification hors liste close');
+        }
+        if (isset($dossier['date']) && !$this->dateValide((string) $dossier['date'])) {
+            return $this->refus('DATE_INVALIDE', 'date doit suivre YYYY-MM-DD');
+        }
+
+        return ['valide' => true];
+    }
+
+    /** @param array<string,mixed> $dossier @return array<string,mixed> */
+    private function controlerGouvernance(array $dossier): array
+    {
+        foreach (['politique', 'producteur', 'source', 'preuve'] as $champ) {
+            if (trim((string) ($dossier[$champ] ?? '')) === '') {
+                return $this->refus('COMMANDE_NON_GOUVERNEE', "champ `{$champ}` absent");
+            }
+        }
+
+        return ['valide' => true];
+    }
+
+    private function estType(string $reference, ?string $type): bool
+    {
+        $i = $this->resoudreIdentite($reference);
+
+        return $i !== null && ($type === null || $i['type'] === $type);
+    }
+
+    private function produitReconnu(string $reference): bool
+    {
+        $produit = $this->resoudreIdentite($reference);
+
+        return $produit !== null
+            && $produit['type'] === 'produit'
+            && is_string($produit['etat'])
+            && str_contains($produit['etat'], 'RECONNU');
     }
 
     /** @return array<string,mixed>|null */
     private function etatDerive(string $reference, ?string $date): ?array
     {
-        $sql = 'SELECT valeur, date_effet, adoption_reference FROM etat_entite WHERE entite_reference = ?';
+        $sql = 'SELECT valeur, date_effet, adoption_reference
+                FROM etat_entite WHERE entite_reference = ?';
         $args = [$reference];
         if ($date !== null) {
             $sql .= ' AND date_effet <= ?';
             $args[] = $date;
         }
         $sql .= ' ORDER BY date_effet DESC, id DESC LIMIT 1';
-
-        $st = $this->pdo->prepare($sql);
+        $st = $this->index->prepare($sql);
         $st->execute($args);
 
         return $st->fetch() ?: null;
@@ -870,10 +964,7 @@ final class Ctr01
     /** @return array<string,mixed>|null */
     private function resoudreInscrite(string $reference, ?string $date): ?array
     {
-        $st = $this->pdo->prepare(
-            'SELECT reference, type, libelle, source_inscription, politique_inscription, canal, classification, date_creation
-             FROM identite_inscrite WHERE reference = ?'
-        );
+        $st = $this->registre->prepare('SELECT * FROM identite_inscrite WHERE reference = ?');
         $st->execute([$reference]);
         $i = $st->fetch();
         if ($i === false) {
@@ -889,103 +980,165 @@ final class Ctr01
             'adoption_reference'    => null,
             'source'                => $i['source_inscription'],
             'regime'                => self::INSCRIT,
+            'provisoire'            => (bool) $i['provisoire'],
             'canal'                 => $i['canal'],
             'politique_inscription' => $i['politique_inscription'],
+            'producteur'            => $i['producteur'],
+            'preuve_reference'      => $i['preuve_reference'],
             'classification'        => $i['classification'],
         ];
     }
 
-    /** État courant d'une identité inscrite, dérivé de ses événements (INV-21). */
     private function etatInscrit(string $reference, ?string $date): ?string
     {
-        $sql = 'SELECT etat_apres FROM evenement_cycle WHERE identite_reference = ?
-                AND evenement_type NOT IN (\'RATTACHEMENT_PRODUIT\',\'RETRAIT_PRODUIT\',
-                                           \'RATTACHEMENT_ORGANISATION\',\'RETRAIT_ORGANISATION\')';
+        $sql = 'SELECT etat_apres FROM evenement_cycle_identite
+                WHERE identite_reference = ?
+                AND evenement_type NOT IN
+                    (\'RATTACHEMENT_PRODUIT\',\'RETRAIT_PRODUIT\',
+                     \'RATTACHEMENT_ORGANISATION\',\'RETRAIT_ORGANISATION\')';
         $args = [$reference];
         if ($date !== null) {
             $sql .= ' AND date_effet <= ?';
             $args[] = $date;
         }
         $sql .= ' ORDER BY date_effet DESC, id DESC LIMIT 1';
-
-        $st = $this->pdo->prepare($sql);
+        $st = $this->registre->prepare($sql);
         $st->execute($args);
-        $r = $st->fetch();
+        $etat = $st->fetchColumn();
 
-        return $r === false ? null : (string) $r['etat_apres'];
+        return $etat === false ? null : (string) $etat;
     }
 
-    /** État courant, quel que soit le régime. */
     private function etatCourant(string $reference): ?string
     {
-        $identite = $this->resoudreIdentite($reference);
-
-        return $identite === null ? null : ($identite['etat'] ?? null);
+        return $this->resoudreIdentite($reference)['etat'] ?? null;
     }
 
-    /**
-     * État d'une relation à une date donnée.
-     *
-     * Une relation dont la date de fin est passée est `CLOSE`, quelle que soit
-     * la valeur inscrite : l'état est RECALCULÉ, jamais lu tel quel. Une
-     * relation expirée n'est ainsi jamais restituée comme active, même si
-     * personne n'a pensé à la clore.
-     *
-     * @param array<string,mixed> $r
-     */
-    private function etatRelation(array $r, string $jour): string
+    /** @return array{etat:string,date_fin:?string} */
+    private function etatRelation(string $reference, string $date): array
     {
-        $fin = $r['date_fin'] ?? null;
-        if ($fin !== null && (string) $fin <= $jour) {
-            return 'CLOSE';
-        }
+        $st = $this->registre->prepare(
+            'SELECT etat, evenement_type, date_effet
+             FROM evenement_relation_identite
+             WHERE relation_reference = ? AND date_effet <= ?
+             ORDER BY date_effet DESC, id DESC LIMIT 1'
+        );
+        $st->execute([$reference, $date]);
+        $e = $st->fetch();
 
-        return (string) $r['etat'];
+        return $e === false
+            ? ['etat' => 'INCONNU', 'date_fin' => null]
+            : [
+                'etat' => (string) $e['etat'],
+                'date_fin' => $e['evenement_type'] === 'CLOTURE'
+                    ? (string) $e['date_effet'] : null,
+            ];
     }
 
-    private function inscrireEvenement(
+    private function inscrireEvenementIdentite(
         string $reference,
         string $type,
         ?string $avant,
         string $apres,
         string $source,
-        ?string $politique,
+        string $preuve,
+        string $politique,
         string $acteur,
         string $date,
     ): void {
         if (!in_array($type, PolitiqueInscription::EVENEMENTS, true)) {
-            throw new \LogicException("événement `{$type}` hors liste close (loi révisée, Art. 22)");
+            throw new \LogicException("événement `{$type}` hors liste close");
         }
+        $this->registre->prepare(
+            'INSERT INTO evenement_cycle_identite
+             (identite_reference,evenement_type,etat_avant,etat_apres,source,
+              preuve_reference,politique_inscription,acteur_reference,date_effet)
+             VALUES(?,?,?,?,?,?,?,?,?)'
+        )->execute([
+            $reference, $type, $avant, $apres, $source, $preuve,
+            $politique, $acteur, $date,
+        ]);
+    }
 
-        $this->pdo->prepare(
-            'INSERT INTO evenement_cycle
-             (identite_reference,evenement_type,etat_avant,etat_apres,source,politique_inscription,acteur_reference,date_effet)
+    private function inscrireEvenementRelation(
+        string $reference,
+        string $categorie,
+        string $type,
+        string $etat,
+        string $source,
+        string $preuve,
+        string $producteur,
+        string $date,
+    ): void {
+        $this->registre->prepare(
+            'INSERT INTO evenement_relation_identite
+             (relation_reference,categorie,evenement_type,etat,source,
+              preuve_reference,producteur,date_effet)
              VALUES(?,?,?,?,?,?,?,?)'
-        )->execute([$reference, $type, $avant, $apres, $source, $politique, $acteur, $date]);
+        )->execute([
+            $reference, $categorie, $type, $etat, $source,
+            $preuve, $producteur, $date,
+        ]);
+    }
+
+    private function allouerReference(string $type): string
+    {
+        $prefixe = PolitiqueInscription::PREFIXE[$type]
+            ?? PolitiqueInscription::PREFIXE['INDETERMINE'];
+        $this->registre->prepare(
+            'INSERT INTO compteur_reference_identite(type,dernier)
+             VALUES(?,0) ON CONFLICT(type) DO NOTHING'
+        )->execute([$type]);
+        $sql = 'SELECT dernier FROM compteur_reference_identite WHERE type = ?';
+        if ((string) $this->registre->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'pgsql') {
+            $sql .= ' FOR UPDATE';
+        }
+        $st = $this->registre->prepare($sql);
+        $st->execute([$type]);
+        $numero = ((int) $st->fetchColumn()) + 1;
+        $this->registre->prepare(
+            'UPDATE compteur_reference_identite SET dernier = ? WHERE type = ?'
+        )->execute([$numero, $type]);
+
+        return sprintf('%s-%09d', $prefixe, $numero);
+    }
+
+    private function dateValide(string $date): bool
+    {
+        $valeur = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+
+        return $valeur !== false && $valeur->format('Y-m-d') === $date;
+    }
+
+    /** @return array<string,mixed> */
+    private function refus(string $motif, string $detail): array
+    {
+        return ['refus' => $motif, 'detail' => $detail];
     }
 
     /**
-     * Alloue une référence canonique jamais encore attribuée.
-     *
-     * INV-17 — une référence libérée par une clôture ou une dissolution n'est
-     * JAMAIS réattribuée. Le compteur repart donc du plus grand numéro déjà
-     * porté par le type, et non du nombre de lignes vivantes.
+     * @template T
+     * @param callable():T $operation
+     * @return T
      */
-    private function allouerReference(string $type): string
+    private function transaction(\PDO $pdo, callable $operation): mixed
     {
-        $prefixe = PolitiqueInscription::PREFIXE[$type] ?? PolitiqueInscription::PREFIXE['INDETERMINE'];
-
-        $st = $this->pdo->prepare(
-            'SELECT reference FROM identite_inscrite WHERE reference LIKE ? ORDER BY reference DESC LIMIT 1'
-        );
-        $st->execute([$prefixe . '-%']);
-        $dernier = $st->fetch();
-
-        $numero = 1;
-        if ($dernier !== false && preg_match('/-(\d+)$/', (string) $dernier['reference'], $m)) {
-            $numero = ((int) $m[1]) + 1;
+        $propre = !$pdo->inTransaction();
+        if ($propre) {
+            $pdo->beginTransaction();
         }
+        try {
+            $resultat = $operation();
+            if ($propre) {
+                $pdo->commit();
+            }
 
-        return sprintf('%s-%06d', $prefixe, $numero);
+            return $resultat;
+        } catch (\Throwable $e) {
+            if ($propre && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 }

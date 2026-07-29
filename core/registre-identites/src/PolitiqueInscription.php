@@ -5,22 +5,18 @@ declare(strict_types=1);
 namespace Gamad\RegistreIdentites;
 
 /**
- * La politique d'inscription et l'échelle d'assurance, telles que l'autorité
- * les a arrêtées par `ADOPTION-0066`, Articles 212 et 213.
+ * Vocabulaire technique fermé de la première implémentation révisée.
  *
- * Ces valeurs ne sont pas des choix d'ingénierie. Elles sont RECOPIÉES d'un
- * acte adopté, et une modification du code qui les changerait sans acte
- * ferait mentir le corpus. Chaque constante nomme l'article qui la porte.
- *
- * INV-79 — l'écriture est gouvernée, jamais libre. Six conditions cumulatives
- * pèsent sur toute commande, et la présente classe en porte trois : le canal
- * autorisé, le type que ce canal peut inscrire, et le niveau d'assurance
- * initial que ce canal produit — jamais davantage.
+ * La loi adoptée par ADOPTION-0064 impose une écriture gouvernée, l'échelle
+ * A0–A3 et des politiques nommées. Cette classe ne prétend pas remplacer le
+ * futur registre des politiques : chaque commande doit encore fournir la
+ * politique, sa source, son producteur et sa preuve. Elle borne seulement les
+ * valeurs que le code sait traiter sans inventer de profil ni de droit.
  */
 final class PolitiqueInscription
 {
     /**
-     * Les cinq canaux d'inscription (ADOPTION-0066, Article 212).
+     * Canaux supportés par ce premier incrément.
      *
      * Un canal ne produit JAMAIS un niveau d'assurance supérieur au sien, et
      * n'inscrit JAMAIS un type absent de sa liste. Aucun produit n'inscrit un
@@ -53,23 +49,23 @@ final class PolitiqueInscription
     ];
 
     /**
-     * Les canaux que l'autorité seule exerce (ADOPTION-0066, Article 214).
+     * Les canaux que l'autorité d'inscription seule exerce.
      * Un produit ou une organisation qui les invoquerait est refusé.
      */
     public const CANAUX_RESERVES = ['AUTORITE', 'CREATION_TECHNIQUE'];
 
-    /** L'autorité d'inscription (ADOPTION-0066, Article 214). */
+    /** Autorité institutionnelle déjà canonique dans le corpus. */
     public const AUTORITE_INSCRIPTION = 'AUT-GAMAD-001';
 
     /**
-     * L'échelle d'assurance, ordonnée (ADOPTION-0066, Article 213).
+     * L'échelle d'assurance ordonnée adoptée pour CAP-CORE-001.
      *
      * @var array<string,int>
      */
     public const ASSURANCE = ['A0' => 0, 'A1' => 1, 'A2' => 2, 'A3' => 3];
 
     /**
-     * Niveau minimal exigé par finalité (ADOPTION-0066, Article 213).
+     * Niveau minimal traité par finalité dans cette première version.
      *
      * `REPRESENTATION` exige `A3` ET un mandat vérifié par `CAP-CORE-003` : le
      * niveau seul n'y suffit jamais, et c'est `resoudreEtatUtilisable` qui
@@ -89,7 +85,7 @@ final class PolitiqueInscription
 
     /**
      * Plafond d'assurance d'une identité provisoire ou pseudonyme, tant
-     * qu'aucune conversion gouvernée n'est intervenue (ADOPTION-0066, Art. 213).
+     * qu'aucune conversion gouvernée n'est intervenue.
      */
     public const PLAFOND_PROVISOIRE = 'A1';
 
@@ -141,6 +137,23 @@ final class PolitiqueInscription
      */
     public const CLASSIFICATIONS = [
         'PUBLIC_ECOSYSTEME', 'INTERNE', 'CONFIDENTIEL', 'RESTREINT', 'SECRET_CORE',
+    ];
+
+    /** États propres aux identités persistantes. */
+    public const ETATS_IDENTITE = [
+        'PROVISOIRE', 'ACTIVE', 'SUSPENDUE', 'CLOTUREE', 'DISSOUTE',
+    ];
+
+    /** Résultats permis pour une proposition de rapprochement. */
+    public const QUALIFICATIONS_RAPPROCHEMENT = [
+        'AUCUNE_CORRESPONDANCE',
+        'CORRESPONDANCE_POSSIBLE',
+        'CORRESPONDANCE_PROBABLE',
+    ];
+
+    /** États gouvernés d'un rapprochement ; aucun n'opère une fusion. */
+    public const ETATS_RAPPROCHEMENT = [
+        'VALIDATION_REQUISE', 'VALIDEE', 'REJETEE',
     ];
 
     /** Préfixe de référence par type. Une référence n'est jamais réattribuée (INV-17). */

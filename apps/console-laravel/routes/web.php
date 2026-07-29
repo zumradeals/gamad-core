@@ -23,6 +23,8 @@ Route::get('/', [Ctr04Controller::class, 'tableauDeBord'])->name('ctr04.tableau-
     Route::get('/sources/{reference}', [Ctr04Controller::class, 'resoudreSource'])->name('ctr04.resoudre-source');
     Route::get('/capacites/{reference}', [Ctr04Controller::class, 'resoudreCapacite'])->name('ctr04.resoudre-capacite');
     Route::get('/identites/{reference}', [Ctr01Controller::class, 'resoudreIdentite'])->name('ctr01.resoudre-identite');
+    Route::get('/identites/{reference}/regime', [Ctr01Controller::class, 'resoudreRegime'])->name('ctr01.resoudre-regime');
+    Route::get('/identites/{reference}/assurance', [Ctr01Controller::class, 'resoudreAssurance'])->name('ctr01.resoudre-assurance');
     Route::get('/identites', [Ctr01Controller::class, 'resoudreInventaire'])->name('ctr01.inventaire');
     Route::get('/denominations', [Ctr01Controller::class, 'resoudreDenominations'])->name('ctr01.denominations');
     Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat'])->name('ctr02.resoudre-mandat');
