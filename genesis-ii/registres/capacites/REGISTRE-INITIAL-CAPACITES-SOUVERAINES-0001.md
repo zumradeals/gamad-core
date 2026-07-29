@@ -2121,3 +2121,74 @@ Le décret de travail du 29 juillet 2026 réserve GamaDrive et l'ouverture du pr
 Le présent Titre ne constate pas `G0`, ne lève aucune réserve, n'admet aucune capacité, ne rend `CAP-CORE-021` ni implémentée ni active, ne modifie l'état d'aucune capacité, ne nomme aucun responsable ni opérateur, n'engage aucun satellite, n'autorise aucune finalité, n'ouvre aucun accès à aucune base, n'inscrit aucune identité, n'accepte aucun risque nouveau, ne modifie le corps d'aucun article antérieur et ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3).
 
 Qu'une application **doive** partager sa base avec le Core ne signifie ni qu'elle le fasse, ni que le Core sache la lire, ni qu'un contrat existe pour cela.
+
+---
+
+# TITRE XLI — AUCUNE DÉCISION EN ATTENTE NE BLOQUE LE CODE
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0066`. Aucun article ni tableau des Titres I à XL n'est réécrit ni supprimé.
+
+## Article 255 — Nature de la présente mise à jour
+
+Le présent Titre constate les conséquences d'exécution de `ADOPTION-0066`, par lequel l'autorité clôt douze décisions et arrête la règle qui empêche qu'une décision future entrave le code.
+
+Il ne modifie l'état d'aucune capacité et ne code rien.
+
+## Article 256 — `INV-93` — Toute décision requérant un nom, une autorisation ou une adoption reçoit une réponse
+
+> **Une décision ouverte qui requiert un nom, une autorisation, un acte ou une adoption reçoit la réponse de l'autorité institutionnelle transitoire. Aucune décision en attente n'arrête la production de code.**
+
+Le motif est inscrit au décret de travail du 29 juillet 2026 : la production de textes avait entravé le travail au point de menacer le corpus d'abrogation. Un corpus dont chaque question ouverte suspend une ligne de code ne protège rien ; il empêche.
+
+L'autorité répond parce qu'elle est, depuis `ADOPTION-0061`, l'**autorité de décision unique et transitoire** pour toutes les classes et tous les niveaux de risque. La règle ne crée aucun pouvoir : elle rend systématique l'exercice d'un pouvoir déjà établi.
+
+## Article 257 — `INV-94` — La réponse est inscrite, jamais tacite
+
+C'est la borne sans laquelle `INV-93` détruirait l'Article 7 du Registre initial des décisions.
+
+> **Une réponse par défaut n'existe qu'inscrite à la forme de l'Article 154, avec la mention « par voie exceptionnelle » et l'acte qui la porte. Une décision qui ne porte pas cette ligne n'est pas close.**
+
+Ni le silence, ni l'ancienneté, ni l'urgence du code ne closent quoi que ce soit. `INV-93` dispense d'attendre ; il ne dispense pas d'écrire. La différence entre les deux est exactement celle qui sépare une décision d'une adoption tacite.
+
+Une réponse par défaut est en outre **provisoire** : elle vaut jusqu'à ce que l'autorité la remplace, et son remplacement n'est ni une rectification ni un aveu.
+
+## Article 258 — `INV-95` — Trois matières que la réponse par défaut ne couvre pas
+
+> **`INV-93` ne s'applique ni à la frontière des accès réservés, ni à l'indépendance de l'audit, ni à l'admission d'une capacité.**
+
+1. **La frontière des accès réservés.** Secrets, clés, `DATABASE_URL`, comptes, hébergement, déploiement demeurent du domaine exclusif de l'autorité (`ADOPTION-0025`, Art. 3.a). Aucune règle générale ne les ouvre, et l'agent ne les franchit pas.
+2. **L'indépendance de l'audit.** Une autorité ne se déclare pas indépendante d'elle-même. `RISK-SEC-0001` demeure entier, la fonction `AUDIT` demeure `VACANTE`, et `M-75` demeure la menace que le corpus porte sans la traiter.
+3. **L'admission d'une capacité.** L'Article 48 de la Charte exige une **démonstration** — un fait, non une règle. Une réponse par défaut ne démontre rien, et `CAP-CORE-021` demeure `INSCRITE`.
+
+Ces trois exclusions ne sont pas des précautions de style. Ce sont les trois matières où une réponse par défaut ferait précisément le contraire de ce qu'elle prétend : elle rendrait vrai par décret ce qui ne se constate que par preuve.
+
+## Article 259 — Les fonctions, après la clôture de `DECISION-0018`
+
+L'autorité institutionnelle transitoire tient, pour les vingt et une capacités, les fonctions de **responsable** et d'**opérateur**.
+
+La fonction **`AUDIT` demeure `VACANTE`**, expressément, et l'autorité **ne la prend pas**. Se nommer auditeur de son propre ouvrage supprimerait la fonction au lieu de la pourvoir.
+
+L'Article 6 du présent Registre exige qu'une capacité opérée ait un opérateur identifiable : il l'est désormais. Il n'exige pas qu'il soit distinct de l'autorité, et le corpus n'en établit aucun autre (`INV-39`).
+
+## Article 260 — Menaces retenues
+
+Le dernier numéro attribué est `M-99`. Le présent Titre retient `M-100` à `M-103`.
+
+| Menace | Énoncé | Traitement |
+|---|---|---|
+| `M-100` | La réponse par défaut devient une adoption tacite, faute d'être écrite | `INV-94` |
+| `M-101` | Une réponse provisoire est tenue pour définitive parce que nul ne l'a remplacée | `INV-94` |
+| `M-102` | La règle est étendue à un secret, à un déploiement ou à une admission | `INV-95` |
+| `M-103` | L'autorité se nomme auditeur de son propre ouvrage, et la fonction disparaît | `INV-95`, Article 259 |
+
+`M-103` n'est pas hypothétique : elle décrit ce qu'aurait produit la clôture de `DECISION-0018` si l'autorité avait pourvu les trois fonctions au lieu de deux.
+
+## Article 261 — Aucun état de capacité ne change
+
+Le présent Titre ne modifie l'état d'aucune des vingt et une capacités, sur aucune des quatre dimensions. `CAP-CORE-021` demeure conception `CONÇUE`, implémentation `NON COMMENCÉE`, exploitation `INACTIVE`, preuve `NON ÉTABLI`.
+
+Nommer un responsable et un opérateur ne rend une capacité ni surveillée, ni sauvegardée, ni restaurable — l'Article 229 disait déjà exactement cela de l'admission.
+
+## Article 262 — Non-effet
+
+Le présent Titre ne constate pas `G0`, ne lève et ne requalifie aucune réserve de `G0`, ne rend l'audit ni indépendant ni suffisant, n'admet aucune capacité, ne modifie l'état d'aucune, n'inscrit aucune identité, n'engage aucun satellite, n'ouvre aucun accès à aucune base, n'accepte aucun risque nouveau, ne modifie le corps d'aucun article antérieur, ne franchit pas la frontière des accès réservés et n'opère aucun déploiement.
