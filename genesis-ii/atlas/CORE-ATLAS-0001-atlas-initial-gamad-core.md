@@ -953,3 +953,32 @@ Elle n'établit ni objectif de reprise, ni mode dégradé, ni plan de succession
 Elle ne franchit pas l'exclusion de mission de l'Article 4 du Registre initial des sauvegardes : l'inventaire et le test des sauvegardes techniques réelles demeurent du domaine exclusif de l'autorité (`ADOPTION-0025`, Art. 3.a).
 
 Le présent Titre est un projet tant qu'il n'est pas adopté ; sa fusion dans `main` par l'autorité **est** la décision (Article 129).
+
+---
+
+# TITRE XVII — RECTIFICATION : LE DÉCOMPTE DE L'ARTICLE 133 ÉTAIT FAUX
+
+> **Nature :** rectification par ajout seul, adoptée par `ADOPTION-0056`. Aucun article ni tableau préexistant n'est réécrit ni supprimé. L'Article 133 demeure exact quant à `CTR-18` et faux quant à son décompte final ; le présent Titre prévaut sur ce point.
+
+## Article 136 — Ce que l'Article 133 a affirmé, et ce que le corpus portait
+
+L'Article 133 conclut : « Avec le présent Titre, **les vingt capacités portent toutes au moins une famille de contrat.** »
+
+Cette affirmation était **fausse à sa date**. Le corpus portait alors dix-huit familles et dix-huit capacités titulaires. **Deux capacités n'en portaient aucune** :
+
+| Capacité | Objet | Domaine | Criticité |
+|---|---|---|---|
+| `CAP-CORE-010` | Lexique canonique | `DOM-01` | `CRITIQUE` |
+| `CAP-CORE-016` | Gouvernance des secrets et clés | `DOM-08` | `RACINE` |
+
+Le fait est dérivable de l'Atlas et du Registre initial des capacités par `Ctr14::attributions()`. Il n'a pas été dérivé : il a été écrit de mémoire.
+
+## Article 137 — La cause, et ce qu'elle enseigne
+
+L'Article 133 raisonnait par récurrence sur les Titres antérieurs — `CTR-17` avait pourvu `CAP-CORE-002`, `CTR-18` pourvoyait `CAP-CORE-019` — et concluait que la série était close. La récurrence était juste ; sa prémisse ne l'était pas, car elle supposait que ces deux capacités étaient les seules dépourvues.
+
+`ADOPTION-0055`, Article 9 a repris cette affirmation sans la dériver, et l'a portée dans `main`. C'est la **seconde occurrence** du défaut qu'`ADOPTION-0054` avait rectifié le 29 juillet 2026 : un décompte reconstitué de mémoire plutôt que relu du corpus.
+
+Ce qu'`ADOPTION-0054` avait arrêté vaut donc aussi pour les décomptes exprimés en **totalité** — « toutes », « la dernière », « la seule » — et pas seulement pour les nombres écrits en chiffres. Une totalité est un décompte qui ne dit pas son nombre.
+
+La rectification ne retire rien à `CTR-18`, dont la création et le rattachement demeurent réguliers. Elle porte sur le seul décompte final.

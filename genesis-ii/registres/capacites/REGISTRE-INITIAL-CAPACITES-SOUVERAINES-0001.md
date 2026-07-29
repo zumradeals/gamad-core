@@ -1664,3 +1664,23 @@ L'**acceptation de `RISK-SEC-0001`** — l'audit non indépendant — demeure sa
 ## Article 212 — Non-effet
 
 Le présent Titre ne rend aucune capacité admise ni active, n'accepte, ne clôt et ne réexamine aucun risque, ne déclare aucun incident, n'atteste aucune sauvegarde, ne franchit pas la frontière des accès réservés et ne constate pas `G0`.
+
+---
+
+# TITRE XXXV — RECTIFICATION : DEUX CAPACITÉS ÉTAIENT DÉPOURVUES DE FAMILLE
+
+> **Nature :** rectification par ajout seul, adoptée par `ADOPTION-0056`. Aucun article ni tableau préexistant n'est réécrit ni supprimé. L'Article 208 demeure exact quant au rattachement de `CTR-18` et faux quant à sa dernière phrase ; le présent Titre prévaut sur ce point.
+
+## Article 213 — L'affirmation rectifiée
+
+L'Article 208 conclut : « **Les vingt capacités portent désormais toutes au moins une famille de contrat.** » L'Article 133 de `CORE-ATLAS-0001` porte la même affirmation, et l'Article 9 d'`ADOPTION-0055` l'a reprise.
+
+Elle était **fausse à sa date**. Le corpus portait dix-huit familles et dix-huit capacités titulaires ; **`CAP-CORE-010` et `CAP-CORE-016` n'en portaient aucune**.
+
+Le fait est dérivable par `Ctr14::attributions()`, service de `CAP-CORE-020`. Il n'a pas été dérivé.
+
+## Article 214 — Portée de la rectification
+
+Elle ne retire rien au rattachement de `CTR-18` à `CAP-CORE-019`, régulier et maintenu. Elle ne modifie l'état d'aucune capacité, n'en promeut ni n'en rétrograde aucune, et ne constate pas `G0`.
+
+Elle rappelle la règle d'`ADOPTION-0054` et l'étend : **une totalité est un décompte qui ne dit pas son nombre.** « Toutes », « la dernière », « la seule » se dérivent du corpus comme un chiffre, jamais de mémoire.
