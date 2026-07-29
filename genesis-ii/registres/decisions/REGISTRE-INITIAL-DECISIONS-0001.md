@@ -962,3 +962,67 @@ Elle ne tranche aucune des décisions inscrites, n'en préjuge aucune, ne fixe a
 ## Article 158 — Non-effet
 
 Le présent Titre ne rend aucune capacité admise ni active, ne nomme aucun responsable, n'ouvre aucune série de références de façon définitive, ne comble aucun écart global et ne constate pas `G0`.
+
+---
+
+# TITRE XIV — MISE À JOUR POST-ADOPTION : L'ACTE DE LOT
+
+## Article 159 — Nature de la présente mise à jour
+
+Le présent Titre est ajouté par `ADOPTION-0052`. Il ne modifie le corps d'aucune disposition des Titres I à XIII.
+
+Il arrête la **forme** d'un acte adoptant plusieurs incréments à la fois, et les garanties qu'un tel acte ne peut pas amoindrir.
+
+## Article 160 — Pourquoi le lot
+
+Un acte par incrément a produit une redite mesurée : sur les six actes qui ont précédé le présent Titre, neuf cent quatre-vingt-dix-sept lignes de corpus pour mille sept cent quatre-vingt-dix-sept lignes de code, dont l'essentiel répétait d'un texte à l'autre le même tableau de gardes, les mêmes empreintes et les mêmes clauses de non-effet.
+
+Cette redite n'ajoute aucune garantie. Elle en retranche même une : c'est dans sa part mécanique que `ADOPTION-0048` a omis le Titre d'état que `ADOPTION-0050` a dû rétablir.
+
+Le lot n'est pas une nouveauté du Core. `ADOPTION-0020` a adopté cinquante-sept documents en un acte. Le présent Titre ne crée donc pas la pratique : il l'encadre.
+
+## Article 161 — Ce que le lot ne change pas
+
+La fusion `--no-ff` dans `main` demeure **l'acte d'adoption**, unique et appartenant à l'autorité seule (`ADOPTION-0024`, Art. 3). Le lot change le nombre de textes à écrire, jamais le nombre d'autorités qui décident.
+
+Demeurent entières et par incrément :
+
+- la **garde de comportement propre** à chaque capacité (`ADOPTION-0035`, Art. 2.2) — une capacité n'hérite pas de la preuve d'une autre ;
+- la **contre-épreuve de falsification** avec témoin (`ADOPTION-0032`, Art. 3) ;
+- le **Titre de constat d'état** au Registre initial des capacités ;
+- la règle d'**ajout seul** : aucun texte adopté n'est réécrit ;
+- l'**empreinte exacte** déclarée pour chaque contenu adopté.
+
+Un lot qui amoindrirait l'une de ces cinq garanties ne serait pas un lot : ce serait une adoption en bloc, que le corpus n'admet pas.
+
+## Article 162 — `INV-51` — Un acte de lot énumère chacun de ses incréments
+
+Ce qu'un acte de lot n'énumère pas, il ne l'adopte pas.
+
+Chaque incrément d'un lot est déclaré séparément, avec son objet, son commit, la capacité qu'il sert et la garde qui l'éprouve. Un incrément présent au commit mais absent de l'énumération demeure **non adopté**, quand bien même la fusion l'aurait porté dans `main`.
+
+Le motif est le risque propre du lot : qu'un incrément passe sans être vu parce qu'il voyageait avec d'autres. L'énumération est ce qui distingue un lot examiné d'un bloc avalé.
+
+## Article 163 — Forme d'un incrément de lot
+
+Chaque incrément est inscrit dans l'acte de lot par une ligne de la forme suivante :
+
+> `- **Incrément :** <objet>. **Commit :** ` + `` `<empreinte>` `` + `. **Capacité :** ` + `` `CAP-CORE-0NN` `` + `. **Garde :** ` + `` `<chemin de la garde>` `` + `.`
+
+La capacité nommée doit exister au Registre initial des capacités. La garde nommée doit exister sur le disque et être inscrite à l'intégration continue. Un incrément dont la garde n'est pas exécutée par l'intégration continue n'est pas éprouvé, et l'énumération le montre.
+
+Un acte n'énumérant aucun incrément n'est pas un acte de lot ; les actes ordinaires demeurent inchangés.
+
+## Article 164 — Ce que le lot ne peut pas contenir
+
+Un même lot ne mêle pas des incréments de code à une **rectification d'un défaut** que l'un d'eux aurait introduit. La rectification appartient à un acte propre, qui la nomme et l'expose.
+
+Le motif est celui qu'`ADOPTION-0050` a établi : un défaut de l'agent trouvé par un mécanisme mérite d'être lu pour lui-même, et non d'être classé au milieu de travaux qui réussissent.
+
+## Article 165 — Cadence
+
+La cadence du lot appartient à l'autorité : par séance, par jour, par thème ou par capacité. Aucun nombre minimal ni maximal d'incréments n'est fixé, et un lot d'un seul incrément demeure régulier.
+
+## Article 166 — Non-effet
+
+Le présent Titre ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, ne nomme aucun responsable et ne constate pas `G0`.

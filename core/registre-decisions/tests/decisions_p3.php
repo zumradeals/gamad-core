@@ -142,6 +142,34 @@ $verifier(
     isset($inscrites['DECISION-0001']) ? (string) $inscrites['DECISION-0001']['source'] : 'inscription absente',
 );
 
+/* ------------------------------------------------------------------ INV-51 */
+echo "\n  INV-51 — un acte de lot énumère chacun de ses incréments\n";
+
+// Le contrôle porte aujourd'hui sur un ensemble qui peut être vide : le dépôt
+// ne portera d'acte de lot qu'à partir du premier. Ce n'est pas une faiblesse
+// du contrôle, c'est son état initial — et c'est la contre-épreuve qui
+// l'éprouve, en fabriquant hors dépôt le lot défaillant que le dépôt ne porte
+// pas. Un contrôle qui n'a rien à voir aujourd'hui doit voir demain.
+$defaillants = $ctr05->incrementsDefaillants();
+$verifier(
+    $defaillants === [],
+    "aucun incrément de lot ne nomme une capacité, une garde ou une CI absente",
+    $defaillants === []
+        ? sprintf('%d lot(s) · %d incrément(s) énuméré(s)', $ecarts['lots'], $ecarts['increments_de_lot'])
+        : implode(' · ', array_map(
+            static fn (array $i) => (string) $i['acte'] . ' → ' . (string) $i['capacite'] . ' : ' . (string) $i['motif'],
+            $defaillants,
+        )),
+);
+
+foreach ($ctr05->lots() as $acte => $increments) {
+    $verifier(
+        $increments !== [],
+        "l'acte de lot {$acte} énumère ses incréments",
+        count($increments) . ' incrément(s)',
+    );
+}
+
 /* ------------------------------------------------------------------ INV-48 */
 echo "\n  INV-48 — les inventaires sont confrontés, jamais réconciliés\n";
 

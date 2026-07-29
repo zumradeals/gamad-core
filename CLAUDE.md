@@ -106,6 +106,31 @@ technologie. Concrètement :
 Le code est identifié par son **commit** (empreinte de l'incrément entier),
 déclaré dans l'acte qui l'adopte.
 
+### L'acte de lot (`ADOPTION-0052`, Titre XIV du Registre des décisions)
+
+Un acte peut adopter **plusieurs incréments à la fois**. C'est la voie normale
+dès qu'une séance en produit plus d'un : elle supprime la redite, jamais une
+garantie.
+
+Chaque incrément est énuméré séparément dans l'acte, sous cette forme exacte :
+
+```
+- **Incrément :** <objet>. **Commit :** `<sha>`. **Capacité :** `CAP-CORE-0NN`. **Garde :** `<chemin>`.
+```
+
+`INV-51` — **ce qu'un acte de lot n'énumère pas, il ne l'adopte pas**, même si
+la fusion l'a porté dans `main`. La garde de `CAP-CORE-008` vérifie que chaque
+incrément énuméré nomme une capacité qui existe et une garde qui existe **et
+qui est exécutée en intégration continue**.
+
+Ce que le lot ne change pas, et que tu dois produire **par incrément** :
+sa garde de comportement propre, sa contre-épreuve de falsification avec
+témoin, son Titre de constat d'état au Registre des capacités, l'ajout seul et
+l'empreinte exacte. Un lot ne mêle jamais des incréments à la **rectification
+d'un défaut** que l'un d'eux a introduit : la rectification a son acte propre.
+
+La cadence appartient à l'autorité. Un lot d'un seul incrément demeure régulier.
+
 ---
 
 ## 6. Carte du dépôt
