@@ -382,6 +382,38 @@ final class Ctr14
      *
      * @return array<string,mixed>
      */
+    /**
+     * Décompte des capacités par criticité, codées et restantes.
+     *
+     * Cette opération existe pour une raison précise : `ADOPTION-0053` a
+     * affirmé « sept des huit `RACINE` » là où le corpus en porte dix, dont
+     * huit codées. Le chiffre avait été écrit de mémoire, non dérivé.
+     *
+     * Un chiffre qui figure dans un acte doit pouvoir être relu du corpus.
+     * Celui-ci l'est désormais, et la garde de la capacité l'éprouve.
+     *
+     * @return array<string,array<string,mixed>> criticité => décompte
+     */
+    public function parCriticite(): array
+    {
+        $decompte = [];
+        foreach ($this->comparerReel() as $l) {
+            $fiche = $this->resoudreCapacite((string) $l['capacite']);
+            if ($fiche === null) {
+                continue;
+            }
+            $criticite = (string) $fiche['criticite'];
+            if (!isset($decompte[$criticite])) {
+                $decompte[$criticite] = ['criticite' => $criticite, 'total' => 0, 'codees' => [], 'restantes' => []];
+            }
+            $decompte[$criticite]['total']++;
+            $decompte[$criticite][$l['observe']['module'] !== null ? 'codees' : 'restantes'][] = (string) $l['capacite'];
+        }
+        ksort($decompte);
+
+        return $decompte;
+    }
+
     public function ecarts(): array
     {
         $reel = $this->comparerReel();
@@ -419,6 +451,7 @@ final class Ctr14
         return [
             'capacites'            => count($this->registre()),
             'capacites_codees'     => count(array_filter($reel, fn (array $l) => $l['observe']['code_present'])),
+            'par_criticite'        => $this->parCriticite(),
             'divergentes'          => count($divergentes),
             'divergences_par_type' => $parType,
             'atlas_divergent'      => count($divergencesAtlas),

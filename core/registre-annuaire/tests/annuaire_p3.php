@@ -239,6 +239,34 @@ $verifier(
 // échouer la preuve de la capacité qui a mission de la voir. Ce n'est pas
 // arbitrer un écart (INV-38) : c'est refuser d'attester un corpus qui se
 // contredit lui-même.
+// Un chiffre écrit de mémoire finit par être faux. ADOPTION-0053 a affirmé
+// « sept des huit RACINE » là où le corpus en porte dix, dont huit codées.
+// Les décomptes par criticité sont désormais DÉRIVÉS, et éprouvés ici : un
+// acte qui les cite peut les relire du corpus au lieu de les reconstituer.
+$parCriticite = $ctr14->parCriticite();
+$attendus = [
+    'RACINE'   => ['total' => 10, 'codees' => 8],
+    'CRITIQUE' => ['total' => 10, 'codees' => 5],
+];
+foreach ($attendus as $criticite => $attendu) {
+    $releve = $parCriticite[$criticite] ?? null;
+    $verifier(
+        $releve !== null
+            && $releve['total'] === $attendu['total']
+            && count($releve['codees']) === $attendu['codees'],
+        "le décompte des capacités {$criticite} est dérivé, non écrit de mémoire",
+        $releve === null
+            ? 'criticité absente'
+            : sprintf('%d codée(s) sur %d', count($releve['codees']), $releve['total']),
+    );
+}
+
+$verifier(
+    array_sum(array_column($parCriticite, 'total')) === $ecarts['capacites'],
+    "les décomptes par criticité couvrent les vingt capacités, sans reste",
+    array_sum(array_column($parCriticite, 'total')) . ' sur ' . $ecarts['capacites'],
+);
+
 $divergentes = array_values(array_filter(
     $ctr14->comparerReel(),
     static fn (array $l) => $l['verdict'] === 'DIVERGENCE',

@@ -106,6 +106,8 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 
 | `ADOPTION-0053` | Premier acte de lot — domaine `DOM-04` : famille `CTR-17`, Registre initial des organisations, et premier code de `CAP-CORE-002`, `CAP-CORE-011` et `CAP-CORE-012` | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
+| `ADOPTION-0054` | Rectification du décompte faux de l'Article 13 d'`ADOPTION-0053` et dérivation des décomptes par criticité | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
 ## Article 5 — Textes en cours de délibération non inscrits
 
 `MATRICE-INITIALE-LOI-PREUVE-0001` et `REGISTRE-INITIAL-USAGES-IA-0001`, ainsi que tout texte produit dans le cadre des Phases 1 à 4 en cours, portent le statut `PROJET NORMATIF — EN COURS DE DÉLIBÉRATION` et ne figurent pas dans ce tableau tant qu'ils ne sont pas adoptés.
