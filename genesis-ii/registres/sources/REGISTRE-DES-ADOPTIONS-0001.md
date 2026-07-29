@@ -94,6 +94,8 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 
 | `ADOPTION-0047` | Conception de `CAP-CORE-009` — Registre des contrats ; catalogue dérivé, dépendances observées et champs non établis | Koné Djakaridja | 28 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
+| `ADOPTION-0048` | Premier incrément de code de `CAP-CORE-009` — catalogue des contrats `CTR-06`, dépendances observées dans le code, preuve `P3` établie | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
 ## Article 5 — Textes en cours de délibération non inscrits
 
 `MATRICE-INITIALE-LOI-PREUVE-0001` et `REGISTRE-INITIAL-USAGES-IA-0001`, ainsi que tout texte produit dans le cadre des Phases 1 à 4 en cours, portent le statut `PROJET NORMATIF — EN COURS DE DÉLIBÉRATION` et ne figurent pas dans ce tableau tant qu'ils ne sont pas adoptés.
