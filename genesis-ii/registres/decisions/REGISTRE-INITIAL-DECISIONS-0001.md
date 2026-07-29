@@ -1189,3 +1189,58 @@ Elle ne tranche aucune décision, n'en préjuge aucune, ne fixe aucun délai, n'
 ## Article 183 — Non-effet
 
 Le présent Titre ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, ne nomme aucun responsable, ne lève aucune réserve, n'accepte aucun risque et ne constate pas `G0`.
+
+---
+
+# TITRE XVII — ARBITRAGE : LA FAMILLE COMPÉTENTE POUR L'ADMISSION D'UNE IMPLÉMENTATION SOUVERAINE
+
+## Article 184 — Nature de la présente mise à jour
+
+Le présent Titre est ajouté par `ADOPTION-0060`. Il ne modifie le corps d'aucune disposition des Titres I à XVI, et n'efface aucune ligne d'inscription.
+
+Il tranche `DECISION-0044`, inscrite au Titre XVI et demeurée ouverte depuis. **C'est le premier arbitrage rendu dans la forme des Articles 153 et 154** : une décision inscrite, tranchée par un acte, et close par une ligne qui nomme cet acte.
+
+## Article 185 — L'admission d'une implémentation souveraine relève de `CTR-14`
+
+L'autorité arrête que l'admission d'une implémentation d'une capacité souveraine, son inscription, sa mention d'audit et son retrait relèvent de la famille **`CTR-14` — Capacité souveraine**, gardien `Transversal`.
+
+Le motif tient à l'objet déclaré de la famille par l'Article 69 de `CORE-ATLAS-0001` : « résoudre mission, **statut**, opérateur, dépendances et **sortie** ». L'admission d'une implémentation est le statut d'une capacité ; son retrait est sa sortie. Le rattachement suit l'objet, et non le mot.
+
+## Article 186 — Le sort du mot « admission » dans les deux objets
+
+`CTR-08` — Statut produit ou realm porte le mot dans son objet : « résoudre **admission**, conformité et cycle de vie ». Ce mot y demeure, et son intitulé le borne.
+
+Le corpus l'avait déjà lu ainsi, dans un tout autre contexte : l'Article 130 de `CORE-ATLAS-0001` constate que `CTR-08` « garde `DOM-04`, mais **son intitulé même la restreint aux produits et aux realms** ». Le présent arbitrage ne crée pas cette lecture ; il la retient et l'étend au cas qui l'appelait.
+
+En conséquence, et sans qu'il faille rien retrancher :
+
+| Objet admis | Famille compétente |
+|---|---|
+| Implémentation d'une capacité souveraine | `CTR-14` |
+| Produit, realm | `CTR-08` |
+
+Les dossiers d'admission des quatre produits, attendus depuis `ADOPTION-0016` et inscrits comme `DECISION-0030`, demeurent sous `CTR-08`. Le présent arbitrage ne les déplace pas et ne les traite pas.
+
+## Article 187 — Une interprétation, non une modification
+
+La présente décision est une **interprétation** au sens de l'Article 52 : elle explique l'application d'un texte sans le modifier. `CORE-ATLAS-0001` n'est ni corrigé, ni prolongé ; la table de son Article 69 demeure telle qu'adoptée, et aucune empreinte de l'Atlas n'est mise à jour.
+
+Deux familles portent le mot « admission » pour deux objets, et continueront de le porter. Ce qui change est que la distinction est désormais **écrite** au lieu d'être implicite — c'est-à-dire vérifiable, et opposable à qui s'en écarterait.
+
+## Article 188 — Clôture
+
+- **Décision close :** `DECISION-0044` — **Par :** `ADOPTION-0060`.
+
+La ligne d'ouverture inscrite à l'Article 180 demeure et n'est pas effacée : la clôture s'y ajoute (`INV-47`, Article 154).
+
+## Article 189 — Ce que cet arbitrage ne tranche pas
+
+Il ne tranche **aucune des quatre autres décisions** nées de l'Article 11 d'`ADOPTION-0058` : `DECISION-0045` — qui prononce l'admission —, `DECISION-0046` — la proportionnalité —, `DECISION-0047` — le sens de la complétude — et `DECISION-0048` — la condition de réexamen sous audit non indépendant demeurent ouvertes.
+
+Il ne tranche pas davantage `DECISION-0019`, dont le point 6 de ce même Article 11 était une espèce, ni `DECISION-0043` — ce qui suit `P3` —, ni `DECISION-0049`, qui soumet les regroupements du Titre XVI.
+
+**Désigner la famille compétente n'ordonne aucun incrément.** Aucun code n'est commandé, aucun ordre de travaux n'est fixé : l'ordre demeure réservé par l'Article 83 et inscrit comme `DECISION-0019`.
+
+## Article 190 — Non-effet
+
+Le présent Titre n'admet aucune implémentation, n'en présente aucune à l'admission, ne rend aucune capacité admise ni active, ne modifie aucun état, ne livre aucun code, ne modifie l'Atlas ni aucune de ses tables, ne nomme aucun responsable, n'accepte aucun risque, ne lève aucune réserve, ne rend l'audit ni indépendant ni suffisant et ne constate pas `G0`.
