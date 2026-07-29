@@ -1458,3 +1458,49 @@ Le registre initial des contrats attendu parmi les preuves `G0` demeure un docum
 ## Article 184 — Non-effet
 
 Le présent Titre ne rend `CAP-CORE-009` ni implémentée, ni admise, ni active, n'arbitre aucune décision ouverte, n'accepte aucun risque nouveau, ne nomme aucun responsable et ne constate pas `G0`.
+
+---
+
+# TITRE XXX — MISE À JOUR POST-ADOPTION : RATTACHEMENT DE LA FAMILLE `CTR-07` À `CAP-CORE-014`
+
+## Article 185 — Nature de la présente mise à jour
+
+Le présent Titre porte au champ qui les recense une attribution que le Registre énonçait déjà, mais en prose. Il ne modifie le corps d'aucune disposition des Titres I à XXIX : ceux-ci demeurent au dépôt tels qu'adoptés, et l'Article 48 n'est ni réécrit ni corrigé.
+
+Il n'attribue aucune famille nouvelle. Il **déclare sous une forme dérivable** ce que l'Article 48 avait déjà adopté.
+
+## Article 186 — Le fait constaté
+
+L'Article 48 énonce, à sa ligne « État actuel », que les « principes et famille `CTR-07` » sont adoptés pour `CAP-CORE-014` — Journal d'événements communs. Cette mention est une attribution ; elle n'a jamais figuré à la ligne « Contrats attendus », que la fiche ne porte pas.
+
+`CAP-CORE-014` est la **seule des vingt capacités** dans ce cas. Les dix-neuf autres portent leurs familles au champ prévu, ou les reçoivent d'un Titre postérieur.
+
+Il en résultait que `CTR-07` — Événement commun apparaissait **sans capacité titulaire** à tout service qui dérive le Registre, alors qu'une capacité la revendiquait en toutes lettres.
+
+## Article 187 — Ce que le service a fait, et ce qu'il n'a pas fait
+
+Le catalogue des contrats livré par `ADOPTION-0048` a **nommé** cet écart, en distinguant deux espèces de vacance : celle dont aucune capacité ne garde le domaine — `CTR-09`, `CTR-12`, `CTR-13` —, structurelle et prévue par l'écart global de données de l'Article 70 ; et celle dont le domaine gardien **est** tenu, qui procède d'une déclaration manquante.
+
+Le service n'a pas comblé le vide. Déduire une attribution d'une phrase de prose eût été précisément le comblement que `INV-43` interdit, et l'attribution appartient à l'autorité (`INV-42`). L'écart a été porté à l'Article 11 de `ADOPTION-0048` et soumis.
+
+Le mécanisme s'est donc comporté comme il devait : il a vu, il a nommé, il n'a pas tranché.
+
+## Article 188 — Déclaration de rattachement
+
+Le rattachement est inscrit ci-après sous une forme que le service dérive sans interprétation.
+
+- **Rattachement :** `CAP-CORE-014` — famille attribuée `CTR-07`. **Source :** `ADOPTION-0049`, constatant l'Article 48.
+
+`CTR-07` — Événement commun est gardée par `DOM-06` (Article 69 de `CORE-ATLAS-0001`). `CAP-CORE-014` garde `DOM-06` et `DOM-09`. **`INV-40` est satisfait** : la capacité porte une famille dont elle garde le domaine. La famille n'est revendiquée par aucune autre capacité ; elle n'est donc pas partagée.
+
+## Article 189 — Ce que ce rattachement ne fait pas
+
+Il ne change l'état d'aucune des quatre dimensions de `CAP-CORE-014`, qui demeure conception `À ÉTABLIR`, implémentation `NON COMMENCÉE`, exploitation `INACTIVE`, preuve `P1`. Aucune conception de cette capacité n'est adoptée, aucun code n'est livré pour elle.
+
+Il n'établit ni les **types d'événement**, ni le **mécanisme**, ni la **conservation**, que l'Article 48 déclare non établis, ni aucune des décisions ouvertes de cette fiche — technologie, garanties de livraison, ordre et conservation. Il ne crée aucun contrat : il rattache une famille que l'Atlas définit depuis son Article 69.
+
+Les trois vacances demeurées — `CTR-09`, `CTR-12` et `CTR-13` — ne sont pas traitées par le présent Titre. Elles sont **structurelles** : aucune des vingt capacités ne garde `DOM-07`, `DOM-11` ni `DOM-12`. Les combler supposerait une capacité nouvelle, décision réservée à l'autorité par l'Article 83.
+
+## Article 190 — Non-effet
+
+Le présent Titre ne rend aucune capacité admise ni active, n'accepte aucun risque nouveau, ne nomme aucun responsable, ne comble aucun écart global, ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3) et ne constate pas `G0`.

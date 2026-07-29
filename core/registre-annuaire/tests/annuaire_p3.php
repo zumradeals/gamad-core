@@ -158,6 +158,16 @@ foreach ($reattribuees as $capacite => $famille) {
     );
 }
 
+// Un rattachement déclaré par un Titre postérieur porte au champ dérivable une
+// famille qu'une fiche nommait en prose seulement — CTR-07 à l'Article 48. Il
+// ne retire rien : ce n'est pas une réattribution, et la forme en est distincte.
+$journal = $ctr14->resoudreCapacite('CAP-CORE-014');
+$verifier(
+    $journal !== null && in_array('CTR-07', $journal['contrats'], true),
+    "un rattachement déclaré est dérivé, la fiche demeurant intacte",
+    $journal === null ? 'fiche absente' : 'contrats : ' . implode(', ', $journal['contrats']),
+);
+
 // Une famille retirée par un Titre postérieur ne doit plus être portée, sans
 // que le texte qui l'attribuait ait été réécrit.
 $sources = $ctr14->resoudreCapacite('CAP-CORE-006');

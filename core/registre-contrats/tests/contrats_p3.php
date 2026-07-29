@@ -142,20 +142,30 @@ $verifier(
     "la vacance de CTR-09 est reconnue structurelle : nulle capacité ne garde DOM-07",
 );
 
-// CTR-07 — Événement commun : le Registre la rattache à CAP-CORE-014 en prose
-// (Article 48, « État actuel »), et non dans le champ qui porte les contrats.
-// Le service nomme cette vacance sans l'attribuer : la porter au champ est un
-// acte de l'autorité, pas une déduction de l'agent (INV-38, INV-42).
+// CTR-07 — Événement commun : le Registre la rattachait à CAP-CORE-014 en prose
+// seulement (Article 48, « État actuel »), et non dans un champ dérivable. Le
+// service a nommé la vacance sans l'attribuer ; l'autorité l'a portée à la
+// forme dérivable par ADOPTION-0049, Titre XXX. Le titulaire est LU, non déduit.
+$verifier(
+    $ctr06->resoudreContrat('CTR-07')['titulaires'] === ['CAP-CORE-014'],
+    "CTR-07 est rattachée à CAP-CORE-014 par une déclaration dérivable",
+    implode(' · ', $ctr06->resoudreContrat('CTR-07')['titulaires']),
+);
+
+// Le tri des deux espèces de vacance demeure le contrôle : toute famille encore
+// sans titulaire doit l'être STRUCTURELLEMENT, aucune capacité ne gardant son
+// domaine. Une vacance d'une autre espèce reparaîtrait ici.
 $malgreGardien = $ctr06->sansTitulaireMalgreGardien();
 $verifier(
-    array_key_exists('CTR-07', $malgreGardien) && $malgreGardien['CTR-07'] !== [],
-    "CTR-07 est nommée : sans titulaire alors qu'une capacité garde son domaine",
-    'capacités gardant DOM-06 : ' . implode(' · ', $malgreGardien['CTR-07'] ?? []),
+    $malgreGardien === [],
+    "toute vacance restante est structurelle, aucune ne procède d'une déclaration manquante",
+    $malgreGardien === [] ? 'aucune' : implode(' · ', array_keys($malgreGardien)),
 );
 
 $verifier(
-    $ctr06->resoudreContrat('CTR-07')['titulaires'] === [],
-    "l'écart est nommé sans être comblé : CTR-07 demeure sans titulaire",
+    $ctr06->sansTitulaire() === ['CTR-09', 'CTR-12', 'CTR-13'],
+    "les trois vacances structurelles sont celles que le corpus prévoit",
+    implode(' · ', $ctr06->sansTitulaire()),
 );
 
 /* ------------------------------------------------------------------ INV-44 */
