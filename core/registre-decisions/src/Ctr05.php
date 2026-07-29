@@ -350,6 +350,87 @@ final class Ctr05
         return $orphelines;
     }
 
+    // ------------------------------------------------------------------ lots
+
+    /**
+     * Les actes de lot et les incréments qu'ils énumèrent (INV-51, Article 163).
+     *
+     * Un acte de lot adopte plusieurs incréments à la fois. Ce qu'il n'énumère
+     * pas, il ne l'adopte pas — quand bien même la fusion l'aurait porté dans
+     * `main`. L'énumération est ce qui distingue un lot examiné d'un bloc avalé.
+     *
+     * Le service lit la FORME, jamais la prose de l'acte.
+     *
+     * @return array<string,list<array<string,string>>> acte => incréments
+     */
+    public function lots(): array
+    {
+        $lots = [];
+        foreach (array_keys($this->actes()) as $reference) {
+            foreach ($this->actes()[$reference] as $fichier) {
+                $texte = $this->lire(self::ACTES . '/' . $fichier);
+                foreach (explode("\n", $texte) as $ligne) {
+                    if (!preg_match(
+                        '/\*\*Incrément\s*:\*\*\s*(.+?)\.\s*\*\*Commit\s*:\*\*\s*`([0-9a-f]{7,40})`\.\s*'
+                        . '\*\*Capacité\s*:\*\*\s*`(CAP-CORE-\d{3})`\.\s*\*\*Garde\s*:\*\*\s*`([^`]+)`/u',
+                        trim($ligne),
+                        $m,
+                    )) {
+                        continue;
+                    }
+                    $lots[$reference][] = [
+                        'acte'      => $reference,
+                        'objet'     => trim($m[1]),
+                        'commit'    => $m[2],
+                        'capacite'  => $m[3],
+                        'garde'     => $m[4],
+                    ];
+                }
+            }
+        }
+        ksort($lots);
+
+        return $lots;
+    }
+
+    /**
+     * Les incréments de lot dont une garantie manque (Article 163).
+     *
+     * Le lot ne peut amoindrir aucune des garanties par incrément. Trois se
+     * vérifient sur le disque sans interpréter quoi que ce soit : la capacité
+     * nommée existe, la garde nommée existe, et l'intégration continue
+     * l'exécute. Une garde que l'intégration continue n'exécute pas n'éprouve
+     * rien, et l'énumération doit le montrer.
+     *
+     * @return list<array<string,string>>
+     */
+    public function incrementsDefaillants(): array
+    {
+        $capacites = $this->lire('genesis-ii/registres/capacites/REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001.md');
+        $ci        = $this->lire('.github/workflows/gardes-comportement.yml');
+
+        $defaillants = [];
+        foreach ($this->lots() as $increments) {
+            foreach ($increments as $increment) {
+                $motifs = [];
+                if (!str_contains($capacites, '`' . $increment['capacite'] . '`')) {
+                    $motifs[] = 'capacité inconnue du Registre';
+                }
+                if (!is_file($this->corpus . '/' . $increment['garde'])) {
+                    $motifs[] = 'garde absente du disque';
+                }
+                if (!str_contains($ci, $increment['garde'])) {
+                    $motifs[] = 'garde non exécutée en intégration continue';
+                }
+                if ($motifs !== []) {
+                    $defaillants[] = $increment + ['motif' => implode(' ; ', $motifs)];
+                }
+            }
+        }
+
+        return $defaillants;
+    }
+
     // ------------------------------------------------------------- vocabulaire
 
     /**
@@ -396,6 +477,9 @@ final class Ctr05
             'ouvertes'            => count($this->ouvertes()),
             'closes'              => count($this->closes()),
             'clotures_sans_acte'  => $this->cloturesSansActe(),
+            'lots'                => count($this->lots()),
+            'increments_de_lot'   => array_sum(array_map('count', $this->lots())),
+            'increments_defaillants' => $this->incrementsDefaillants(),
             'statuts_hors_vocabulaire' => $hors,
             'statuts_distincts'   => count(array_unique(array_column($this->index(), 'statut'))),
             'champs_non_etablis'  => array_keys(array_filter(
