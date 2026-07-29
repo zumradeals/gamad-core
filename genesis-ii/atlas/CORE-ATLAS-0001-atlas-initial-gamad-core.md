@@ -982,3 +982,63 @@ L'Article 133 raisonnait par récurrence sur les Titres antérieurs — `CTR-17`
 Ce qu'`ADOPTION-0054` avait arrêté vaut donc aussi pour les décomptes exprimés en **totalité** — « toutes », « la dernière », « la seule » — et pas seulement pour les nombres écrits en chiffres. Une totalité est un décompte qui ne dit pas son nombre.
 
 La rectification ne retire rien à `CTR-18`, dont la création et le rattachement demeurent réguliers. Elle porte sur le seul décompte final.
+
+---
+
+# TITRE XVIII — LA FAMILLE `CTR-19` — RÉSOLUTION DE TERME
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0057`. Aucun article ni tableau préexistant n'est réécrit ni supprimé.
+
+## Article 138 — La première des deux capacités sans famille
+
+`CAP-CORE-010` — Lexique canonique énonce à l'Article 45 du Registre initial des capacités : « résolution de terme, version applicable, ambiguïté et changement lexical ». Aucune des dix-huit familles ne les porte.
+
+L'omission a la même cause que celles des Titres XIV, XV et XVI : l'Article 69 n'a pas été consulté au moment où la fiche a été rédigée.
+
+## Article 139 — `CTR-19` — Résolution de terme
+
+| Référence | Famille de contrat | Domaine gardien | Objet minimal |
+|---|---|---|---|
+| `CTR-19` | Résolution de terme | `DOM-01` | Résoudre un terme canonique, sa définition, sa version applicable, le texte qui la porte et son statut d'arbitrage |
+
+La numérotation suit la règle de `ADOPTION-0032`, Art. 2.1 : le dernier numéro attribué était `CTR-18`.
+
+`CAP-CORE-010` garde `DOM-01`, domaine gardien de `CTR-19`. **`INV-40` est satisfait** sans réattribution, et la famille n'est revendiquée par aucune autre capacité. Elle ne recouvre pas `CTR-15` — Référence de source, également gardée par `DOM-01` et tenue par `CAP-CORE-006` : `CTR-15` résout une **source**, `CTR-19` résout un **terme**.
+
+## Article 140 — Ce que cette famille ne fait pas
+
+Elle ne crée, ne modifie et ne déprécie aucune entrée de `LEXICON-0001`, ne tranche aucune ambiguïté et ne met à jour aucune empreinte déclarée.
+
+Elle ne tranche pas l'observation de l'Article 8 du Registre lexical, ouverte depuis le 27 juillet 2026, et n'établit ni règle de numérotation, ni statut des synonymes, ni gouvernance des termes locaux — l'Article 45 les range parmi ses décisions ouvertes, réservées à l'autorité.
+
+---
+
+# TITRE XIX — LA DERNIÈRE FAMILLE OMISE : `CTR-20`
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0057`. Aucun article ni tableau préexistant n'est réécrit ni supprimé.
+
+## Article 141 — La seconde des deux capacités sans famille
+
+`CAP-CORE-016` — Gouvernance des secrets et clés, de criticité `RACINE`, énonce à l'Article 51 du Registre initial des capacités : « demande limitée, rotation, révocation, attestation et cérémonie de récupération ». Aucune des dix-neuf familles ne les porte.
+
+Avec le présent Titre, **les vingt capacités portent toutes au moins une famille de contrat** — cette fois dérivé du corpus par `Ctr14::attributions()`, et non reconstitué de mémoire (`ADOPTION-0054` ; Titre XVII ci-dessus).
+
+## Article 142 — `CTR-20` — Gouvernance de secret
+
+| Référence | Famille de contrat | Domaine gardien | Objet minimal |
+|---|---|---|---|
+| `CTR-20` | Gouvernance de secret | `DOM-08` | Résoudre les métadonnées d'un secret — gardien, finalité, rotation, révocation, récupération — jamais sa valeur |
+
+La numérotation suit la règle de `ADOPTION-0032`, Art. 2.1 : le dernier numéro attribué était `CTR-19`.
+
+`CAP-CORE-016` garde `DOM-08`, domaine gardien de `CTR-20`. **`INV-40` est satisfait** sans réattribution, et la famille n'est revendiquée par aucune autre capacité. Elle ne recouvre pas `CTR-16` — Preuve de contrôle et assurance, gardée par `DOM-02`/`DOM-08` et tenue par `CAP-CORE-005` : `CTR-16` établit une **session**, `CTR-20` gouverne un **secret**.
+
+## Article 143 — L'exclusion de la valeur est la définition de la famille
+
+`CTR-20` porte des métadonnées et **jamais une valeur secrète**. Ce n'est pas une limitation de son objet : c'en est la définition. Une famille de contrat qui porterait la valeur violerait la Loi 40 de `CORE-LAWS-0001` et l'Article 72 de `GOVERNANCE-0001`.
+
+Elle ne franchit pas les exclusions de mission de l'Article 4 du Registre cryptographique et de l'Article 4 du Registre initial des accès privilégiés : l'inventaire réel des secrets, clés, certificats, coffres et comptes demeure du domaine exclusif de l'autorité (`ADOPTION-0025`, Art. 3.a).
+
+Elle n'établit ni solution de coffre, ni détenteur, ni seuil, ni fréquence de rotation, ni politique de clés racines — l'Article 51 les range parmi ses décisions ouvertes.
+
+Le présent Titre est un projet tant qu'il n'est pas adopté ; sa fusion dans `main` par l'autorité **est** la décision (Article 129).

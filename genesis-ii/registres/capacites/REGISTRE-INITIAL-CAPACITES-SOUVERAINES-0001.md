@@ -1684,3 +1684,66 @@ Le fait est dérivable par `Ctr14::attributions()`, service de `CAP-CORE-020`. I
 Elle ne retire rien au rattachement de `CTR-18` à `CAP-CORE-019`, régulier et maintenu. Elle ne modifie l'état d'aucune capacité, n'en promeut ni n'en rétrograde aucune, et ne constate pas `G0`.
 
 Elle rappelle la règle d'`ADOPTION-0054` et l'étend : **une totalité est un décompte qui ne dit pas son nombre.** « Toutes », « la dernière », « la seule » se dérivent du corpus comme un chiffre, jamais de mémoire.
+
+---
+
+# TITRE XXXVI — MISE À JOUR POST-ADOPTION : LE LOT FINAL — `CAP-CORE-010`, `CAP-CORE-013`, `CAP-CORE-014` ET `CAP-CORE-016`
+
+## Article 215 — Nature de la présente mise à jour
+
+Le présent Titre constate les conséquences d'exécution de `ADOPTION-0057`, troisième acte de lot. Il ne modifie le corps d'aucune disposition des Titres I à XXXV.
+
+Ces quatre capacités ne partagent ni domaine ni famille : ce qui les rassemble est une **position** — elles sont les dernières non codées. La conception est conjointe ; la preuve ne l'est pas.
+
+## Article 216 — Rattachement de la famille `CTR-19` à `CAP-CORE-010`
+
+L'Article 45 énonce les contrats attendus de `CAP-CORE-010` en prose et sans référence. Le Titre XVIII de `CORE-ATLAS-0001`, adopté par le même acte, crée la famille `CTR-19` — Résolution de terme, gardée par `DOM-01`.
+
+- **Rattachement :** `CAP-CORE-010` — famille attribuée `CTR-19`. **Source :** `ADOPTION-0057`, constatant l'Article 45.
+
+`CAP-CORE-010` garde `DOM-01` : `INV-40` est satisfait. La famille ne recouvre pas `CTR-15`, tenue par `CAP-CORE-006` sur le même domaine — `CTR-15` résout une source, `CTR-19` résout un terme.
+
+## Article 217 — Rattachement de la famille `CTR-20` à `CAP-CORE-016`
+
+L'Article 51 énonce les contrats attendus de `CAP-CORE-016` en prose et sans référence. Le Titre XIX de `CORE-ATLAS-0001`, adopté par le même acte, crée la famille `CTR-20` — Gouvernance de secret, gardée par `DOM-08`.
+
+- **Rattachement :** `CAP-CORE-016` — famille attribuée `CTR-20`. **Source :** `ADOPTION-0057`, constatant l'Article 51.
+
+`CAP-CORE-016` garde `DOM-08` : `INV-40` est satisfait. **Les vingt capacités portent désormais toutes au moins une famille de contrat** — dérivé par `Ctr14::attributions()`, et non reconstitué de mémoire (Titre XXXV ci-dessus).
+
+## Article 218 — Le partage de `CTR-10` entre deux capacités est régulier
+
+`CTR-10` — Audit et intégrité sert `CAP-CORE-013` et `CAP-CORE-015`, et l'Atlas l'énonce dans son intitulé même. Le partage est **régulier** (`INV-40`, Article 125 de l'Atlas).
+
+Chaque capacité a son module propre et déclare la capacité qu'elle sert (`INV-41`) : `core/registre-audit/` sert `CAP-CORE-013`, `core/registre-preuves/` sert `CAP-CORE-015`. L'intégrité atteste d'un **objet** ; l'audit atteste d'un **acte**.
+
+## Article 219 — Changement d'état
+
+| Capacité | État avant | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-010` — Lexique canonique | Conception `EN CONCEPTION` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+| `CAP-CORE-013` — Audit commun | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+| `CAP-CORE-014` — Journal d'événements communs | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+| `CAP-CORE-016` — Gouvernance des secrets et clés | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0057`. **Contrats :** `CTR-19` pour `CAP-CORE-010`, `CTR-10` pour `CAP-CORE-013`, `CTR-07` pour `CAP-CORE-014`, `CTR-20` pour `CAP-CORE-016`. **Invariants introduits :** `INV-62` à `INV-66`. **Menaces retenues :** `M-70` à `M-75`.
+
+L'exploitation demeure `INACTIVE` pour les quatre. `CAP-CORE-016` étant de criticité `RACINE`, **les dix capacités `RACINE` sont désormais codées et éprouvées**, et **les vingt capacités souveraines le sont**. Ce décompte est dérivé par `Ctr14::parCriticite()`.
+
+## Article 220 — Ce que le présent Titre ne comble pas
+
+L'**écart global de sécurité** de l'Article 72 demeure entier : aucun inventaire, aucun coffre, aucun détenteur, aucune rotation, aucune récupération testée n'est établi. Le service de `CAP-CORE-016` s'arrête devant l'exclusion de mission et devant l'interdiction absolue ; il ne comble ni l'une ni l'autre.
+
+L'**observation lexicale** de l'Article 8 du Registre lexical demeure non tranchée depuis le 27 juillet 2026. Le service de `CAP-CORE-010` la nomme ; il ne la tranche pas.
+
+Les **deux réserves de `G0` levées sous restriction** — accès et secrets, produits non qualifiés — demeurent restreintes dans les termes que le dossier d'audit écrit lui-même. Le service de `CAP-CORE-013` les restitue ; il ne les requalifie pas.
+
+Le **journal d'événements communs** demeure inexistant, et son absence demeure non déclarée. Le service de `CAP-CORE-014` la nomme ; il n'établit aucun type, aucune convention, aucune conservation.
+
+La fonction `AUDIT` demeure **non indépendante** : `RISK-SEC-0001` est inchangé, sans terme fixe.
+
+## Article 221 — Non-effet
+
+Le présent Titre ne rend aucune capacité admise ni active, n'opère aucun déploiement, n'accepte aucun risque, ne nomme aucun responsable, ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3) et **ne constate pas `G0`**.
+
+Que les vingt capacités atteignent `P3 — TESTÉ` signifie que chacune porte une garde éprouvant son propre contrat. Cela ne signifie ni qu'elles sont exploitées, ni qu'elles sont admises, ni que les écarts qu'elles constatent sont comblés — la plupart d'entre elles ont précisément pour objet de nommer ce qui manque.

@@ -8,7 +8,7 @@ namespace Gamad\RegistreLexique;
  * Les opérations du contrat CTR-19 — Résolution de terme
  * (CAP-CORE-010, conception adoptée par ADOPTION-0057).
  *
- * La famille `CTR-19` est créée par le Titre XVII de `CORE-ATLAS-0001` et
+ * La famille `CTR-19` est créée par le Titre XVIII de `CORE-ATLAS-0001` et
  * rattachée à `CAP-CORE-010`. L'Article 45 énonçait ses contrats attendus en
  * prose — « résolution de terme, version applicable, ambiguïté et changement
  * lexical » — sans qu'aucune famille de l'Article 69 ne les porte.
