@@ -168,6 +168,41 @@ function etat(array $l, string $dimension): string
   <p class="ok">Aucun — les quatre champs sont établis pour au moins une capacité.</p>
   <?php endif; ?>
 
+  <h2>Dossiers d'admission — assemblés, jamais conclus</h2>
+  <p class="sub">
+    <code>ADOPTION-0060</code> a rattaché l'admission d'une implémentation souveraine à <code>CTR-14</code>.
+    Le service assemble les neuf pièces dérivables de l'Article 13 et <strong>ne conclut pas</strong> (<code>INV-72</code>) :
+    un dossier complet ne vaut pas admission, il la rend examinable. L'admission est prononcée par l'autorité seule.
+  </p>
+  <div class="scroll"><table>
+    <thead><tr>
+      <th>Capacité</th><th>Admission inscrite</th><th>Acte adoptant</th><th>Contre-épreuve</th>
+      <th>Dossier</th><th>Recevable (<code>INV-69</code>)</th><th>Mention d'audit (<code>INV-70</code>)</th>
+    </tr></thead>
+    <tbody>
+    <?php foreach ($reel as $l): $d = $ctr14->dossierAdmission((string) $l['capacite']); ?>
+      <tr>
+        <td><code><?= e((string) $l['capacite']) ?></code></td>
+        <td class="<?= $d['admission'] === null ? 'muted' : '' ?>"><?= e((string) $d['etat_admission']) ?></td>
+        <td><?= $d['pieces']['acte_adoptant'] !== null ? '<code>' . e((string) $d['pieces']['acte_adoptant']) . '</code>' : '<span class="ko">non résolu</span>' ?></td>
+        <td><?= $d['pieces']['contre_epreuve']['declaree']
+              ? '<span class="ok">déclarée' . ($d['pieces']['contre_epreuve']['temoin'] ? ' · témoin' : '') . '</span>'
+              : '<span class="ko">non déclarée à l\'acte</span>' ?></td>
+        <td class="<?= $d['dossier_complet'] ? 'ok' : 'ko' ?>">
+          <?= $d['dossier_complet'] ? 'complet' : 'incomplet — ' . e(implode(', ', $d['pieces_manquantes'])) ?>
+        </td>
+        <td class="muted"><?= $d['recevable_a_l_admission'] ? 'oui' : 'non — état partiel' ?></td>
+        <td><?= $d['mention_d_audit_requise'] ? '<span class="pill">audit non indépendant</span>' : '<span class="muted">—</span>' ?></td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table></div>
+  <p class="sub">
+    Quatre questions demeurent hors de portée de tout service (Article 14 de la conception) et sont restituées
+    <strong><?= e(Ctr14::NON_DERIVABLE) ?></strong> : complétude au sens de l'objet de la famille, proportionnalité
+    des contrôles, identité du responsable, opportunité. Le service ne les comble pas.
+  </p>
+
   <h2>Concordance Atlas — Registre (<?= count($atlas) ?> capacités confrontées)</h2>
   <p class="<?= $ecarts['atlas_divergent'] ? 'ko' : 'ok' ?>">
     <?= (int) $ecarts['atlas_divergent'] ?> divergence(s) de libellé ou de domaine entre <code>CORE-ATLAS-0001</code> et le Registre initial des capacités.

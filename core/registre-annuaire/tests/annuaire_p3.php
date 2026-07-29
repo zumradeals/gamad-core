@@ -298,6 +298,173 @@ $verifier(
         )),
 );
 
+/* -------------------------------- INV-67 à INV-72 — dossier d'admission */
+echo "\n  INV-67 à INV-72 — le dossier d'admission s'assemble, et ne conclut pas\n";
+
+// ADOPTION-0060 a rattaché l'admission d'une implémentation souveraine à
+// CTR-14 : c'est donc ici, et non ailleurs, que le dossier se dérive.
+
+$verifier(
+    $ctr14->admissions() === [],
+    "aucune admission n'est inscrite, et le service n'en invente aucune",
+    count($ctr14->admissions()) . ' admission(s) relevée(s) à la forme de l\'Article 174',
+);
+
+$dossier = $ctr14->dossierAdmission('CAP-CORE-020');
+
+$piecesAttendues = [
+    'identite', 'commit_presente', 'acte_adoptant', 'garde', 'contre_epreuve',
+    'concordance', 'ecarts_ouverts', 'exclusions_de_mission', 'audit',
+];
+$absentes = array_values(array_diff($piecesAttendues, array_keys($dossier['pieces'])));
+$verifier(
+    $absentes === [] && count($dossier['pieces']) === 9,
+    "les neuf pièces dérivables de l'Article 13 sont assemblées, ni plus ni moins",
+    $absentes === [] ? count($dossier['pieces']) . ' pièce(s)' : 'absente(s) : ' . implode(', ', $absentes),
+);
+
+// Une capacité dont la conception déclare une exclusion de mission ne doit pas
+// la voir comptée comme un manque (INV-69). CAP-CORE-016 en porte une.
+$secrets = $ctr14->dossierAdmission('CAP-CORE-016');
+$verifier(
+    $secrets['pieces']['exclusions_de_mission'] !== []
+        && !in_array('exclusions_de_mission', $secrets['pieces_manquantes'], true),
+    "une exclusion de mission déclarée appartient au périmètre, non aux manques",
+    implode(', ', $secrets['pieces']['exclusions_de_mission']) ?: 'aucune relevée',
+);
+
+// La contre-épreuve est relevée de l'acte, jamais rejouée ni présumée.
+$verifier(
+    $secrets['pieces']['contre_epreuve']['declaree'] === true
+        && $secrets['pieces']['contre_epreuve']['temoin'] === true,
+    "la contre-épreuve et son témoin sont relevés de l'acte adoptant",
+    (string) $secrets['pieces']['contre_epreuve']['source'],
+);
+
+// Les écarts du dossier sont ceux de l'annuaire, pris de `ecarts()` comme
+// l'Article 13 le prescrit. Un dossier qui en tiendrait le compte à part
+// présenterait à l'admission un état plus clément que l'annuaire publié.
+$ecartsAnnuaire = [];
+foreach ($ctr14->ecarts()['divergences_par_type'] as $type => $capacites) {
+    foreach ($capacites as $c) {
+        $ecartsAnnuaire[(string) $c][] = (string) $type;
+    }
+}
+$ecartsDossiers = [];
+foreach ($ctr14->comparerReel() as $ligne) {
+    $siens = $ctr14->dossierAdmission((string) $ligne['capacite'])['pieces']['ecarts_ouverts'];
+    if ($siens !== []) {
+        $ecartsDossiers[(string) $ligne['capacite']] = array_keys($siens);
+    }
+}
+$verifier(
+    $ecartsDossiers == $ecartsAnnuaire,
+    "les écarts ouverts du dossier sont ceux de l'annuaire, ni moindres ni autres",
+    $ecartsAnnuaire === [] ? 'aucun écart ouvert de part ni d\'autre' : count($ecartsAnnuaire) . ' capacité(s) en écart',
+);
+
+// INV-72 — le service assemble et ne conclut pas. Aucun champ du dossier ne
+// porte un avis, une suffisance ni une proposition d'admission.
+$conclusions = array_intersect(
+    ['avis', 'admis', 'suffisant', 'recommandation', 'proposition', 'verdict_admission'],
+    array_keys($dossier),
+);
+$verifier(
+    $conclusions === [],
+    "INV-72 — le dossier ne porte aucune conclusion",
+    $conclusions === [] ? 'aucun champ de conclusion' : 'champ(s) : ' . implode(', ', $conclusions),
+);
+
+// Article 14 de la conception — quatre questions qu'aucun service ne dérive.
+$nonDerivables = $dossier['non_derivable'];
+$declarees = array_filter($nonDerivables, static fn (string $v) => $v === Ctr14::NON_DERIVABLE);
+$verifier(
+    count($nonDerivables) === 4 && count($declarees) === 4,
+    "les quatre questions non dérivables sont DÉCLARÉES telles, non comblées",
+    implode(', ', array_keys($nonDerivables)),
+);
+
+// INV-69 — nul ne se présente à l'admission depuis un état partiel. Les vingt
+// capacités sont PARTIELLEMENT MATÉRIALISÉE : aucune n'est recevable, et un
+// dossier complet ne change rien à cela.
+$recevables = [];
+$completsNonRecevables = 0;
+$incomplets = [];
+foreach ($ctr14->comparerReel() as $ligne) {
+    $d = $ctr14->dossierAdmission((string) $ligne['capacite']);
+    if ($d['recevable_a_l_admission']) {
+        $recevables[] = (string) $ligne['capacite'];
+    }
+    if ($d['dossier_complet'] && !$d['recevable_a_l_admission']) {
+        $completsNonRecevables++;
+    }
+    if (!$d['dossier_complet']) {
+        $incomplets[(string) $ligne['capacite']] = $d['pieces_manquantes'];
+    }
+}
+$verifier(
+    $recevables === [],
+    "INV-69 — aucune capacité n'est recevable à l'admission depuis un état partiel",
+    $recevables === [] ? 'aucune des vingt' : implode(', ', $recevables),
+);
+$verifier(
+    $completsNonRecevables === 19,
+    "un dossier complet ne vaut pas recevabilité — dix-neuf le démontrent",
+    $completsNonRecevables . ' dossier(s) complet(s) et non recevable(s)',
+);
+
+// Le dossier relève un fait historique du corpus, et ne l'arrondit pas :
+// `ADOPTION-0029` a adopté le premier incrément codé AVANT que
+// `ADOPTION-0032`, Art. 3 n'exige une contre-épreuve. Son acte n'en déclare
+// donc aucune, et le dossier de `CAP-CORE-007` est incomplet de cette pièce.
+// La contre-épreuve existe — `ADOPTION-0031` l'a produite — mais pas là où
+// l'Article 13 la fait chercher. Un service qui irait la prendre ailleurs
+// ferait disparaître l'anomalie au lieu de la montrer.
+$verifier(
+    array_keys($incomplets) === ['CAP-CORE-007']
+        && $incomplets['CAP-CORE-007'] === ['contre_epreuve'],
+    "le seul dossier incomplet est CAP-CORE-007, faute de contre-épreuve à son acte",
+    $incomplets === []
+        ? 'aucun dossier incomplet'
+        : implode(' · ', array_map(
+            static fn (string $c, array $p) => $c . ' : ' . implode(', ', $p),
+            array_keys($incomplets),
+            $incomplets,
+        )),
+);
+
+// INV-70, rendu obligatoire par ADOPTION-0061 : l'autorité de décision et
+// FCT-CORE-021 étant le même titulaire, aucune admission ne peut être
+// prononcée sans porter la mention d'audit non indépendant.
+$verifier(
+    $dossier['mention_d_audit_requise'] === true,
+    "INV-70 — la mention d'audit non indépendant est requise",
+    'audit indépendant : ' . var_export($dossier['pieces']['audit']['independante'], true),
+);
+
+// La qualité de l'audit est CONSOMMÉE de CAP-CORE-013, jamais recalculée ici.
+$verifier(
+    str_starts_with((string) $dossier['pieces']['audit']['source'], 'CAP-CORE-013'),
+    "la qualité de l'audit est consommée de CAP-CORE-013, non recalculée",
+    (string) $dossier['pieces']['audit']['source'],
+);
+
+// INV-68 — une admission nomme un commit. Aucune n'étant inscrite, l'état est
+// nommé, et non présumé favorable.
+$verifier(
+    $dossier['etat_admission'] === 'AUCUNE ADMISSION INSCRITE',
+    "INV-68 — l'absence d'admission est nommée, non présumée",
+    (string) $dossier['etat_admission'],
+);
+
+// Une capacité inconnue ne reçoit pas un dossier vide qui passerait pour vrai.
+$inconnue = $ctr14->dossierAdmission('CAP-CORE-999');
+$verifier(
+    ($inconnue['complet'] ?? true) === false,
+    "une capacité inconnue ne reçoit aucun dossier",
+    (string) ($inconnue['motif'] ?? 'dossier rendu'),
+);
+
 /* ------------------------------------------- point d'entrée de consultation */
 echo "\n  Point d'entrée — l'annuaire est consultable sans lancer un test\n";
 
@@ -335,6 +502,19 @@ $verifier(
 $verifier(
     !preg_match('/\b(Fatal error|Warning|Notice|Deprecated)\b/', $rendu),
     "la page ne laisse échapper aucun diagnostic PHP",
+);
+
+// Le dossier n'a de valeur que consultable : l'autorité doit voir sur la page
+// ce que le service assemble, y compris le seul dossier incomplet et la mention
+// d'audit qu'INV-70 impose. La page porte aussi le refus de conclure, faute de
+// quoi un lecteur pressé prendrait un tableau de pièces pour un avis.
+$verifier(
+    str_contains($rendu, "Dossiers d'admission")
+        && str_contains($rendu, 'incomplet — contre_epreuve')
+        && str_contains($rendu, 'audit non indépendant')
+        && str_contains($rendu, 'ne conclut pas'),
+    "les dossiers d'admission sont consultables, et la page ne conclut pas",
+    substr_count($rendu, 'incomplet — ') . ' dossier(s) incomplet(s) affiché(s)',
 );
 
 echo "\n";

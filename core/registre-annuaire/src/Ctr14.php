@@ -40,8 +40,20 @@ final class Ctr14
     /** Les quatre dimensions d'état, distinctes et jamais mêlées (INV-37). */
     public const DIMENSIONS = ['conception', 'implementation', 'exploitation', 'preuve'];
 
+    /**
+     * Ce qu'aucun service ne dérive, et que le dossier d'admission déclare
+     * tel plutôt que de le combler (Article 14 de la conception ; INV-39).
+     */
+    public const NON_DERIVABLE = 'NON DÉRIVABLE — appréciation humaine';
+
+    /** L'état d'implémentation depuis lequel une admission est recevable (INV-69). */
+    public const RECEVABLE_DEPUIS = 'IMPLÉMENTÉE NON ADMISE';
+
     /** @var array<string,array<string,mixed>>|null */
     private ?array $registre = null;
+
+    /** @var array<string,mixed>|null Les écarts du corpus, relevés une fois. */
+    private ?array $ecartsCorpus = null;
 
     /** @var array<string,array<string,string>>|null */
     private ?array $atlas = null;
@@ -462,6 +474,352 @@ final class Ctr14
             'champs_non_etablis'   => $champsNonEtablis,
             'portee'               => "Annuaire dérivé, jamais autoritatif (INV-36). Il nomme les divergences ; il n'en arbitre aucune.",
         ];
+    }
+
+    /**
+     * Les admissions INSCRITES, relevées à la forme de l'Article 174 du
+     * Registre initial des décisions.
+     *
+     * L'inscription vit au Registre initial des capacités souveraines :
+     * l'admission d'une implémentation est le STATUT d'une capacité, et son
+     * retrait est sa SORTIE — les deux termes de l'objet de `CTR-14`, à qui
+     * `ADOPTION-0060` a rattaché l'admission d'une implémentation souveraine.
+     *
+     * Le service ne relève que ce qui porte la forme. Une admission écrite en
+     * prose n'est pas une admission : c'est la leçon d'`ADOPTION-0059`, où
+     * vingt-quatre décisions avaient attendu quatre actes faute de forme.
+     *
+     * @return array<string,array<string,string>> capacité => admission
+     */
+    public function admissions(): array
+    {
+        $admissions = [];
+        foreach (explode("\n", $this->lire(self::REGISTRE)) as $ligne) {
+            if (!preg_match(
+                '/\*\*Admission\s*:\*\*\s*`(CAP-CORE-\d{3})`\s*\.\s*'
+                . '\*\*Commit admis\s*:\*\*\s*`([0-9a-f]{7,40})`\s*\.\s*'
+                . '\*\*Famille\s*:\*\*\s*`(CTR-\d{2})`\s*\.\s*'
+                . '\*\*Responsable\s*:\*\*\s*(.+?)\s*\.\s*'
+                . '\*\*Audit\s*:\*\*\s*(.+?)\s*\.\s*'
+                . '\*\*Réexamen\s*:\*\*\s*(.+?)\s*\.\s*$/u',
+                trim($ligne),
+                $m,
+            )) {
+                continue;
+            }
+            $admissions[$m[1]] = [
+                'capacite'     => $m[1],
+                'commit_admis' => $m[2],
+                'famille'      => $m[3],
+                'responsable'  => trim($m[4]),
+                'audit'        => trim($m[5]),
+                'reexamen'     => trim($m[6]),
+            ];
+        }
+
+        return $admissions;
+    }
+
+    /**
+     * Le DOSSIER d'admission d'une capacité : les neuf pièces que l'Article 13
+     * de `CONCEPTION-CONTROLE-ADMISSION-0001` déclare dérivables, et les
+     * quatre questions que son Article 14 déclare hors de portée d'un service.
+     *
+     * CE SERVICE NE CONCLUT PAS (`INV-72`). Il n'émet aucun avis, ne qualifie
+     * aucun dossier de suffisant et ne propose aucune admission. Le motif est
+     * celui que `ADOPTION-0057` avait porté au code du service d'audit, qui ne
+     * prononce aucune levée : un service écrit par le concepteur ne conclut
+     * pas sur l'ouvrage du concepteur.
+     *
+     * La qualité de l'audit n'est pas analysée ici : elle est CONSOMMÉE de
+     * `CAP-CORE-013`, seule capacité dont c'est la mission. Deux analyseurs du
+     * même fait finiraient par diverger, et le corpus porterait alors deux
+     * vérités sur l'indépendance de son propre audit.
+     *
+     * @return array<string,mixed>
+     */
+    public function dossierAdmission(string $reference): array
+    {
+        $comparaison = $this->comparerReel($reference);
+        if ($comparaison === []) {
+            return [
+                'capacite' => $reference,
+                'complet'  => false,
+                'motif'    => 'capacité inconnue du Registre',
+            ];
+        }
+
+        $ligne = $comparaison[0];
+        $observe = $ligne['observe'];
+        $admission = $this->admissions()[$reference] ?? null;
+        $commitCourant = $this->commitDuModule($observe['module']);
+
+        // INV-68 — une admission nomme un commit et ne lui survit pas.
+        $etatAdmission = 'AUCUNE ADMISSION INSCRITE';
+        if ($admission !== null) {
+            $etatAdmission = $commitCourant !== null
+                && str_starts_with($commitCourant, $admission['commit_admis'])
+                    ? 'ADMISE — commit inchangé'
+                    : 'ADMISSION CADUQUE — le module a changé depuis le commit admis (INV-68)';
+        }
+
+        $acte = $this->acteAdoptant($observe['module']);
+
+        // Les NEUF pièces de l'Article 13 de la conception, une clé par pièce.
+        $pieces = [
+            'identite'             => [
+                'capacite'       => $reference,
+                'module'         => $observe['module'],
+                'famille_servie' => $observe['famille_servie'],
+            ],
+            'commit_presente'      => $commitCourant,
+            'acte_adoptant'        => $acte,
+            'garde'                => [
+                'chemin' => $observe['garde'],
+                'en_ci'  => $observe['garde_en_ci'],
+            ],
+            'contre_epreuve'       => $this->contreEpreuve($acte),
+            'concordance'          => $ligne['verdict'],
+            'ecarts_ouverts'       => $this->ecartsDeLaCapacite($reference),
+            'exclusions_de_mission' => $this->exclusionsDeMission($reference),
+            'audit'                => $this->qualiteDeLAudit(),
+        ];
+
+        $manquantes = [];
+        if ($observe['module'] === null || $observe['famille_servie'] === null) {
+            $manquantes[] = 'identite';
+        }
+        if ($commitCourant === null) {
+            $manquantes[] = 'commit_presente';
+        }
+        if ($acte === null) {
+            $manquantes[] = 'acte_adoptant';
+        }
+        if ($observe['garde'] === null || !$observe['garde_en_ci']) {
+            $manquantes[] = 'garde';
+        }
+        if (!$pieces['contre_epreuve']['declaree']) {
+            $manquantes[] = 'contre_epreuve';
+        }
+
+        return [
+            'capacite'        => $reference,
+            'etat_declare'    => $ligne['declare'],
+            'admission'       => $admission,
+            'etat_admission'  => $etatAdmission,
+            'pieces'          => $pieces,
+            'pieces_manquantes' => $manquantes,
+            'dossier_complet' => $manquantes === [],
+
+            // INV-69 · INV-70 — recevabilité et mention, qui ne se dérivent pas.
+            'recevable_a_l_admission' => $ligne['declare']['implementation'] === self::RECEVABLE_DEPUIS,
+            'mention_d_audit_requise' => $this->qualiteDeLAudit()['independante'] === false,
+
+            // Article 14 de la conception — ce qu'aucun service ne dérive.
+            'non_derivable' => [
+                'completude'      => self::NON_DERIVABLE,
+                'proportionnalite' => self::NON_DERIVABLE,
+                'responsable'     => self::NON_DERIVABLE,
+                'opportunite'     => self::NON_DERIVABLE,
+            ],
+
+            'portee' => "Le service assemble le dossier et ne conclut pas (INV-72). "
+                . "Un dossier complet ne vaut pas admission : il la rend examinable. "
+                . "L'admission est prononcée par l'autorité seule (ADOPTION-0061).",
+        ];
+    }
+
+    /**
+     * Les écarts ouverts qui touchent la capacité, pris de `ecarts()` — la
+     * source que l'Article 13 de la conception nomme pour cette pièce.
+     *
+     * Le dossier ne tient pas son propre décompte d'écarts : deux inventaires
+     * du même fait divergeraient, et le dossier finirait par présenter à
+     * l'admission un état plus clément que celui que l'annuaire publie.
+     *
+     * @return array<string,string> type d'écart => portée
+     */
+    private function ecartsDeLaCapacite(string $reference): array
+    {
+        $this->ecartsCorpus ??= $this->ecarts();
+
+        $siens = [];
+        foreach ($this->ecartsCorpus['divergences_par_type'] as $type => $capacites) {
+            if (in_array($reference, $capacites, true)) {
+                $siens[$type] = 'écart ouvert sur cette capacité';
+            }
+        }
+
+        return $siens;
+    }
+
+    /**
+     * La contre-épreuve de falsification déclarée par l'acte qui a adopté
+     * l'incrément, et son témoin (`ADOPTION-0032`, Art. 3).
+     *
+     * Le service relève ce que l'acte DÉCLARE. Il ne rejoue pas la
+     * falsification et ne certifie pas qu'elle a eu lieu : une contre-épreuve
+     * se constate à l'exécution, par l'autorité, non par le service qui la lit.
+     *
+     * @return array<string,mixed>
+     */
+    private function contreEpreuve(?string $acte): array
+    {
+        $absente = [
+            'declaree' => false,
+            'temoin'   => false,
+            'source'   => $acte,
+            'portee'   => "L'acte adoptant ne déclare aucune contre-épreuve de falsification.",
+        ];
+
+        if ($acte === null) {
+            return ['declaree' => false, 'temoin' => false, 'source' => null, 'portee' => 'Acte adoptant non résolu.'];
+        }
+
+        $fichiers = glob($this->corpus . '/genesis-ii/registre/' . $acte . '-*.md') ?: [];
+        if ($fichiers === []) {
+            return $absente;
+        }
+
+        // La SECTION de contre-épreuve, et elle seule. Un acte qui se borne à
+        // lister une garde dans son tableau de vérification ne l'a pas
+        // falsifiée : confondre les deux ferait passer une mention pour une
+        // preuve.
+        $texte = (string) file_get_contents($fichiers[0]);
+        if (!preg_match(
+            '/^##[^\n]*(?:Contre-épreuve de falsification|par falsification)[^\n]*$(.*?)(?=^## |\z)/msu',
+            $texte,
+            $m,
+        )) {
+            return $absente;
+        }
+
+        $section = $m[1];
+        if (preg_match('/Aucune contre-épreuve n\'est déclarée/ui', $section)) {
+            return $absente;
+        }
+
+        return [
+            'declaree' => true,
+            'temoin'   => (bool) preg_match('/témoin|intact|sain/ui', $section),
+            'source'   => $acte,
+            'portee'   => "Déclaration relevée de l'acte adoptant ; la contre-épreuve n'est pas rejouée ici.",
+        ];
+    }
+
+    /**
+     * Les exclusions de mission que la conception adoptée déclare pour cette
+     * capacité — ce que le service n'a PAS le droit de connaître ou de
+     * produire (`INV-61`, `INV-66`).
+     *
+     * Elles appartiennent au périmètre et ne comptent pas comme manque
+     * (`INV-69`). Un dossier qui les tairait présenterait comme lacunaire un
+     * service qui se borne comme le corpus le lui ordonne.
+     *
+     * @return list<string> les documents de conception qui en déclarent
+     */
+    private function exclusionsDeMission(string $reference): array
+    {
+        $declarants = [];
+        foreach (glob($this->corpus . '/genesis-ii/conception/*.md') ?: [] as $fichier) {
+            $texte = (string) file_get_contents($fichier);
+            if (!str_contains($texte, $reference)) {
+                continue;
+            }
+            if (preg_match('/exclusion de mission|interdiction absolue/ui', $texte)) {
+                $declarants[] = basename($fichier, '.md');
+            }
+        }
+
+        return $declarants;
+    }
+
+    /**
+     * La qualité de l'audit, consommée de `CAP-CORE-013` et jamais recalculée.
+     *
+     * `ADOPTION-0061` a rendu la mention obligatoire pour toute admission :
+     * tant que l'autorité de décision et `FCT-CORE-021` sont le même titulaire,
+     * une inscription d'admission qui l'omettrait serait irrégulière.
+     *
+     * @return array<string,mixed>
+     */
+    private function qualiteDeLAudit(): array
+    {
+        $classe = $this->corpus . '/core/registre-audit/src/Ctr10.php';
+        if (!is_file($classe)) {
+            return ['independante' => null, 'source' => self::NON_DERIVABLE];
+        }
+        require_once $classe;
+        $ctr10 = new \Gamad\RegistreAudit\Ctr10($this->corpus);
+        $etat = $ctr10->independanceDeLAudit();
+
+        return [
+            'independante'   => $etat['independante'],
+            'detenteur'      => $etat['detenteur'],
+            'risque_associe' => $etat['risque_associe'],
+            'source'         => 'CAP-CORE-013 — ' . $etat['source'],
+        ];
+    }
+
+    /**
+     * L'acte qui a adopté le module, relevé des actes eux-mêmes.
+     *
+     * La dérivation ne devine rien : elle prend le commit qui a INTRODUIT le
+     * module, puis cherche cette empreinte parmi celles que les actes
+     * déclarent à leur constat d'exécution. Un module dont aucune empreinte
+     * déclarée ne porte le commit est rendu `null` — jamais rattaché par
+     * ressemblance de nom à l'acte qui s'en rapprocherait le plus (INV-43).
+     */
+    private function acteAdoptant(?string $module): ?string
+    {
+        $introduction = $this->commitDuModule($module, true);
+        if ($introduction === null) {
+            return null;
+        }
+
+        foreach (glob($this->corpus . '/genesis-ii/registre/ADOPTION-*.md') ?: [] as $acte) {
+            $texte = (string) file_get_contents($acte);
+            if (!preg_match_all('/`([0-9a-f]{7,40})`/', $texte, $m)) {
+                continue;
+            }
+            foreach ($m[1] as $empreinte) {
+                if (str_starts_with($introduction, $empreinte)) {
+                    return preg_match('/^(ADOPTION-\d{4})/', basename($acte), $ma) ? $ma[1] : null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Le commit du module, tel que le dépôt le porte — le dernier, ou celui
+     * qui l'a introduit.
+     *
+     * Hors dépôt Git — une copie de corpus, par exemple — l'empreinte n'est
+     * pas dérivable. Elle est alors rendue `null`, et le dossier la compte
+     * parmi ses pièces manquantes : un dossier d'admission sans commit ne
+     * satisfait pas `INV-68`, et le dire vaut mieux que l'inventer (INV-39).
+     */
+    private function commitDuModule(?string $module, bool $introduction = false): ?string
+    {
+        if ($module === null || !is_dir($this->corpus . '/.git')) {
+            return null;
+        }
+        // L'introduction est le PLUS ANCIEN commit qui ajoute un fichier du
+        // module — `-1` seul rendrait le plus récent, donc l'acte le plus
+        // tardif à y avoir ajouté un fichier, et non celui qui l'a livré.
+        $sortie = @shell_exec(sprintf(
+            'git -C %s log %s --format=%%H -- %s 2>/dev/null',
+            escapeshellarg($this->corpus),
+            $introduction ? '--diff-filter=A --reverse' : '-1',
+            escapeshellarg('core/' . $module),
+        ));
+
+        $lignes = array_values(array_filter(array_map('trim', explode("\n", (string) $sortie))));
+        $commit = $lignes === [] ? '' : $lignes[0];
+
+        return preg_match('/^[0-9a-f]{40}$/', $commit) === 1 ? $commit : null;
     }
 
     // ------------------------------------------------------------------ interne
