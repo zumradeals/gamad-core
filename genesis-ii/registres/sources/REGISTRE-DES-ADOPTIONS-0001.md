@@ -98,6 +98,8 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 
 | `ADOPTION-0049` | Rattachement de la famille `CTR-07` à `CAP-CORE-014` — Titre XXX du Registre des capacités et forme dérivable de la déclaration | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
+| `ADOPTION-0050` | Constat de l'état de `CAP-CORE-009` omis par `ADOPTION-0048` — Titre XXXI, et refus par la garde de l'annuaire d'une divergence d'état | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
 ## Article 5 — Textes en cours de délibération non inscrits
 
 `MATRICE-INITIALE-LOI-PREUVE-0001` et `REGISTRE-INITIAL-USAGES-IA-0001`, ainsi que tout texte produit dans le cadre des Phases 1 à 4 en cours, portent le statut `PROJET NORMATIF — EN COURS DE DÉLIBÉRATION` et ne figurent pas dans ce tableau tant qu'ils ne sont pas adoptés.
