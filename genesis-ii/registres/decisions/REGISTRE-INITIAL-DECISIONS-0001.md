@@ -1086,3 +1086,106 @@ Le retrait d'une admission s'inscrit de la même forme, avec son motif. Une admi
 ## Article 175 — Non-effet
 
 Le présent Titre n'admet aucune implémentation, ne rend aucune capacité admise ni active, ne modifie aucun état, ne livre aucun code, ne nomme aucun responsable, ne lève aucune réserve, ne rend l'audit ni indépendant ni suffisant et ne constate pas `G0`.
+
+---
+
+# TITRE XVI — MISE À JOUR POST-ADOPTION : SECONDE INSCRIPTION DE DÉCISIONS OUVERTES
+
+## Article 176 — Nature de la présente mise à jour
+
+Le présent Titre est ajouté par `ADOPTION-0059`. Il ne modifie le corps d'aucune disposition des Titres I à XV, et n'efface aucune ligne du Titre XIII.
+
+Il porte à la forme d'inscription de l'Article 153 un second ensemble de décisions que des actes adoptés énoncent déjà en prose. **Il n'en tranche aucune.**
+
+## Article 177 — Le défaut que le Titre XIII nommait s'est reformé
+
+L'Article 152 constatait que les décisions réservées à l'autorité vivaient « dans la prose, sous des intitulés qui varient », et qu'aucun service ne pouvait les retrouver. Le Titre XIII y a répondu par une forme, et par une première inscription de vingt-cinq décisions.
+
+Le défaut a reparu **dans les actes écrits après ce Titre**. Quatre actes ont énoncé des points soumis à l'autorité sans qu'aucun n'entre dans la forme dérivable :
+
+| Acte | Article | Points énoncés | Inscrits avant le présent Titre |
+|---|---|---|---|
+| `ADOPTION-0053` | 15 | 5 | 0 |
+| `ADOPTION-0055` | 16 | 6 | 0 |
+| `ADOPTION-0057` | 19 | 7 | 0 |
+| `ADOPTION-0058` | 11 | 6 | 0 |
+| **Total** | | **24** | **0** |
+
+Une forme adoptée n'est pas une forme employée. La présente inscription répare l'écart constaté ; elle ne garantit pas qu'il ne se reformera pas une troisième fois.
+
+## Article 178 — Inscrire suppose un jugement, et ce jugement est déclaré
+
+Passer d'un point de prose à une ligne inscrite n'est pas une opération mécanique : il faut décider **ce qui compte pour une décision**, où l'une finit et où l'autre commence, et si un point n'est pas déjà inscrit sous un autre libellé.
+
+L'Article 152 l'avait dit : « chercher une décision ouverte dans la prose, c'est décider laquelle en est une. » Le présent Titre ne s'en exempte pas. Les regroupements et le rejet de doublon opérés à l'Article 179 sont des appréciations, énoncées pour être contestées, et non des constats.
+
+## Article 179 — Un point n'est pas inscrit, parce qu'il l'est déjà
+
+Le point 6 de l'Article 11 d'`ADOPTION-0058` — l'ordre entre définir l'admission, admettre effectivement et rendre l'audit indépendant — invoque expressément l'Article 83 du Registre initial des capacités souveraines.
+
+Cet article est la source de `DECISION-0019`, déjà inscrite et demeurée ouverte. Le point en est une espèce, non une décision nouvelle. **Il ne reçoit pas de référence propre** : deux références pour une décision valent moins qu'une, car la clôture de l'une laisserait l'autre ouverte sans motif.
+
+Une adjacence voisine est signalée sans être traitée de même : `DECISION-0043` — ce qui suit `P3` — touche à l'ordre de mise en capacité que `DECISION-0019` réserve. Elle en est distincte, car elle ne demande pas dans quel ordre exploiter, mais **si l'exploitation est entreprise**, et à quelle frontière. L'appréciation est soumise avec le reste.
+
+## Article 180 — Seconde inscription
+
+Les décisions ci-après sont relevées d'actes adoptés, où elles figurent déjà comme réservées à l'autorité. Leur inscription ne les crée pas et n'en tranche aucune.
+
+D'`ADOPTION-0053`, Article 15 :
+
+- **Décision ouverte :** `DECISION-0026` — constituer le Registre des realms, ou prononcer la décision motivée d'absence que l'Article 47 admet. **Source :** `ADOPTION-0053`, Article 15 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 47.
+- **Décision ouverte :** `DECISION-0027` — désigner les propriétaires institutionnels des quatre produits, non désignés depuis `ADOPTION-0016`. **Source :** `ADOPTION-0053`, Article 15.
+- **Décision ouverte :** `DECISION-0028` — étendre le vocabulaire d'état des produits, ou rapprocher les états constatés hors vocabulaire. **Source :** `ADOPTION-0053`, Article 15.
+- **Décision ouverte :** `DECISION-0029` — arrêter la typologie des organisations, l'autorité d'admission et l'articulation avec les réalités juridiques externes. **Source :** `ADOPTION-0053`, Article 15.
+- **Décision ouverte :** `DECISION-0030` — constituer les dossiers d'admission des quatre produits, attendus depuis `ADOPTION-0016`. **Source :** `ADOPTION-0053`, Article 15.
+
+D'`ADOPTION-0055`, Article 16 :
+
+- **Décision ouverte :** `DECISION-0031` — arbitrer les niveaux de `RISK-SEC-0002` et `RISK-SEC-0003`, proposés par un agent artificiel depuis le 26 juillet 2026. **Source :** `ADOPTION-0055`, Article 16.
+- **Décision ouverte :** `DECISION-0032` — décider si une condition tient lieu d'échéance pour `RISK-SEC-0001` et `EXC-SEC-0001`, ou si un terme est fixé. **Source :** `ADOPTION-0055`, Article 16.
+- **Décision ouverte :** `DECISION-0033` — décider de la compensation technique de `EXC-SEC-0001`, que le Registre déclare inexistante. **Source :** `ADOPTION-0055`, Article 16.
+- **Décision ouverte :** `DECISION-0034` — arrêter la méthode d'évaluation, les seuils et la fréquence de revue des risques. **Source :** `ADOPTION-0055`, Article 16 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 52.
+- **Décision ouverte :** `DECISION-0035` — arrêter la classification des incidents, les délais, les autorités de crise et la politique de communication. **Source :** `ADOPTION-0055`, Article 16 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 53.
+- **Décision ouverte :** `DECISION-0036` — arrêter les objectifs de reprise, emplacements, rétention et responsabilités, et tenir le premier exercice de restauration. **Source :** `ADOPTION-0055`, Article 16 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 54.
+
+D'`ADOPTION-0057`, Article 19 :
+
+- **Décision ouverte :** `DECISION-0037` — trancher le terme « Registraire constitutionnel » : entrée au Lexique, ou constat motivé qu'il désigne une fonction et non un concept lexical. **Source :** `ADOPTION-0057`, Article 19.
+- **Décision ouverte :** `DECISION-0038` — arrêter les règles de numérotation lexicale, le statut des synonymes et la gouvernance des termes locaux. **Source :** `ADOPTION-0057`, Article 19 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 45.
+- **Décision ouverte :** `DECISION-0039` — arrêter les événements auditables, les délais, les accès et l'indépendance de la fonction d'audit, et le sort des cinq actes dont la trace d'adoption ne se reconstitue pas. **Source :** `ADOPTION-0057`, Article 19 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 49.
+- **Décision ouverte :** `DECISION-0040` — arrêter les types d'événement, garanties de livraison, ordre et conservation du journal commun, et décider s'il y a lieu de déclarer l'absence de ce registre plutôt que de la laisser muette. **Source :** `ADOPTION-0057`, Article 19 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 48.
+- **Décision ouverte :** `DECISION-0041` — arrêter les solutions de coffre, détenteurs, seuils, fréquence de rotation et clés racines. **Source :** `ADOPTION-0057`, Article 19 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 51.
+- **Décision ouverte :** `DECISION-0042` — décider du sort du mot de passe GamaDrive consigné en clair, accepté comme risque transitoire et qu'aucun code ne corrigera. **Source :** `ADOPTION-0057`, Article 19.
+- **Décision ouverte :** `DECISION-0043` — décider ce qui suit `P3` : l'exploitation demeure inactive pour les vingt capacités, et son activation touche le déploiement, donc la frontière des accès réservés. **Source :** `ADOPTION-0057`, Article 19.
+
+D'`ADOPTION-0058`, Article 11 :
+
+- **Décision ouverte :** `DECISION-0044` — rattacher l'admission d'une implémentation souveraine à `CTR-14` ou à `CTR-08`, et régler le sort du mot « admission » présent dans les deux objets. **Source :** `ADOPTION-0058`, Article 11.
+- **Décision ouverte :** `DECISION-0045` — désigner qui prononce l'admission parmi les neuf qualités de gouvernance de l'Article 22, et qui en répond ensuite. **Source :** `ADOPTION-0058`, Article 11 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 22.
+- **Décision ouverte :** `DECISION-0046` — arrêter la proportionnalité exigée d'une capacité `RACINE` par rapport à une capacité `CRITIQUE`. **Source :** `ADOPTION-0058`, Article 11 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 18.
+- **Décision ouverte :** `DECISION-0047` — arrêter le sens de la complétude au regard de l'objet d'une famille : appréciation d'espèce, ou grille arrêtée une fois pour toutes. **Source :** `ADOPTION-0058`, Article 11.
+- **Décision ouverte :** `DECISION-0048` — arrêter la condition de réexamen d'une admission prononcée sous audit non indépendant : condition, terme fixe, ou aucun. **Source :** `ADOPTION-0058`, Article 11.
+
+Du présent Titre :
+
+- **Décision ouverte :** `DECISION-0049` — confirmer ou corriger les regroupements opérés à l'Article 180 et le rejet de doublon opéré à l'Article 179. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 178.
+
+Cette dernière inscription n'est pas une précaution de style. Un acte qui répare la dispersion des décisions en prose et poserait ses propres réserves en prose recommencerait le défaut dans le texte même qui le corrige.
+
+## Article 181 — Aucune clôture n'est constatée
+
+Le Titre XIII avait pu constater deux clôtures, parce que deux actes postérieurs avaient tranché avant lui. Aucune des vingt-quatre décisions inscrites ci-dessus n'a été tranchée par un acte.
+
+**Aucune ne se clôt donc ici**, et l'Article 154 demeure la seule voie : une ligne de clôture nommant l'acte qui a tranché. Ni le silence, ni l'ancienneté, ni la présente inscription ne closent quoi que ce soit.
+
+## Article 182 — Ce que la présente inscription n'établit pas
+
+Elle n'est pas déclarée complète, et `DECISION-0025` demeure ouverte : aucun texte n'établit l'ensemble des décisions ouvertes du corpus, et le service qui dérive le présent Titre ne découvre que ce qui porte la forme.
+
+Le fait même que vingt-quatre points aient attendu quatre actes avant d'être inscrits est la mesure de cette limite, non sa réfutation.
+
+Elle ne tranche aucune décision, n'en préjuge aucune, ne fixe aucun délai, n'attribue aucune classe ni niveau de risque, et ne confirme pas la série `DECISION`, dont l'Article 153 rappelle qu'elle demeure soumise à `DECISION-0001`.
+
+## Article 183 — Non-effet
+
+Le présent Titre ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, ne nomme aucun responsable, ne lève aucune réserve, n'accepte aucun risque et ne constate pas `G0`.
