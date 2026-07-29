@@ -230,6 +230,30 @@ $verifier(
     sprintf('%d capacité(s) codée(s) sur %d', $ecarts['capacites_codees'], $ecarts['capacites']),
 );
 
+// Nommer une divergence ne suffit pas si rien n'en fait un obstacle. La carte a
+// porté deux actes durant un état que l'acte adopté contredisait — module
+// présent déclaré NON COMMENCÉE, garde éprouvée déclarée P1 —, et aucune garde
+// n'a échoué : celle-ci savait dire, elle ne savait pas refuser.
+//
+// Une divergence entre l'état déclaré et la réalité observée fait désormais
+// échouer la preuve de la capacité qui a mission de la voir. Ce n'est pas
+// arbitrer un écart (INV-38) : c'est refuser d'attester un corpus qui se
+// contredit lui-même.
+$divergentes = array_values(array_filter(
+    $ctr14->comparerReel(),
+    static fn (array $l) => $l['verdict'] === 'DIVERGENCE',
+));
+$verifier(
+    $ecarts['divergentes'] === 0,
+    "aucune capacité ne déclare un état que la réalité observée contredit",
+    $divergentes === []
+        ? 'aucune divergence'
+        : implode(' · ', array_map(
+            static fn (array $l) => (string) $l['capacite'] . ' : ' . implode(' ; ', $l['divergences']),
+            $divergentes,
+        )),
+);
+
 /* ------------------------------------------- point d'entrée de consultation */
 echo "\n  Point d'entrée — l'annuaire est consultable sans lancer un test\n";
 

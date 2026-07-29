@@ -1504,3 +1504,37 @@ Les trois vacances demeurées — `CTR-09`, `CTR-12` et `CTR-13` — ne sont pas
 ## Article 190 — Non-effet
 
 Le présent Titre ne rend aucune capacité admise ni active, n'accepte aucun risque nouveau, ne nomme aucun responsable, ne comble aucun écart global, ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3) et ne constate pas `G0`.
+
+---
+
+# TITRE XXXI — MISE À JOUR POST-ADOPTION : PREMIER CODE DE `CAP-CORE-009`
+
+## Article 191 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0048` que cet acte avait déclarée sans la porter au Registre. Il ne modifie le corps d'aucune disposition des Titres I à XXX : ceux-ci demeurent au dépôt tels qu'adoptés.
+
+Il est adopté par `ADOPTION-0050` et prend rang à sa date, quoiqu'il constate un fait antérieur.
+
+## Article 192 — Changement d'état
+
+| Capacité | État avant | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-009` — Registre des contrats | Conception `CONÇUE` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception `CONÇUE` ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0048`. **Contrat :** `CTR-06`, servi par le module `core/registre-contrats/`. **Garde :** `core/registre-contrats/tests/contrats_p3.php`, inscrite à l'intégration continue. **Aucun invariant ni menace nouveaux :** `INV-42` à `INV-45` et `M-46` à `M-51` procèdent de `ADOPTION-0047`.
+
+L'exploitation demeure `INACTIVE`. Un service qui s'exécute en local n'est pas un service exploité.
+
+## Article 193 — Pourquoi ce Titre est tardif, et ce que l'omission enseigne
+
+`ADOPTION-0048` a déclaré ce changement d'état à son Article 10 et n'a pas ajouté le Titre qui le porte au Registre. Pendant deux actes, le corpus a donc porté sur `CAP-CORE-009` un état que l'acte adopté contredisait : implémentation `NON COMMENCÉE` pour un module présent, preuve `P1` pour une garde éprouvée et exécutée en intégration continue.
+
+**L'omission a été vue par le mécanisme, non par son auteur.** La comparaison Atlas–Registre–réalité de l'Article 55 a nommé les deux divergences — `CODE NON DÉCLARÉ` et `PREUVE SOUS-DÉCLARÉE` — dès la première interrogation qui a suivi.
+
+Elle n'a fait échouer aucune garde. La garde de `CAP-CORE-020` comptait les capacités codées sans exiger qu'aucune divergence ne demeure : elle savait dire, elle ne savait pas refuser. `ADOPTION-0050` étend cette garde en conséquence — une sous-déclaration d'état fera désormais échouer la preuve de la capacité qui a mission de la voir.
+
+C'est la seconde fois qu'un défaut du travail de l'agent est trouvé par un mécanisme du corpus et non par l'agent — la première étant celle que le Titre XXX rapporte. Le fait est porté ici pour ce qu'il vaut : la réserve d'audit non indépendant de `ADOPTION-0025`, Art. 3, n'est pas une formule.
+
+## Article 194 — Non-effet
+
+Le présent Titre ne rend `CAP-CORE-009` ni admise, ni active, n'arbitre aucune décision ouverte, n'accepte aucun risque nouveau, ne nomme aucun responsable et ne constate pas `G0`.
