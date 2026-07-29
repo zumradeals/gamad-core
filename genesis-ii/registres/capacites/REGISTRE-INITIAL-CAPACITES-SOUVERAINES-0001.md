@@ -1538,3 +1538,39 @@ C'est la seconde fois qu'un défaut du travail de l'agent est trouvé par un mé
 ## Article 194 — Non-effet
 
 Le présent Titre ne rend `CAP-CORE-009` ni admise, ni active, n'arbitre aucune décision ouverte, n'accepte aucun risque nouveau, ne nomme aucun responsable et ne constate pas `G0`.
+
+---
+
+# TITRE XXXII — MISE À JOUR POST-ADOPTION : CONCEPTION ET PREMIER CODE DE `CAP-CORE-008`
+
+## Article 195 — Nature de la présente mise à jour
+
+Le présent Titre constate une conséquence d'exécution de `ADOPTION-0051`. Il ne modifie le corps d'aucune disposition des Titres I à XXXI : ceux-ci demeurent au dépôt tels qu'adoptés.
+
+## Article 196 — Changement d'état
+
+| Capacité | État avant | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-008` — Registre des décisions | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0051`. **Contrat :** `CTR-05`, déjà nommé par l'Article 43. **Invariants introduits :** `INV-46` à `INV-50`. **Menaces retenues :** `M-52` à `M-57`.
+
+L'exploitation demeure `INACTIVE`.
+
+## Article 197 — Le contrat `CTR-05` satisfait la règle du domaine gardien
+
+`CTR-05` — Cycle de décision est gardée par `DOM-05`, que `CAP-CORE-008` garde également. `INV-40` est satisfait sans réattribution. La famille était demeurée sans producteur depuis que `ADOPTION-0045` l'a rendue à sa capacité titulaire ; elle en a un désormais.
+
+## Article 198 — Motif de la priorité
+
+`CAP-CORE-008` est de criticité `RACINE` et n'appartient pas à l'ensemble racine de l'Article 61 — l'Article 83 réserve l'ordre à l'autorité, qui l'a retenue.
+
+Le motif est établi par les faits : cinquante décisions formelles au dépôt, dix-sept au tableau consolidé qui prétend les inventorier, et vingt-trois décisions réservées à l'autorité dispersées dans des articles que rien ne rassemblait.
+
+## Article 199 — Ce que la conception laisse entier
+
+Les décisions ouvertes de l'Article 43 — classes de décision, quorums, autorités, délais, urgence et contestation — ne sont pas arbitrées. Elles sont désormais **inscrites** au Titre XIII du Registre initial des décisions, sous une forme dérivable, ce qui n'est pas les trancher.
+
+## Article 200 — Non-effet
+
+Le présent Titre ne rend `CAP-CORE-008` ni admise, ni active, n'arbitre aucune décision inscrite, n'accepte aucun risque nouveau, ne nomme aucun responsable et ne constate pas `G0`.

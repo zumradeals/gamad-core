@@ -873,3 +873,92 @@ Pour toute décision de GAMAD Core, le Registre doit pouvoir répondre :
 Jusqu’à son adoption expresse et son inscription au Registre des adoptions, le présent texte demeure :
 
 > **PROJET NORMATIF — EN COURS DE DÉLIBÉRATION**
+
+---
+
+# TITRE XIII — MISE À JOUR POST-ADOPTION : FORME DÉRIVABLE D'UNE DÉCISION OUVERTE ET PREMIÈRE INSCRIPTION
+
+## Article 151 — Nature de la présente mise à jour
+
+Le présent Titre est ajouté par `ADOPTION-0051`. Il ne modifie le corps d'aucune disposition des Titres I à XII : ceux-ci demeurent au dépôt tels qu'adoptés, et le tableau de l'Article 92 n'est ni corrigé ni prolongé.
+
+Il arrête une **forme** par laquelle une décision demeurée ouverte est inscrite et retrouvée sans interprétation, et il inscrit un **premier ensemble** de décisions ouvertes que des textes adoptés énoncent déjà.
+
+## Article 152 — Pourquoi une forme, et pourquoi maintenant
+
+Les décisions que le corpus réserve à l'autorité sont énoncées, mais dispersées. Elles vivent dans les articles de deux registres, dans les fiches des vingt capacités et dans les Titres finaux des actes récents, sous des intitulés qui varient — « Décisions ouvertes », « Points soumis à l'autorité », « Décisions humaines à valider », « Décision réservée ».
+
+Aucun service ne peut les retrouver toutes, et aucun ne le doit : chercher une décision ouverte dans la prose, c'est décider laquelle en est une. Le corpus a déjà tranché ce point pour les attributions de contrat (`ADOPTION-0049`) : ce que le service dérive est une forme, jamais une phrase.
+
+## Article 153 — Forme d'inscription
+
+Une décision demeurée ouverte est inscrite par une ligne de la forme suivante :
+
+> `- **Décision ouverte :** ` + `` `DECISION-XXXX` `` + ` — <objet>. **Source :** <texte>, <article>.`
+
+La référence suit la série `DECISION` que l'Article 26 nomme et que l'Article 131 soumet à confirmation. Cette confirmation demeure ouverte ; la série est employée ici sans préjuger de la décision qui l'arrêtera.
+
+## Article 154 — Forme de clôture
+
+Une décision inscrite n'est close que par une ligne de la forme suivante :
+
+> `- **Décision close :** ` + `` `DECISION-XXXX` `` + ` — **Par :** <acte>.`
+
+Une décision ouverte ne se clôt par aucun autre moyen. Ni le silence, ni l'ancienneté, ni l'exécution d'un acte voisin ne la closent — l'Article 7 exclut l'adoption tacite, et le risque de « silence interprété comme accord » que l'Article 43 du Registre des capacités range parmi ceux de la présente capacité est précisément celui-là.
+
+La ligne d'ouverture n'est jamais effacée : l'inscription demeure, la clôture s'y ajoute.
+
+## Article 155 — Première inscription
+
+Les décisions ci-après sont **relevées de textes adoptés**, où elles figurent déjà comme réservées à l'autorité. Leur inscription ne les crée pas et n'en tranche aucune.
+
+Du présent Registre, Titre XI :
+
+- **Décision ouverte :** `DECISION-0001` — confirmer ou modifier les séries de références `DECISION`, `VALIDATION`, `RISQUE`, `URGENCE`, `CONTESTATION`. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 131.
+- **Décision ouverte :** `DECISION-0002` — confirmer, corriger ou préciser la classe proposée de chacune des dix-sept adoptions classées. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 132.
+- **Décision ouverte :** `DECISION-0003` — confirmer le périmètre de l'inventaire des décisions formelles à reprendre. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 133.
+- **Décision ouverte :** `DECISION-0004` — rapprocher statuts, dates et effets des actes et feuilles de statut. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 134.
+- **Décision ouverte :** `DECISION-0005` — confirmer le maintien général du niveau de preuve `P1` tant que les contrôles `P2` ne sont pas produits. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 135.
+- **Décision ouverte :** `DECISION-0006` — définir les catégories de confidentialité des décisions et leurs métadonnées minimales visibles. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 136.
+- **Décision ouverte :** `DECISION-0007` — confirmer les autorités compétentes par classe et par niveau de risque, sans nomination implicite. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 137.
+- **Décision ouverte :** `DECISION-0008` — valider la matrice des revues minimales par classe et par niveau `R0` à `R4`. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 138.
+- **Décision ouverte :** `DECISION-0009` — décider des pouvoirs d'acceptation de risque, durées maximales, compensations et conditions de réexamen. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 139.
+- **Décision ouverte :** `DECISION-0010` — fixer les autorités, pouvoirs, durées et revues postérieures des décisions d'urgence. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 140.
+- **Décision ouverte :** `DECISION-0011` — définir les habilitations, délais, effets suspensifs, autorités de recours et protections en matière de contestation. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 141.
+- **Décision ouverte :** `DECISION-0012` — décider du sort des dossiers historiques incomplets : complétés, déclarés lacunaires, audités ou conservés. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 142.
+- **Décision ouverte :** `DECISION-0013` — mandater par acte distinct la fonction de registraire. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 143.
+- **Décision ouverte :** `DECISION-0014` — approuver la structure et le niveau de détail des dix modèles initiaux avant usage canonique. **Source :** `REGISTRE-INITIAL-DECISIONS-0001`, Article 144.
+
+Du Registre initial des capacités souveraines, Titre XII :
+
+- **Décision ouverte :** `DECISION-0015` — valider ou modifier les classes `RACINE`, `CRITIQUE` et `MAJEURE` et leurs effets de contrôle. **Source :** `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 79.
+- **Décision ouverte :** `DECISION-0016` — valider les vocabulaires d'état normatif, documentaire, de conception, d'implémentation et d'exploitation. **Source :** `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 80.
+- **Décision ouverte :** `DECISION-0017` — confirmer le périmètre exact des vingt capacités, leurs données minimales, exclusions et domaines contributeurs. **Source :** `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 81.
+- **Décision ouverte :** `DECISION-0018` — nommer ou déclarer expressément vacantes les fonctions compétentes, responsables, opérateurs, auditeurs et pouvoirs de suspension. **Source :** `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 82.
+- **Décision ouverte :** `DECISION-0019` — décider l'ordre de conception et de mise en capacité selon les dépendances, les risques et les moyens. **Source :** `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 83.
+
+Des actes du cycle de codage :
+
+- **Décision ouverte :** `DECISION-0020` — retenir ou non `CAP-CORE-009` avant les capacités de l'ensemble racine. **Source :** `ADOPTION-0047`, Article 17.
+- **Décision ouverte :** `DECISION-0021` — décider du sort de la famille `CTR-09`, définie et sans capacité titulaire. **Source :** `ADOPTION-0047`, Article 17.
+- **Décision ouverte :** `DECISION-0022` — arrêter formats, protocoles, règles de compatibilité et autorité d'approbation des contrats communs. **Source :** `ADOPTION-0047`, Article 17 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 44.
+- **Décision ouverte :** `DECISION-0023` — adopter le registre initial des contrats comme document distinct du service qui le dérive. **Source :** `ADOPTION-0047`, Article 17.
+- **Décision ouverte :** `DECISION-0024` — porter au champ dérivable le rattachement de la famille `CTR-07` à `CAP-CORE-014`. **Source :** `ADOPTION-0048`, Article 11.
+- **Décision ouverte :** `DECISION-0025` — décider si la présente inscription est complète, et par quel moyen une décision ouverte non inscrite serait découverte. **Source :** `ADOPTION-0051`, Article 8.
+
+## Article 156 — Clôtures constatées
+
+Deux des décisions inscrites ont déjà été tranchées par un acte postérieur à celui qui les posait. Elles sont inscrites puis closes, l'ouverture demeurant lisible.
+
+- **Décision close :** `DECISION-0020` — **Par :** `ADOPTION-0048`.
+- **Décision close :** `DECISION-0024` — **Par :** `ADOPTION-0049`.
+
+## Article 157 — Ce que la présente inscription n'établit pas
+
+Elle **n'est pas déclarée complète**. Aucun texte n'établit l'ensemble des décisions ouvertes du corpus, et le service qui dérive le présent Titre ne peut pas découvrir celles qui n'y figurent pas : il ne lit que la forme. Cette limite est elle-même inscrite comme `DECISION-0025`.
+
+Elle ne tranche aucune des décisions inscrites, n'en préjuge aucune, ne fixe aucun délai et n'attribue aucune classe ni niveau de risque — l'Article 132 réserve la classification, l'Article 139 l'acceptation de risque.
+
+## Article 158 — Non-effet
+
+Le présent Titre ne rend aucune capacité admise ni active, ne nomme aucun responsable, n'ouvre aucune série de références de façon définitive, ne comble aucun écart global et ne constate pas `G0`.
