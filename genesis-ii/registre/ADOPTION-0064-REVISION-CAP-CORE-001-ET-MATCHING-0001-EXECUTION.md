@@ -14,4 +14,13 @@ Le commit est **relevé du dépôt** et non écrit de mémoire (`ADOPTION-0054`)
 
 Il ne rouvre pas `ADOPTION-0064`, n'en modifie aucun article, n'admet aucune capacité, ne rend `CAP-CORE-021` ni implémentée ni active, n'accepte aucun risque et ne constate pas `G0`.
 
-Il ne rend pas caduque l'admission de `CAP-CORE-020` : la caducité procède de la modification du module (`INV-68`), qu'elle constate sans la prononcer. Le module de `CAP-CORE-020` **est** modifié par cet incrément ; son admission au commit `242921d6a4b3bff8675835eaade8adc69ad73355` est donc **caduque** au sens de l'Article 231 du Registre initial des capacités souveraines. C'est le mécanisme qui fonctionne, non une faute, et la réinscription relève de l'autorité au moment qu'elle choisira.
+Il ne prononce aucune caducité : celle-ci procède de la modification d'un module (`INV-68`), et le constat la relève sans la décider.
+
+**Deux admissions deviennent caduques** du fait de cet incrément, et le service les nomme :
+
+| Capacité | Module modifié | Commit admis devenu caduc |
+|---|---|---|
+| `CAP-CORE-009` | `core/registre-contrats/tests/` | `8eafa66b726de0ae94375552fb6c951309f64536` |
+| `CAP-CORE-020` | `core/registre-annuaire/` | `242921d6a4b3bff8675835eaade8adc69ad73355` |
+
+C'est le mécanisme de l'Article 231 du Registre initial des capacités souveraines qui fonctionne, non une faute. La caducité est un constat porté au tableau de bord ; elle n'interrompt ni le travail ni l'intégration continue, et la réinscription relève de l'autorité au moment qu'elle choisira.

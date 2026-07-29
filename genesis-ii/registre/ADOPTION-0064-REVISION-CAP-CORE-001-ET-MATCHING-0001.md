@@ -115,11 +115,15 @@ Décomptes dérivés par `Ctr14`, relus du corpus selon la règle d'`ADOPTION-00
 | Capacités `CRITIQUE` | 10, dont 10 codées | **11, dont 10 codées** |
 | Capacités déclarées `ADMISE` | 20 | **20** |
 | Admissions inscrites à la forme de l'Article 174 | 20 | **20** |
-| Admissions caduques | 0 | **0** |
+| Admissions caduques | 0 | **2** — `CAP-CORE-009` et `CAP-CORE-020` |
 | Admissions sans objet | 0 | **0** |
 | Décisions ouvertes inscrites par le présent acte | — | **10** |
 
 La vingt et unième capacité n'est pas codée, n'est pas admise et ne porte aucune admission : les trois décomptes qui la concerneraient demeurent à vingt, et c'est la réponse juste.
+
+**Les deux caducités sont l'œuvre du présent acte, et il les nomme.** L'incrément modifie `core/registre-annuaire/` — module de `CAP-CORE-020` — et `core/registre-contrats/tests/` — module de `CAP-CORE-009`. Leurs admissions nommaient les commits `242921d6a4b3bff8675835eaade8adc69ad73355` et `8eafa66b726de0ae94375552fb6c951309f64536` ; les modules ont changé depuis. C'est le mécanisme d'`INV-68` qui fonctionne, non une faute : l'Article 231 du Registre initial des capacités souveraines veut que la caducité soit un constat porté au tableau de bord, qu'elle n'interrompe ni le travail ni l'intégration continue, et que la réinscription relève de l'autorité au moment qu'elle choisit.
+
+Un acte qui aurait déclaré zéro caducité aurait été **faux dès sa fusion**. Le chiffre est relu du corpus après l'incrément, non écrit avant lui.
 
 ## Article 11 — Vérification des gardes
 
