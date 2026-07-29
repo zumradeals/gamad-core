@@ -464,9 +464,14 @@ final class Ctr14
      * relevé des emprunts, celui des partages —, et les confondre ferait
      * dépendre le contrôle de l'ordre des colonnes d'un tableau d'illustration.
      *
+     * Cette opération est PUBLIQUE : le registre des contrats (CTR-06) la
+     * consomme plutôt que de dupliquer le relevé. Deux analyseurs du même
+     * tableau finiraient par diverger, et le corpus porterait alors deux
+     * vérités sur ses propres contrats.
+     *
      * @return array<string,array<string,string>>
      */
-    private function familles(): array
+    public function familles(): array
     {
         if ($this->familles !== null) {
             return $this->familles;
