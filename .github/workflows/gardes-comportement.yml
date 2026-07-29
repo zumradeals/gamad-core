@@ -63,6 +63,8 @@ jobs:
             garde: core/registre-preuves/tests/preuves_p3.php
           - capacite: CAP-CORE-017 (risques et exceptions)
             garde: core/registre-risques/tests/risques_p3.php
+          - capacite: CAP-CORE-018 (incidents)
+            garde: core/registre-incidents/tests/incidents_p3.php
           - capacite: CAP-CORE-020 (annuaire et Atlas)
             garde: core/registre-annuaire/tests/annuaire_p3.php
 
