@@ -895,3 +895,31 @@ Toute référence à `CTR-05` antérieure au présent Titre et désignant `CAP-C
 ## Article 129 — Autorité de modification
 
 L'Article 114 réserve toute modification de l'Atlas canonique au mandat, à la décision et à la procédure de publication applicables. Le présent Titre est un projet tant qu'il n'est pas adopté ; sa fusion dans `main` par l'autorité **est** la décision. L'agent l'a rédigé ; il ne l'adopte pas.
+
+---
+
+# TITRE XV — UNE TROISIÈME FAMILLE DE CONTRATS OMISE : `CTR-17`
+
+## Article 130 — Ce que l'Article 69 n'avait pas prévu, une fois encore
+
+Le Titre XIV a relevé deux familles omises et posé la règle du domaine gardien. Une troisième omission demeurait, d'une autre espèce : elle ne concernait pas une famille empruntée, mais une capacité **sans aucune famille**.
+
+`CAP-CORE-002` — Registre des organisations énonce à l'Article 37 du Registre initial des capacités des contrats attendus — « résolution d'organisation, statut, représentation et événements de cycle de vie » — **en prose et sans référence**. Aucune des seize familles de l'Article 69 ne les porte : `CTR-08` — Statut produit ou realm garde `DOM-04`, mais son intitulé même la restreint aux produits et aux realms.
+
+`CAP-CORE-002` était ainsi, jusqu'au présent Titre, la **seule des vingt capacités dépourvue de famille de contrat**.
+
+## Article 131 — `CTR-17` — Référence d'organisation
+
+| Référence | Famille de contrat | Domaine gardien | Objet minimal |
+|---|---|---|---|
+| `CTR-17` | Référence d'organisation | `DOM-04` | Résoudre une organisation, son type, son statut et le texte qui la fonde |
+
+La numérotation suit la règle de `ADOPTION-0032`, Art. 2.1 : le dernier numéro attribué était `CTR-16`.
+
+`CAP-CORE-002` garde `DOM-04`, domaine gardien de `CTR-17`. **`INV-40` est satisfait** sans réattribution, et la famille n'est revendiquée par aucune autre capacité.
+
+## Article 132 — Ce que cette famille ne fait pas
+
+Elle ne crée aucune organisation, n'en admet aucune, ne confère aucune personnalité juridique et n'arbitre pas l'articulation avec les réalités juridiques externes, que l'Article 37 réserve à l'autorité.
+
+Le présent Titre est un projet tant qu'il n'est pas adopté ; sa fusion dans `main` par l'autorité **est** la décision (Article 129). L'agent l'a rédigé ; il ne l'adopte pas.

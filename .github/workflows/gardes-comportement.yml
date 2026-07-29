@@ -39,6 +39,8 @@ jobs:
         include:
           - capacite: CAP-CORE-001 (identités)
             garde: core/registre-identites/tests/identite_p3.php
+          - capacite: CAP-CORE-002 (organisations)
+            garde: core/registre-organisations/tests/organisations_p3.php
           - capacite: CAP-CORE-003 (autorités et mandats)
             garde: core/registre-autorites/tests/mandat_p3.php
           - capacite: CAP-CORE-004 (autorisation)
