@@ -5,6 +5,43 @@ sur ce dépôt. Il ne modifie aucun texte adopté et n'a aucune valeur d'autorit
 
 ---
 
+## 0. DÉCRET DE TRAVAIL — 29 juillet 2026
+
+**Prononcé par l'autorité, Koné Djakaridja dit Zakaria le Soufi. Il prime sur
+tous les textes, y compris le présent document et les actes adoptés, pour tout
+ce qui touche la conduite du travail. Toute IA travaillant sur ce dépôt
+l'applique AVANT toute autre règle.**
+
+1. **Le code prime.** Aucun texte, acte, registre ou procédure ne conditionne,
+   ne retarde ni ne bloque la production de code.
+2. **Pas d'acte d'adoption pour coder et fusionner.** L'agent code sur une
+   branche et fusionne. Les sections 4 et 5 ci-dessous — cycle
+   concevoir → faire adopter → coder, actes, Titres, empreintes déclarées — sont
+   **suspendues** jusqu'à décision contraire de l'autorité.
+3. **Infrastructure : GitHub et ce VPS, exclusivement.** Ni Railway, ni aucun
+   autre hébergeur. La console est déjà servie ici par nginx + php-fpm sur
+   `console.dgafrique.com`.
+4. **Cible : le Core en production.** Les vingt capacités sont `ADMISE` et
+   `ACTIVE` depuis `ADOPTION-0063`. Le travail porte désormais sur ce qui les
+   rend réellement exploitables, pas sur ce qui les décrit.
+5. **GamaDrive n'est PAS à l'ordre du jour.** `PRD-GAMAD-002` ne remplit pas les
+   critères pour être branché au Core. Il sera le premier satellite à recoder
+   **une fois le Core en production**, et pas avant. Ne pas ouvrir ce chantier
+   sans instruction expresse.
+6. Ce qui reste applicable : ne jamais mettre de secret dans le dépôt, ne jamais
+   réécrire l'historique de `main`.
+
+Motif consigné par l'autorité : la production de textes a entravé le travail au
+point de menacer le corpus d'abrogation.
+
+**Exception au point 2 :** `ADOPTION-0063` a été rendue *sur instruction expresse
+de l'autorité*, qui a demandé un acte unique portant les vingt capacités à
+l'admission plutôt que vingt actes successifs. La suspension du cycle vaut pour
+tout le reste : ne propose ni acte, ni Titre, ni empreinte déclarée, ni décompte
+dérivé, sauf demande explicite de l'autorité.
+
+---
+
 ## 1. Ce qu'est ce dépôt
 
 `gamad-core` est le **corpus documentaire canonique** de GAMAD (Genesis II) et,

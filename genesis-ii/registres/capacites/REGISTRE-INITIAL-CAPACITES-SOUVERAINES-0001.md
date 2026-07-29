@@ -1804,3 +1804,101 @@ La fonction `AUDIT` demeure **non indépendante** : `RISK-SEC-0001` est inchang�
 ## Article 227 — Non-effet
 
 Le présent Titre **n'admet aucune implémentation** et n'en présente aucune à l'admission. Il ne rend aucune capacité admise ni active, n'inscrit aucune admission, ne nomme aucun responsable, ne fixe aucune condition de réexamen, n'arbitre aucune divergence, ne modifie le corps d'aucun article antérieur, n'accepte aucun risque, ne lève et ne requalifie aucune réserve de `G0`, ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3) et **ne constate pas `G0`**.
+
+---
+
+# TITRE XXXVIII — ADMISSION EXCEPTIONNELLE DES VINGT IMPLÉMENTATIONS ET ENTRÉE EN EXPLOITATION
+
+## Article 228 — Nature de la présente mise à jour
+
+Le présent Titre constate les conséquences d'exécution de `ADOPTION-0063`. Il ne modifie le corps d'aucune disposition des Titres I à XXXVII.
+
+L'autorité prononce l'**admission des vingt implémentations souveraines**, porte leur état d'exploitation à `ACTIVE` et les déclare **prêtes pour la production**. La décision est celle de l'autorité seule (`INV-72` ; `ADOPTION-0061`) ; aucun service ne l'a proposée ni ne pouvait la proposer.
+
+## Article 229 — Le caractère exceptionnel, et ce qu'il couvre
+
+L'admission est prononcée **à titre exceptionnel**. Le mot n'est pas de style : il couvre trois écarts que l'autorité constate et passe outre, en connaissance.
+
+1. **`INV-69` — l'état de départ.** Les vingt implémentations étaient `PARTIELLEMENT MATÉRIALISÉE`, non `IMPLÉMENTÉE NON ADMISE`. Aucune n'était donc recevable au sens de l'invariant. L'autorité admet depuis l'état partiel.
+2. **Article 15 — les conditions de l'exploitation `ACTIVE`.** L'Article 15 subordonne `ACTIVE` à une autorisation, un opérateur, des contrats, des contrôles, une surveillance, une sauvegarde, une restauration et des preuves proportionnés. **L'opérateur n'est pas nommé, la restauration n'est pas testée, la surveillance n'est pas établie.** L'autorité passe outre.
+3. **Le dossier de `CAP-CORE-007` demeure incomplet**, faute de contre-épreuve déclarée à son acte adoptant (`ADOPTION-0029`, antérieur à l'exigence). L'autorité l'admet nonobstant.
+
+Ces trois écarts sont **inscrits, non levés**. Aucune preuve n'est réputée acquise du fait de l'admission, et le service continue de les restituer.
+
+## Article 230 — Les vingt inscriptions d'admission
+
+Inscrites à la forme de l'Article 174 du Registre initial des décisions. Chaque admission nomme le commit du module au jour du présent Titre — elle ne lui survit pas (`INV-68`).
+
+- **Admission :** `CAP-CORE-001`. **Commit admis :** `65093691e0efbb35cf8ff92aee9c59dcfb3b7704`. **Famille :** `CTR-01`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-002`. **Commit admis :** `2a15722b552e7dd58e8d662c8c8799fa0f8469f1`. **Famille :** `CTR-17`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-003`. **Commit admis :** `65093691e0efbb35cf8ff92aee9c59dcfb3b7704`. **Famille :** `CTR-02`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-004`. **Commit admis :** `65093691e0efbb35cf8ff92aee9c59dcfb3b7704`. **Famille :** `CTR-03`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-005`. **Commit admis :** `65093691e0efbb35cf8ff92aee9c59dcfb3b7704`. **Famille :** `CTR-16`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-006`. **Commit admis :** `65093691e0efbb35cf8ff92aee9c59dcfb3b7704`. **Famille :** `CTR-15`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-007`. **Commit admis :** `65093691e0efbb35cf8ff92aee9c59dcfb3b7704`. **Famille :** `CTR-04`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-008`. **Commit admis :** `8515cd36e9520dabab3b9422265368ca7393134d`. **Famille :** `CTR-05`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-009`. **Commit admis :** `8eafa66b726de0ae94375552fb6c951309f64536`. **Famille :** `CTR-06`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-010`. **Commit admis :** `8eafa66b726de0ae94375552fb6c951309f64536`. **Famille :** `CTR-19`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-011`. **Commit admis :** `70a527d0457361a0e6fde366c699ce6006319a5a`. **Famille :** `CTR-08`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-012`. **Commit admis :** `dc03828ba68d815a39b882cca591ccf2834800a8`. **Famille :** `CTR-08`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-013`. **Commit admis :** `2ef40f204e1b2f505387fe467d16e3d5d99ceefa`. **Famille :** `CTR-10`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-014`. **Commit admis :** `a1d6a36b27b16882cb747d11daec7b59e65fe501`. **Famille :** `CTR-07`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-015`. **Commit admis :** `65093691e0efbb35cf8ff92aee9c59dcfb3b7704`. **Famille :** `CTR-10`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-016`. **Commit admis :** `a9f6ef7c3510bf50f6af5e6443abe64b2c5a7ba4`. **Famille :** `CTR-20`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-017`. **Commit admis :** `2c61d09175900e84fa547f09ac28c5d274d295ea`. **Famille :** `CTR-11`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-018`. **Commit admis :** `f21b1ce22a94d616db1718b4cdb7b6d7660908ec`. **Famille :** `CTR-11`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-019`. **Commit admis :** `4f3eb229ab27f30629ee45b462241cc4e1a1dce2`. **Famille :** `CTR-18`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+- **Admission :** `CAP-CORE-020`. **Commit admis :** `242921d6a4b3bff8675835eaade8adc69ad73355`. **Famille :** `CTR-14`. **Responsable :** Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire. **Audit :** non indépendant. **Réexamen :** à la première modification du module admis, et au plus tard à l'établissement d'un audit indépendant.
+
+Les commits ci-dessus sont **relevés du dépôt** et non écrits de mémoire (`ADOPTION-0054`). La garde de `CAP-CORE-020` vérifie que chacun appartient à l'histoire de son module.
+
+## Article 231 — Ce qu'une admission caduque signifie, et ce qu'elle ne bloque pas
+
+Un module qui évolue rend son admission **caduque** : c'est le mécanisme d'`INV-68` qui fonctionne, non une faute. La caducité est un **constat porté au tableau de bord**, et elle n'interrompt ni le travail ni l'intégration continue.
+
+Réinscrire relève de l'autorité, au moment qu'elle choisit. Un corpus qui exigerait une réinscription avant tout commit rendrait le code impossible ; l'invariant demande que l'admission nomme un commit, non que le code s'arrête.
+
+Se distingue de la caducité l'**admission sans objet** — celle dont le commit n'a jamais appartenu à l'histoire du module. Elle n'a rien admis, et le service la nomme séparément.
+
+## Article 232 — Changement d'état
+
+| Capacité | État avant | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-001` — Identity Registry | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-002` — Registre des organisations | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-003` — Registre des autorités et mandats | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-004` — Moteur d’autorisation commun | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-005` — Authentification et assurance communes | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-006` — Registre des sources | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-007` — Registre des normes | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-008` — Registre des décisions | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-009` — Registre des contrats | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-010` — Lexique canonique | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-011` — Registre des produits | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-012` — Registre des realms | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-013` — Audit commun | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-014` — Journal d’événements communs | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-015` — Preuves d’intégrité | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-016` — Gouvernance des secrets et clés | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-017` — Registre des risques et exceptions | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-018` — Registre des incidents | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-019` — Sauvegarde et restauration souveraines | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+| `CAP-CORE-020` — Annuaire des capacités et Atlas | Conception `CONÇUE` ; implémentation `PARTIELLEMENT MATÉRIALISÉE` ; exploitation `INACTIVE` ; preuve `P3 — TESTÉ` | Conception `CONÇUE` ; implémentation **`ADMISE`** ; exploitation **`ACTIVE`** ; preuve `P3 — TESTÉ` |
+
+- **Source :** `ADOPTION-0063`. **Invariants engagés :** `INV-67` à `INV-72`. **Garde :** `core/registre-annuaire/tests/annuaire_p3.php`.
+
+La **conception** et la **preuve** ne changent pas : rien n'a été conçu ni éprouvé de nouveau. Seules l'implémentation et l'exploitation changent, parce que seule une décision les fait changer.
+
+## Article 233 — Ce que le présent Titre ne comble pas
+
+L'admission ne rend rien vrai qui ne l'était pas. Les vingt services restituent après comme avant les écarts qu'ils constatent : l'écart global de sécurité de l'Article 72, l'inventaire des secrets réservé à l'autorité, le journal d'événements inexistant, l'observation lexicale non tranchée, les deux réserves de `G0` levées sous restriction.
+
+La fonction `AUDIT` demeure **non indépendante** : `RISK-SEC-0001` est inchangé, sans terme fixe, et les vingt inscriptions le portent (`INV-70`).
+
+Demeurent ouvertes `DECISION-0046` — la proportionnalité exigée d'une capacité `RACINE` —, `DECISION-0047` — le sens de la complétude — et `DECISION-0048` — la condition de réexamen sous audit non indépendant. **L'admission prononcée ici ne les tranche pas** ; elle est rendue sans qu'elles le soient, ce que l'Article 229 assume.
+
+## Article 234 — Non-effet
+
+Le présent Titre ne constate pas `G0`, ne lève et ne requalifie aucune réserve de `G0`, ne rend l'audit ni indépendant ni suffisant, ne nomme aucun opérateur, n'établit aucune surveillance, ne teste aucune restauration, n'accepte aucun risque nouveau, ne modifie le corps d'aucun article antérieur, ne crée ni ne supprime aucune famille de contrat et ne franchit pas la frontière des accès réservés (`ADOPTION-0025`, Art. 3).
+
+Que les vingt capacités soient `ADMISE` et `ACTIVE` signifie que l'autorité en répond. Cela ne signifie pas qu'elles sont surveillées, sauvegardées ou restaurables — l'Article 229 dit exactement le contraire.
