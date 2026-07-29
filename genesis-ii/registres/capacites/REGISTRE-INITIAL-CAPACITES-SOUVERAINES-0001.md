@@ -1574,3 +1574,49 @@ Les décisions ouvertes de l'Article 43 — classes de décision, quorums, autor
 ## Article 200 — Non-effet
 
 Le présent Titre ne rend `CAP-CORE-008` ni admise, ni active, n'arbitre aucune décision inscrite, n'accepte aucun risque nouveau, ne nomme aucun responsable et ne constate pas `G0`.
+
+---
+
+# TITRE XXXIII — MISE À JOUR POST-ADOPTION : LE DOMAINE `DOM-04` — `CAP-CORE-002`, `CAP-CORE-011` ET `CAP-CORE-012`
+
+## Article 201 — Nature de la présente mise à jour
+
+Le présent Titre constate les conséquences d'exécution de `ADOPTION-0053`, premier acte de lot au sens du Titre XIV du Registre initial des décisions. Il ne modifie le corps d'aucune disposition des Titres I à XXXII.
+
+## Article 202 — Rattachement de la famille `CTR-17` à `CAP-CORE-002`
+
+L'Article 37 énonce les contrats attendus de `CAP-CORE-002` en prose et sans référence ; aucune des seize familles de l'Article 69 de l'Atlas ne les portait. `CAP-CORE-002` était la seule des vingt capacités dépourvue de famille de contrat.
+
+Le Titre XV de `CORE-ATLAS-0001`, adopté par le même acte, crée la famille `CTR-17` — Référence d'organisation, gardée par `DOM-04`.
+
+- **Rattachement :** `CAP-CORE-002` — famille attribuée `CTR-17`. **Source :** `ADOPTION-0053`, constatant l'Article 37.
+
+`CAP-CORE-002` garde `DOM-04` : `INV-40` est satisfait.
+
+## Article 203 — Le partage de `CTR-08` entre deux capacités est régulier
+
+`CTR-08` — Statut produit ou realm sert `CAP-CORE-011` et `CAP-CORE-012`, et l'Atlas l'énonce dans son intitulé même. Le partage est **régulier** (`INV-40`, Article 125 de l'Atlas) et n'est pas une collision.
+
+Chaque capacité a son module propre, et chaque module déclare la capacité qu'il sert (`INV-41`) : `core/registre-produits/` sert `CAP-CORE-011`, `core/registre-realms/` sert `CAP-CORE-012`. Le numéro de famille ne les distingue pas ; leur déclaration si.
+
+## Article 204 — Changement d'état
+
+| Capacité | État avant | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-002` — Registre des organisations | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+| `CAP-CORE-011` — Registre des produits | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+| `CAP-CORE-012` — Registre des realms | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0053`. **Contrats :** `CTR-17` pour `CAP-CORE-002`, `CTR-08` pour `CAP-CORE-011` et `CAP-CORE-012`. **Invariants introduits :** `INV-52` à `INV-56`. **Menaces retenues :** `M-58` à `M-63`.
+
+L'exploitation demeure `INACTIVE` pour les trois.
+
+## Article 205 — Deux des trois sources canoniques de `DOM-04` étaient absentes
+
+L'Article 35 de l'Atlas nomme trois sources canoniques pour `DOM-04` : le Registre des organisations, celui des produits, celui des realms. Seul le second existait, depuis `ADOPTION-0016`.
+
+`ADOPTION-0053` adopte le **Registre initial des organisations**. Le **Registre des realms demeure absent**, et aucun realm n'est reconnu : le service de `CAP-CORE-012` constate cette absence et ne la supplée pas (`INV-55`).
+
+## Article 206 — Non-effet
+
+Le présent Titre ne rend aucune capacité admise ni active, n'admet ni ne certifie aucun produit, ne reconnaît aucun realm, ne confère aucune autorité, n'arbitre aucune décision ouverte et ne constate pas `G0`.

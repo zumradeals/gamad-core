@@ -127,8 +127,8 @@ $verifier(
 echo "\n  INV-40 — une capacité ne porte que les familles dont elle garde le domaine\n";
 
 $verifier(
-    $ecarts['familles'] === 16,
-    "les seize familles de contrat sont relevées à l'Atlas",
+    $ecarts['familles'] === 17,
+    "les dix-sept familles de contrat sont relevées à l'Atlas",
     $ecarts['familles'] . ' famille(s)',
 );
 
