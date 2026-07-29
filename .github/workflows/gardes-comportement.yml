@@ -49,6 +49,8 @@ jobs:
             garde: core/registre-sources/tests/sources_p3.php
           - capacite: CAP-CORE-007 (normes)
             garde: core/registre-normes/tests/temporel_p3.php
+          - capacite: CAP-CORE-009 (contrats)
+            garde: core/registre-contrats/tests/contrats_p3.php
           - capacite: CAP-CORE-015 (preuves d'intégrité)
             garde: core/registre-preuves/tests/preuves_p3.php
           - capacite: CAP-CORE-020 (annuaire et Atlas)
