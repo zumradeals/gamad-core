@@ -131,7 +131,7 @@ Pour le résultat voulu, la dernière instruction claire du dirigeant prévaut.
 
 ---
 
-# TITRE III — NON-EFFETS
+# TITRE III — NON-EFFETS ET CONSTAT
 
 ## Article 11 — Ce que le présent acte ne fait pas
 
@@ -157,6 +157,18 @@ La fusion de la branche `agent/loi-veto-dirigeant-code-first` dans `main` par l�
 - le décret temporaire du 29 juillet 2026 reçoit une forme normative permanente ;
 - les agents ne peuvent plus invoquer l’ancien cycle « texte d’abord » pour bloquer un chantier ;
 - le Véto du dirigeant exceptionnel devient opposable à tout obstacle procédural interne au dépôt.
+
+## Article 13 — Constat d’exécution
+
+Les empreintes sont relevées sur la branche après production des contenus :
+
+| Chemin | Nature | Empreinte Git après mise à jour |
+|---|---|---|
+| `genesis-ii/lois/LOI-PRIMAUTE-EXECUTION-VETO-DIRIGEANT-0001.md` | Loi supérieure créée | `5ebc475254079bfbd622ddfc847a47cc200ec51b` |
+| `genesis-ii/registres/sources/REGISTRE-DES-ADOPTIONS-0001.md` | Ligne `ADOPTION-0065` ajoutée | `2227f82e18b4c32d0cecd7295da627cca96d255f` |
+| `CLAUDE.md` | Orientation des agents alignée sur la loi | `7eec973b36fa31faf40b2966f593020815d475bc` |
+
+Aucun module de capacité n’est modifié par le présent acte.
 
 ---
 
