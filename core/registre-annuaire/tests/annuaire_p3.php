@@ -61,9 +61,39 @@ echo "  INV-36 — l'annuaire décrit, il ne fonde pas\n";
 
 $ecarts = $ctr14->ecarts();
 $verifier(
-    $ecarts['capacites'] === 20,
-    "les vingt capacités souveraines sont dérivées du Registre",
+    $ecarts['capacites'] === 21,
+    "les vingt et une capacités souveraines sont dérivées du Registre",
     $ecarts['capacites'] . ' fiche(s) relevée(s)',
+);
+
+// La vingt et unième n'est pas au tableau de l'Article 31, et ne peut pas y
+// être : ce tableau est adopté, et le corpus se corrige par ajout. Elle est
+// inscrite par le Titre XXXIX à une forme dérivable. Ce cas éprouve que le
+// service relève une capacité inscrite hors du tableau fondateur — sans quoi
+// une capacité adoptée serait invisible au contrôle qui a mission de la voir.
+$inscrite = $ctr14->resoudreCapacite('CAP-CORE-021');
+$verifier(
+    $inscrite !== null
+        && $inscrite['libelle'] === 'Moteur de Matching GAMAD'
+        && $inscrite['contrats'] === ['CTR-21']
+        && $inscrite['etats']['implementation'] === 'NON COMMENCÉE',
+    "une capacité inscrite hors du tableau de l'Article 31 est dérivée avec ses états",
+    $inscrite === null ? 'fiche absente' : sprintf(
+        '%s · %s · implémentation %s',
+        (string) $inscrite['libelle'],
+        implode(', ', $inscrite['contrats']),
+        (string) $inscrite['etats']['implementation'],
+    ),
+);
+
+// Une inscription CRÉE ; elle ne réécrit jamais une ligne de l'Article 31. Sans
+// cette règle, un Titre postérieur pourrait changer en silence la criticité ou
+// le libellé d'une capacité adoptée, ce que l'ajout seul interdit.
+$racine = $ctr14->resoudreCapacite('CAP-CORE-001');
+$verifier(
+    $racine !== null && $racine['criticite'] === 'RACINE' && $racine['libelle'] === 'Identity Registry',
+    "une inscription postérieure ne réécrit pas une capacité du tableau fondateur",
+    $racine === null ? 'fiche absente' : (string) $racine['libelle'] . ' · ' . (string) $racine['criticite'],
 );
 
 $fiche = $ctr14->resoudreCapacite('CAP-CORE-020');
@@ -127,8 +157,8 @@ $verifier(
 echo "\n  INV-40 — une capacité ne porte que les familles dont elle garde le domaine\n";
 
 $verifier(
-    $ecarts['familles'] === 20,
-    "les vingt familles de contrat sont relevées à l'Atlas",
+    $ecarts['familles'] === 21,
+    "les vingt et une familles de contrat sont relevées à l'Atlas",
     $ecarts['familles'] . ' famille(s)',
 );
 
@@ -211,7 +241,7 @@ echo "\n  Article 55 — comparaison Atlas–Registre–réalité\n";
 
 $atlas = $ctr14->comparerAtlas();
 $verifier(
-    count($atlas) === 20,
+    count($atlas) === 21,
     "l'Atlas et le Registre décrivent le même ensemble de capacités",
     count($atlas) . ' capacité(s) confrontée(s)',
 );
@@ -262,7 +292,7 @@ $verifier(
 $parCriticite = $ctr14->parCriticite();
 $attendus = [
     'RACINE'   => ['total' => 10, 'codees' => 10],
-    'CRITIQUE' => ['total' => 10, 'codees' => 10],
+    'CRITIQUE' => ['total' => 11, 'codees' => 10],
 ];
 foreach ($attendus as $criticite => $attendu) {
     $releve = $parCriticite[$criticite] ?? null;
@@ -279,7 +309,7 @@ foreach ($attendus as $criticite => $attendu) {
 
 $verifier(
     array_sum(array_column($parCriticite, 'total')) === $ecarts['capacites'],
-    "les décomptes par criticité couvrent les vingt capacités, sans reste",
+    "les décomptes par criticité couvrent toutes les capacités, sans reste",
     array_sum(array_column($parCriticite, 'total')) . ' sur ' . $ecarts['capacites'],
 );
 
@@ -306,15 +336,33 @@ echo "\n  INV-67 à INV-72 — le dossier d'admission s'assemble, et ne conclut 
 
 // Les vingt admissions sont INSCRITES depuis l'acte exceptionnel. Le service ne
 // relève que ce qui porte la forme de l'Article 174 : une admission écrite en
-// prose ne serait pas relevée, et vingt capacités déclarées ADMISE sans
-// inscription seraient vingt divergences.
+// prose ne serait pas relevée, et une capacité déclarée ADMISE sans inscription
+// serait une divergence.
+//
+// L'attendu n'est pas « vingt » mais « exactement celles qui se déclarent
+// ADMISE ». Un nombre écrit en dur cesse d'être vrai dès qu'une capacité est
+// inscrite — CAP-CORE-021 l'est, NON COMMENCÉE, et n'a donc rien à admettre.
+// Ce que l'invariant exige est une correspondance, pas un total.
 $admissions = $ctr14->admissions();
-$capacites  = array_column($ctr14->comparerReel(), 'capacite');
+$declareesAdmises = array_values(array_map(
+    static fn (array $l) => (string) $l['capacite'],
+    array_filter(
+        $ctr14->comparerReel(),
+        static fn (array $l) => ($l['declare']['implementation'] ?? null) === 'ADMISE',
+    ),
+));
+$sansInscription = array_diff($declareesAdmises, array_keys($admissions));
+$sansDeclaration = array_diff(array_keys($admissions), $declareesAdmises);
 $verifier(
-    count($admissions) === 20 && array_diff($capacites, array_keys($admissions)) === [],
-    "les vingt admissions sont inscrites à la forme de l'Article 174",
-    count($admissions) . ' admission(s) relevée(s) · sans inscription : '
-        . (implode(', ', array_diff($capacites, array_keys($admissions))) ?: 'aucune'),
+    $declareesAdmises !== [] && $sansInscription === [] && $sansDeclaration === [],
+    "les admissions inscrites à la forme de l'Article 174 recouvrent exactement les capacités déclarées ADMISE",
+    sprintf(
+        '%d admission(s) pour %d déclaration(s) · sans inscription : %s · sans déclaration : %s',
+        count($admissions),
+        count($declareesAdmises),
+        implode(', ', $sansInscription) ?: 'aucune',
+        implode(', ', $sansDeclaration) ?: 'aucune',
+    ),
 );
 
 // Chaque inscription nomme la famille que le module sert réellement. Une
@@ -491,8 +539,14 @@ $caduques = array_keys(array_filter(
     $etatsAdmission,
     static fn (string $e): bool => str_starts_with($e, 'ADMISSION CADUQUE'),
 ));
+// L'attendu porte sur les capacités DÉCLARÉES ADMISE, et non sur toutes : une
+// capacité inscrite mais non admise n'a pas d'admission à nommer, et exiger
+// qu'elle en porte une reviendrait à lui reprocher de n'être pas admise.
+$etatsDesAdmises = array_intersect_key($etatsAdmission, array_flip($declareesAdmises));
 $verifier(
-    count($etatsAdmission) === 20 && !in_array('AUCUNE ADMISSION INSCRITE', $etatsAdmission, true),
+    $etatsDesAdmises !== []
+        && count($etatsDesAdmises) === count($declareesAdmises)
+        && !in_array('AUCUNE ADMISSION INSCRITE', $etatsDesAdmises, true),
     "l'état de chaque admission est nommé, jamais présumé favorable",
     count($caduques) . ' caduque(s) : ' . (implode(', ', $caduques) ?: 'aucune'),
 );
@@ -504,10 +558,16 @@ $verifier(
 // La contre-épreuve existe — `ADOPTION-0031` l'a produite — mais pas là où
 // l'Article 13 la fait chercher. Un service qui irait la prendre ailleurs
 // ferait disparaître l'anomalie au lieu de la montrer.
+//
+// Une capacité inscrite et non codée n'a évidemment pas de dossier complet :
+// elle n'a ni module, ni garde, ni acte adoptant. Son dossier est incomplet
+// PARCE QU'ELLE N'EST PAS ADMISE, ce qui est la réponse juste, et l'attendu
+// ci-dessous ne porte donc que sur les capacités déclarées ADMISE.
+$incompletsAdmis = array_intersect_key($incomplets, array_flip($declareesAdmises));
 $verifier(
-    array_keys($incomplets) === ['CAP-CORE-007']
-        && $incomplets['CAP-CORE-007'] === ['contre_epreuve'],
-    "le seul dossier incomplet est CAP-CORE-007, faute de contre-épreuve à son acte",
+    array_keys($incompletsAdmis) === ['CAP-CORE-007']
+        && $incompletsAdmis['CAP-CORE-007'] === ['contre_epreuve'],
+    "parmi les capacités admises, le seul dossier incomplet est CAP-CORE-007, faute de contre-épreuve à son acte",
     $incomplets === []
         ? 'aucun dossier incomplet'
         : implode(' · ', array_map(
@@ -587,8 +647,8 @@ $verifier(
 
 preg_match_all('/CAP-CORE-\d{3}/', $rendu, $mv);
 $verifier(
-    count(array_unique($mv[0])) === 20,
-    "les vingt capacités figurent sur la page rendue",
+    count(array_unique($mv[0])) === 21,
+    "les vingt et une capacités figurent sur la page rendue",
     count(array_unique($mv[0])) . ' capacité(s) restituée(s)',
 );
 

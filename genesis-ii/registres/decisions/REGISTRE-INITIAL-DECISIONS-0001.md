@@ -1307,3 +1307,55 @@ Elle nomme **qui décide**, et rien d'autre. Demeurent ouvertes, faute d'avoir �
 ## Article 198 — Non-effet
 
 Le présent Titre n'admet aucune implémentation, ne rend aucune capacité admise ni active, ne modifie aucun état, ne livre aucun code, ne crée aucune fonction, ne modifie aucun mandat, n'accepte aucun risque nouveau, ne lève ni ne diminue `RISK-SEC-0001`, ne rend l'audit ni indépendant ni suffisant, ne fixe aucun terme et ne constate pas `G0`.
+
+---
+
+# TITRE XIX — TROISIÈME INSCRIPTION DE DÉCISIONS OUVERTES : LA RÉVISION DE `CAP-CORE-001` ET LE MATCHING
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0064`. Aucun article ni tableau préexistant n'est réécrit ni supprimé.
+
+## Article 199 — Nature de la présente inscription
+
+`ADOPTION-0064` adopte la révision de `CAP-CORE-001` et inscrit `CAP-CORE-021`. Ces deux textes réservent dix points à l'autorité.
+
+Ils sont inscrits **ici, à la forme de l'Article 154**, et non laissés en prose dans les conceptions qui les soulèvent. Le Titre XVI a établi pourquoi : vingt-quatre décisions avaient attendu quatre actes faute de forme dérivable, et un acte qui réparerait la dispersion en la recommençant ne réparerait rien.
+
+## Article 200 — Décisions ouvertes de la révision de `CAP-CORE-001`
+
+De `CONCEPTION-CAP-CORE-001-REVISION-PERIMETRE-0002`, Article 42 :
+
+- **Décision ouverte :** `DECISION-0050` — arrêter la politique d'inscription initiale : quels canaux inscrivent, pour quels types d'entité, sous quel niveau d'assurance initial, avec quelles preuves exigées et sous quel responsable. **Source :** `ADOPTION-0064`, Article 3.
+- **Décision ouverte :** `DECISION-0051` — arrêter l'échelle des niveaux d'assurance, les preuves admises pour chaque niveau et le niveau exigé par finalité. **Source :** `ADOPTION-0064`, Article 3 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 36.
+- **Décision ouverte :** `DECISION-0052` — désigner l'autorité d'inscription : qui inscrit une identité, qui propose un rapprochement, qui décide d'une fusion. **Source :** `ADOPTION-0064`, Article 3.
+- **Décision ouverte :** `DECISION-0053` — arrêter le mécanisme de version du contrat `CTR-01`, que `CAP-CORE-009` est seule compétente à établir. **Source :** `ADOPTION-0064`, Article 3.
+- **Décision ouverte :** `DECISION-0054` — arrêter l'ordre pilote de migration des identités locales, et décider s'il y a lieu d'ouvrir un premier chantier satellite, que le décret de travail du 29 juillet 2026 réserve. **Source :** `ADOPTION-0064`, Article 3.
+
+`DECISION-0050` commande les quatre autres et la révision entière : tant qu'elle n'est pas rendue, `INV-79` refuse toute écriture, et la loi révisée demeure sans effet pratique.
+
+## Article 201 — Décisions ouvertes du Moteur de Matching
+
+De `CONCEPTION-CAP-CORE-021-MOTEUR-DE-MATCHING-0001`, Article 37 :
+
+- **Décision ouverte :** `DECISION-0055` — décider de la création de la capacité, de sa référence et de son domaine gardien. **Source :** `ADOPTION-0064`, Article 4.
+- **Décision ouverte :** `DECISION-0056` — arrêter les premiers contextes de matching autorisés, et leur ordre. **Source :** `ADOPTION-0064`, Article 4.
+- **Décision ouverte :** `DECISION-0057` — arrêter la liste initiale des critères autorisés et interdits par contexte, dont l'Article 24 de la conception ne fixe que le plancher. **Source :** `ADOPTION-0064`, Article 4.
+- **Décision ouverte :** `DECISION-0058` — arrêter la stratégie de segment — activation interne, jeton, relais de diffusion ou export exceptionnel — et l'inscription au lexique canonique des dix termes de l'Article 20 de la conception. **Source :** `ADOPTION-0064`, Article 4 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 45.
+- **Décision ouverte :** `DECISION-0059` — arrêter la gouvernance des modèles statistiques et de l'apprentissage : politique de mémoire, de retour d'expérience et de contrôle des modèles. **Source :** `ADOPTION-0064`, Article 4.
+
+## Article 202 — `DECISION-0055` est tranchée pour partie, et inscrite pour le reste
+
+`ADOPTION-0064` **crée** la capacité, lui attribue la référence `CAP-CORE-021` et arrête son domaine gardien `DOM-13` : sur ces trois points, `DECISION-0055` est tranchée par l'acte lui-même, et la ligne ci-dessus le constate plutôt que de feindre qu'elle demeure entière.
+
+Ce qu'elle conserve d'ouvert est ce que l'acte n'a pas tranché : les conditions auxquelles la capacité passera de l'inscription à l'**admission**, que l'Article 48 de la Charte subordonne à la démonstration de trois critères aujourd'hui non démontrés, et l'Article 86 à sept exigences aujourd'hui non établies.
+
+Elle n'est donc pas close. L'Article 154 demeure la seule voie de clôture : une ligne nommant l'acte qui a tranché.
+
+## Article 203 — Aucune clôture n'est constatée
+
+Aucune des dix décisions inscrites ci-dessus n'a été tranchée par un acte antérieur, et aucune ne se clôt ici. Ni le silence, ni l'ancienneté, ni la présente inscription ne closent quoi que ce soit.
+
+Demeurent ouvertes, inchangées, les décisions inscrites par les Titres XIII, XVI et XVII, `DECISION-0046` à `DECISION-0049` comprises.
+
+## Article 204 — Non-effet
+
+Le présent Titre ne tranche aucune décision, n'en préjuge aucune, ne fixe aucun délai, n'attribue aucune classe ni niveau de risque, ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, ne nomme aucun responsable, ne lève aucune réserve, n'accepte aucun risque et ne constate pas `G0`.

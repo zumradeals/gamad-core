@@ -1022,6 +1022,53 @@ final class Ctr14
             ];
         }
 
+        // 1 bis. Capacités inscrites par un Titre de mise à jour postérieur.
+        //        Le tableau de l'Article 31 est un texte adopté : il ne se
+        //        réécrit pas, et une vingt et unième capacité ne peut donc pas
+        //        y prendre place. Elle est inscrite en fin de texte, à une
+        //        forme dérivable, et relevée ici au même titre qu'une ligne du
+        //        tableau. Sans cela elle serait inscrite en prose, donc
+        //        invisible au contrôle — le défaut exact qu'ADOPTION-0059 a
+        //        réparé pour les décisions ouvertes.
+        //
+        //        Une inscription ne remplace jamais une ligne de l'Article 31 :
+        //        elle CRÉE. Une capacité déjà présente au tableau est laissée
+        //        intacte, faute de quoi un Titre postérieur pourrait réécrire
+        //        en silence l'identité ou la criticité d'une capacité adoptée.
+        foreach (explode("\n", $texte) as $ligne) {
+            if (!preg_match(
+                '/\*\*Inscription\s*:\*\*\s*`(CAP-CORE-\d{3})`\s*—\s*(.+?)\.\s*'
+                . '\*\*Domaine\s*:\*\*\s*(.+?)\.\s*'
+                . '\*\*Criticité\s*:\*\*\s*`([^`]+)`\.\s*'
+                . '\*\*Conception\s*:\*\*\s*`([^`]+)`\.\s*'
+                . '\*\*Implémentation\s*:\*\*\s*`([^`]+)`\.\s*'
+                . '\*\*Exploitation\s*:\*\*\s*`([^`]+)`\.\s*'
+                . '\*\*Preuve\s*:\*\*\s*`([^`]+)`\./u',
+                trim($ligne),
+                $m,
+            )) {
+                continue;
+            }
+            if (isset($capacites[$m[1]])) {
+                continue;
+            }
+            $capacites[$m[1]] = [
+                'reference'  => $m[1],
+                'libelle'    => trim($m[2]),
+                'domaine'    => trim($m[3]),
+                'criticite'  => $this->sansAccolades($m[4]),
+                'etats'      => [
+                    'conception'     => $this->sansAccolades($m[5]),
+                    'implementation' => $this->sansAccolades($m[6]),
+                    'exploitation'   => $this->sansAccolades($m[7]),
+                    'preuve'         => $this->sansAccolades($m[8]),
+                ],
+                'contrats'   => [],
+                'dependances' => null,
+                'champs'     => ['responsable' => null, 'operateur' => null, 'sortie' => null],
+            ];
+        }
+
         // 2. Fiches (Articles 36 à 55) : contrats attendus et dépendances.
         $fiche = null;
         foreach (explode("\n", $texte) as $ligne) {
