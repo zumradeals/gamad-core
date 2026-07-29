@@ -1359,3 +1359,56 @@ Demeurent ouvertes, inchangées, les décisions inscrites par les Titres XIII, X
 ## Article 204 — Non-effet
 
 Le présent Titre ne tranche aucune décision, n'en préjuge aucune, ne fixe aucun délai, n'attribue aucune classe ni niveau de risque, ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, ne nomme aucun responsable, ne lève aucune réserve, n'accepte aucun risque et ne constate pas `G0`.
+
+---
+
+# TITRE XX — `DECISION-0058` RENDUE : LA STRATÉGIE DE SEGMENT ET LE PARTAGE DE L'ÉCOSYSTÈME
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0065`. Aucun article ni tableau préexistant n'est réécrit ni supprimé.
+
+## Article 205 — Nature de la présente mise à jour
+
+L'autorité rend `DECISION-0058`, inscrite ouverte par le Titre XIX, et pose la doctrine de circulation des données dans l'écosystème.
+
+## Article 206 — Ce que l'autorité décide
+
+**La stratégie de segment est l'activation par contrat, et non l'export.**
+
+Un satellite ne reçoit pas la liste des identités qui composent un segment. Il consomme `CTR-21` — une référence de segment, des statistiques agrégées, une durée, des obligations — et diffuse sous ces obligations. L'export brut demeure interdit par défaut (`INV-86`) ; l'export exceptionnel demeure une autorisation expresse, motivée et tracée, jamais un mode d'usage.
+
+**Le ciblage est unique.** `CAP-CORE-021` est le seul moteur d'appariement de l'écosystème ; aucun satellite n'en construit un second (`INV-89`). Wasplex est le premier cas d'usage nommé, non l'exception qui fonde la règle.
+
+**Toute application de l'écosystème partage sa base et ses données avec le Core** et ses capacités, par contrat déclaré et sous finalité déclarée (`INV-90`) — le Core y accédant sans les absorber, et n'en retenant que le minimum commun (`INV-91`), le satellite recevant en retour un résultat qualifié et jamais la base du Core (`INV-92`).
+
+- **Décision close :** `DECISION-0058` — **Par :** `ADOPTION-0065`.
+
+La ligne d'ouverture inscrite à l'Article 201 n'est pas effacée : l'inscription demeure, la clôture s'y ajoute (Article 154).
+
+## Article 207 — Ce que la clôture ne couvre pas, et qui est reporté
+
+`DECISION-0058` portait **deux questions** : la stratégie de segment, et l'inscription au lexique canonique des dix termes de l'Article 20 de la conception du Matching.
+
+L'autorité a rendu la première. La seconde ne l'est pas, et il serait irrégulier de la tenir pour tranchée du fait qu'elle voyageait dans la même ligne — l'Article 7 exclut l'adoption tacite.
+
+- **Décision ouverte :** `DECISION-0060` — inscrire ou non au lexique canonique les dix termes de l'Article 20 de `CONCEPTION-CAP-CORE-021-MOTEUR-DE-MATCHING-0001` : entité, offre, besoin, audience, segment, critère, politique de matching, contexte, résultat, activation. **Source :** `ADOPTION-0065`, Article 5 ; `REGISTRE-INITIAL-DECISIONS-0001`, Article 201.
+
+Qu'une décision inscrite ait porté deux questions est le défaut à relever : une décision qui en contient deux se clôt à moitié sans que rien ne le signale. Le présent article le signale.
+
+## Article 208 — Ce que la doctrine ouvre, et qui doit être décidé avant tout partage
+
+Le partage énoncé à l'Article 247 du Registre initial des capacités souveraines n'est exécutable par aucun contrat existant.
+
+- **Décision ouverte :** `DECISION-0061` — arrêter le contrat de partage entre un satellite et le Core : ce que le satellite expose, sous quelle finalité, pour quelle durée, à quelles capacités, avec quelle classification et quelle procédure de retrait. **Source :** `ADOPTION-0065`, Article 6 ; `REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001`, Article 247.
+- **Décision ouverte :** `DECISION-0062` — arrêter la condition d'appartenance à l'écosystème qui emporte l'obligation de partage, et le sort des produits partenaires que le Registre des produits ne range pas parmi les produits officiels. **Source :** `ADOPTION-0065`, Article 6.
+
+`DECISION-0061` commande l'Article 247 tout entier : une obligation de partage sans contrat de partage est une obligation que nul ne peut exécuter.
+
+## Article 209 — Aucune autre clôture n'est constatée
+
+Demeurent ouvertes, inchangées, `DECISION-0046` à `DECISION-0049`, `DECISION-0050` à `DECISION-0057` et `DECISION-0059`, ainsi que les décisions inscrites par les Titres XIII, XVI et XVII.
+
+`DECISION-0055` demeure ouverte pour ce qu'`ADOPTION-0064` n'a pas tranché : les conditions du passage de l'inscription à l'admission. L'Article 250 du Registre initial des capacités souveraines le confirme — décréter qu'une capacité est commune ne la démontre pas.
+
+## Article 210 — Non-effet
+
+Le présent Titre ne tranche aucune décision autre que `DECISION-0058`, n'en préjuge aucune, ne fixe aucun délai, n'attribue aucune classe ni niveau de risque, ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, ne nomme aucun responsable, n'engage aucun satellite, n'ouvre aucun accès à aucune base, ne lève aucune réserve, n'accepte aucun risque et ne constate pas `G0`.
