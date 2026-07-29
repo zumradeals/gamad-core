@@ -1412,3 +1412,178 @@ Demeurent ouvertes, inchangées, `DECISION-0046` à `DECISION-0049`, `DECISION-0
 ## Article 210 — Non-effet
 
 Le présent Titre ne tranche aucune décision autre que `DECISION-0058`, n'en préjuge aucune, ne fixe aucun délai, n'attribue aucune classe ni niveau de risque, ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, ne nomme aucun responsable, n'engage aucun satellite, n'ouvre aucun accès à aucune base, ne lève aucune réserve, n'accepte aucun risque et ne constate pas `G0`.
+
+---
+
+# TITRE XXI — CLÔTURE PAR VOIE EXCEPTIONNELLE DES DÉCISIONS QUI ENTRAVENT LE CODE
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0066`. Aucun article ni tableau préexistant n'est réécrit ni supprimé. Les lignes d'ouverture demeurent ; les clôtures s'y ajoutent (Article 154).
+
+## Article 211 — Nature de la présente clôture
+
+Le corpus portait **cinquante-six décisions ouvertes**, relevées du Registre par le service de `CTR-05` et non écrites de mémoire (`ADOPTION-0054`).
+
+Douze d'entre elles, et douze seulement, **entravent le code ou une capacité**. L'autorité les rend ici, par voie exceptionnelle, en application du décret de travail du 29 juillet 2026. Les quarante-quatre autres demeurent ouvertes : ce sont des questions de gouvernance, elles n'arrêtent aucune ligne de code, et les trancher en bloc reviendrait à décider à l'aveugle ce que rien n'oblige à décider aujourd'hui.
+
+## Article 212 — `DECISION-0050` — La politique d'inscription initiale
+
+Cinq canaux d'inscription sont autorisés. Chacun produit un niveau d'assurance initial et ne peut en produire un plus élevé.
+
+| Canal | Qui inscrit | Assurance initiale | Types autorisés |
+|---|---|---|---|
+| Auto-inscription | la personne elle-même | `A0` | `personne` |
+| Produit reconnu | un produit officiel de l'écosystème | `A1` | `personne`, `organisation` |
+| Organisation reconnue | une organisation inscrite à `CAP-CORE-002` | `A1` | `personne` |
+| Autorité | l'autorité institutionnelle | `A3` | tous |
+| Création technique | l'autorité institutionnelle | `A3` | `agent`, `service`, `produit`, `realm` |
+
+Toute inscription laisse, sans exception : une **source**, une **date**, un **canal**, un **producteur**, un **niveau d'assurance**, une **preuve**, la **politique** qui l'autorise et un **événement de cycle de vie**. Les six conditions cumulatives d'`INV-79` demeurent entières ; un canal ne dispense d'aucune.
+
+Un canal n'inscrit que les types du tableau. Aucun produit n'inscrit un `agent`, un `service`, un `produit` ou un `realm` : ces types relèvent de l'autorité seule.
+
+- **Décision close :** `DECISION-0050` — **Par :** `ADOPTION-0066`.
+
+## Article 213 — `DECISION-0051` — L'échelle des niveaux d'assurance
+
+Quatre niveaux, ordonnés, jamais présumés (`INV-78`).
+
+| Niveau | Ce qui l'établit |
+|---|---|
+| `A0` | Déclaration sans contrôle |
+| `A1` | Contrôle d'un canal — une adresse ou un numéro éprouvé par un défi |
+| `A2` | Contrôle d'un facteur fort — authentificateur inscrit à `CAP-CORE-005` |
+| `A3` | Vérification par une source admise — pièce ou attestation vérifiée |
+
+Niveau exigé par finalité :
+
+| Finalité | Niveau minimal |
+|---|---|
+| Existence au registre, consultation d'une référence | `A0` |
+| Usage courant d'un produit, appartenance à une audience | `A1` |
+| Action engageant l'entité — commande, adhésion, publication | `A2` |
+| Représentation d'une organisation, mandat, engagement institutionnel | `A3` **et** un mandat vérifié par `CAP-CORE-003` |
+
+Le niveau ne s'élève que par un **événement d'assurance** produit par `CAP-CORE-005`. Il ne se déduit ni de l'usage, ni de l'ancienneté, ni du nombre de produits. Une identité provisoire ou pseudonyme ne dépasse jamais `A1` sans conversion gouvernée.
+
+- **Décision close :** `DECISION-0051` — **Par :** `ADOPTION-0066`.
+
+## Article 214 — `DECISION-0052` — L'autorité d'inscription
+
+Koné Djakaridja, dit Zakaria le Soufi, autorité institutionnelle transitoire, est l'**autorité d'inscription** : il adopte les politiques d'inscription, décide des fusions et tranche les rapprochements proposés.
+
+L'**inscription courante** — celle qui s'exerce par un canal du tableau de l'Article 212 — n'exige pas son intervention : elle s'exerce sous la politique adoptée, et c'est tout l'objet de l'Article 8 de la loi révisée.
+
+Ce que l'autorité d'inscription ne délègue pas : la **fusion** de deux références (`INV-80`), la **conversion** d'une identité provisoire en identité vérifiée, et l'inscription des types `agent`, `service`, `produit` et `realm`.
+
+**L'agent n'est l'autorité d'inscription d'aucune politique**, et ne le devient par aucun canal. Il est lui-même l'une des entités du registre (`AGENT-IA-002`).
+
+- **Décision close :** `DECISION-0052` — **Par :** `ADOPTION-0066`.
+
+## Article 215 — `DECISION-0053` — La version du contrat `CTR-01`
+
+La famille `CTR-01` **conserve son numéro**. Aucune famille `CTR-01 v2` n'est créée.
+
+L'évolution d'un contrat est **strictement additive** : une opération nouvelle s'ajoute, aucune opération existante ne change de signature ni de sémantique, aucune n'est retirée sans un acte de dépréciation nommant les consommateurs affectés et le délai (Article 73 de l'Atlas).
+
+La version est portée par le **catalogue des contrats** de `CAP-CORE-009`, non par le numéro de famille. Un numéro de famille qui changerait à chaque évolution ferait mentir toutes les citations antérieures — c'est `INV-17` transposé aux contrats.
+
+- **Décision close :** `DECISION-0053` — **Par :** `ADOPTION-0066`.
+
+## Article 216 — `DECISION-0056` — Les premiers contextes de matching autorisés
+
+Deux contextes sont autorisés, et deux seulement. Le nombre n'est pas arbitraire : la démonstration du caractère transversal exigée par l'Article 48 de la Charte suppose **deux consommateurs distincts**, et un contexte unique ne la produirait jamais.
+
+| Contexte | Consommateur | Finalité |
+|---|---|---|
+| `WASPLEX_B2B` | Wasplex | Présenter une offre à des organisations qualifiées |
+| `PORTAIL_ORIENTATION` | Portail GAMAD | Orienter une entité vers les services qui lui sont utiles |
+
+`INSTITUTIONNEL_ELIGIBILITE` est **nommé et non autorisé** : il touche l'attribution d'aides publiques, et son ouverture exige une décision propre.
+
+- **Décision close :** `DECISION-0056` — **Par :** `ADOPTION-0066`.
+
+## Article 217 — `DECISION-0057` — Les critères autorisés et interdits par contexte
+
+Liste close. Un critère absent de la liste de son contexte n'est pas utilisé, la donnée fût-elle disponible et pertinente (`INV-83`).
+
+**`WASPLEX_B2B` :** secteur d'activité déclaré · territoire déclaré · taille d'organisation déclarée · rôle déclaré dans l'organisation · besoin déclaré · langue · existence d'une relation active avec un produit de l'écosystème.
+
+**`PORTAIL_ORIENTATION` :** besoin déclaré · territoire déclaré · type d'entité · services déjà consommés · langue.
+
+**Interdits dans tout contexte**, présent et futur : les sept critères du plancher de l'Article 24 de `CONCEPTION-CAP-CORE-021-MOTEUR-DE-MATCHING-0001`. Une politique qui en invoquerait un est refusée **à l'inscription**, non à l'exécution.
+
+Deux constats portés par la liste elle-même : tout critère y est **déclaré** — le moteur ne qualifie sur rien d'inféré ; et aucun ne porte sur une personne physique dans `WASPLEX_B2B` — le premier contexte apparie des organisations, non des individus.
+
+- **Décision close :** `DECISION-0057` — **Par :** `ADOPTION-0066`.
+
+## Article 218 — `DECISION-0061` — Le contrat de partage entre un satellite et le Core
+
+Ce que le satellite expose au Core, et rien d'autre :
+
+1. l'inventaire de ses **sujets locaux opaques**, sans les identifiants métier ;
+2. le **type d'entité** présumé, jamais présenté comme établi ;
+3. le **canal de contrôle** exercé et son niveau, au sens de l'Article 213 ;
+4. les **dates** de début et de fin de la relation d'usage ;
+5. les **attributs** que la liste close du contexte de matching énumère, et eux seuls.
+
+Ce que le satellite n'expose jamais : contenus, fichiers, messages, documents, historiques de navigation, données de paiement, et tout attribut absent de la liste close.
+
+**Durée :** celle de l'admission du satellite. **Finalité :** celle du contexte, jamais générale. **Classification :** portée par chaque ligne. **Retrait :** le satellite ou l'autorité y met fin par déclaration ; le Core cesse alors de lire, les relations passent à l'état clos, et **les références canoniques subsistent** (`INV-76`).
+
+Le Core **lit** ; il ne copie pas. Une réplication intégrale de la base d'un satellite n'est pas un partage au sens du présent article (`INV-91`).
+
+- **Décision close :** `DECISION-0061` — **Par :** `ADOPTION-0066`.
+
+## Article 219 — `DECISION-0062` — La condition d'appartenance qui emporte le partage
+
+L'obligation de partage pèse sur les entités que le Registre initial des produits reconnaît comme **produits officiels**, et sur les realms fédérés inscrits.
+
+Wasplex et IKOMA y sont inscrits comme **familles de produits partenaires**, non comme produits officiels : ils ne sont pas soumis à l'obligation. Ils peuvent consommer `CTR-21` sous un contrat spécifique, qui demeure à écrire.
+
+Tenir un partenaire pour un membre de l'écosystème serait la faute exacte qu'`INV-54` et `INV-56` interdisent : ni la confiance ni l'appartenance ne sont implicites.
+
+- **Décision close :** `DECISION-0062` — **Par :** `ADOPTION-0066`.
+
+## Article 220 — `DECISION-0018` — Les fonctions, nommées ou déclarées vacantes
+
+L'autorité institutionnelle transitoire tient, pour les vingt et une capacités, les fonctions de **responsable** et d'**opérateur**, jusqu'à nomination distincte.
+
+La fonction **`AUDIT` est expressément déclarée `VACANTE`**, et l'autorité **ne la prend pas**. Se nommer auditeur de son propre ouvrage supprimerait la fonction au lieu de la pourvoir. `RISK-SEC-0001` demeure entier, sans terme fixe, et `M-75` — la fonction d'audit qui atteste de sa propre indépendance — demeure la menace que le corpus porte sans la traiter.
+
+Le pouvoir de suspension demeure celui de l'autorité.
+
+- **Décision close :** `DECISION-0018` — **Par :** `ADOPTION-0066`.
+
+## Article 221 — `DECISION-0019` — L'ordre de conception et de mise en capacité
+
+L'ordre est celui du décret de travail du 29 juillet 2026 : le **Core en production d'abord**, le premier satellite ensuite. `PRD-GAMAD-002` sera le premier satellite recodé, et pas avant.
+
+- **Décision close :** `DECISION-0019` — **Par :** `ADOPTION-0066`.
+
+## Article 222 — `DECISION-0043` — Ce qui suit `P3`
+
+`ADOPTION-0063` a porté l'exploitation des vingt capacités à `ACTIVE`. Ce qui suit `P3` n'est **plus une question normative** : c'est le déploiement, acte de l'autorité, qui touche la frontière des accès réservés (`ADOPTION-0025`, Art. 3).
+
+Aucun texte supplémentaire n'est requis. L'agent guide ; il ne déploie pas.
+
+- **Décision close :** `DECISION-0043` — **Par :** `ADOPTION-0066`.
+
+## Article 223 — `DECISION-0060` — Le lexique du Matching
+
+Les dix termes de l'Article 20 de la conception du Matching **ne sont pas inscrits** au lexique canonique.
+
+Constat motivé : ils sont **définis dans un texte adopté**, et une inscription lexicale produirait un texte dont aucun code n'a besoin. Le jour où un usage divergerait de la définition adoptée, l'inscription se justifierait ; ce jour n'est pas venu.
+
+- **Décision close :** `DECISION-0060` — **Par :** `ADOPTION-0066`.
+
+## Article 224 — Ce que la présente clôture ne clôt pas
+
+**Quarante-quatre décisions demeurent ouvertes**, et le nombre est dérivé du Registre après la présente clôture, non écrit de mémoire.
+
+Aucune ne bloque le code. Elles portent sur l'indépendance de l'audit, les seuils et méthodes d'évaluation des risques, la classification des incidents, les objectifs de reprise, les vocabulaires, les dossiers historiques et les propriétaires institutionnels des produits. Les trancher en bloc reviendrait à décider à l'aveugle ce que rien n'oblige à décider aujourd'hui — et l'Article 5 du Registre initial des capacités souveraines préfère `NON ÉTABLI` à une conclusion sans preuve.
+
+`DECISION-0055` demeure ouverte pour ce qu'aucun acte n'a tranché : les conditions du passage de `CAP-CORE-021` de l'inscription à l'admission, que l'Article 48 de la Charte subordonne à une **démonstration** et non à une règle.
+
+## Article 225 — Non-effet
+
+Le présent Titre ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, n'inscrit aucune identité, n'engage aucun satellite, n'ouvre aucun accès à aucune base, ne rend l'audit ni indépendant ni suffisant, ne lève aucune réserve de `G0`, n'accepte aucun risque nouveau et ne constate pas `G0`.
