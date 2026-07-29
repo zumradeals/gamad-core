@@ -1620,3 +1620,47 @@ L'Article 35 de l'Atlas nomme trois sources canoniques pour `DOM-04` : le Regist
 ## Article 206 — Non-effet
 
 Le présent Titre ne rend aucune capacité admise ni active, n'admet ni ne certifie aucun produit, ne reconnaît aucun realm, ne confère aucune autorité, n'arbitre aucune décision ouverte et ne constate pas `G0`.
+
+---
+
+# TITRE XXXIV — MISE À JOUR POST-ADOPTION : LE DOMAINE `DOM-10` — `CAP-CORE-017`, `CAP-CORE-018` ET `CAP-CORE-019`
+
+## Article 207 — Nature de la présente mise à jour
+
+Le présent Titre constate les conséquences d'exécution de `ADOPTION-0055`, second acte de lot. Il ne modifie le corps d'aucune disposition des Titres I à XXXIII.
+
+## Article 208 — Rattachement de la famille `CTR-18` à `CAP-CORE-019`
+
+L'Article 54 énonce les contrats attendus de `CAP-CORE-019` en prose et sans référence. Le Titre XVI de `CORE-ATLAS-0001`, adopté par le même acte, crée la famille `CTR-18` — Preuve de sauvegarde et restauration, gardée par `DOM-10`.
+
+- **Rattachement :** `CAP-CORE-019` — famille attribuée `CTR-18`. **Source :** `ADOPTION-0055`, constatant l'Article 54.
+
+`CAP-CORE-019` garde `DOM-10` : `INV-40` est satisfait. **Les vingt capacités portent désormais toutes au moins une famille de contrat.**
+
+## Article 209 — Le partage de `CTR-11` entre deux capacités est régulier
+
+`CTR-11` — Risque et incident sert `CAP-CORE-017` et `CAP-CORE-018`, et l'Atlas l'énonce dans son intitulé même. Le partage est **régulier** (`INV-40`, Article 125 de l'Atlas).
+
+Chaque capacité a son module propre et déclare la capacité qu'elle sert (`INV-41`) : `core/registre-risques/` sert `CAP-CORE-017`, `core/registre-incidents/` sert `CAP-CORE-018`.
+
+## Article 210 — Changement d'état
+
+| Capacité | État avant | État constaté par le présent Titre |
+|---|---|---|
+| `CAP-CORE-017` — Registre des risques et exceptions | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+| `CAP-CORE-018` — Registre des incidents | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+| `CAP-CORE-019` — Sauvegarde et restauration souveraines | Conception `À ÉTABLIR` ; implémentation `NON COMMENCÉE` ; exploitation `INACTIVE` ; preuve `P1` | Conception **`CONÇUE`** ; implémentation **`PARTIELLEMENT MATÉRIALISÉE`** ; exploitation `INACTIVE` ; preuve **`P3 — TESTÉ`** |
+
+- **Source :** `ADOPTION-0055`. **Contrats :** `CTR-11` pour `CAP-CORE-017` et `CAP-CORE-018`, `CTR-18` pour `CAP-CORE-019`. **Invariants introduits :** `INV-57` à `INV-61`. **Menaces retenues :** `M-64` à `M-69`.
+
+L'exploitation demeure `INACTIVE` pour les trois. `CAP-CORE-019` étant de criticité `RACINE`, **neuf des dix capacités `RACINE` sont désormais codées et éprouvées** ; seule `CAP-CORE-016` — Gouvernance des secrets et clés ne l'est pas.
+
+## Article 211 — Ce que le présent Titre ne comble pas
+
+L'**écart global de continuité** de l'Article 74 demeure entier : aucun objectif de reprise, aucun mode dégradé, aucun test de restauration, aucun plan de succession n'est établi. Le service de `CAP-CORE-019` le constate ; il ne le comble pas.
+
+L'**acceptation de `RISK-SEC-0001`** — l'audit non indépendant — demeure sans terme fixe, et l'exception `EXC-SEC-0001` demeure ouverte, sans compensation technique. Le service de `CAP-CORE-017` les nomme ; il ne fixe aucune échéance, la Loi 65 de `CORE-LAWS-0001` réservant l'acceptation du risque à l'autorité compétente.
+
+## Article 212 — Non-effet
+
+Le présent Titre ne rend aucune capacité admise ni active, n'accepte, ne clôt et ne réexamine aucun risque, ne déclare aucun incident, n'atteste aucune sauvegarde, ne franchit pas la frontière des accès réservés et ne constate pas `G0`.
