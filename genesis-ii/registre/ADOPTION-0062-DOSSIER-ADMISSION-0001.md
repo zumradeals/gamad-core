@@ -23,7 +23,9 @@ Koné Djakaridja, dit Zakaria le Soufi, dirigeant actuel de GAMAD, déclare avoi
 
 Est adopté l'incrément suivant :
 
-- **Incrément :** le dossier d'admission — `Ctr14::admissions()` et `Ctr14::dossierAdmission()`, leur garde et leur restitution au tableau de bord. **Commit :** `c354bc7b676af6e149cf8b5cdcef2933b9ffd6bd`. **Capacité :** `CAP-CORE-020`. **Garde :** `core/registre-annuaire/tests/annuaire_p3.php`.
+- **Incrément :** le dossier d'admission — `Ctr14::admissions()` et `Ctr14::dossierAdmission()`, leur garde et leur restitution au tableau de bord. **Commit :** `5217becb5e54dc0604d0d90dbc06a669aefad538`. **Capacité :** `CAP-CORE-020`. **Garde :** `core/registre-annuaire/tests/annuaire_p3.php`.
+
+L'incrément est porté par **deux commits** : `c354bc7b676af6e149cf8b5cdcef2933b9ffd6bd` livre le service et sa garde ; `5217becb5e54dc0604d0d90dbc06a669aefad538` rectifie l'environnement d'intégration continue, sur un défaut que l'intégration continue elle-même a trouvé avant toute adoption (Article 11). Le commit déclaré est le **second**, qui porte l'incrément entier. Les deux sont nommés plutôt qu'un seul, afin que la rectification demeure lisible et ne se confonde pas avec la livraison.
 
 Est adopté le **Titre XXXVII** — Articles 222 à 227 — ajouté au Registre initial des capacités souveraines, qui constate l'état après cet incrément.
 
@@ -107,7 +109,7 @@ La dernière ligne est vérifiée par la garde et non déclarée : les écarts d
 | `core/registre-risques/tests/risques_p3.php` | `CAP-CORE-017` | `0` |
 | `core/registre-incidents/tests/incidents_p3.php` | `CAP-CORE-018` | `0` |
 | `core/registre-continuite/tests/continuite_p3.php` | `CAP-CORE-019` | `0` |
-| `core/registre-annuaire/tests/annuaire_p3.php` | `CAP-CORE-020` | `0` — 42 vérifications, dont 15 ajoutées au titre du dossier |
+| `core/registre-annuaire/tests/annuaire_p3.php` | `CAP-CORE-020` | `0` — 43 vérifications, dont 16 ajoutées au titre du dossier |
 
 Ces vingt et une sorties ont été relevées **une par une**, selon la règle portée par `ADOPTION-0054`, Art. 7.
 
@@ -145,11 +147,28 @@ La falsification de l'état d'implémentation **n'a pas échoué du premier coup
 
 Le fait est consigné parce qu'il touche la **valeur d'une contre-épreuve** : une falsification qui manque sa cible se lit exactement comme une garde qui ne voit rien. La distinction ne se fait qu'en vérifiant que la vérification tombée est bien celle que l'altération visait — d'où la seconde table de l'Article 9, qui nomme la vérification tombée pour chacune des cinq.
 
+## Article 11 — Ce que l'intégration continue a trouvé, et que la contre-épreuve n'avait pas vu
+
+La garde de `CAP-CORE-020` **a échoué en intégration continue alors qu'elle passait localement, et sur les six copies de la contre-épreuve**.
+
+La cause n'était pas le service. Deux des neuf pièces se dérivent du **dépôt** et non du corpus — le commit qui a introduit le module, et l'acte qui a déclaré cette empreinte. `actions/checkout` clone par défaut à `--depth 1` : sans histoire, ces deux pièces ne sont pas dérivables, le service les a déclarées telles, et les vingt dossiers sont devenus incomplets. **La garde a refusé d'établir la preuve, et elle a eu raison** — un dossier sans commit ne satisfait pas `INV-68`, et le dire vaut mieux que l'inventer (`INV-39`).
+
+La contre-épreuve ne pouvait pas trouver ce défaut : ses copies portaient l'histoire du dépôt, puisqu'elles en étaient des copies intégrales. **Falsifier un corpus n'éprouve pas l'environnement qui l'exécute.**
+
+Deux rectifications, portées par le commit `5217becb5e54dc0604d0d90dbc06a669aefad538` :
+
+- `fetch-depth: 0` au checkout des vingt gardes de comportement ;
+- une vérification qui **nomme la cause** — sans elle, vingt dossiers paraissaient incomplets sans raison lisible, et la lecture naturelle eût été d'accuser le code.
+
+Vérifié dans les deux sens sur clone local : `--depth 1` → sortie `1`, cause nommée ; après `git fetch --unshallow` → sortie `0`.
+
+**Ce que cet épisode établit :** `ADOPTION-0035`, Art. 2.2 exige qu'une garde soit exécutée en intégration continue pour valoir preuve `P3`. Le motif s'en vérifie ici — une garde qui n'aurait été lancée que sur le poste du concepteur aurait été déclarée verte et n'aurait rien prouvé de ce que produit une machine qui ne connaît pas le dépôt.
+
 ---
 
 # TITRE III — LIMITES
 
-## Article 11 — Ce que cet acte ne tranche pas
+## Article 12 — Ce que cet acte ne tranche pas
 
 Trois des quatre décisions nées de l'Article 11 d'`ADOPTION-0058` demeurent **ouvertes** : `DECISION-0046` — la proportionnalité exigée d'une capacité `RACINE` ; `DECISION-0047` — le sens de la complétude au regard de l'objet d'une famille ; `DECISION-0048` — la condition de réexamen sous audit non indépendant. La quatrième, `DECISION-0045`, a été close par `ADOPTION-0061`.
 
@@ -157,7 +176,7 @@ Décomptes dérivés par `Ctr05` : **49** décisions inscrites, **44** ouvertes,
 
 Deux de ces trois décisions sont, mot pour mot, des questions que l'Article 14 déclare non dérivables. **Le code les rend visibles ; il ne les résout pas**, et l'adoption du présent acte ne vaut arbitrage d'aucune.
 
-## Article 12 — Non-effet
+## Article 13 — Non-effet
 
 Le présent acte **n'admet aucune implémentation** et n'en présente aucune à l'admission. Il n'inscrit aucune admission, n'en retire aucune, ne rend aucune capacité admise ni active, ne nomme aucun responsable, ne fixe aucune condition de réexamen.
 
@@ -180,7 +199,7 @@ Ces précautions bornent le service ; elles ne rendent pas l'audit indépendant.
 | `genesis-ii/registres/capacites/REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001.md` | Titre XXXVII — Articles 222 à 227 (ajout seul) | `5e17df88d84ede8b307002d043b91b370ce5ff12` |
 | `genesis-ii/registres/sources/REGISTRE-DES-ADOPTIONS-0001.md` | Article 4 — ligne `ADOPTION-0062` | `0eea7a1c36bd95f8e5a98ff32c40cea3c5eee180` |
 
-Le code adopté est identifié par son **commit** : `c354bc7b676af6e149cf8b5cdcef2933b9ffd6bd`.
+Le code adopté est identifié par son **commit** : `5217becb5e54dc0604d0d90dbc06a669aefad538`, précédé de `c354bc7b676af6e149cf8b5cdcef2933b9ffd6bd` (Article 1).
 
 Ces empreintes remplacent, pour ces fichiers et pour eux seuls, celles déclarées par les actes antérieurs — `ADOPTION-0061` compris —, lesquelles demeurent exactes à leur date. **Aucune ligne ni article préexistant n'a été réécrit ou supprimé.**
 
