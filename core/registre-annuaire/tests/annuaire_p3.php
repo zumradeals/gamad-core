@@ -304,10 +304,50 @@ echo "\n  INV-67 à INV-72 — le dossier d'admission s'assemble, et ne conclut 
 // ADOPTION-0060 a rattaché l'admission d'une implémentation souveraine à
 // CTR-14 : c'est donc ici, et non ailleurs, que le dossier se dérive.
 
+// Les vingt admissions sont INSCRITES depuis l'acte exceptionnel. Le service ne
+// relève que ce qui porte la forme de l'Article 174 : une admission écrite en
+// prose ne serait pas relevée, et vingt capacités déclarées ADMISE sans
+// inscription seraient vingt divergences.
+$admissions = $ctr14->admissions();
+$capacites  = array_column($ctr14->comparerReel(), 'capacite');
 $verifier(
-    $ctr14->admissions() === [],
-    "aucune admission n'est inscrite, et le service n'en invente aucune",
-    count($ctr14->admissions()) . ' admission(s) relevée(s) à la forme de l\'Article 174',
+    count($admissions) === 20 && array_diff($capacites, array_keys($admissions)) === [],
+    "les vingt admissions sont inscrites à la forme de l'Article 174",
+    count($admissions) . ' admission(s) relevée(s) · sans inscription : '
+        . (implode(', ', array_diff($capacites, array_keys($admissions))) ?: 'aucune'),
+);
+
+// Chaque inscription nomme la famille que le module sert réellement. Une
+// admission qui admettrait une capacité au titre d'une famille qu'elle ne porte
+// pas admettrait autre chose que ce qui a été éprouvé.
+$famillesFausses = [];
+foreach ($ctr14->comparerReel() as $ligne) {
+    $ref = (string) $ligne['capacite'];
+    $servie = $ligne['observe']['famille_servie'];
+    if (isset($admissions[$ref]) && $admissions[$ref]['famille'] !== $servie) {
+        $famillesFausses[] = $ref . ' : inscrite ' . $admissions[$ref]['famille'] . ', servie ' . var_export($servie, true);
+    }
+}
+$verifier(
+    $famillesFausses === [],
+    "chaque admission nomme la famille que son module sert réellement",
+    $famillesFausses === [] ? 'vingt concordances' : implode(' · ', $famillesFausses),
+);
+
+// INV-70 rendu obligatoire par ADOPTION-0061 : l'autorité de décision et
+// FCT-CORE-021 étant le même titulaire, une inscription qui omettrait la
+// mention serait irrégulière. La garde le vérifie sur l'inscription elle-même,
+// et non sur l'intention de l'acte.
+$sansMention = [];
+foreach ($admissions as $ref => $a) {
+    if (!str_contains(mb_strtolower($a['audit']), 'non indépendant')) {
+        $sansMention[] = $ref . ' : ' . $a['audit'];
+    }
+}
+$verifier(
+    $sansMention === [],
+    "INV-70 — les vingt inscriptions portent la mention d'audit non indépendant",
+    $sansMention === [] ? 'vingt mentions portées' : implode(' · ', $sansMention),
 );
 
 $dossier = $ctr14->dossierAdmission('CAP-CORE-020');
@@ -397,33 +437,64 @@ $verifier(
     implode(', ', array_keys($nonDerivables)),
 );
 
-// INV-69 — nul ne se présente à l'admission depuis un état partiel. Les vingt
-// capacités sont PARTIELLEMENT MATÉRIALISÉE : aucune n'est recevable, et un
-// dossier complet ne change rien à cela.
+// Les vingt sont désormais ADMISE. Aucune n'est donc « recevable » — non plus
+// faute d'état suffisant, mais parce qu'elle n'a plus à se présenter. Le
+// service distingue les deux faux : confondus, une capacité admise se lirait
+// comme une capacité écartée.
 $recevables = [];
-$completsNonRecevables = 0;
+$admises = [];
 $incomplets = [];
+$etatsAdmission = [];
 foreach ($ctr14->comparerReel() as $ligne) {
-    $d = $ctr14->dossierAdmission((string) $ligne['capacite']);
+    $ref = (string) $ligne['capacite'];
+    $d = $ctr14->dossierAdmission($ref);
     if ($d['recevable_a_l_admission']) {
-        $recevables[] = (string) $ligne['capacite'];
+        $recevables[] = $ref;
     }
-    if ($d['dossier_complet'] && !$d['recevable_a_l_admission']) {
-        $completsNonRecevables++;
+    if ($d['deja_admise']) {
+        $admises[] = $ref;
     }
     if (!$d['dossier_complet']) {
-        $incomplets[(string) $ligne['capacite']] = $d['pieces_manquantes'];
+        $incomplets[$ref] = $d['pieces_manquantes'];
     }
+    $etatsAdmission[$ref] = (string) $d['etat_admission'];
 }
 $verifier(
-    $recevables === [],
-    "INV-69 — aucune capacité n'est recevable à l'admission depuis un état partiel",
-    $recevables === [] ? 'aucune des vingt' : implode(', ', $recevables),
+    count($admises) === 20,
+    "les vingt capacités sont déclarées ADMISE",
+    count($admises) . ' capacité(s) admise(s)',
 );
 $verifier(
-    $completsNonRecevables === 19,
-    "un dossier complet ne vaut pas recevabilité — dix-neuf le démontrent",
-    $completsNonRecevables . ' dossier(s) complet(s) et non recevable(s)',
+    $recevables === [],
+    "INV-69 — aucune capacité n'est recevable : les vingt sont admises, non en attente",
+    $recevables === [] ? 'aucune en attente d\'admission' : implode(', ', $recevables),
+);
+
+// INV-68 — chaque admission nomme un commit que le module a réellement porté.
+// Un commit inconnu de son histoire n'admettrait rien ; c'est un faux distinct
+// de la caducité, et le service ne les confond pas.
+$sansObjet = array_keys(array_filter(
+    $etatsAdmission,
+    static fn (string $e): bool => str_starts_with($e, 'ADMISSION SANS OBJET'),
+));
+$verifier(
+    $sansObjet === [],
+    "INV-68 — chaque commit admis appartient à l'histoire de son module",
+    $sansObjet === [] ? 'vingt commits vérifiés dans l\'histoire' : implode(', ', $sansObjet),
+);
+
+// La caducité est un CONSTAT, pas une faute : un module qui évolue rend son
+// admission caduque, et c'est le mécanisme d'INV-68 qui fonctionne. La garde le
+// relève et le nomme ; elle n'échoue pas là-dessus, faute de quoi tout commit
+// futur bloquerait le travail avant d'être écrit.
+$caduques = array_keys(array_filter(
+    $etatsAdmission,
+    static fn (string $e): bool => str_starts_with($e, 'ADMISSION CADUQUE'),
+));
+$verifier(
+    count($etatsAdmission) === 20 && !in_array('AUCUNE ADMISSION INSCRITE', $etatsAdmission, true),
+    "l'état de chaque admission est nommé, jamais présumé favorable",
+    count($caduques) . ' caduque(s) : ' . (implode(', ', $caduques) ?: 'aucune'),
 );
 
 // Le dossier relève un fait historique du corpus, et ne l'arrondit pas :
@@ -462,12 +533,21 @@ $verifier(
     (string) $dossier['pieces']['audit']['source'],
 );
 
-// INV-68 — une admission nomme un commit. Aucune n'étant inscrite, l'état est
-// nommé, et non présumé favorable.
+// INV-67 — l'admission est expresse ou n'est pas. Une capacité déclarée ADMISE
+// dont l'inscription serait retirée deviendrait une admission tacite : le
+// service la relève alors comme divergence, et ne l'accepte pas en silence.
+$reglesAdmission = 0;
+foreach ($ctr14->comparerReel() as $ligne) {
+    foreach ($ligne['divergences'] as $d) {
+        if (str_starts_with($d, 'ADMISSION NON INSCRITE') || str_starts_with($d, 'EXPLOITATION SANS ADMISSION')) {
+            $reglesAdmission++;
+        }
+    }
+}
 $verifier(
-    $dossier['etat_admission'] === 'AUCUNE ADMISSION INSCRITE',
-    "INV-68 — l'absence d'admission est nommée, non présumée",
-    (string) $dossier['etat_admission'],
+    $reglesAdmission === 0,
+    "INV-67 — aucune admission tacite, aucune exploitation sans admission",
+    $reglesAdmission . ' divergence(s) d\'admission',
 );
 
 // Une capacité inconnue ne reçoit pas un dossier vide qui passerait pour vrai.
