@@ -627,6 +627,34 @@ final class Ctr14
             $capacites[$ref]['contrats'] = $contrats;
         }
 
+        // 2 quater. Rattachements déclarés par un Titre postérieur. Une famille
+        //           peut avoir été attribuée par une fiche SANS figurer au
+        //           champ qui la recense — l'Article 48 nomme `CTR-07` dans sa
+        //           ligne « État actuel », et la fiche de CAP-CORE-014 ne porte
+        //           aucune ligne « Contrats attendus ». Un tel rattachement ne
+        //           retire rien : il n'est donc pas une réattribution, et une
+        //           déclaration distincte le porte.
+        //
+        //           La forme est exigée, non déduite : le service ne lit pas la
+        //           prose d'une fiche pour y chercher une attribution. Déduire
+        //           un rattachement d'une phrase serait le comblement que
+        //           INV-43 interdit ; le porter à la forme dérivable est un
+        //           acte de l'autorité (ADOPTION-0049).
+        foreach (explode("\n", $texte) as $ligne) {
+            if (!preg_match(
+                '/\*\*Rattachement\s*:\*\*\s*`(CAP-CORE-\d{3})`\s*—\s*famille attribuée\s*`(CTR-\d{2})`/u',
+                trim($ligne),
+                $m,
+            )) {
+                continue;
+            }
+            [, $ref, $attribuee] = $m;
+            if (!isset($capacites[$ref]) || in_array($attribuee, $capacites[$ref]['contrats'], true)) {
+                continue;
+            }
+            $capacites[$ref]['contrats'][] = $attribuee;
+        }
+
         // 3. Titres de mise à jour post-adoption, dans l'ordre du document —
         //    qui est l'ordre chronologique d'adoption. Le dernier prévaut.
         foreach (explode("\n", $texte) as $ligne) {
