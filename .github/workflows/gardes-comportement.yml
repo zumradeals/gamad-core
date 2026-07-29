@@ -55,6 +55,8 @@ jobs:
             garde: core/registre-decisions/tests/decisions_p3.php
           - capacite: CAP-CORE-009 (contrats)
             garde: core/registre-contrats/tests/contrats_p3.php
+          - capacite: CAP-CORE-011 (produits)
+            garde: core/registre-produits/tests/produits_p3.php
           - capacite: CAP-CORE-015 (preuves d'intégrité)
             garde: core/registre-preuves/tests/preuves_p3.php
           - capacite: CAP-CORE-020 (annuaire et Atlas)
