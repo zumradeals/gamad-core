@@ -172,7 +172,14 @@ function etat(array $l, string $dimension): string
   <p class="sub">
     <code>ADOPTION-0060</code> a rattaché l'admission d'une implémentation souveraine à <code>CTR-14</code>.
     Le service assemble les neuf pièces dérivables de l'Article 13 et <strong>ne conclut pas</strong> (<code>INV-72</code>) :
-    un dossier complet ne vaut pas admission, il la rend examinable. L'admission est prononcée par l'autorité seule.
+    un dossier complet ne vaut pas admission, il la rend examinable. L'admission est prononcée par l'autorité seule —
+    ce qu'elle a fait par <code>ADOPTION-0063</code>, à titre exceptionnel, pour les vingt.
+  </p>
+  <p class="sub">
+    Une admission nomme un <strong>commit</strong> et ne lui survit pas (<code>INV-68</code>). Un module qui évolue rend
+    son admission <strong>caduque</strong> : c'est un constat porté à cette page, non une faute — l'autorité réinscrit
+    quand elle le juge bon. Une admission dont le commit n'appartient pas à l'histoire du module est en revanche
+    <strong>sans objet</strong>, et les deux ne se confondent pas.
   </p>
   <div class="scroll"><table>
     <thead><tr>
@@ -191,7 +198,9 @@ function etat(array $l, string $dimension): string
         <td class="<?= $d['dossier_complet'] ? 'ok' : 'ko' ?>">
           <?= $d['dossier_complet'] ? 'complet' : 'incomplet — ' . e(implode(', ', $d['pieces_manquantes'])) ?>
         </td>
-        <td class="muted"><?= $d['recevable_a_l_admission'] ? 'oui' : 'non — état partiel' ?></td>
+        <td class="muted"><?= $d['deja_admise']
+              ? 'sans objet — déjà admise'
+              : ($d['recevable_a_l_admission'] ? 'oui' : 'non — état partiel') ?></td>
         <td><?= $d['mention_d_audit_requise'] ? '<span class="pill">audit non indépendant</span>' : '<span class="muted">—</span>' ?></td>
       </tr>
     <?php endforeach; ?>

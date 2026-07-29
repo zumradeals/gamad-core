@@ -49,11 +49,20 @@ final class Ctr14
     /** L'état d'implémentation depuis lequel une admission est recevable (INV-69). */
     public const RECEVABLE_DEPUIS = 'IMPLÉMENTÉE NON ADMISE';
 
+    /** L'état d'implémentation d'une capacité dont l'admission est prononcée. */
+    public const ADMISE = 'ADMISE';
+
+    /** L'état d'exploitation qui suppose une admission prononcée (INV-67). */
+    public const EXPLOITEE = 'ACTIVE';
+
     /** @var array<string,array<string,mixed>>|null */
     private ?array $registre = null;
 
     /** @var array<string,mixed>|null Les écarts du corpus, relevés une fois. */
     private ?array $ecartsCorpus = null;
+
+    /** @var array<string,array<string,string>>|null Les admissions, relevées une fois. */
+    private ?array $admissionsCache = null;
 
     /** @var array<string,array<string,string>>|null */
     private ?array $atlas = null;
@@ -372,6 +381,20 @@ final class Ctr14
                 $divergences[] = 'PREUVE SOUS-DÉCLARÉE — garde `' . $observe['garde'] . '` présente, preuve déclarée `' . ($preuve ?: 'non établie') . '`';
             }
 
+            // INV-67 — l'admission est expresse ou n'est pas. Un état déclaré
+            // `ADMISE` que nulle inscription ne porte serait une admission
+            // tacite, c'est-à-dire la chose même que l'invariant refuse.
+            $exploitation = (string) ($etats['exploitation'] ?? '');
+            $admise = $implementation === self::ADMISE;
+            if ($admise && !isset($this->admissions()[$ref])) {
+                $divergences[] = 'ADMISSION NON INSCRITE — implémentation déclarée `'
+                    . self::ADMISE . '`, aucune inscription à la forme de l\'Article 174';
+            }
+            if ($exploitation === self::EXPLOITEE && !$admise) {
+                $divergences[] = 'EXPLOITATION SANS ADMISSION — exploitation déclarée `'
+                    . self::EXPLOITEE . '`, implémentation `' . ($implementation ?: 'non établie') . '`';
+            }
+
             $lignes[] = [
                 'capacite'    => $ref,
                 'declare'     => $etats,
@@ -493,6 +516,10 @@ final class Ctr14
      */
     public function admissions(): array
     {
+        if ($this->admissionsCache !== null) {
+            return $this->admissionsCache;
+        }
+
         $admissions = [];
         foreach (explode("\n", $this->lire(self::REGISTRE)) as $ligne) {
             if (!preg_match(
@@ -517,7 +544,7 @@ final class Ctr14
             ];
         }
 
-        return $admissions;
+        return $this->admissionsCache = $admissions;
     }
 
     /**
@@ -557,10 +584,23 @@ final class Ctr14
         // INV-68 — une admission nomme un commit et ne lui survit pas.
         $etatAdmission = 'AUCUNE ADMISSION INSCRITE';
         if ($admission !== null) {
-            $etatAdmission = $commitCourant !== null
-                && str_starts_with($commitCourant, $admission['commit_admis'])
-                    ? 'ADMISE — commit inchangé'
-                    : 'ADMISSION CADUQUE — le module a changé depuis le commit admis (INV-68)';
+            // Le commit admis est confronté à l'HISTOIRE du module, et pas
+            // seulement à sa tête. Un commit que le module n'a jamais porté
+            // n'est pas une admission caduque : c'est une admission qui ne
+            // désigne rien, et les deux ne se confondent pas.
+            $admission['commit_admis_connu'] = $this->commitConnuDuModule(
+                $observe['module'],
+                $admission['commit_admis'],
+            );
+
+            if (!$admission['commit_admis_connu']) {
+                $etatAdmission = 'ADMISSION SANS OBJET — le commit admis n\'appartient pas à l\'histoire du module';
+            } else {
+                $etatAdmission = $commitCourant !== null
+                    && str_starts_with($commitCourant, $admission['commit_admis'])
+                        ? 'ADMISE — commit inchangé'
+                        : 'ADMISSION CADUQUE — le module a changé depuis le commit admis (INV-68)';
+            }
         }
 
         $acte = $this->acteAdoptant($observe['module']);
@@ -612,7 +652,12 @@ final class Ctr14
             'dossier_complet' => $manquantes === [],
 
             // INV-69 · INV-70 — recevabilité et mention, qui ne se dérivent pas.
+            // Une capacité DÉJÀ admise n'est pas « recevable » : elle n'a plus
+            // à se présenter. Les deux faux sont distincts et le dossier les
+            // distingue, faute de quoi une capacité admise se lirait comme une
+            // capacité écartée.
             'recevable_a_l_admission' => $ligne['declare']['implementation'] === self::RECEVABLE_DEPUIS,
+            'deja_admise'             => $ligne['declare']['implementation'] === self::ADMISE,
             'mention_d_audit_requise' => $this->qualiteDeLAudit()['independante'] === false,
 
             // Article 14 de la conception — ce qu'aucun service ne dérive.
@@ -790,6 +835,36 @@ final class Ctr14
         }
 
         return null;
+    }
+
+    /**
+     * Le commit admis appartient-il à l'histoire du module ?
+     *
+     * Une admission qui nomme un commit que le module n'a jamais porté ne
+     * désigne rien. Le distinguer d'une admission caduque importe : la seconde
+     * a été vraie et a cessé de l'être, la première n'a jamais rien admis.
+     * Les confondre laisserait passer une inscription fautive sous le couvert
+     * d'une évolution normale du code.
+     */
+    private function commitConnuDuModule(?string $module, string $commit): bool
+    {
+        if ($module === null || $commit === '' || !is_dir($this->corpus . '/.git')) {
+            return false;
+        }
+
+        $sortie = (string) @shell_exec(sprintf(
+            'git -C %s log --format=%%H -- %s 2>/dev/null',
+            escapeshellarg($this->corpus),
+            escapeshellarg('core/' . $module),
+        ));
+
+        foreach (explode("\n", $sortie) as $ligne) {
+            if (str_starts_with(trim($ligne), $commit)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
