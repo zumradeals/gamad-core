@@ -127,8 +127,8 @@ $verifier(
 echo "\n  INV-40 — une capacité ne porte que les familles dont elle garde le domaine\n";
 
 $verifier(
-    $ecarts['familles'] === 17,
-    "les dix-sept familles de contrat sont relevées à l'Atlas",
+    $ecarts['familles'] === 18,
+    "les dix-huit familles de contrat sont relevées à l'Atlas",
     $ecarts['familles'] . ' famille(s)',
 );
 
@@ -245,8 +245,8 @@ $verifier(
 // acte qui les cite peut les relire du corpus au lieu de les reconstituer.
 $parCriticite = $ctr14->parCriticite();
 $attendus = [
-    'RACINE'   => ['total' => 10, 'codees' => 8],
-    'CRITIQUE' => ['total' => 10, 'codees' => 5],
+    'RACINE'   => ['total' => 10, 'codees' => 9],
+    'CRITIQUE' => ['total' => 10, 'codees' => 7],
 ];
 foreach ($attendus as $criticite => $attendu) {
     $releve = $parCriticite[$criticite] ?? null;

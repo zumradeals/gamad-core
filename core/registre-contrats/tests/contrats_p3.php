@@ -64,8 +64,8 @@ $ecarts    = $ctr06->ecarts();
 echo "  INV-42 — le catalogue dérive, il ne crée aucun contrat\n";
 
 $verifier(
-    $ecarts['familles'] === 17,
-    "les dix-sept familles définies par l'Atlas sont dérivées, ni plus ni moins",
+    $ecarts['familles'] === 18,
+    "les dix-huit familles définies par l'Atlas sont dérivées, ni plus ni moins",
     $ecarts['familles'] . ' famille(s) cataloguée(s)',
 );
 
@@ -288,8 +288,8 @@ $verifier(
 
 preg_match_all('/CTR-\d{2}/', $rendu, $mv);
 $verifier(
-    count(array_unique($mv[0])) >= 17,
-    "les dix-sept familles figurent sur la page rendue",
+    count(array_unique($mv[0])) >= 18,
+    "les dix-huit familles figurent sur la page rendue",
     count(array_unique($mv[0])) . ' famille(s) restituée(s)',
 );
 

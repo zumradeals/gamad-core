@@ -923,3 +923,33 @@ La numérotation suit la règle de `ADOPTION-0032`, Art. 2.1 : le dernier numér
 Elle ne crée aucune organisation, n'en admet aucune, ne confère aucune personnalité juridique et n'arbitre pas l'articulation avec les réalités juridiques externes, que l'Article 37 réserve à l'autorité.
 
 Le présent Titre est un projet tant qu'il n'est pas adopté ; sa fusion dans `main` par l'autorité **est** la décision (Article 129). L'agent l'a rédigé ; il ne l'adopte pas.
+
+---
+
+# TITRE XVI — LA DERNIÈRE FAMILLE OMISE : `CTR-18`
+
+## Article 133 — La seconde capacité sans famille de contrat
+
+Le Titre XV a relevé que `CAP-CORE-002` était dépourvue de famille de contrat, l'Article 37 énonçant ses contrats attendus en prose et sans référence. Une seconde capacité était dans ce cas.
+
+`CAP-CORE-019` — Sauvegarde et restauration souveraines, de criticité `RACINE`, énonce à l'Article 54 du Registre initial des capacités : « preuve de sauvegarde, demande de restauration, résultat, réconciliation et attestation de succession ». Aucune des dix-sept familles ne les porte.
+
+Avec le présent Titre, **les vingt capacités portent toutes au moins une famille de contrat.**
+
+## Article 134 — `CTR-18` — Preuve de sauvegarde et restauration
+
+| Référence | Famille de contrat | Domaine gardien | Objet minimal |
+|---|---|---|---|
+| `CTR-18` | Preuve de sauvegarde et restauration | `DOM-10` | Attester une sauvegarde, une demande de restauration, son résultat et la réconciliation qui s'ensuit |
+
+La numérotation suit la règle de `ADOPTION-0032`, Art. 2.1 : le dernier numéro attribué était `CTR-17`.
+
+`CAP-CORE-019` garde `DOM-10`, domaine gardien de `CTR-18`. **`INV-40` est satisfait** sans réattribution, et la famille n'est revendiquée par aucune autre capacité.
+
+## Article 135 — Ce que cette famille ne fait pas
+
+Elle n'établit ni objectif de reprise, ni mode dégradé, ni plan de succession, ni stratégie de sortie fournisseur — l'Article 74 les constate comme écart global de continuité, et l'Article 54 les réserve à l'autorité.
+
+Elle ne franchit pas l'exclusion de mission de l'Article 4 du Registre initial des sauvegardes : l'inventaire et le test des sauvegardes techniques réelles demeurent du domaine exclusif de l'autorité (`ADOPTION-0025`, Art. 3.a).
+
+Le présent Titre est un projet tant qu'il n'est pas adopté ; sa fusion dans `main` par l'autorité **est** la décision (Article 129).
