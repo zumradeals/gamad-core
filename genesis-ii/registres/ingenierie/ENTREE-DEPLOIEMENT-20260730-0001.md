@@ -31,3 +31,20 @@ par `ADOPTION-0020`. Elle ne prononce aucune adoption et n'établit pas `G0`.
 - automatismes d'exploitation : `388fa746263a11552ca321714a7af06aa27106ef`;
 - sauvegardes quotidiennes, vérification horaire du journal et readiness toutes
   les cinq minutes activées par `systemd`.
+
+## Complément du 30 juillet 2026 — durcissement P1 de la porte console
+
+Ce complément est additif. Il ne modifie ni le constat du déploiement initial
+ci-dessus, ni la portée de sa réserve sur l'authentification forte.
+
+| Champ | Constat |
+|---|---|
+| **Version livrée** | `be77a5521f90b03a625b23448d04a730fa1b28ba` sur `main`, fusion de la PR `#35` |
+| **Objet** | limitation des tentatives de connexion console, journalisation append-only des acceptations, refus, indisponibilités et blocages, révocation de toute session dont la preuve d'audit ne peut être produite |
+| **Données protégées** | aucun secret, identifiant brut ou adresse IP brute n'est inscrit au journal par ce mécanisme |
+| **Contrôles CI** | quatre workflows réussis sur le commit livré, dont `Core Operational Foundation` et les vingt preuves P3 |
+| **Contrôles locaux** | `console_auth_p1.php`, `api_v1_p1.php` et `fondation_operationnelle_p3.php` établis |
+| **Livraison** | cache Laravel reconstruit sous l'utilisateur applicatif, puis PHP 8.3 FPM rechargé ; aucune migration, dépendance ou modification de données requise |
+| **Résultat** | succès — `/connexion` répond HTTP `200`, la route `POST /connexion` porte `throttle:10,1`, la readiness demeure `PRET` sur quatre magasins PostgreSQL |
+| **Journal** | chaîne valide après livraison, cinq événements présents et tête `416f45af7029e6e23a005d2ebc5d134dd5d294249fd240510269b3d24a041040` |
+| **Réserve maintenue** | ce P1 durcit la porte existante mais ne constitue pas, à lui seul, la livraison d'une authentification forte |
