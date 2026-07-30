@@ -62,6 +62,20 @@ $verifier(
     "une compétence de l'Article 48 est PERMISE",
 );
 
+// --- La politique d'inscription permet précisément l'autorité désignée.
+$inscription = $ctr03->autoriser($titulaire, 'inscrire une identité', 'personne');
+$verifier(
+    $inscription['decision'] === 'PERMIS'
+        && $inscription['politique'] === 'POL-INSCRIPTION-IDENTITES-V1'
+        && str_contains((string) $inscription['source'], 'POLITIQUE-INSCRIPTION-IDENTITES-0001'),
+    "l'autorité désignée peut inscrire une identité sous la politique adoptée",
+);
+$agentSansDroit = $ctr03->autoriser('AGENT-IA-002', 'inscrire une identité', 'personne');
+$verifier(
+    $agentSansDroit['decision'] === 'REFUSÉ' && $agentSansDroit['politique'] === null,
+    "la politique d'inscription ne donne aucun droit à l'agent qui l'implémente",
+);
+
 // --- INV-30 : une limite de l'Article 49 est refusée AU TITULAIRE LUI-MÊME.
 $limites = [
     'falsifier une source ou l’histoire',

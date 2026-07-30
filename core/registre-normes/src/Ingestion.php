@@ -341,7 +341,79 @@ final class Ingestion
             }
         }
 
+        $n += $this->ingererPolitiqueInscriptionIdentites($insPol, $insReg);
+
         return $n;
+    }
+
+    /**
+     * Dérive la permission opérationnelle de la politique d'inscription des
+     * identités. La règle n'existe que si son acte figure dans l'index des
+     * adoptions : déposer le fichier seul ne crée donc aucun droit.
+     *
+     * @param \PDOStatement $insPol
+     * @param \PDOStatement $insReg
+     */
+    private function ingererPolitiqueInscriptionIdentites(
+        \PDOStatement $insPol,
+        \PDOStatement $insReg,
+    ): int {
+        $referenceTexte = 'POLITIQUE-INSCRIPTION-IDENTITES-0001';
+        $chemin = 'genesis-ii/politiques/' . $referenceTexte . '.md';
+        $texte = (string) @file_get_contents($this->corpus . '/' . $chemin);
+        if ($texte === '') {
+            return 0;
+        }
+
+        $acte = null;
+        foreach ($this->actes as $ref => $a) {
+            if (str_contains(mb_strtoupper($a['texte'], 'UTF-8'), $referenceTexte)) {
+                $acte = $ref;
+                break;
+            }
+        }
+        if ($acte === null) {
+            return 0;
+        }
+
+        $regles = [];
+        foreach (explode("\n", $texte) as $ligne) {
+            if (!preg_match(
+                '/^\|\s*`([^`]+)`\s*\|\s*`(PERMET|REFUSE)`\s*\|\s*`([^`]+)`\s*\|\s*(.*?)\s*\|\s*$/u',
+                trim($ligne),
+                $m,
+            )) {
+                continue;
+            }
+            $regles[] = [
+                'sujet' => $m[1],
+                'effet' => $m[2],
+                'action' => $m[3],
+                'motif' => $this->nettoyer($m[4]),
+            ];
+        }
+        if ($regles === []) {
+            return 0;
+        }
+
+        $insPol->execute([
+            'POL-INSCRIPTION-IDENTITES-V1',
+            '1.0',
+            'Politique initiale d’inscription des identités',
+            $referenceTexte . ', Art. 5',
+            $acte,
+        ]);
+        foreach ($regles as $regle) {
+            $insReg->execute([
+                'POL-INSCRIPTION-IDENTITES-V1',
+                $regle['effet'],
+                $this->actionDepuisEnonce($regle['action']),
+                $regle['sujet'],
+                $regle['motif'],
+            ]);
+        }
+
+        return count($regles);
     }
 
     /**

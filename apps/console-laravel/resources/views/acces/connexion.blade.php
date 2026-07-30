@@ -49,8 +49,8 @@
 
   <p class="note">
     Une session établit <strong>qui vous êtes</strong>, non ce que vous pouvez faire :
-    les droits relèvent de <code>CAP-CORE-004</code>, à établir. Aucun secret n'est
-    conservé, seulement son empreinte non réversible (<code>INV-24</code>).
+    les droits sont évalués par <code>CAP-CORE-004</code>. Aucun secret n'est conservé,
+    seulement son empreinte non réversible (<code>INV-24</code>).
   </p>
 </form>
 <script>

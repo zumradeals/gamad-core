@@ -1359,3 +1359,29 @@ Demeurent ouvertes, inchangées, les décisions inscrites par les Titres XIII, X
 ## Article 204 — Non-effet
 
 Le présent Titre ne tranche aucune décision, n'en préjuge aucune, ne fixe aucun délai, n'attribue aucune classe ni niveau de risque, ne rend aucune capacité admise ni active, ne modifie aucun état, n'adopte aucun incrément, ne nomme aucun responsable, ne lève aucune réserve, n'accepte aucun risque et ne constate pas `G0`.
+
+---
+
+# TITRE XX — POLITIQUE INITIALE D'INSCRIPTION DES IDENTITÉS
+
+> **Nature :** ajout seul, adopté par `ADOPTION-0066`. Les lignes d'ouverture du Titre XIX demeurent comme trace historique.
+
+## Article 205 — Politique rendue
+
+`POLITIQUE-INSCRIPTION-IDENTITES-0001` arrête les canaux d'inscription, les types admis, l'échelle d'assurance `A0` à `A3`, les preuves minimales et l'autorité responsable.
+
+La première exposition opérationnelle autorise uniquement `AUT-GAMAD-001`, sous mandat actif, à utiliser les canaux réservés. Les sujets non autorisés demeurent refusés par défaut.
+
+## Article 206 — Clôtures
+
+- **Décision close :** `DECISION-0050` — **Par :** `ADOPTION-0066`.
+- **Décision close :** `DECISION-0051` — **Par :** `ADOPTION-0066`.
+- **Décision close :** `DECISION-0052` — **Par :** `ADOPTION-0066`.
+
+## Article 207 — Décisions maintenues
+
+`DECISION-0053`, relative au mécanisme de version du contrat `CTR-01`, et `DECISION-0054`, relative à l'ordre pilote de migration, demeurent ouvertes.
+
+## Article 208 — Non-effet
+
+Le présent Titre ne clôt aucune autre décision, ne lance aucune migration, n'ouvre aucune auto-inscription publique et ne prononce aucun déploiement.
