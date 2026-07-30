@@ -127,9 +127,23 @@ final class ReindexerCommand extends Command
         }
 
         $toutes = true;
+        $environnementGarde = [
+            // Les gardes d'admission consultent l'histoire Git. Le dépôt de
+            // production appartient à root alors que cette commande s'exécute
+            // sous PHP-FPM : déclarer uniquement ce corpus comme sûr évite une
+            // configuration globale de Git pour www-data.
+            'GIT_CONFIG_COUNT' => '1',
+            'GIT_CONFIG_KEY_0' => 'safe.directory',
+            'GIT_CONFIG_VALUE_0' => $corpus,
+        ];
 
         foreach ($gardes as $libelle => $commande) {
-            $process = new Process($commande, $corpus, timeout: 300);
+            $process = new Process(
+                $commande,
+                $corpus,
+                env: $environnementGarde,
+                timeout: 300,
+            );
             $process->run();
 
             if ($process->isSuccessful()) {

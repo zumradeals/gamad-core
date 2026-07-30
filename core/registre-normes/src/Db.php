@@ -61,7 +61,9 @@ final class Db
      */
     private static function environnement(string $nom): ?string
     {
-        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+        // Une variable de processus explicite sert notamment à isoler les
+        // gardes lancées depuis Artisan. À défaut seulement, lire phpdotenv.
+        foreach ([getenv($nom), $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
             if (is_string($valeur)) {
                 return $valeur;
             }

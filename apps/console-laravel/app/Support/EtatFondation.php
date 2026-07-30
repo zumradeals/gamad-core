@@ -151,7 +151,7 @@ final class EtatFondation
      */
     private function environnement(string $nom): ?string
     {
-        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+        foreach ([getenv($nom), $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
             if (is_string($valeur)) {
                 return $valeur;
             }

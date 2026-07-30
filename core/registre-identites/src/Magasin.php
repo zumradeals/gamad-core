@@ -29,7 +29,9 @@ final class Magasin
      */
     public static function ouvrir(?string $chemin = null): \PDO
     {
-        $url = self::environnement('IDENTITY_REGISTRY_URL');
+        // Un chemin explicite impose le magasin isolé, même lorsque le
+        // processus parent Laravel expose une URL de production.
+        $url = $chemin === null ? self::environnement('IDENTITY_REGISTRY_URL') : null;
         if (is_string($url) && $url !== '') {
             $p = parse_url($url);
             if ($p === false || !isset($p['host'])) {
@@ -63,7 +65,7 @@ final class Magasin
      */
     private static function environnement(string $nom): ?string
     {
-        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+        foreach ([getenv($nom), $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
             if (is_string($valeur)) {
                 return $valeur;
             }
