@@ -86,7 +86,7 @@ GAMAD_INDEX_PGSERVICE=gamad_index
 GAMAD_ACCESS_PGSERVICE=gamad_access
 GAMAD_IDENTITY_PGSERVICE=gamad_identity
 GAMAD_JOURNAL_PGSERVICE=gamad_journal
-GAMAD_BACKUP_DIR=/srv/backups/gamad-core
+GAMAD_BACKUP_DIR=/var/backups/gamad-core/daily
 PGSERVICEFILE=/etc/gamad-core/pg_service.conf
 PGPASSFILE=/etc/gamad-core/pgpass
 ```
@@ -95,10 +95,10 @@ Sur ce serveur local, `PGHOST`, `PGPORT` et `PGUSER` peuvent aussi venir de
 l'environnement protégé, avec les noms de bases non secrets :
 
 ```text
-GAMAD_INDEX_PGDATABASE=gamad_index
-GAMAD_ACCESS_PGDATABASE=gamad_access
-GAMAD_IDENTITY_PGDATABASE=gamad_identity
-GAMAD_JOURNAL_PGDATABASE=gamad_journal
+GAMAD_INDEX_PGDATABASE=registre_normes
+GAMAD_ACCESS_PGDATABASE=registre_acces
+GAMAD_IDENTITY_PGDATABASE=registre_identites
+GAMAD_JOURNAL_PGDATABASE=journal_operationnel
 ```
 
 Exécuter :
@@ -164,6 +164,22 @@ Les unités proposées sous `ops/core-foundation/systemd/` écrivent les échecs
 critiques dans le journal système avec la priorité `auth.alert`. Le routage de
 ces alertes vers un opérateur externe reste à installer avant de prétendre à
 une surveillance 24/7.
+
+Sur le serveur actuel, les unités attendent le fichier non secret
+`/etc/gamad-core/backup.env` :
+
+```text
+GAMAD_BACKUP_DIR=/var/backups/gamad-core/daily
+GAMAD_INDEX_PGDATABASE=registre_normes
+GAMAD_ACCESS_PGDATABASE=registre_acces
+GAMAD_IDENTITY_PGDATABASE=registre_identites
+GAMAD_JOURNAL_PGDATABASE=journal_operationnel
+```
+
+La sonde `gamad-core-readiness.timer` interroge la readiness publique toutes
+les cinq minutes. Trois échecs consécutifs dans la même exécution déclenchent
+`gamad-core-operations-alert@readiness.service`. La vérification du journal est
+horaire et la sauvegarde quotidienne.
 
 La spécification HTTP est dans
 `apps/console-laravel/openapi/core-v1.yaml`.
