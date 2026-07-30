@@ -39,5 +39,7 @@ Route::get('/', [Ctr04Controller::class, 'tableauDeBord'])->name('ctr04.tableau-
 
 // Accès : la seule porte ouverte sans session (CAP-CORE-005).
 Route::get('/connexion', [AccesController::class, 'formulaire'])->name('acces.formulaire');
-Route::post('/connexion', [AccesController::class, 'connecter'])->name('acces.connecter');
+Route::post('/connexion', [AccesController::class, 'connecter'])
+    ->middleware('throttle:10,1')
+    ->name('acces.connecter');
 Route::post('/deconnexion', [AccesController::class, 'deconnecter'])->name('acces.deconnecter');

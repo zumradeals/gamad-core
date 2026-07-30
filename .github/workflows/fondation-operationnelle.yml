@@ -40,6 +40,9 @@ jobs:
       - name: Exécuter l'intégration HTTP v1
         run: php apps/console-laravel/tests/Integration/api_v1_p1.php
 
+      - name: Éprouver l'authentification console
+        run: php apps/console-laravel/tests/Integration/console_auth_p1.php
+
       - name: Éprouver l'import SQLite
         run: php apps/console-laravel/tests/Integration/import_sqlite_p0.php
 
