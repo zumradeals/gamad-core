@@ -124,7 +124,10 @@ final class Magasin
      */
     public static function ouvrir(?string $chemin = null): \PDO
     {
-        $url = self::environnement('MAGASIN_URL');
+        // Un chemin explicite est une frontière d'isolation forte pour les
+        // gardes et les imports. Il ne doit jamais être supplanté par la
+        // connexion de production héritée d'Artisan.
+        $url = $chemin === null ? self::environnement('MAGASIN_URL') : null;
         if (is_string($url) && $url !== '') {
             $p = parse_url($url);
             if ($p === false || !isset($p['host'])) {
@@ -164,7 +167,7 @@ final class Magasin
      */
     private static function environnement(string $nom): ?string
     {
-        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+        foreach ([getenv($nom), $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
             if (is_string($valeur)) {
                 return $valeur;
             }

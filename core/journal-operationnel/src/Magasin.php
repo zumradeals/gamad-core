@@ -22,7 +22,8 @@ final class Magasin
 
     public static function ouvrir(?string $chemin = null): \PDO
     {
-        $url = self::environnement('JOURNAL_OPERATIONNEL_URL');
+        // Un chemin explicite impose le magasin isolé des gardes.
+        $url = $chemin === null ? self::environnement('JOURNAL_OPERATIONNEL_URL') : null;
         if (is_string($url) && $url !== '') {
             $p = parse_url($url);
             if ($p === false || !isset($p['host']) || trim((string) ($p['path'] ?? ''), '/') === '') {
@@ -58,7 +59,7 @@ final class Magasin
      */
     private static function environnement(string $nom): ?string
     {
-        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+        foreach ([getenv($nom), $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
             if (is_string($valeur)) {
                 return $valeur;
             }
