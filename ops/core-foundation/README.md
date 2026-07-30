@@ -188,3 +188,7 @@ les trois timers. Toute modification d’une unité doit être suivie de
 
 La spécification HTTP est dans
 `apps/console-laravel/openapi/core-v1.yaml`.
+
+Le déploiement initial de ce socle est constaté sans réécriture du registre
+historique scellé dans
+`genesis-ii/registres/ingenierie/ENTREE-DEPLOIEMENT-20260730-0001.md`.
