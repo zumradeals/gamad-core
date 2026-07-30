@@ -181,5 +181,10 @@ les cinq minutes. Trois échecs consécutifs dans la même exécution déclenche
 `gamad-core-operations-alert@readiness.service`. La vérification du journal est
 horaire et la sauvegarde quotidienne.
 
+Les unités et l’environnement non secret sont installés depuis
+`ops/core-foundation/systemd/`, puis activés avec `systemctl enable --now` pour
+les trois timers. Toute modification d’une unité doit être suivie de
+`systemctl daemon-reload` et d’une exécution manuelle de son service.
+
 La spécification HTTP est dans
 `apps/console-laravel/openapi/core-v1.yaml`.
