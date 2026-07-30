@@ -18,7 +18,14 @@ final class EtatFondation
     public function inspecter(): array
     {
         $production = app()->environment('production');
-        $tablesAcces = ['migration_registre_acces', 'authentificateur', 'session_ouverte'];
+        $tablesAcces = [
+            'migration_registre_acces',
+            'authentificateur',
+            'passkey',
+            'autorisation_enrolement_passkey',
+            'ceremonie_passkey',
+            'session_ouverte',
+        ];
         if ($production || config('session.driver') === 'database') {
             $tablesAcces[] = 'migrations';
             $tablesAcces[] = 'sessions';
@@ -52,18 +59,20 @@ final class EtatFondation
         ];
 
         $configuration = [
-            'app_debug_desactive' => !$production || config('app.debug') === false,
-            'connexion_laravel_separee' => !$production
+            'app_debug_desactive' => ! $production || config('app.debug') === false,
+            'connexion_laravel_separee' => ! $production
                 || config('database.default') === 'gamad_access',
-            'sessions_persistantes' => !$production || config('session.driver') === 'database',
-            'sessions_chiffrees' => !$production || config('session.encrypt') === true,
-            'cookies_session_securises' => !$production || config('session.secure') === true,
-            'url_publique_https' => !$production
+            'sessions_persistantes' => ! $production || config('session.driver') === 'database',
+            'sessions_chiffrees' => ! $production || config('session.encrypt') === true,
+            'cookies_session_securises' => ! $production || config('session.secure') === true,
+            'url_publique_https' => ! $production
                 || str_starts_with((string) config('app.url'), 'https://'),
+            'passkeys_origine_fermee' => ! $production
+                || $this->configurationPasskeysFermee(),
         ];
 
-        $pret = !in_array(false, array_column($cibles, 'prete'), true)
-            && !in_array(false, $configuration, true);
+        $pret = ! in_array(false, array_column($cibles, 'prete'), true)
+            && ! in_array(false, $configuration, true);
 
         return [
             'statut' => $pret ? 'PRET' : 'NON_PRET',
@@ -76,8 +85,8 @@ final class EtatFondation
     }
 
     /**
-     * @param callable():\PDO $ouvrir
-     * @param list<string> $tables
+     * @param  callable():\PDO  $ouvrir
+     * @param  list<string>  $tables
      * @return array<string,mixed>
      */
     private function inspecterCible(
@@ -88,7 +97,7 @@ final class EtatFondation
         bool $verifierJournal = false,
     ): array {
         $urlPresente = trim((string) $this->environnement($variable)) !== '';
-        if ($production && !$urlPresente) {
+        if ($production && ! $urlPresente) {
             return [
                 'prete' => false,
                 'moteur' => null,
@@ -120,7 +129,7 @@ final class EtatFondation
                     'verification_complete' => 'php artisan core:journal:verifier',
                 ];
             }
-            $moteurOk = !$production || $moteur === 'pgsql';
+            $moteurOk = ! $production || $moteur === 'pgsql';
             $integriteOk = $integrite === null || $integrite['tete_lisible'] === true;
 
             return [
@@ -129,9 +138,9 @@ final class EtatFondation
                 'tables' => $tablesOk,
                 'integrite' => $integrite,
                 'motif' => match (true) {
-                    !$moteurOk => 'PostgreSQL obligatoire en production',
-                    !$tablesOk => 'migration absente ou incomplète',
-                    !$integriteOk => 'chaîne d’audit invalide',
+                    ! $moteurOk => 'PostgreSQL obligatoire en production',
+                    ! $tablesOk => 'migration absente ou incomplète',
+                    ! $integriteOk => 'chaîne d’audit invalide',
                     default => null,
                 },
             ];
@@ -140,7 +149,7 @@ final class EtatFondation
                 'prete' => false,
                 'moteur' => null,
                 'tables' => false,
-                'motif' => 'connexion indisponible (' . $e::class . ')',
+                'motif' => 'connexion indisponible ('.$e::class.')',
             ];
         }
     }
@@ -167,5 +176,31 @@ final class EtatFondation
         }
 
         return null;
+    }
+
+    private function configurationPasskeysFermee(): bool
+    {
+        $url = rtrim((string) config('app.url'), '/');
+        $hote = parse_url($url, PHP_URL_HOST);
+        $rpId = (string) config('passkeys.relying_party.id');
+        $origines = config('passkeys.allowed_origins', []);
+        if (! is_string($hote)
+            || $hote === ''
+            || $rpId === ''
+            || ! hash_equals($hote, $rpId)
+            || ! is_array($origines)
+            || ! in_array($url, $origines, true)) {
+            return false;
+        }
+
+        foreach ($origines as $origine) {
+            if (! is_string($origine)
+                || parse_url($origine, PHP_URL_SCHEME) !== 'https'
+                || parse_url($origine, PHP_URL_HOST) === null) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

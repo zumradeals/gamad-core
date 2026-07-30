@@ -74,6 +74,73 @@ paths:
           description: Limite de tentatives atteinte.
         "503":
           description: Journal indisponible; aucune session n'est conservée.
+  /sessions/passkey/options:
+    post:
+      tags: [Sessions]
+      operationId: preparerSessionPasskey
+      summary: Prépare une assertion WebAuthn à vérification utilisateur obligatoire.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entite]
+              properties:
+                entite:
+                  type: string
+                  maxLength: 64
+      responses:
+        "200":
+          description: Challenge public, temporaire et à usage unique.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CeremoniePasskey"
+        "429":
+          description: Limite de tentatives atteinte.
+        "503":
+          description: Registre d'accès indisponible.
+  /sessions/passkey:
+    post:
+      tags: [Sessions]
+      operationId: ouvrirSessionPasskey
+      summary: Vérifie l'assertion WebAuthn et ouvre une session bearer A2.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entite, ceremonie, credential]
+              properties:
+                entite:
+                  type: string
+                  maxLength: 64
+                ceremonie:
+                  type: string
+                  maxLength: 64
+                credential:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "201":
+          description: Session A2 ouverte et auditée; réponse non cachable.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401":
+          description: Assertion, challenge ou entité refusé.
+        "429":
+          description: Limite de tentatives atteinte.
+        "503":
+          description: Journal indisponible; la session A2 est révoquée.
   /sessions/current:
     delete:
       tags: [Sessions]
@@ -276,6 +343,18 @@ components:
           format: date-time
         preuve:
           $ref: "#/components/schemas/Preuve"
+    CeremoniePasskey:
+      type: object
+      required: [options, ceremonie, expire_le]
+      properties:
+        options:
+          type: object
+          additionalProperties: true
+        ceremonie:
+          type: string
+        expire_le:
+          type: string
+          format: date-time
     DecisionAvecPreuve:
       type: object
       required: [decision, mandat, preuve]
