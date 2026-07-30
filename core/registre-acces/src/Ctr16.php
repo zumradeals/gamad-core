@@ -92,17 +92,27 @@ final class Ctr16
                 continue;
             }
 
-            $reference = 'SESS-' . strtoupper(bin2hex(random_bytes(16)));
+            $jeton = 'SESS-' . strtoupper(bin2hex(random_bytes(24)));
+            $reference = 'SINT-' . strtoupper(bin2hex(random_bytes(12)));
             $expire = date('c', time() + self::DUREE_SESSION);
 
             $this->magasin->prepare(
                 'INSERT INTO session_ouverte
-                 (reference,authentificateur_ref,entite_reference,niveau_assurance,ouverte_le,expire_le)
-                 VALUES(?,?,?,?,?,?)'
-            )->execute([$reference, $a['reference'], $entite, $a['niveau_assurance'], $this->maintenant(), $expire]);
+                 (reference,jeton_empreinte,authentificateur_ref,entite_reference,
+                  niveau_assurance,ouverte_le,expire_le)
+                 VALUES(?,?,?,?,?,?,?)'
+            )->execute([
+                $reference,
+                $this->empreinteSession($jeton),
+                $a['reference'],
+                $entite,
+                $a['niveau_assurance'],
+                $this->maintenant(),
+                $expire,
+            ]);
 
             return [
-                'session'   => $reference,
+                'session'   => $jeton,
                 'entite'    => $entite,
                 'assurance' => $a['niveau_assurance'],
                 'expire_le' => $expire,
@@ -129,9 +139,9 @@ final class Ctr16
             'SELECT s.entite_reference, s.niveau_assurance, s.expire_le, s.revoquee_le, a.etat
              FROM session_ouverte s
              JOIN authentificateur a ON a.reference = s.authentificateur_ref
-             WHERE s.reference = ?'
+             WHERE s.jeton_empreinte = ?'
         );
-        $st->execute([$session]);
+        $st->execute([$this->empreinteSession($session)]);
         $s = $st->fetch();
 
         if ($s === false) {
@@ -159,9 +169,10 @@ final class Ctr16
     public function revoquerSession(string $session): bool
     {
         $st = $this->magasin->prepare(
-            'UPDATE session_ouverte SET revoquee_le = ? WHERE reference = ? AND revoquee_le IS NULL'
+            'UPDATE session_ouverte SET revoquee_le = ?
+             WHERE jeton_empreinte = ? AND revoquee_le IS NULL'
         );
-        $st->execute([$this->maintenant(), $session]);
+        $st->execute([$this->maintenant(), $this->empreinteSession($session)]);
 
         return $st->rowCount() > 0;
     }
@@ -206,5 +217,10 @@ final class Ctr16
     private function maintenant(): string
     {
         return date('c');
+    }
+
+    private function empreinteSession(#[\SensitiveParameter] string $session): string
+    {
+        return hash('sha256', $session);
     }
 }

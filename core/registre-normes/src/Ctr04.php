@@ -196,7 +196,10 @@ final class Ctr04
     {
         $primaires = [];
         foreach (glob($this->corpus . '/genesis-ii/registre/ADOPTION-*.md') ?: [] as $f) {
-            if (str_contains(basename($f), '-EXECUTION')) {
+            // Seul le suffixe compagnon est exclu. Un mot « EXECUTION » dans
+            // le titre d'un acte primaire (ADOPTION-0065) ne le transforme
+            // pas en constat d'exécution.
+            if (preg_match('/-EXECUTION\.md$/', basename($f)) === 1) {
                 continue;
             }
             if (preg_match('/(ADOPTION-\d{4})/', basename($f), $m)) {

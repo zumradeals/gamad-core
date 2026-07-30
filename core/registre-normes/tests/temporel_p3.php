@@ -53,6 +53,21 @@ foreach ($cas as [$date, $attendu, $libelle]) {
     }
 }
 
+$index = $ctr04->resoudreIndex();
+$indexOk = $index['actes_primaires'] === $index['index'] && $index['divergences'] === [];
+printf(
+    "  %s  cohérence après réindexation : %d actes primaires, %d indexés\n",
+    $indexOk ? '[OK]  ' : '[ÉCHEC]',
+    $index['actes_primaires'],
+    $index['index'],
+);
+if (!$indexOk) {
+    $echecs++;
+    foreach ($index['divergences'] as $divergence) {
+        echo "          {$divergence}\n";
+    }
+}
+
 @unlink($fichier);
 
 echo "\n";

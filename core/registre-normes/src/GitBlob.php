@@ -8,9 +8,9 @@ namespace Gamad\RegistreNormes;
  * Empreinte Git d'un contenu, calculée sans le binaire `git`.
  *
  * `git hash-object` calcule sha1("blob " . taille . "\0" . contenu). Reproduire
- * ce calcul en PHP rend le service portable (Railway n'a pas nécessairement le
- * binaire git) tout en restant identique, octet pour octet, aux empreintes
- * déclarées dans les actes d'adoption. Sert l'invariant INV-1.
+ * ce calcul en PHP rend le service indépendant de la présence du binaire `git`
+ * dans le processus PHP-FPM, tout en restant identique, octet pour octet, aux
+ * empreintes déclarées dans les actes d'adoption. Sert l'invariant INV-1.
  */
 final class GitBlob
 {

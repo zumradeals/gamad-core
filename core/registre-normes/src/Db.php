@@ -7,10 +7,10 @@ namespace Gamad\RegistreNormes;
 /**
  * Connexion PDO à l'index dérivé.
  *
- * Deux cibles, un seul code : PostgreSQL en déploiement (variable
- * DATABASE_URL fournie par Railway), SQLite en local et en intégration
- * continue. L'index n'est jamais la source de vérité (INV-5) : ce sont les
- * fichiers Git. La base est reconstructible à volonté.
+ * Deux cibles, un seul code : PostgreSQL sur le serveur d'exploitation
+ * (variable DATABASE_URL), SQLite en local et en intégration continue.
+ * L'index n'est jamais la source de vérité (INV-5) : ce sont les fichiers Git.
+ * La base est reconstructible à volonté.
  */
 final class Db
 {

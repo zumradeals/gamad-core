@@ -44,6 +44,77 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        /*
+         * Connexions physiques de « Core Operational Foundation v1 ».
+         *
+         * Les quatre noms restent stables dans le code tandis que leurs URL
+         * sont indépendantes. En production, les variables *_DRIVER valent
+         * toutes `pgsql`; SQLite reste autorisé uniquement en local et en CI.
+         */
+        'gamad_index' => [
+            'driver' => env('GAMAD_INDEX_DRIVER', 'sqlite'),
+            'url' => env('DATABASE_URL'),
+            'host' => env('GAMAD_INDEX_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_INDEX_PORT', '5432'),
+            'database' => env('SQLITE_PATH', database_path('gamad-index.sqlite')),
+            'username' => env('GAMAD_INDEX_USERNAME'),
+            'password' => env('GAMAD_INDEX_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_INDEX_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
+        'gamad_access' => [
+            'driver' => env('GAMAD_ACCESS_DRIVER', 'sqlite'),
+            'url' => env('MAGASIN_URL'),
+            'host' => env('GAMAD_ACCESS_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_ACCESS_PORT', '5432'),
+            'database' => env('MAGASIN_PATH', database_path('gamad-access.sqlite')),
+            'username' => env('GAMAD_ACCESS_USERNAME'),
+            'password' => env('GAMAD_ACCESS_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_ACCESS_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
+        'gamad_identity' => [
+            'driver' => env('GAMAD_IDENTITY_DRIVER', 'sqlite'),
+            'url' => env('IDENTITY_REGISTRY_URL'),
+            'host' => env('GAMAD_IDENTITY_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_IDENTITY_PORT', '5432'),
+            'database' => env('IDENTITY_REGISTRY_PATH', database_path('gamad-identity.sqlite')),
+            'username' => env('GAMAD_IDENTITY_USERNAME'),
+            'password' => env('GAMAD_IDENTITY_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_IDENTITY_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
+        'gamad_journal' => [
+            'driver' => env('GAMAD_JOURNAL_DRIVER', 'sqlite'),
+            'url' => env('JOURNAL_OPERATIONNEL_URL'),
+            'host' => env('GAMAD_JOURNAL_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_JOURNAL_PORT', '5432'),
+            'database' => env('JOURNAL_OPERATIONNEL_PATH', database_path('gamad-journal.sqlite')),
+            'username' => env('GAMAD_JOURNAL_USERNAME'),
+            'password' => env('GAMAD_JOURNAL_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_JOURNAL_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

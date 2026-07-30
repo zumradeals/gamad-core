@@ -1,0 +1,16 @@
+[Unit]
+Description=Vérification complète du journal opérationnel GAMAD Core
+After=postgresql.service
+OnFailure=gamad-core-operations-alert@journal.service
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/gamad-core/apps/console-laravel
+EnvironmentFile=/etc/gamad-core/core.env
+ExecStart=/usr/bin/php artisan core:journal:verifier
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
