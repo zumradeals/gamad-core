@@ -87,7 +87,7 @@ final class EtatFondation
         bool $production,
         bool $verifierJournal = false,
     ): array {
-        $urlPresente = trim((string) getenv($variable)) !== '';
+        $urlPresente = trim((string) $this->environnement($variable)) !== '';
         if ($production && !$urlPresente) {
             return [
                 'prete' => false,
@@ -143,5 +143,20 @@ final class EtatFondation
                 'motif' => 'connexion indisponible (' . $e::class . ')',
             ];
         }
+    }
+
+    /**
+     * Laravel expose les valeurs de .env dans $_ENV et $_SERVER. getenv()
+     * seul ferait déclarer les connexions absentes et réactiverait SQLite.
+     */
+    private function environnement(string $nom): ?string
+    {
+        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+            if (is_string($valeur)) {
+                return $valeur;
+            }
+        }
+
+        return null;
     }
 }

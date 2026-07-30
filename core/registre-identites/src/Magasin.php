@@ -29,7 +29,7 @@ final class Magasin
      */
     public static function ouvrir(?string $chemin = null): \PDO
     {
-        $url = getenv('IDENTITY_REGISTRY_URL');
+        $url = self::environnement('IDENTITY_REGISTRY_URL');
         if (is_string($url) && $url !== '') {
             $p = parse_url($url);
             if ($p === false || !isset($p['host'])) {
@@ -46,7 +46,8 @@ final class Magasin
                 isset($p['pass']) ? urldecode($p['pass']) : null,
             );
         } else {
-            $chemin ??= getenv('IDENTITY_REGISTRY_PATH') ?: dirname(__DIR__) . '/var/registre.sqlite';
+            $chemin ??= self::environnement('IDENTITY_REGISTRY_PATH')
+                ?: dirname(__DIR__) . '/var/registre.sqlite';
             @mkdir(dirname($chemin), 0777, true);
             $pdo = new \PDO('sqlite:' . $chemin);
         }
@@ -55,5 +56,19 @@ final class Magasin
         $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
 
         return $pdo;
+    }
+
+    /**
+     * Comprend aussi les variables chargées par Laravel via phpdotenv.
+     */
+    private static function environnement(string $nom): ?string
+    {
+        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+            if (is_string($valeur)) {
+                return $valeur;
+            }
+        }
+
+        return null;
     }
 }

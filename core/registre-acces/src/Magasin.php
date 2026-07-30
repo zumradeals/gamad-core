@@ -124,7 +124,7 @@ final class Magasin
      */
     public static function ouvrir(?string $chemin = null): \PDO
     {
-        $url = getenv('MAGASIN_URL');
+        $url = self::environnement('MAGASIN_URL');
         if (is_string($url) && $url !== '') {
             $p = parse_url($url);
             if ($p === false || !isset($p['host'])) {
@@ -136,7 +136,8 @@ final class Magasin
                 isset($p['pass']) ? urldecode($p['pass']) : null,
             );
         } else {
-            $chemin ??= getenv('MAGASIN_PATH') ?: dirname(__DIR__) . '/var/magasin.sqlite';
+            $chemin ??= self::environnement('MAGASIN_PATH')
+                ?: dirname(__DIR__) . '/var/magasin.sqlite';
             @mkdir(dirname($chemin), 0777, true);
             $pdo = new \PDO('sqlite:' . $chemin);
         }
@@ -156,5 +157,19 @@ final class Magasin
         } catch (\PDOException) {
             return false;
         }
+    }
+
+    /**
+     * Comprend aussi les variables chargées par Laravel via phpdotenv.
+     */
+    private static function environnement(string $nom): ?string
+    {
+        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+            if (is_string($valeur)) {
+                return $valeur;
+            }
+        }
+
+        return null;
     }
 }
