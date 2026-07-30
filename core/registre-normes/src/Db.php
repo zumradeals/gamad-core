@@ -63,7 +63,19 @@ final class Db
     {
         // Une variable de processus explicite sert notamment à isoler les
         // gardes lancées depuis Artisan. À défaut seulement, lire phpdotenv.
-        foreach ([getenv($nom), $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
+        $configuration = match ($nom) {
+            'DATABASE_URL' => 'database.connections.gamad_index.url',
+            'SQLITE_PATH' => 'database.connections.gamad_index.database',
+            default => null,
+        };
+        $valeurLaravel = null;
+        if ($configuration !== null
+            && function_exists('app')
+            && app()->bound('config')) {
+            $valeurLaravel = config($configuration);
+        }
+
+        foreach ([getenv($nom), $valeurLaravel, $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
             if (is_string($valeur)) {
                 return $valeur;
             }

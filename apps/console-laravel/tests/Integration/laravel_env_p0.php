@@ -141,6 +141,53 @@ foreach ($fichiersExplicites as $fichier) {
     @unlink($fichier);
 }
 
+$magasinsExplicites = [];
+foreach (array_keys($variables) as $nom) {
+    putenv($nom);
+    unset($_ENV[$nom], $_SERVER[$nom]);
+}
+
+$fichiersConfiguration = [
+    'index' => $prefixe . '-config-index.sqlite',
+    'acces' => $prefixe . '-config-acces.sqlite',
+    'identites' => $prefixe . '-config-identites.sqlite',
+    'journal' => $prefixe . '-config-journal.sqlite',
+];
+$app = require $application . '/bootstrap/app.php';
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+config([
+    'database.connections.gamad_index.url' => '',
+    'database.connections.gamad_index.database' => $fichiersConfiguration['index'],
+    'database.connections.gamad_access.url' => '',
+    'database.connections.gamad_access.database' => $fichiersConfiguration['acces'],
+    'database.connections.gamad_identity.url' => '',
+    'database.connections.gamad_identity.database' => $fichiersConfiguration['identites'],
+    'database.connections.gamad_journal.url' => '',
+    'database.connections.gamad_journal.database' => $fichiersConfiguration['journal'],
+]);
+$magasinsConfiguration = [
+    'index' => Db::connect(),
+    'acces' => AccesMagasin::connecter(),
+    'identites' => IdentiteMagasin::connecter(),
+    'journal' => JournalMagasin::connecter(),
+];
+foreach ($magasinsConfiguration as $nom => $pdo) {
+    $ok = $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'sqlite'
+        && is_file($fichiersConfiguration[$nom]);
+    printf(
+        "  %s  %s\n",
+        $ok ? '[OK]  ' : '[ÉCHEC]',
+        "{$nom} comprend le référentiel de configuration Laravel",
+    );
+    if (!$ok) {
+        $echecs++;
+    }
+}
+$magasinsConfiguration = [];
+foreach ($fichiersConfiguration as $fichier) {
+    @unlink($fichier);
+}
+
 echo "\n";
 if ($echecs === 0) {
     echo "Raccordement Laravel : ÉTABLI.\n";

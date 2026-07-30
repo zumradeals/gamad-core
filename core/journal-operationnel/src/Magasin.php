@@ -59,7 +59,19 @@ final class Magasin
      */
     private static function environnement(string $nom): ?string
     {
-        foreach ([getenv($nom), $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
+        $configuration = match ($nom) {
+            'JOURNAL_OPERATIONNEL_URL' => 'database.connections.gamad_journal.url',
+            'JOURNAL_OPERATIONNEL_PATH' => 'database.connections.gamad_journal.database',
+            default => null,
+        };
+        $valeurLaravel = null;
+        if ($configuration !== null
+            && function_exists('app')
+            && app()->bound('config')) {
+            $valeurLaravel = config($configuration);
+        }
+
+        foreach ([getenv($nom), $valeurLaravel, $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
             if (is_string($valeur)) {
                 return $valeur;
             }

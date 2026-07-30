@@ -151,7 +151,16 @@ final class EtatFondation
      */
     private function environnement(string $nom): ?string
     {
-        foreach ([getenv($nom), $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
+        $configuration = match ($nom) {
+            'DATABASE_URL' => 'database.connections.gamad_index.url',
+            'MAGASIN_URL' => 'database.connections.gamad_access.url',
+            'IDENTITY_REGISTRY_URL' => 'database.connections.gamad_identity.url',
+            'JOURNAL_OPERATIONNEL_URL' => 'database.connections.gamad_journal.url',
+            default => null,
+        };
+        $valeurLaravel = $configuration === null ? null : config($configuration);
+
+        foreach ([getenv($nom), $valeurLaravel, $_ENV[$nom] ?? null, $_SERVER[$nom] ?? null] as $valeur) {
             if (is_string($valeur)) {
                 return $valeur;
             }
