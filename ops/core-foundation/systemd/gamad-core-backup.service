@@ -13,4 +13,4 @@ PrivateTmp=true
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/srv/backups/gamad-core
+ReadWritePaths=/var/backups/gamad-core/daily
