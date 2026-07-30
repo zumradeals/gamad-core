@@ -111,19 +111,23 @@ $routes = (string) file_get_contents($racine . '/apps/console-laravel/routes/api
 $controleur = (string) file_get_contents(
     $racine . '/apps/console-laravel/app/Http/Controllers/Api/V1/IdentiteController.php'
 );
+$casUsage = (string) file_get_contents(
+    $racine . '/apps/console-laravel/app/Application/Identites/InscrireIdentite.php'
+);
 $verifier(
     str_contains($routes, "Route::prefix('v1')")
         && str_contains($routes, "Route::middleware('gamad.api')")
         && str_contains($routes, "Route::post('/identites'"),
     'l’écriture d’identité est versionnée et placée derrière l’authentification API',
 );
-$positionDecision = strpos($controleur, "->autoriser(");
-$positionEcriture = strpos($controleur, "->inscrireIdentite(");
+$positionDecision = strpos($casUsage, "->autoriser(");
+$positionEcriture = strpos($casUsage, "->inscrireIdentite(");
 $verifier(
-    $positionDecision !== false
+    str_contains($controleur, 'InscrireIdentite $inscrire')
+        && $positionDecision !== false
         && $positionEcriture !== false
         && $positionDecision < $positionEcriture
-        && str_contains($controleur, "\$decision['decision'] === 'PERMIS'"),
+        && str_contains($casUsage, "\$decision['decision'] === 'PERMIS'"),
     'CAP-CORE-004 décide avant toute inscription et le refus est appliqué',
 );
 

@@ -7,26 +7,29 @@ use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
 use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
+use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\PasskeyController;
 use Illuminate\Support\Facades\Route;
 
 /*
- * Livraison HTTP du contrat CTR-04 (CAP-CORE-007) — GET uniquement.
- * Aucune route d'écriture n'est déclarée ici : INV-4 est tenu par
- * l'absence structurelle de verbe POST/PUT/PATCH/DELETE vers ce contrôleur
- * (CONCEPTION-LIVRAISON-LARAVEL-CTR-04-0001, Article 6).
+ * Console authentifiée : les lectures restent servies par les contrats du
+ * Core. La seule écriture web est l'inscription gouvernée d'une identité ;
+ * elle partage le même cas d'usage que l'API v1.
  */
-
-    Route::middleware('gamad.session')->group(function () {
-
-Route::get('/', [Ctr04Controller::class, 'tableauDeBord'])->name('ctr04.tableau-de-bord');
+Route::middleware('gamad.session')->group(function (): void {
+    Route::get('/', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');
     Route::get('/normes/{reference}', [Ctr04Controller::class, 'resoudreNorme'])->name('ctr04.resoudre-norme');
     Route::get('/sources/{reference}', [Ctr04Controller::class, 'resoudreSource'])->name('ctr04.resoudre-source');
     Route::get('/capacites/{reference}', [Ctr04Controller::class, 'resoudreCapacite'])->name('ctr04.resoudre-capacite');
-    Route::get('/identites/{reference}', [Ctr01Controller::class, 'resoudreIdentite'])->name('ctr01.resoudre-identite');
-    Route::get('/identites/{reference}/regime', [Ctr01Controller::class, 'resoudreRegime'])->name('ctr01.resoudre-regime');
-    Route::get('/identites/{reference}/assurance', [Ctr01Controller::class, 'resoudreAssurance'])->name('ctr01.resoudre-assurance');
-    Route::get('/identites', [Ctr01Controller::class, 'resoudreInventaire'])->name('ctr01.inventaire');
+    Route::get('/identites', [IdentiteConsoleController::class, 'index'])
+        ->name('console.identites.index');
+    Route::get('/identites/nouvelle', [IdentiteConsoleController::class, 'create'])
+        ->name('console.identites.create');
+    Route::post('/identites', [IdentiteConsoleController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('console.identites.store');
+    Route::get('/identites/{reference}', [IdentiteConsoleController::class, 'show'])
+        ->name('console.identites.show');
     Route::get('/denominations', [Ctr01Controller::class, 'resoudreDenominations'])->name('ctr01.denominations');
     Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat'])->name('ctr02.resoudre-mandat');
     Route::get('/actes/{reference}/verification', [Ctr02Controller::class, 'verifierActe'])->name('ctr02.verifier-acte');
@@ -35,7 +38,6 @@ Route::get('/', [Ctr04Controller::class, 'tableauDeBord'])->name('ctr04.tableau-
     Route::get('/vacances', [Ctr02Controller::class, 'resoudreVacance'])->name('ctr02.resoudre-vacance');
     Route::get('/integrite/{reference?}', [Ctr04Controller::class, 'verifierIntegrite'])->name('ctr04.verifier-integrite');
     Route::get('/index', [Ctr04Controller::class, 'resoudreIndex'])->name('ctr04.resoudre-index');
-
 });
 
 // Accès : la seule porte ouverte sans session (CAP-CORE-005).

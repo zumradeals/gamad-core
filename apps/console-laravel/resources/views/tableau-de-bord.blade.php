@@ -1,93 +1,258 @@
-<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GAMAD Core — Registre des normes (CAP-CORE-007)</title>
-<style>
-  :root { color-scheme: light dark; --bg:#0f1115; --card:#171a21; --fg:#e7e9ee; --muted:#9aa2b1; --line:#262b36; --ok:#3fb950; --ko:#f85149; --accent:#58a6ff; }
-  @media (prefers-color-scheme: light){ :root{ --bg:#f6f7f9; --card:#fff; --fg:#1b1f27; --muted:#5b6472; --line:#e4e7ec; } }
-  * { box-sizing:border-box; } body{ margin:0; background:var(--bg); color:var(--fg); font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-  .wrap{ max-width:980px; margin:0 auto; padding:32px 20px 64px; }
-  h1{ font-size:22px; margin:0 0 4px; } .sub{ color:var(--muted); margin:0 0 28px; }
-  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:28px; }
-  .card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; }
-  .kpi{ font-size:30px; font-weight:650; } .kpi small{ font-size:13px; font-weight:400; color:var(--muted); }
-  .ok{ color:var(--ok); } .ko{ color:var(--ko); }
-  h2{ font-size:15px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:32px 0 12px; }
-  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
-  th,td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); }
-  th{ color:var(--muted); font-weight:600; }
-  code{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; }
-  .pill{ display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; border:1px solid var(--line); }
-  .scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:12px; }
-  .note{ color:var(--muted); font-size:13px; margin-top:26px; border-top:1px solid var(--line); padding-top:16px; }
-  a{ color:var(--accent); }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>GAMAD Core — Registre des normes</h1>
-  <p class="sub">Capacité souveraine <code>CAP-CORE-007</code> · contrat <code>CTR-04</code> (lecture et attestation) · vue en lecture seule · livrée par Laravel</p>
+@extends('layouts.console')
 
-  <div class="grid">
-    <div class="card"><div class="kpi">{{ count($adoptions) }}</div><small>actes d'adoption</small></div>
-    <div class="card"><div class="kpi ok">{{ count($concordants) }}</div><small>fichiers intègres</small></div>
-    <div class="card"><div class="kpi {{ count($divergents) ? 'ko' : 'ok' }}">{{ count($divergents) }}</div><small>divergences d'empreinte</small></div>
-    <div class="card"><div class="kpi {{ count($index['divergences']) ? 'ko' : 'ok' }}">{{ count($index['divergences']) }}</div><small>divergences d'index</small></div>
-    <div class="card"><div class="kpi {{ $p3Ok ? 'ok' : 'ko' }}">{{ $p3Ok ? 'P3 ✓' : 'P3 ✗' }}</div><small>reconstruction temporelle</small></div>
-    <div class="card"><div class="kpi">{{ $indetermines }}</div><small>normes de rang indéterminé</small></div>
-  </div>
+@section('title', 'Vue d’ensemble')
 
-  <h2>Preuve P3 — reconstruction temporelle de <code>CAP-CORE-007</code></h2>
-  <div class="scroll"><table>
-    <thead><tr><th>Date interrogée</th><th>Statut attendu</th><th>Statut restitué</th><th></th></tr></thead>
-    <tbody>
-    @foreach ($p3 as $c)
-      <tr>
-        <td><code>{{ $c['date'] }}</code></td>
-        <td>{{ $c['attendu'] }}</td>
-        <td>{{ $c['obtenu'] }}</td>
-        <td class="{{ $c['ok'] ? 'ok' : 'ko' }}">{{ $c['ok'] ? '✓' : '✗' }}</td>
-      </tr>
-    @endforeach
-    </tbody>
-  </table></div>
+@section('content')
+@php
+    $corePret = (bool) ($fondation['pret'] ?? false);
+    $mandatActif = is_array($mandat) && str_starts_with((string) ($mandat['etat'] ?? ''), 'ACTIF');
+    $peutInscrire = ($decisionInscription['decision'] ?? null) === 'PERMIS' && $mandatActif;
+    $libellesActivite = [
+        'AUTHENTIFICATION_CONSOLE' => 'Connexion à la console',
+        'AUTHENTIFICATION_API' => 'Accès à l’API',
+        'DECISION_INSCRIPTION_IDENTITE' => 'Décision d’inscription',
+        'INSCRIPTION_IDENTITE_REFUSEE' => 'Inscription refusée',
+        'ENROLEMENT_PASSKEY' => 'Passkey enregistrée',
+        'AUTHENTIFICATION_PASSKEY' => 'Connexion avec une passkey',
+    ];
+@endphp
 
-  <h2>Actes d'adoption ({{ count($adoptions) }})</h2>
-  <div class="scroll"><table>
-    <thead><tr><th>Référence</th><th>Autorité</th><th>Date</th><th>Signature</th></tr></thead>
-    <tbody>
-    @foreach ($adoptions as $a)
-      <tr>
-        <td><code>{{ $a['reference'] }}</code></td>
-        <td>{{ $a['autorite'] }}</td>
-        <td>{{ $a['date_adoption'] }}</td>
-        <td>@if((int) $a['signature_presente'])<span class="pill">signé</span>@endif</td>
-      </tr>
-    @endforeach
-    </tbody>
-  </table></div>
+<header class="page-header">
+    <div>
+        <p class="eyebrow">{{ now()->locale('fr')->isoFormat('dddd D MMMM YYYY') }}</p>
+        <h1 class="page-title">Bonjour.</h1>
+        <p class="page-subtitle">
+            Voici l’état utile du Core et les actions qui demandent votre attention aujourd’hui.
+        </p>
+    </div>
+    <div class="page-actions">
+        <a class="button button--primary" href="{{ route('console.identites.create') }}">
+            <span class="button__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </span>
+            Inscrire une identité
+        </a>
+    </div>
+</header>
 
-  @if (count($divergents))
-  <h2 class="ko">Divergences d'intégrité</h2>
-  <div class="scroll"><table>
-    <thead><tr><th>Fichier</th><th>Déclarée</th><th>Réelle</th></tr></thead>
-    <tbody>
-    @foreach ($divergents as $d)
-      <tr><td><code>{{ $d['chemin'] }}</code></td><td><code>{{ $d['empreinte_declaree'] }}</code></td><td><code>{{ $d['empreinte_reelle'] ?? 'fichier absent' }}</code></td></tr>
-    @endforeach
-    </tbody>
-  </table></div>
-  @endif
+<section class="hero-status" aria-labelledby="etat-core">
+    <div>
+        <p class="eyebrow">État général</p>
+        <h2 class="hero-status__title" id="etat-core">
+            {{ $corePret && $alertes === [] ? 'Le Core fonctionne normalement.' : 'Le Core reste disponible, avec des points à examiner.' }}
+        </h2>
+        <p class="hero-status__copy">
+            @if($corePret && $alertes === [])
+                Les quatre registres répondent, les contrôles sont cohérents et votre mandat autorise les opérations prévues.
+            @else
+                Les services disponibles sont affichés ci-dessous. Toute action non autorisée restera fermée par défaut.
+            @endif
+        </p>
+        <div class="hero-status__actions">
+            <a class="button button--primary" href="{{ route('console.identites.index') }}">Gérer les identités</a>
+            <a class="button button--secondary" href="#activite">Voir l’activité récente</a>
+        </div>
+    </div>
+    <div class="health-orbit">
+        <div class="health-orbit__ring {{ $corePret ? '' : 'health-orbit__ring--danger' }}">
+            <span>
+                <span class="health-orbit__state">{{ $corePret ? 'Prêt' : 'À vérifier' }}</span>
+                <span class="health-orbit__label">4 registres souverains</span>
+            </span>
+        </div>
+    </div>
+</section>
 
-  <p class="note">
-    Index dérivé des fichiers versionnés — les fichiers Git restent la source de vérité (INV-5).
-    Aucune écriture du corpus depuis cette vue (INV-4). Empreintes recalculées, jamais recopiées (INV-1).
-    Le rang normatif n'est établi pour aucune norme : <code>SOURCES-0001</code> énumère les rangs en prose
-    sans les assigner à des textes nommés, et cette qualification appartient à l'autorité (INV-8).
-    Ce tableau de bord ne rend aucune capacité opérationnelle et ne constate pas <code>G0</code>.
-  </p>
+<div class="dashboard-grid">
+    <section class="card span-7" aria-labelledby="attention-title">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="attention-title">Votre attention</h2>
+                <p class="card__description">Les points importants, classés avant les statistiques.</p>
+            </div>
+            <span class="status {{ $alertes === [] ? 'status--success' : 'status--warning' }}">
+                {{ $alertes === [] ? 'Aucune alerte' : count($alertes).' à examiner' }}
+            </span>
+        </div>
+        <div class="card__body">
+            <ul class="alert-list">
+                @forelse($alertes as $alerte)
+                    <li class="alert {{ $alerte['niveau'] === 'danger' ? 'alert--danger' : '' }}">
+                        <span class="alert__dot" aria-hidden="true"></span>
+                        <span>
+                            <span class="alert__title">{{ $alerte['titre'] }}</span>
+                            <span class="alert__detail">{{ $alerte['detail'] }}</span>
+                        </span>
+                    </li>
+                @empty
+                    <li class="alert alert--success">
+                        <span class="alert__dot" aria-hidden="true"></span>
+                        <span>
+                            <span class="alert__title">Rien d’urgent pour le moment</span>
+                            <span class="alert__detail">Les fondations répondent et aucune divergence d’intégrité n’est signalée.</span>
+                        </span>
+                    </li>
+                @endforelse
+            </ul>
+        </div>
+    </section>
+
+    <section class="card span-5" aria-labelledby="actions-title">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="actions-title">Actions rapides</h2>
+                <p class="card__description">Commencer par ce qui compte.</p>
+            </div>
+        </div>
+        <div class="card__body">
+            <div class="quick-actions">
+                <a class="quick-action" href="{{ route('console.identites.create') }}">
+                    <span class="quick-action__icon" aria-hidden="true">+</span>
+                    <span>
+                        <span class="quick-action__title">Nouvelle identité</span>
+                        <span class="quick-action__detail">{{ $peutInscrire ? 'Autorisation et mandat vérifiés' : 'Vérification requise' }}</span>
+                    </span>
+                </a>
+                <a class="quick-action" href="{{ route('console.identites.index') }}">
+                    <span class="quick-action__icon" aria-hidden="true">⌕</span>
+                    <span>
+                        <span class="quick-action__title">Rechercher une identité</span>
+                        <span class="quick-action__detail">{{ count($identites) }} identités connues</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="card span-4" aria-labelledby="identity-summary-title">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="identity-summary-title">Identités</h2>
+                <p class="card__description">Le registre commun, sans profil universel.</p>
+            </div>
+            <a href="{{ route('console.identites.index') }}">Ouvrir</a>
+        </div>
+        <div class="card__body">
+            <div class="metric-row">
+                <div class="metric">
+                    <span class="metric__value">{{ count($identites) }}</span>
+                    <span class="metric__label">Total</span>
+                </div>
+                <div class="metric">
+                    <span class="metric__value">{{ $parType['personne'] ?? 0 }}</span>
+                    <span class="metric__label">Personnes</span>
+                </div>
+                <div class="metric">
+                    <span class="metric__value">{{ ($parType['organisation'] ?? 0) + ($parType['produit'] ?? 0) }}</span>
+                    <span class="metric__label">Structures</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card span-4" aria-labelledby="mandate-title">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="mandate-title">Votre mandat</h2>
+                <p class="card__description">Le pouvoir vient d’une source explicite.</p>
+            </div>
+            <span class="status {{ $mandatActif ? 'status--success' : 'status--danger' }}">
+                {{ $mandatActif ? 'Actif' : 'Non actif' }}
+            </span>
+        </div>
+        <div class="card__body">
+            @if(is_array($mandat))
+                <strong>{{ $mandat['fonction_libelle'] }}</strong>
+                <p class="technical-reference">{{ $mandat['mandat'] }}</p>
+                <p class="card__description">Preuve {{ $mandat['niveau_preuve'] }} · depuis {{ $mandat['debut'] }}</p>
+            @else
+                <p class="card__description">Aucun mandat n’a été résolu pour cette session.</p>
+            @endif
+        </div>
+    </section>
+
+    <section class="card span-4" aria-labelledby="foundation-title">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="foundation-title">Fondations</h2>
+                <p class="card__description">État des magasins de production.</p>
+            </div>
+            <span class="status {{ $corePret ? 'status--success' : 'status--danger' }}">
+                {{ $corePret ? 'Prêtes' : 'À vérifier' }}
+            </span>
+        </div>
+        <div class="card__body">
+            <ul class="detail-list">
+                @foreach($fondation['cibles'] as $nom => $cible)
+                    <li style="display:flex;justify-content:space-between;gap:12px">
+                        <span>{{ ucfirst($nom) }}</span>
+                        <span class="status {{ $cible['prete'] ? 'status--success' : 'status--danger' }}">
+                            {{ $cible['prete'] ? 'Disponible' : 'Indisponible' }}
+                        </span>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    </section>
+
+    <section class="card span-7" id="activite" aria-labelledby="activity-title">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="activity-title">Activité récente</h2>
+                <p class="card__description">Les dernières traces du journal opérationnel.</p>
+            </div>
+        </div>
+        <div class="card__body">
+            <ol class="activity-list">
+                @forelse($activite as $evenement)
+                    <li class="activity-item">
+                        <span class="activity-item__dot" aria-hidden="true"></span>
+                        <span>
+                            <span class="activity-item__title">
+                                {{ $libellesActivite[$evenement['type_evenement']] ?? ucfirst(mb_strtolower(str_replace('_', ' ', $evenement['type_evenement']))) }}
+                            </span>
+                            <span class="activity-item__meta">
+                                {{ $evenement['acteur'] ?: 'Système' }} · {{ $evenement['decision'] ?: $evenement['categorie'] }}
+                            </span>
+                        </span>
+                        <time class="activity-item__time" datetime="{{ $evenement['cree_le'] }}">
+                            {{ substr($evenement['cree_le'], 11, 5) }}
+                        </time>
+                    </li>
+                @empty
+                    <li class="card__description">Aucune activité n’est encore enregistrée.</li>
+                @endforelse
+            </ol>
+        </div>
+    </section>
+
+    <section class="card span-5" aria-labelledby="integrity-title">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="integrity-title">Cohérence et preuves</h2>
+                <p class="card__description">Les indicateurs techniques restent disponibles, sans dominer l’accueil.</p>
+            </div>
+        </div>
+        <div class="card__body">
+            <dl class="detail-list">
+                <div class="detail-row">
+                    <dt>Actes d’adoption</dt>
+                    <dd>{{ count($adoptions) }}</dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Fichiers intègres</dt>
+                    <dd>{{ count($concordants) }}</dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Divergences</dt>
+                    <dd>{{ count($divergents) + count($index['divergences']) }}</dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Preuve temporelle</dt>
+                    <dd>{{ $p3Ok ? 'P3 établie' : 'À vérifier' }}</dd>
+                </div>
+            </dl>
+        </div>
+    </section>
 </div>
-</body>
-</html>
+@endsection

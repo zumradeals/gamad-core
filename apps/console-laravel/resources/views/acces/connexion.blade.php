@@ -1,58 +1,77 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GAMAD Core — Connexion</title>
-<style>
-  :root { color-scheme: light dark; --bg:#0f1115; --card:#171a21; --fg:#e7e9ee; --muted:#9aa2b1; --line:#262b36; --ko:#f85149; --accent:#58a6ff; }
-  @media (prefers-color-scheme: light){ :root{ --bg:#f6f7f9; --card:#fff; --fg:#1b1f27; --muted:#5b6472; --line:#e4e7ec; } }
-  * { box-sizing:border-box; }
-  body{ margin:0; min-height:100vh; display:grid; place-items:center; background:var(--bg); color:var(--fg);
-        font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; padding:24px; }
-  .carte{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:30px; width:100%; max-width:420px; }
-  h1{ font-size:19px; margin:0 0 4px; }
-  .sub{ color:var(--muted); font-size:13.5px; margin:0 0 24px; }
-  label{ display:block; font-size:13px; color:var(--muted); margin:0 0 6px; }
-  input{ width:100%; padding:10px 12px; margin-bottom:16px; border-radius:9px; border:1px solid var(--line);
-         background:var(--bg); color:var(--fg); font:inherit; }
-  input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
-  button{ width:100%; padding:11px; border-radius:9px; border:0; background:var(--accent); color:#05070c;
-          font:inherit; font-weight:600; cursor:pointer; }
-  button.secondaire{ margin-top:10px; background:transparent; color:var(--accent); border:1px solid var(--accent); }
-  button:disabled{ opacity:.55; cursor:wait; }
-  .erreur{ color:var(--ko); font-size:13.5px; margin:0 0 16px; }
-  .note{ color:var(--muted); font-size:12.5px; margin:22px 0 0; border-top:1px solid var(--line); padding-top:14px; }
-  code{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
-</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8d40a">
+    <title>Connexion — GAMAD Core</title>
+    <link rel="stylesheet" href="{{ asset('css/gamad-core.css') }}">
 </head>
-<body>
-<form class="carte" method="POST" action="{{ route('acces.connecter') }}">
-  @csrf
-  <h1>GAMAD Core</h1>
-  <p class="sub">Console du Registre des normes · accès réservé</p>
+<body class="auth-page">
+<main class="auth-shell">
+    <section class="auth-story" aria-label="Présentation de GAMAD Core">
+        <img class="auth-logo"
+             src="{{ asset('images/logo-gamad.jpg') }}"
+             alt="Logo GAMAD"
+             width="108"
+             height="108">
+        <div class="auth-story__message">
+            <p class="eyebrow" style="color:#111417">Noyau souverain</p>
+            <h1>La cohérence au service de la mission.</h1>
+            <p>Formation · Travail · Adoration</p>
+        </div>
+    </section>
 
-  @if ($errors->any())
-    <p class="erreur">{{ $errors->first() }}</p>
-  @endif
+    <section class="auth-form-panel">
+        <form class="auth-form" method="POST" action="{{ route('acces.connecter') }}">
+            @csrf
+            <p class="eyebrow">Accès réservé</p>
+            <h2>Ouvrir la console</h2>
+            <p class="auth-form__intro">Identifiez-vous pour accéder aux opérations autorisées du Core.</p>
 
-  <label for="entite">Référence d'entité</label>
-  <input id="entite" name="entite" value="{{ old('entite') }}" autocomplete="username"
-         placeholder="AUT-GAMAD-001" required autofocus>
+            @if ($errors->any())
+                <div class="form-error auth-error" role="alert">{{ $errors->first() }}</div>
+            @endif
 
-  <label for="secret">Secret</label>
-  <input id="secret" name="secret" type="password" autocomplete="current-password" required>
+            <div class="field">
+                <label for="entite">Référence d’identité</label>
+                <input class="input"
+                       id="entite"
+                       name="entite"
+                       value="{{ old('entite') }}"
+                       autocomplete="username"
+                       placeholder="AUT-GAMAD-001"
+                       required
+                       autofocus>
+            </div>
 
-  <button type="submit">Ouvrir une session</button>
-  <button class="secondaire" id="passkey" type="button">Utiliser une passkey</button>
-  <p class="erreur" id="passkey-erreur" hidden></p>
+            <div class="field">
+                <label for="secret">Secret</label>
+                <input class="input"
+                       id="secret"
+                       name="secret"
+                       type="password"
+                       autocomplete="current-password"
+                       required>
+            </div>
 
-  <p class="note">
-    Une session établit <strong>qui vous êtes</strong>, non ce que vous pouvez faire :
-    les droits sont évalués par <code>CAP-CORE-004</code>. Aucun secret n'est conservé,
-    seulement son empreinte non réversible (<code>INV-24</code>).
-  </p>
-</form>
+            <button class="button button--primary button--full" type="submit">Ouvrir une session</button>
+
+            <div class="auth-divider">ou</div>
+
+            <button class="button button--secondary button--full" id="passkey" type="button">
+                Utiliser une passkey
+            </button>
+            <p class="auth-error-text" id="passkey-erreur" hidden></p>
+
+            <p class="auth-note">
+                Une session établit votre identité. Chaque droit est ensuite évalué par
+                <code>CAP-CORE-004</code>. Aucun secret n’est conservé en clair.
+            </p>
+        </form>
+    </section>
+</main>
+
 <script>
 const csrf = @json(csrf_token());
 const versOctets = (valeur) => {
@@ -84,7 +103,7 @@ document.getElementById('passkey').addEventListener('click', async () => {
   const entite = document.getElementById('entite').value.trim();
   erreur.hidden = true;
   if (!window.PublicKeyCredential || !entite) {
-    erreur.textContent = entite ? 'Ce navigateur ne prend pas en charge les passkeys.' : 'Saisissez votre référence d’entité.';
+    erreur.textContent = entite ? 'Ce navigateur ne prend pas en charge les passkeys.' : 'Saisissez votre référence d’identité.';
     erreur.hidden = false;
     return;
   }

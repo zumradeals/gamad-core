@@ -331,9 +331,18 @@ foreach (SchemaInscription::TABLES as $table) {
 $verifier($colonnesInterdites === [], 'le schéma ne contient aucune colonne de profil ou de jugement');
 $routes = (string) file_get_contents(REGN_CORPUS . '/apps/console-laravel/routes/web.php');
 $routesApi = (string) file_get_contents(REGN_CORPUS . '/apps/console-laravel/routes/api.php');
+$controleurConsole = (string) file_get_contents(
+    REGN_CORPUS . '/apps/console-laravel/app/Http/Controllers/IdentiteConsoleController.php'
+);
+$casUsage = (string) file_get_contents(
+    REGN_CORPUS . '/apps/console-laravel/app/Application/Identites/InscrireIdentite.php'
+);
 $verifier(
-    preg_match('/Route::(?:post|put|patch|delete)\([^\\n]*identit/ui', $routes) !== 1,
-    'aucune écriture d’identité n’est exposée dans la console web historique',
+    str_contains($routes, "Route::middleware('gamad.session')")
+        && str_contains($routes, "Route::post('/identites'")
+        && str_contains($controleurConsole, 'InscrireIdentite $inscrire')
+        && str_contains($casUsage, "->autoriser("),
+    'la console inscrit une identité sous session via le cas d’usage gouverné commun',
 );
 $verifier(
     str_contains($routesApi, "Route::middleware('gamad.api')")
@@ -342,8 +351,9 @@ $verifier(
             (string) file_get_contents(
                 REGN_CORPUS . '/apps/console-laravel/app/Http/Controllers/Api/V1/IdentiteController.php'
             ),
-            "->autoriser(",
-        ),
+            'InscrireIdentite $inscrire',
+        )
+        && str_contains($casUsage, "->autoriser("),
     'l’API v1 d’inscription exige une session et une décision CAP-CORE-004',
 );
 
