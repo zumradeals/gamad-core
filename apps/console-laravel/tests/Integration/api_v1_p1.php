@@ -150,9 +150,10 @@ $decision = $requete('POST', '/api/v1/autorisation/decisions', [
 ], $jeton);
 $verifier(
     $decision['statut'] === 200
-        && ($decision['corps']['decision']['decision'] ?? null) === 'REFUSÉ'
+        && ($decision['corps']['decision']['decision'] ?? null) === 'PERMIS'
+        && ($decision['corps']['decision']['politique'] ?? null) === 'POL-INSCRIPTION-IDENTITES-V1'
         && ($decision['corps']['mandat']['mandat'] ?? null) === 'MANDAT-GENESIS-II-0001',
-    'la session mène à une vérification de mandat et au refus CAP-CORE-004',
+    'la session mène à la politique d’inscription et au mandat actif',
 );
 
 $avant = (int) (new \PDO('sqlite:' . $fichiers['identites']))
@@ -161,23 +162,43 @@ $avant = (int) (new \PDO('sqlite:' . $fichiers['identites']))
 $inscription = $requete('POST', '/api/v1/identites', [
     'canal' => 'AUTORITE',
     'type' => 'personne',
-    'libelle' => 'Identité qui ne doit pas être écrite',
+    'libelle' => 'Identité inscrite par l’autorité',
     'classification' => 'INTERNE',
 ], $jeton);
 $apres = (int) (new \PDO('sqlite:' . $fichiers['identites']))
     ->query('SELECT count(*) FROM identite_inscrite')
     ->fetchColumn();
 $verifier(
-    $inscription['statut'] === 403
-        && ($inscription['corps']['erreur'] ?? null) === 'AUTORISATION_REFUSEE'
-        && $avant === $apres,
-    'le refus par défaut bloque physiquement l’inscription',
+    $inscription['statut'] === 201
+        && ($inscription['corps']['identite']['type'] ?? null) === 'personne'
+        && ($inscription['corps']['identite']['assurance'] ?? null) === 'A3'
+        && ($inscription['corps']['decision']['politique'] ?? null) === 'POL-INSCRIPTION-IDENTITES-V1'
+        && ($inscription['corps']['mandat']['etat'] ?? null) === 'ACTIF — TRANSITOIRE'
+        && $apres === $avant + 1,
+    'l’autorité sous mandat inscrit effectivement une identité A3',
+);
+
+$avantCanalNonReserve = $apres;
+$canalNonReserve = $requete('POST', '/api/v1/identites', [
+    'canal' => 'PRODUIT_RECONNU',
+    'type' => 'personne',
+    'libelle' => 'Identité hors canal de l’autorité',
+], $jeton);
+$apresCanalNonReserve = (int) (new \PDO('sqlite:' . $fichiers['identites']))
+    ->query('SELECT count(*) FROM identite_inscrite')
+    ->fetchColumn();
+$verifier(
+    $canalNonReserve['statut'] === 422
+        && ($canalNonReserve['corps']['erreur'] ?? null) === 'INSCRIPTION_REFUSEE'
+        && ($canalNonReserve['corps']['resultat']['refus'] ?? null) === 'PRODUCTEUR_INCOMPETENT'
+        && $apresCanalNonReserve === $avantCanalNonReserve,
+    'l’autorité ne peut pas usurper le canal réservé aux produits reconnus',
 );
 
 $integrite = (new Journal(JournalMagasin::ouvrir()))->verifierIntegrite();
 $verifier(
-    $integrite['valide'] === true && $integrite['evenements'] >= 5,
-    'authentifications, décision et refus forment une chaîne d’audit valide',
+    $integrite['valide'] === true && $integrite['evenements'] >= 6,
+    'authentifications, décisions, écriture et refus forment une chaîne d’audit valide',
 );
 $ready = $requete('GET', '/api/v1/health/ready');
 $readyOk = $ready['statut'] === 200

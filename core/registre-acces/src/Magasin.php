@@ -24,7 +24,7 @@ namespace Gamad\RegistreAcces;
  */
 final class Magasin
 {
-    public const VERSION = 2;
+    public const VERSION = 3;
 
     public static function creer(\PDO $pdo): void
     {
@@ -95,6 +95,62 @@ final class Magasin
         $pdo->exec(
             'CREATE UNIQUE INDEX IF NOT EXISTS session_ouverte_jeton_empreinte
              ON session_ouverte(jeton_empreinte)'
+        );
+
+        // Facteur fort WebAuthn : le Core ne conserve que la partie publique
+        // du credential. La clé privée et la biométrie restent dans
+        // l'authenticator et ne traversent jamais cette frontière.
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS passkey (
+                reference             TEXT PRIMARY KEY,
+                authentificateur_ref  TEXT NOT NULL UNIQUE REFERENCES authentificateur(reference),
+                entite_reference      TEXT NOT NULL,
+                credential_id         TEXT NOT NULL UNIQUE,
+                user_handle           TEXT NOT NULL,
+                credential_record     TEXT NOT NULL,
+                libelle               TEXT NOT NULL,
+                etat                  TEXT NOT NULL,
+                cree_le               TEXT NOT NULL,
+                utilise_le            TEXT,
+                revoque_le            TEXT
+            )
+        SQL);
+
+        // L'enrôlement est amorcé hors HTTP par une autorisation éphémère à
+        // usage unique. Seule l'empreinte du jeton est persistée.
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS autorisation_enrolement_passkey (
+                reference         TEXT PRIMARY KEY,
+                entite_reference  TEXT NOT NULL,
+                jeton_empreinte   TEXT NOT NULL UNIQUE,
+                expire_le         TEXT NOT NULL,
+                consommee_le      TEXT,
+                cree_le           TEXT NOT NULL
+            )
+        SQL);
+
+        // Le challenge WebAuthn n'est pas un secret, mais il est court, lié à
+        // une seule cérémonie et consommé avant toute validation afin qu'une
+        // réponse, valide ou non, ne puisse jamais être rejouée.
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS ceremonie_passkey (
+                reference         TEXT PRIMARY KEY,
+                entite_reference  TEXT NOT NULL,
+                usage             TEXT NOT NULL,
+                options_json      TEXT NOT NULL,
+                expire_le         TEXT NOT NULL,
+                consommee_le      TEXT,
+                cree_le           TEXT NOT NULL
+            )
+        SQL);
+
+        $pdo->exec(
+            'CREATE INDEX IF NOT EXISTS passkey_entite_etat
+             ON passkey(entite_reference,etat)'
+        );
+        $pdo->exec(
+            'CREATE INDEX IF NOT EXISTS ceremonie_passkey_expiration
+             ON ceremonie_passkey(expire_le)'
         );
 
         $st = $pdo->prepare(

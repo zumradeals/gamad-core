@@ -101,6 +101,119 @@ foreach ($attestation['authentificateurs'] as $a) {
 }
 $verifier(!$fuite, "l'attestation ne restitue aucune empreinte de secret (INV-24)");
 
+// --- Facteur fort A2 : autorisation d'enrôlement à usage unique, challenge
+// brûlé et credential public seulement.
+$autorisation = $ctr16->preparerEnrolementPasskey('ENTITE-DE-TEST', 300);
+$verifier(
+    $ctr16->verifierAutorisationEnrolement('ENTITE-DE-TEST', 'jeton-errone') === null
+        && $ctr16->verifierAutorisationEnrolement(
+            'ENTITE-DE-TEST',
+            $autorisation['jeton'],
+        ) !== null,
+    'seul le jeton éphémère exact autorise l’enrôlement',
+);
+$brutMagasin = (string) file_get_contents($fichier);
+$verifier(
+    !str_contains($brutMagasin, $autorisation['jeton']),
+    'le jeton d’enrôlement n’est jamais conservé en clair',
+);
+
+$ceremonie = $ctr16->enregistrerCeremoniePasskey(
+    'ENTITE-DE-TEST',
+    'ENROLEMENT',
+    '{"challenge":"public-et-temporaire"}',
+    300,
+);
+$premiereConsommation = $ctr16->consommerCeremoniePasskey(
+    $ceremonie['reference'],
+    'ENROLEMENT',
+    'ENTITE-DE-TEST',
+);
+$verifier(
+    is_array($premiereConsommation)
+        && $ctr16->consommerCeremoniePasskey(
+            $ceremonie['reference'],
+            'ENROLEMENT',
+            'ENTITE-DE-TEST',
+        ) === null,
+    'une cérémonie WebAuthn est brûlée à sa première réponse',
+);
+
+$passkey = $ctr16->inscrirePasskey(
+    'ENTITE-DE-TEST',
+    'credential-public-de-test',
+    'user-handle-opaque-de-test',
+    '{"cle_publique":"donnee-de-test"}',
+    'Clé de test',
+    $autorisation['reference'],
+);
+$verifier(
+    $ctr16->verifierAutorisationEnrolement(
+        'ENTITE-DE-TEST',
+        $autorisation['jeton'],
+    ) === null,
+    'l’autorisation est consommée atomiquement avec la passkey',
+);
+$sessionA2 = $ctr16->etablirSessionPasskey($passkey);
+$verifier(
+    is_array($sessionA2)
+        && ($sessionA2['assurance'] ?? null) === 'A2 — FACTEUR FORT'
+        && ($ctr16->verifierSession((string) $sessionA2['session'])['valide'] ?? false) === true,
+    'une passkey vérifiée ouvre une session A2',
+);
+$attestationA2 = $ctr16->attester('ENTITE-DE-TEST');
+$fuiteCredential = false;
+foreach ($attestationA2['authentificateurs'] as $a) {
+    if (array_key_exists('credential_record', $a)
+        || array_key_exists('credential_id', $a)
+        || array_key_exists('user_handle', $a)) {
+        $fuiteCredential = true;
+    }
+}
+$verifier(
+    !$fuiteCredential,
+    'l’attestation publique ne restitue aucun matériau de credential',
+);
+$verifier(
+    $ctr16->revoquerPasskey($passkey)
+        && ($ctr16->verifierSession((string) $sessionA2['session'])['valide'] ?? true) === false,
+    'révoquer la passkey invalide immédiatement sa session A2',
+);
+
+$limiteRefusee = false;
+for ($i = 1; $i <= 5; $i++) {
+    $autorisationLimite = $ctr16->preparerEnrolementPasskey('ENTITE-DE-TEST');
+    $ctr16->inscrirePasskey(
+        'ENTITE-DE-TEST',
+        "credential-limite-{$i}",
+        "user-handle-limite-{$i}",
+        "{\"cle_publique\":\"limite-{$i}\"}",
+        "Clé limite {$i}",
+        $autorisationLimite['reference'],
+    );
+}
+$autorisationSixieme = $ctr16->preparerEnrolementPasskey('ENTITE-DE-TEST');
+try {
+    $ctr16->inscrirePasskey(
+        'ENTITE-DE-TEST',
+        'credential-limite-6',
+        'user-handle-limite-6',
+        '{"cle_publique":"limite-6"}',
+        'Clé limite 6',
+        $autorisationSixieme['reference'],
+    );
+} catch (\RuntimeException) {
+    $limiteRefusee = true;
+}
+$verifier(
+    $limiteRefusee
+        && $ctr16->verifierAutorisationEnrolement(
+            'ENTITE-DE-TEST',
+            $autorisationSixieme['jeton'],
+        ) !== null,
+    'la sixième passkey est refusée sans consommer son autorisation',
+);
+
 // --- Migration additive d'un magasin v1 : une session existante reste
 // valide, mais sa valeur bearer disparaît de la base.
 $fichierV1 = sys_get_temp_dir() . '/regn-authn-v1-p3-' . getmypid() . '.sqlite';
@@ -141,7 +254,7 @@ $verifier(
     ($ctrMigre->verifierSession('SESS-V1-EN-CLAIR')['valide'] ?? false) === true
         && $ligneMigree['reference'] !== 'SESS-V1-EN-CLAIR'
         && $ligneMigree['jeton_empreinte'] === hash('sha256', 'SESS-V1-EN-CLAIR'),
-    'la migration v2 conserve la session sans conserver son bearer en clair',
+    'la migration additive conserve la session sans conserver son bearer en clair',
 );
 
 unset($magasin);

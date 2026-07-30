@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Support\ImportateurSqlite;
+use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 
@@ -13,6 +14,8 @@ $prefixe = sys_get_temp_dir() . '/gamad-import-p0-' . getmypid();
 $fichiers = [
     'acces_source' => $prefixe . '-acces-source.sqlite',
     'acces_cible' => $prefixe . '-acces-cible.sqlite',
+    'acces_source_passkey' => $prefixe . '-acces-source-passkey.sqlite',
+    'acces_cible_passkey' => $prefixe . '-acces-cible-passkey.sqlite',
     'identites_source' => $prefixe . '-identites-source.sqlite',
     'identites_cible' => $prefixe . '-identites-cible.sqlite',
 ];
@@ -68,6 +71,18 @@ $sourceIdentites->exec(
 );
 
 $cibleAcces = AccesMagasin::connecter($fichiers['acces_cible']);
+$sourceAccesPasskey = AccesMagasin::connecter($fichiers['acces_source_passkey']);
+$ctrPasskey = new Ctr16($sourceAccesPasskey);
+$autorisationPasskey = $ctrPasskey->preparerEnrolementPasskey('AUT-GAMAD-001');
+$referencePasskey = $ctrPasskey->inscrirePasskey(
+    'AUT-GAMAD-001',
+    'credential-public-import',
+    'user-handle-import',
+    '{"credential":"public"}',
+    'Passkey importée',
+    $autorisationPasskey['reference'],
+);
+$cibleAccesPasskey = AccesMagasin::connecter($fichiers['acces_cible_passkey']);
 $cibleIdentites = IdentiteMagasin::connecter($fichiers['identites_cible']);
 $importateur = new ImportateurSqlite();
 
@@ -91,6 +106,17 @@ $verifier(
                AND reference <> 'SESS-IMPORT'",
         )->fetchColumn() === 1,
     'authentificateurs et sessions sont copiés sans conserver le bearer en clair',
+);
+$accesPasskey = $importateur->importerAcces(
+    $fichiers['acces_source_passkey'],
+    $cibleAccesPasskey,
+);
+$verifier(
+    ($accesPasskey['passkey'] ?? null) === 1
+        && (string) $cibleAccesPasskey->query(
+            "SELECT reference FROM passkey WHERE credential_id = 'credential-public-import'",
+        )->fetchColumn() === $referencePasskey,
+    'un export récent conserve la passkey publique sans importer les cérémonies éphémères',
 );
 $verifier(
     $identites['identite_inscrite'] === 1

@@ -43,6 +43,9 @@ jobs:
       - name: Éprouver l'authentification console
         run: php apps/console-laravel/tests/Integration/console_auth_p1.php
 
+      - name: Éprouver le facteur fort WebAuthn A2
+        run: php apps/console-laravel/tests/Integration/passkey_a2_p2.php
+
       - name: Éprouver l'import SQLite
         run: php apps/console-laravel/tests/Integration/import_sqlite_p0.php
 

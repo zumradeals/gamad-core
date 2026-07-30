@@ -16,6 +16,7 @@ final class ImportateurSqlite
     /** @var list<string> */
     private const TABLES_ACCES = [
         'authentificateur',
+        'passkey',
         'session_ouverte',
     ];
 
@@ -34,7 +35,10 @@ final class ImportateurSqlite
     /** @return array<string,int> */
     public function importerAcces(string $source, \PDO $cible): array
     {
-        return $this->importer($source, $cible, self::TABLES_ACCES);
+        // Les exports antérieurs à la migration WebAuthn ne portent pas
+        // encore `passkey`. Ils restent importables ; si la table existe,
+        // les credentials publics sont repris avant les sessions.
+        return $this->importer($source, $cible, self::TABLES_ACCES, ['passkey']);
     }
 
     /** @return array<string,int> */
@@ -44,19 +48,30 @@ final class ImportateurSqlite
     }
 
     /**
-     * @param list<string> $tables
+     * @param  list<string>  $tables
+     * @param  list<string>  $optionnelles
      * @return array<string,int>
      */
-    private function importer(string $source, \PDO $cible, array $tables): array
-    {
-        if (!is_file($source) || !is_readable($source)) {
+    private function importer(
+        string $source,
+        \PDO $cible,
+        array $tables,
+        array $optionnelles = [],
+    ): array {
+        if (! is_file($source) || ! is_readable($source)) {
             throw new \RuntimeException("Source SQLite absente ou illisible : {$source}");
         }
 
-        $sqlite = new \PDO('sqlite:' . $source);
+        $sqlite = new \PDO('sqlite:'.$source);
         $sqlite->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $sqlite->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
         $cible->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+        $tables = array_values(array_filter(
+            $tables,
+            fn (string $table): bool => ! in_array($table, $optionnelles, true)
+                || $this->tableExiste($sqlite, $table),
+        ));
 
         foreach ($tables as $table) {
             $this->exigerTable($sqlite, $table);
@@ -67,7 +82,7 @@ final class ImportateurSqlite
             }
         }
 
-        $propreTransaction = !$cible->inTransaction();
+        $propreTransaction = ! $cible->inTransaction();
         if ($propreTransaction) {
             $cible->beginTransaction();
         }
@@ -86,7 +101,7 @@ final class ImportateurSqlite
 
                 $colonnesCible = $colonnes;
                 $migrationSession = $table === 'session_ouverte'
-                    && !in_array('jeton_empreinte', $colonnes, true);
+                    && ! in_array('jeton_empreinte', $colonnes, true);
                 if ($migrationSession) {
                     $colonnesCible[] = 'jeton_empreinte';
                 }
@@ -106,7 +121,7 @@ final class ImportateurSqlite
                         $jeton = (string) $ligne['reference'];
                         $empreinte = hash('sha256', $jeton);
                         $positionReference = array_search('reference', $colonnes, true);
-                        $valeurs[$positionReference] = 'SINT-MIG-' . strtoupper(substr($empreinte, 0, 24));
+                        $valeurs[$positionReference] = 'SINT-MIG-'.strtoupper(substr($empreinte, 0, 24));
                         $valeurs[] = $empreinte;
                     }
                     $inserer->execute($valeurs);
@@ -148,12 +163,18 @@ final class ImportateurSqlite
 
     private function exigerTable(\PDO $sqlite, string $table): void
     {
+        if (! $this->tableExiste($sqlite, $table)) {
+            throw new \RuntimeException("Table {$table} absente de la source SQLite.");
+        }
+    }
+
+    private function tableExiste(\PDO $sqlite, string $table): bool
+    {
         $st = $sqlite->prepare(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
         );
         $st->execute([$table]);
-        if ($st->fetchColumn() === false) {
-            throw new \RuntimeException("Table {$table} absente de la source SQLite.");
-        }
+
+        return $st->fetchColumn() !== false;
     }
 }

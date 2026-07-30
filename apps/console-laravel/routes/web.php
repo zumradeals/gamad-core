@@ -7,6 +7,7 @@ use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
 use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
+use App\Http\Controllers\PasskeyController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,3 +44,20 @@ Route::post('/connexion', [AccesController::class, 'connecter'])
     ->middleware('throttle:10,1')
     ->name('acces.connecter');
 Route::post('/deconnexion', [AccesController::class, 'deconnecter'])->name('acces.deconnecter');
+
+Route::middleware('gamad.https')->group(function (): void {
+    Route::get('/passkeys/enrolement', [PasskeyController::class, 'formulaireEnrolement'])
+        ->name('passkeys.enrolement');
+    Route::post('/passkeys/enrolement/options', [PasskeyController::class, 'optionsEnrolement'])
+        ->middleware('throttle:5,1')
+        ->name('passkeys.enrolement.options');
+    Route::post('/passkeys/enrolement', [PasskeyController::class, 'enroler'])
+        ->middleware('throttle:5,1')
+        ->name('passkeys.enroler');
+    Route::post('/passkeys/authentification/options', [PasskeyController::class, 'optionsAuthentification'])
+        ->middleware('throttle:10,1')
+        ->name('passkeys.authentification.options');
+    Route::post('/passkeys/authentification', [PasskeyController::class, 'authentifier'])
+        ->middleware('throttle:10,1')
+        ->name('passkeys.authentifier');
+});

@@ -130,6 +130,8 @@ Toute nouvelle adoption exige une ligne supplémentaire dans le tableau de l'Art
 
 | `ADOPTION-0065` | Loi supérieure de conduite du travail — primauté permanente de l’exécution, doctrine « code d’abord », Véto du dirigeant exceptionnel, tests honnêtes et documentation postérieure ou parallèle | Koné Djakaridja | 29 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
 
+| `ADOPTION-0066` | `POLITIQUE-INSCRIPTION-IDENTITES-0001` — canaux d'inscription, assurance `A0` à `A3`, autorité `AUT-GAMAD-001`, clôture de `DECISION-0050` à `0052` et premier chemin d'écriture gouverné | Koné Djakaridja | 30 juillet 2026 | `LU ET ADOPTÉ — EN VIGUEUR` |
+
 ## Article 5 — Textes en cours de délibération non inscrits
 
 `MATRICE-INITIALE-LOI-PREUVE-0001` et `REGISTRE-INITIAL-USAGES-IA-0001`, ainsi que tout texte produit dans le cadre des Phases 1 à 4 en cours, portent le statut `PROJET NORMATIF — EN COURS DE DÉLIBÉRATION` et ne figurent pas dans ce tableau tant qu'ils ne sont pas adoptés.

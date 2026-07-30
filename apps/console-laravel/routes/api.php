@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\V1\AutorisationController;
 use App\Http\Controllers\Api\V1\FondationController;
 use App\Http\Controllers\Api\V1\IdentiteController;
+use App\Http\Controllers\Api\V1\PasskeySessionController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
@@ -16,6 +17,10 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
 
     Route::post('/sessions', [SessionController::class, 'store'])
         ->middleware('throttle:5,1');
+    Route::post('/sessions/passkey/options', [PasskeySessionController::class, 'options'])
+        ->middleware('throttle:10,1');
+    Route::post('/sessions/passkey', [PasskeySessionController::class, 'store'])
+        ->middleware('throttle:10,1');
 
     Route::middleware('gamad.api')->group(function (): void {
         Route::delete('/sessions/current', [SessionController::class, 'destroy']);

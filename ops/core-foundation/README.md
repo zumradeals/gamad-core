@@ -63,6 +63,40 @@ Les migrations de ce lot sont additives. Un rollback applicatif consiste à
 revenir au commit/release précédent puis à recharger PHP-FPM;
 aucune suppression de table n'est exécutée pendant ce rollback.
 
+## Activer l'authentification forte A2
+
+La console utilise WebAuthn/passkeys : le Core conserve la clé publique et le
+compteur de signature, jamais la clé privée ni la biométrie de l'utilisateur.
+La production exige une origine HTTPS fermée et un identifiant RP égal à
+l'hôte de `APP_URL` :
+
+```text
+GAMAD_PASSKEY_RP_NAME=GAMAD Core
+GAMAD_PASSKEY_RP_ID=console.dgafrique.com
+GAMAD_PASSKEY_ALLOWED_ORIGINS=https://console.dgafrique.com
+```
+
+Après les migrations, un opérateur prépare un enrôlement à usage unique :
+
+```text
+php artisan identite:preparer-passkey AUT-GAMAD-001
+```
+
+Le jeton n'est affiché qu'une fois et seul son SHA-256 est conservé. Il expire
+après dix minutes par défaut. L'utilisateur ouvre ensuite
+`/passkeys/enrolement`; la vérification utilisateur de l'authenticator est
+obligatoire. Les challenges WebAuthn expirent après cinq minutes et sont
+consommés dès la première réponse, valide ou non.
+
+Une passkey perdue ou compromise se révoque immédiatement :
+
+```text
+php artisan identite:revoquer-passkey AUT-GAMAD-001 PASS-REFERENCE
+```
+
+La révocation invalide aussi toutes les sessions ouvertes par cette passkey et
+produit un événement de sécurité dans le journal opérationnel.
+
 La configuration Nginx active sert déjà le bon front-controller Laravel et
 redirige HTTP vers HTTPS. Avant tout rechargement :
 

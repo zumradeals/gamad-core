@@ -7,11 +7,12 @@ namespace Gamad\RegistreIdentites;
 /**
  * Vocabulaire technique fermé de la première implémentation révisée.
  *
- * La loi adoptée par ADOPTION-0064 impose une écriture gouvernée, l'échelle
- * A0–A3 et des politiques nommées. Cette classe ne prétend pas remplacer le
- * futur registre des politiques : chaque commande doit encore fournir la
- * politique, sa source, son producteur et sa preuve. Elle borne seulement les
- * valeurs que le code sait traiter sans inventer de profil ni de droit.
+ * La loi adoptée par ADOPTION-0064 impose une écriture gouvernée.
+ * POLITIQUE-INSCRIPTION-IDENTITES-0001 arrête les canaux, l'échelle A0–A3 et
+ * l'autorité d'inscription. Cette classe ne remplace pas le corpus : chaque
+ * commande doit encore fournir la politique, sa source, son producteur et sa
+ * preuve. Elle borne les valeurs que le code sait traiter sans inventer de
+ * profil ni de droit.
  */
 final class PolitiqueInscription
 {

@@ -18,9 +18,8 @@ use Illuminate\View\View;
  * Page de connexion de la console (CAP-CORE-005, contrat CTR-05).
  *
  * Ouvrir une session établit QUI L'ON EST, non ce que l'on peut faire : les
- * droits relèvent de CAP-CORE-004, à établir. Tant qu'elle n'existe pas, une
- * session ne confère qu'un accès en lecture — la capacité FERME une porte,
- * elle n'en ouvre aucune.
+ * droits relèvent de CAP-CORE-004. Une session seule ne confère qu'un accès en
+ * lecture — toute écriture exige une permission distincte et vérifiée.
  */
 final class AccesController
 {
