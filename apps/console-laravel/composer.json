@@ -34,7 +34,8 @@
             "Gamad\\RegistreAutorites\\": "../../core/registre-autorites/src/",
             "Gamad\\RegistreIdentites\\": "../../core/registre-identites/src/",
             "Gamad\\RegistreAcces\\": "../../core/registre-acces/src/",
-            "Gamad\\RegistreAutorisation\\": "../../core/registre-autorisation/src/"
+            "Gamad\\RegistreAutorisation\\": "../../core/registre-autorisation/src/",
+            "Gamad\\JournalOperationnel\\": "../../core/journal-operationnel/src/"
         }
     },
     "autoload-dev": {

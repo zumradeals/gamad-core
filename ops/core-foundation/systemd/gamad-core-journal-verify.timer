@@ -1,0 +1,11 @@
+[Unit]
+Description=Vérification horaire du journal opérationnel GAMAD Core
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=5m
+Unit=gamad-core-journal-verify.service
+
+[Install]
+WantedBy=timers.target

@@ -7,16 +7,16 @@ namespace Gamad\RegistreNormes;
 /**
  * Connexion PDO à l'index dérivé.
  *
- * Deux cibles, un seul code : PostgreSQL en déploiement (variable
- * DATABASE_URL fournie par Railway), SQLite en local et en intégration
- * continue. L'index n'est jamais la source de vérité (INV-5) : ce sont les
- * fichiers Git. La base est reconstructible à volonté.
+ * Deux cibles, un seul code : PostgreSQL sur le serveur d'exploitation
+ * (variable DATABASE_URL), SQLite en local et en intégration continue.
+ * L'index n'est jamais la source de vérité (INV-5) : ce sont les fichiers Git.
+ * La base est reconstructible à volonté.
  */
 final class Db
 {
     public static function connect(): \PDO
     {
-        $url = getenv('DATABASE_URL');
+        $url = self::environnement('DATABASE_URL');
 
         if (is_string($url) && $url !== '') {
             $p = parse_url($url);
@@ -35,7 +35,7 @@ final class Db
                 isset($p['pass']) ? urldecode($p['pass']) : null
             );
         } else {
-            $chemin = getenv('SQLITE_PATH');
+            $chemin = self::environnement('SQLITE_PATH');
             if (!is_string($chemin) || $chemin === '') {
                 $chemin = dirname(__DIR__) . '/var/index.sqlite';
             }
@@ -52,5 +52,21 @@ final class Db
     public static function driver(\PDO $pdo): string
     {
         return (string) $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+    }
+
+    /**
+     * Laravel charge .env dans $_ENV/$_SERVER sans nécessairement alimenter
+     * getenv(). Les gardes autonomes utilisent aussi de vraies variables de
+     * processus : les trois sources doivent donc être comprises.
+     */
+    private static function environnement(string $nom): ?string
+    {
+        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+            if (is_string($valeur)) {
+                return $valeur;
+            }
+        }
+
+        return null;
     }
 }

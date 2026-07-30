@@ -330,9 +330,21 @@ foreach (SchemaInscription::TABLES as $table) {
 }
 $verifier($colonnesInterdites === [], 'le schéma ne contient aucune colonne de profil ou de jugement');
 $routes = (string) file_get_contents(REGN_CORPUS . '/apps/console-laravel/routes/web.php');
+$routesApi = (string) file_get_contents(REGN_CORPUS . '/apps/console-laravel/routes/api.php');
 $verifier(
     preg_match('/Route::(?:post|put|patch|delete)\([^\\n]*identit/ui', $routes) !== 1,
-    'aucune route HTTP d’écriture d’identité n’est exposée',
+    'aucune écriture d’identité n’est exposée dans la console web historique',
+);
+$verifier(
+    str_contains($routesApi, "Route::middleware('gamad.api')")
+        && str_contains($routesApi, "Route::post('/identites'")
+        && str_contains(
+            (string) file_get_contents(
+                REGN_CORPUS . '/apps/console-laravel/app/Http/Controllers/Api/V1/IdentiteController.php'
+            ),
+            "->autoriser(",
+        ),
+    'l’API v1 d’inscription exige une session et une décision CAP-CORE-004',
 );
 
 // 14 — contre-épreuves ciblées sur copie temporaire. La garde doit détecter

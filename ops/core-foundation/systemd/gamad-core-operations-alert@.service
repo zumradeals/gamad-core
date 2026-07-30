@@ -1,0 +1,9 @@
+[Unit]
+Description=Alerte locale GAMAD Core pour %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/logger --priority auth.alert --tag gamad-core "ECHEC OPERATIONNEL: %i"
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true

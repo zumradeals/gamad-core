@@ -1,0 +1,305 @@
+openapi: 3.1.0
+info:
+  title: GAMAD Core API
+  version: 1.0.0
+  description: >-
+    Première API opérationnelle du Core. Toute écriture d'identité exige une
+    session bearer, une décision CAP-CORE-004, un mandat actif lorsque le canal
+    est réservé, et une preuve dans le journal opérationnel.
+servers:
+  - url: https://console.dgafrique.com/api/v1
+    description: Serveur GAMAD Core.
+tags:
+  - name: Exploitation
+  - name: Sessions
+  - name: Identités
+  - name: Autorisation
+paths:
+  /health/live:
+    get:
+      tags: [Exploitation]
+      operationId: verifierVie
+      summary: Vérifie que le processus HTTP répond.
+      responses:
+        "200":
+          description: Processus vivant.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vie"
+  /health/ready:
+    get:
+      tags: [Exploitation]
+      operationId: verifierReadiness
+      summary: Vérifie connexions, migrations, configuration et chaîne d'audit.
+      responses:
+        "200":
+          description: Service prêt à recevoir du trafic.
+        "503":
+          description: Une dépendance ou exigence de production manque.
+  /sessions:
+    post:
+      tags: [Sessions]
+      operationId: ouvrirSession
+      summary: Échange un authentificateur contre une session bearer temporaire.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entite, secret]
+              properties:
+                entite:
+                  type: string
+                  maxLength: 64
+                secret:
+                  type: string
+                  writeOnly: true
+      responses:
+        "201":
+          description: Session ouverte. La réponse ne doit jamais être mise en cache.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401":
+          description: Identifiant ou secret refusé.
+        "429":
+          description: Limite de tentatives atteinte.
+        "503":
+          description: Journal indisponible; aucune session n'est conservée.
+  /sessions/current:
+    delete:
+      tags: [Sessions]
+      operationId: fermerSession
+      security:
+        - bearerSession: []
+      responses:
+        "200":
+          description: Résultat de la révocation et preuve.
+        "401":
+          description: Session invalide.
+  /autorisation/decisions:
+    post:
+      tags: [Autorisation]
+      operationId: prendreDecisionAutorisation
+      security:
+        - bearerSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  maxLength: 256
+                ressource:
+                  type: [string, "null"]
+                  maxLength: 256
+      responses:
+        "200":
+          description: Décision expliquée, mandat constaté et preuve chaînée.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionAvecPreuve"
+        "401":
+          description: Session invalide.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /identites:
+    get:
+      tags: [Identités]
+      operationId: listerIdentites
+      security:
+        - bearerSession: []
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Inventaire des identités lisibles.
+        "401":
+          description: Session invalide.
+    post:
+      tags: [Identités]
+      operationId: inscrireIdentite
+      summary: Inscrit une identité après autorisation et vérification du mandat.
+      description: >-
+        Avec le corpus actuel, CAP-CORE-004 ne permet pas explicitement cette
+        action. Le refus par défaut produit donc HTTP 403 et aucune écriture.
+      security:
+        - bearerSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InscriptionIdentite"
+      responses:
+        "201":
+          description: Identité inscrite et preuve produite.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'action ou le mandat réservé manque.
+        "422":
+          description: Le registre d'identités refuse le dossier gouverné.
+        "503":
+          description: Le journal est indisponible; aucune écriture n'a lieu.
+  /identites/{reference}:
+    get:
+      tags: [Identités]
+      operationId: lireIdentite
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Identité résolue.
+        "404":
+          description: Identité inconnue.
+  /identites/{reference}/regime:
+    get:
+      tags: [Identités]
+      operationId: lireRegimeIdentite
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Régime de vérité de l'identité.
+        "404":
+          description: Identité inconnue.
+  /identites/{reference}/assurance:
+    get:
+      tags: [Identités]
+      operationId: lireAssuranceIdentite
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Assurance de l'identité autorisée.
+        "403":
+          description: L'appelant n'est ni l'identité ni l'autorité.
+  /mandats/{fonction}:
+    get:
+      tags: [Autorisation]
+      operationId: lireMandat
+      security:
+        - bearerSession: []
+      parameters:
+        - in: path
+          name: fonction
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Mandat résolu.
+        "404":
+          description: Aucun mandat applicable.
+components:
+  securitySchemes:
+    bearerSession:
+      type: http
+      scheme: bearer
+      bearerFormat: SESS
+  parameters:
+    Reference:
+      in: path
+      name: reference
+      required: true
+      schema:
+        type: string
+  schemas:
+    Vie:
+      type: object
+      required: [statut, service, version_api, observe_le]
+      properties:
+        statut:
+          const: VIVANT
+        service:
+          const: gamad-core
+        version_api:
+          const: v1
+        observe_le:
+          type: string
+          format: date-time
+    Preuve:
+      type: object
+      required: [reference, correlation_id, empreinte, algorithme, signee, cree_le]
+      properties:
+        reference:
+          type: string
+        correlation_id:
+          type: string
+        empreinte:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        algorithme:
+          const: sha256
+        signee:
+          const: false
+        cree_le:
+          type: string
+          format: date-time
+    Session:
+      type: object
+      required: [type, jeton, entite, assurance, expire_le, preuve]
+      properties:
+        type:
+          const: Bearer
+        jeton:
+          type: string
+        entite:
+          type: string
+        assurance:
+          type: string
+        expire_le:
+          type: string
+          format: date-time
+        preuve:
+          $ref: "#/components/schemas/Preuve"
+    DecisionAvecPreuve:
+      type: object
+      required: [decision, mandat, preuve]
+      properties:
+        decision:
+          type: object
+          additionalProperties: true
+        mandat:
+          type: [object, "null"]
+          additionalProperties: true
+        preuve:
+          $ref: "#/components/schemas/Preuve"
+    InscriptionIdentite:
+      type: object
+      required: [canal, type, libelle]
+      properties:
+        canal:
+          enum: [PRODUIT_RECONNU, ORGANISATION_RECONNUE, AUTORITE, CREATION_TECHNIQUE]
+        type:
+          enum: [personne, organisation, produit, realm, agent, service]
+        libelle:
+          type: string
+          maxLength: 256
+        classification:
+          enum: [PUBLIC_ECOSYSTEME, INTERNE, CONFIDENTIEL, RESTREINT, SECRET_CORE]
+        provisoire:
+          type: boolean

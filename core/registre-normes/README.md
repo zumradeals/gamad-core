@@ -44,28 +44,19 @@ php -S 127.0.0.1:8080 -t core/registre-normes/public
 
 L'index SQLite se construit tout seul au premier accès, depuis le corpus.
 
-## Déployer sur Railway — premier regard (SQLite, zéro secret)
+## Déploiement actif — serveur local
 
-Le plus simple pour **voir** le Core : aucune base à provisionner, l'index se
-reconstruit à chaque démarrage depuis les fichiers du dépôt.
+Le service actif n'est pas ce point d'entrée autonome. Nginx sert le monolithe
+Laravel dans `apps/console-laravel/public`, via PHP 8.3-FPM. Le monolithe appelle
+ce module pour reconstruire et lire l'index.
 
-1. Railway → **New Project** → **Deploy from GitHub repo** → `zumradeals/gamad-core`.
-2. Ne **pas** régler de « Root Directory » : le service a besoin du corpus
-   `genesis-ii/` présent à la racine.
-3. Le fichier `nixpacks.toml` à la racine fixe PHP et la commande de démarrage.
-   Si l'autodétection diffère, régler à la main la **Start Command** :
-   `php -S 0.0.0.0:$PORT -t core/registre-normes/public`.
-4. Déployer → ouvrir l'URL publique `…up.railway.app` → le tableau de bord.
+En exploitation, `DATABASE_URL` désigne la base PostgreSQL locale dédiée à
+l'index. **`DATABASE_URL` est un secret** : elle réside dans l'environnement
+protégé du serveur, jamais dans le dépôt. SQLite reste uniquement un repli local
+et de CI.
 
-> Extension PostgreSQL : inutile pour ce premier regard (SQLite). Si l'image PHP
-> de Railway manque `pdo_sqlite`, l'indiquer et la configuration sera ajustée.
-
-## Étape suivante — persistance PostgreSQL
-
-Pour un index persistant : ajouter le plugin **PostgreSQL** (Railway fournit
-`DATABASE_URL`), le service le détecte automatiquement. **`DATABASE_URL` est un
-secret** : le consigner au registre autonome des accès et secrets de l'autorité
-(`ADOPTION-0025`, Art. 3.a), jamais dans le dépôt.
+La topologie, l'ordre de migration, la sauvegarde et l'exercice de restauration
+sont décrits dans `ops/core-foundation/README.md`.
 
 ## Ce que ce module n'est pas
 

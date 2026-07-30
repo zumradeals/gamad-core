@@ -1,0 +1,201 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Épreuve d'intégration HTTP sans dépendance à PHPUnit.
+ *
+ * Exécution depuis la racine du dépôt :
+ *   php apps/console-laravel/tests/Integration/api_v1_p1.php
+ */
+
+use Gamad\JournalOperationnel\Journal;
+use Gamad\JournalOperationnel\Magasin as JournalMagasin;
+use Gamad\RegistreAcces\Ctr16;
+use Gamad\RegistreAcces\Magasin as AccesMagasin;
+use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
+use Gamad\RegistreNormes\Db;
+use Gamad\RegistreNormes\Ingestion;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Http\Request;
+
+$application = dirname(__DIR__, 2);
+$racine = dirname($application, 2);
+$temp = sys_get_temp_dir() . '/gamad-api-v1-' . getmypid();
+$fichiers = [
+    'index' => $temp . '-index.sqlite',
+    'acces' => $temp . '-acces.sqlite',
+    'identites' => $temp . '-identites.sqlite',
+    'journal' => $temp . '-journal.sqlite',
+];
+foreach ($fichiers as $fichier) {
+    @unlink($fichier);
+}
+register_shutdown_function(static function () use ($fichiers): void {
+    foreach ($fichiers as $fichier) {
+        @unlink($fichier);
+    }
+});
+
+$environnement = [
+    'APP_ENV' => 'testing',
+    'APP_DEBUG' => 'false',
+    'APP_KEY' => 'base64:' . base64_encode(str_repeat('x', 32)),
+    'APP_CONFIG_CACHE' => $temp . '-config.php',
+    'APP_EVENTS_CACHE' => $temp . '-events.php',
+    'APP_PACKAGES_CACHE' => $temp . '-packages.php',
+    'APP_ROUTES_CACHE' => $temp . '-routes.php',
+    'APP_SERVICES_CACHE' => $temp . '-services.php',
+    'CACHE_STORE' => 'array',
+    'SESSION_DRIVER' => 'array',
+    'LOG_CHANNEL' => 'errorlog',
+    'DATABASE_URL' => '',
+    'SQLITE_PATH' => $fichiers['index'],
+    'MAGASIN_URL' => '',
+    'MAGASIN_PATH' => $fichiers['acces'],
+    'IDENTITY_REGISTRY_URL' => '',
+    'IDENTITY_REGISTRY_PATH' => $fichiers['identites'],
+    'JOURNAL_OPERATIONNEL_URL' => '',
+    'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
+];
+foreach ($environnement as $cle => $valeur) {
+    putenv("{$cle}={$valeur}");
+    $_ENV[$cle] = $valeur;
+    $_SERVER[$cle] = $valeur;
+}
+
+require $application . '/vendor/autoload.php';
+
+$index = Db::connect();
+(new Ingestion($index, $racine))->executer();
+$secret = 'Secret-P3-API-2026!';
+(new Ctr16(AccesMagasin::connecter()))->inscrireAuthentificateur('AUT-GAMAD-001', $secret);
+IdentiteMagasin::connecter();
+
+$app = require $application . '/bootstrap/app.php';
+$kernel = $app->make(Kernel::class);
+
+$echecs = 0;
+$verifier = static function (bool $ok, string $libelle) use (&$echecs): void {
+    printf("  %s  %s\n", $ok ? '[OK]  ' : '[ÉCHEC]', $libelle);
+    if (!$ok) {
+        $echecs++;
+    }
+};
+$requete = static function (
+    string $methode,
+    string $uri,
+    ?array $json = null,
+    ?string $jeton = null,
+) use ($kernel): array {
+    $serveur = [
+        'HTTP_ACCEPT' => 'application/json',
+        'CONTENT_TYPE' => 'application/json',
+    ];
+    if ($jeton !== null) {
+        $serveur['HTTP_AUTHORIZATION'] = 'Bearer ' . $jeton;
+    }
+    $request = Request::create(
+        $uri,
+        $methode,
+        [],
+        [],
+        [],
+        $serveur,
+        $json === null ? null : json_encode($json, JSON_THROW_ON_ERROR),
+    );
+    $response = $kernel->handle($request);
+    $corps = json_decode((string) $response->getContent(), true);
+    $resultat = [
+        'statut' => $response->getStatusCode(),
+        'corps' => is_array($corps) ? $corps : [],
+    ];
+    $kernel->terminate($request, $response);
+
+    return $resultat;
+};
+
+echo "INTÉGRATION HTTP — API V1 P0/P1\n\n";
+
+$live = $requete('GET', '/api/v1/health/live');
+$verifier(
+    $live['statut'] === 200 && ($live['corps']['version_api'] ?? null) === 'v1',
+    'la sonde de vie versionnée répond sans dépendance',
+);
+
+$sansSession = $requete('POST', '/api/v1/autorisation/decisions', [
+    'action' => 'inscrire une identité',
+]);
+$verifier(
+    $sansSession['statut'] === 401
+        && ($sansSession['corps']['erreur'] ?? null) === 'AUTHENTIFICATION_REQUISE',
+    'une décision sans session est refusée et tracée',
+);
+
+$connexion = $requete('POST', '/api/v1/sessions', [
+    'entite' => 'AUT-GAMAD-001',
+    'secret' => $secret,
+]);
+$jeton = (string) ($connexion['corps']['jeton'] ?? '');
+$verifier(
+    $connexion['statut'] === 201
+        && $jeton !== ''
+        && ($connexion['corps']['entite'] ?? null) === 'AUT-GAMAD-001',
+    'un authentificateur valide ouvre une session bearer',
+);
+
+$decision = $requete('POST', '/api/v1/autorisation/decisions', [
+    'action' => 'inscrire une identité',
+    'ressource' => 'personne',
+], $jeton);
+$verifier(
+    $decision['statut'] === 200
+        && ($decision['corps']['decision']['decision'] ?? null) === 'REFUSÉ'
+        && ($decision['corps']['mandat']['mandat'] ?? null) === 'MANDAT-GENESIS-II-0001',
+    'la session mène à une vérification de mandat et au refus CAP-CORE-004',
+);
+
+$avant = (int) (new \PDO('sqlite:' . $fichiers['identites']))
+    ->query('SELECT count(*) FROM identite_inscrite')
+    ->fetchColumn();
+$inscription = $requete('POST', '/api/v1/identites', [
+    'canal' => 'AUTORITE',
+    'type' => 'personne',
+    'libelle' => 'Identité qui ne doit pas être écrite',
+    'classification' => 'INTERNE',
+], $jeton);
+$apres = (int) (new \PDO('sqlite:' . $fichiers['identites']))
+    ->query('SELECT count(*) FROM identite_inscrite')
+    ->fetchColumn();
+$verifier(
+    $inscription['statut'] === 403
+        && ($inscription['corps']['erreur'] ?? null) === 'AUTORISATION_REFUSEE'
+        && $avant === $apres,
+    'le refus par défaut bloque physiquement l’inscription',
+);
+
+$integrite = (new Journal(JournalMagasin::ouvrir()))->verifierIntegrite();
+$verifier(
+    $integrite['valide'] === true && $integrite['evenements'] >= 5,
+    'authentifications, décision et refus forment une chaîne d’audit valide',
+);
+$ready = $requete('GET', '/api/v1/health/ready');
+$readyOk = $ready['statut'] === 200
+    && ($ready['corps']['pret'] ?? false) === true
+    && count($ready['corps']['cibles'] ?? []) === 4;
+if (!$readyOk) {
+    fwrite(STDERR, json_encode($ready, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
+}
+$verifier(
+    $readyOk,
+    'la readiness vérifie les quatre magasins et leurs migrations',
+);
+
+echo "\n";
+if ($echecs === 0) {
+    echo "Intégration HTTP : ÉTABLIE.\n";
+    exit(0);
+}
+
+echo "Intégration HTTP : NON ÉTABLIE ({$echecs} écart(s)).\n";
+exit(1);

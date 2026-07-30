@@ -24,8 +24,17 @@ namespace Gamad\RegistreAcces;
  */
 final class Magasin
 {
+    public const VERSION = 2;
+
     public static function creer(\PDO $pdo): void
     {
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS migration_registre_acces (
+                version INTEGER PRIMARY KEY,
+                appliquee_le TEXT NOT NULL
+            )
+        SQL);
+
         $driver = (string) $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
         $id = $driver === 'pgsql'
             ? 'bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY'
@@ -53,6 +62,7 @@ final class Magasin
             CREATE TABLE IF NOT EXISTS session_ouverte (
                 id                   {$id},
                 reference            TEXT NOT NULL UNIQUE,
+                jeton_empreinte      TEXT,
                 authentificateur_ref TEXT NOT NULL REFERENCES authentificateur(reference),
                 entite_reference     TEXT NOT NULL,
                 niveau_assurance     TEXT NOT NULL,
@@ -61,6 +71,39 @@ final class Magasin
                 revoquee_le          TEXT
             )
         SQL);
+
+        if (!self::colonnePresente($pdo, 'session_ouverte', 'jeton_empreinte')) {
+            $pdo->exec('ALTER TABLE session_ouverte ADD COLUMN jeton_empreinte TEXT');
+        }
+
+        // Migration des anciennes sessions : la valeur bearer n'est plus
+        // conservée en clair, sans invalider les sessions encore actives.
+        $lire = $pdo->query(
+            'SELECT id, reference FROM session_ouverte WHERE jeton_empreinte IS NULL'
+        );
+        $migrer = $pdo->prepare(
+            'UPDATE session_ouverte SET reference = ?, jeton_empreinte = ? WHERE id = ?'
+        );
+        foreach ($lire->fetchAll() as $session) {
+            $empreinte = hash('sha256', (string) $session['reference']);
+            $migrer->execute([
+                'SINT-MIG-' . strtoupper(substr($empreinte, 0, 24)),
+                $empreinte,
+                $session['id'],
+            ]);
+        }
+        $pdo->exec(
+            'CREATE UNIQUE INDEX IF NOT EXISTS session_ouverte_jeton_empreinte
+             ON session_ouverte(jeton_empreinte)'
+        );
+
+        $st = $pdo->prepare(
+            'INSERT INTO migration_registre_acces(version,appliquee_le)
+             SELECT ?, ? WHERE NOT EXISTS (
+                 SELECT 1 FROM migration_registre_acces WHERE version = ?
+             )'
+        );
+        $st->execute([self::VERSION, gmdate('c'), self::VERSION]);
     }
 
     /**
@@ -70,7 +113,18 @@ final class Magasin
      */
     public static function connecter(?string $chemin = null): \PDO
     {
-        $url = getenv('MAGASIN_URL');
+        $pdo = self::ouvrir($chemin);
+        self::creer($pdo);
+
+        return $pdo;
+    }
+
+    /**
+     * Ouvre le magasin sans modifier son schéma, notamment pour la readiness.
+     */
+    public static function ouvrir(?string $chemin = null): \PDO
+    {
+        $url = self::environnement('MAGASIN_URL');
         if (is_string($url) && $url !== '') {
             $p = parse_url($url);
             if ($p === false || !isset($p['host'])) {
@@ -82,15 +136,40 @@ final class Magasin
                 isset($p['pass']) ? urldecode($p['pass']) : null,
             );
         } else {
-            $chemin ??= getenv('MAGASIN_PATH') ?: dirname(__DIR__) . '/var/magasin.sqlite';
+            $chemin ??= self::environnement('MAGASIN_PATH')
+                ?: dirname(__DIR__) . '/var/magasin.sqlite';
             @mkdir(dirname($chemin), 0777, true);
             $pdo = new \PDO('sqlite:' . $chemin);
         }
 
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-        self::creer($pdo);
 
         return $pdo;
+    }
+
+    private static function colonnePresente(\PDO $pdo, string $table, string $colonne): bool
+    {
+        try {
+            $pdo->query("SELECT {$colonne} FROM {$table} LIMIT 0");
+
+            return true;
+        } catch (\PDOException) {
+            return false;
+        }
+    }
+
+    /**
+     * Comprend aussi les variables chargées par Laravel via phpdotenv.
+     */
+    private static function environnement(string $nom): ?string
+    {
+        foreach ([$_ENV[$nom] ?? null, $_SERVER[$nom] ?? null, getenv($nom)] as $valeur) {
+            if (is_string($valeur)) {
+                return $valeur;
+            }
+        }
+
+        return null;
     }
 }
