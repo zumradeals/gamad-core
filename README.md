@@ -1,20 +1,31 @@
-# GAMAD Core — Genesis II
+# GAMAD Core
 
-Cette branche `main` est la branche canonique de la refondation générationnelle de GAMAD Core.
+GAMAD Core est le socle commun de l’écosystème numérique GAMAD.
 
-Elle contient uniquement :
+Il fournit les fonctions transversales qui ne doivent pas être recréées séparément dans chaque produit : identité canonique, authentification, autorisations, organisations, contrats, produits, événements, audit, sécurité, continuité, Matching et fédération des satellites.
 
-- les textes Genesis II adoptés ;
-- leurs statuts canoniques ;
-- les registres d’adoption ;
-- les manifestes d’archives nécessaires à la traçabilité.
+Le dépôt contient :
 
-L’ancien code, les migrations, la console, les tests et la documentation de Genesis I sont préservés dans :
+- `apps/` : applications et interfaces du Core ;
+- `core/` : modules techniques des capacités ;
+- `docs/` : description fonctionnelle et technique active ;
+- `outils/` et les répertoires d’exploitation : scripts, sauvegarde, restauration, déploiement et contrôles ;
+- `CLAUDE.md` : méthode de travail dans le dépôt.
 
-- `archive/genesis-i-2026-07-24` ;
-- `cursor` ;
-- le commit `45144dfc12edf885a77e833fd1f6443b7116b967`.
+## Documentation active
 
-## Commencer la lecture
+Commencer par :
 
-Consulter `genesis-ii/README.md`.
+1. `docs/00-vision-gamad-core.md`
+2. `docs/01-architecture-core-et-satellites.md`
+3. `docs/02-compte-gamad-federation-et-portail.md`
+4. `docs/03-moteur-de-matching-gamad.md`
+5. `docs/capacites/README.md`
+
+Les anciens textes Genesis II, actes, lois, adoptions et registres normatifs ont été retirés de la version active. Ils restent consultables dans l’historique Git.
+
+## Règle de vérité
+
+Un fichier Markdown décrit une capacité ; il ne prouve pas qu’elle fonctionne.
+
+L’état réel est établi par le code, les migrations, les tests reproductibles, l’exploitation, la sauvegarde, la restauration et les observations de production.
