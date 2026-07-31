@@ -7,15 +7,15 @@ namespace Gamad\RegistreNormes;
 /**
  * Reconstruit l'index technique à partir d'une photographie versionnée.
  *
- * Cette source est transitoire : elle remplace la lecture directe du corpus
- * Markdown pour les consommateurs déjà migrés, sans prétendre être le modèle
- * final des capacités GAMAD Core.
+ * C'est la seule source d'initialisation contrôlée de l'index : elle ne lit
+ * aucun fichier documentaire et ne dépend d'aucun corpus. Son contenu est
+ * protégé par une empreinte SHA-256 vérifiée avant toute écriture.
  */
 final class BaselineOperationnelle
 {
     private const FORMAT = 'gamad-core-index-baseline';
     private const VERSION = 1;
-    private const EMPREINTE_SHA256 = 'f08f5b728942e38b00af3523d664f8589a134cfa9370fbd461ea232b01414b57';
+    private const EMPREINTE_SHA256 = '5eaab46d389876422fe5caf27229aa8f730e373236157921c28c543800add56e';
 
     /**
      * Ordre d'insertion respectant les dépendances relationnelles du schéma.
@@ -112,6 +112,83 @@ final class BaselineOperationnelle
 
             throw $e;
         }
+    }
+
+    /**
+     * Diagnostic opérationnel de l'index : la source d'initialisation est-elle
+     * intègre, et l'index en base correspond-il encore à ce qu'elle porte ?
+     *
+     * Aucune écriture, aucune exception : un diagnostic doit rendre compte
+     * d'une panne, non s'y ajouter. Ce que le service ne peut pas constater
+     * est déclaré, jamais présumé conforme.
+     *
+     * @return array{baseline:array<string,mixed>,index:array<string,mixed>,
+     *               divergences:list<string>,coherent:bool}
+     */
+    public function diagnostiquer(\PDO $pdo): array
+    {
+        $divergences = [];
+
+        $presente = is_file($this->chemin);
+        $brut = $presente ? file_get_contents($this->chemin) : false;
+        $empreinteReelle = is_string($brut) ? hash('sha256', $brut) : null;
+        $baselineIntegre = $empreinteReelle !== null
+            && hash_equals(self::EMPREINTE_SHA256, $empreinteReelle);
+
+        if (! $presente) {
+            $divergences[] = 'source d’initialisation absente : '.$this->chemin;
+        } elseif (! $baselineIntegre) {
+            $divergences[] = 'empreinte de la source d’initialisation non concordante';
+        }
+
+        $attendus = null;
+        if ($baselineIntegre) {
+            try {
+                /** @var array<string,int> $attendus */
+                $attendus = $this->charger()['compteurs'];
+            } catch (\Throwable $e) {
+                $divergences[] = 'source d’initialisation illisible : '.$e->getMessage();
+            }
+        }
+
+        $obtenus = null;
+        try {
+            $obtenus = $this->compteurs($pdo);
+        } catch (\Throwable $e) {
+            $divergences[] = 'index illisible : '.$e::class;
+        }
+
+        if (is_array($attendus) && is_array($obtenus)) {
+            foreach ($attendus as $cle => $attendu) {
+                $obtenu = $obtenus[$cle] ?? null;
+                if ($obtenu !== $attendu) {
+                    $divergences[] = sprintf(
+                        '%s : attendu %d, présent %s',
+                        $cle,
+                        $attendu,
+                        $obtenu === null ? '(illisible)' : (string) $obtenu,
+                    );
+                }
+            }
+        }
+
+        return [
+            'baseline' => [
+                'chemin' => $this->chemin,
+                'version' => self::VERSION,
+                'presente' => $presente,
+                'empreinte_attendue' => self::EMPREINTE_SHA256,
+                'empreinte_reelle' => $empreinteReelle,
+                'concorde' => $baselineIntegre,
+            ],
+            'index' => [
+                'lisible' => $obtenus !== null,
+                'attendus' => $attendus,
+                'obtenus' => $obtenus,
+            ],
+            'divergences' => array_values($divergences),
+            'coherent' => $divergences === [],
+        ];
     }
 
     /** @return array<string,mixed> */

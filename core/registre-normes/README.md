@@ -1,54 +1,49 @@
 # Registre des normes — service `CTR-04` (`CAP-CORE-007`)
 
-Premier module de code canonique de GAMAD Core, ouvert après le constat de `G0`
-(`ADOPTION-0025`) sur la conception adoptée `ADOPTION-0026`, la pile adoptée
-`ADOPTION-0027` et la conception d'implémentation adoptée `ADOPTION-0028`.
-
-Ce module expose le contrat `CTR-04` **en lecture et attestation seulement** :
-il ne modifie jamais le corpus. Les fichiers Git restent la source de vérité ;
-la base n'est qu'un **index dérivé**, reconstructible à volonté.
+Ce module expose le contrat `CTR-04` **en lecture seule** sur l'index technique
+du Core. Il ne lit aucun fichier documentaire : l'index est une base
+relationnelle, initialisée de façon contrôlée depuis une baseline versionnée et
+reconstructible à volonté.
 
 ## Ce qu'il fait
 
-- **Ingestion dérivée** — lit les actes d'adoption, l'index et les fichiers
-  canoniques du dépôt, et en construit un index relationnel. Sens unique
-  (fichiers → base), empreintes recalculées et non recopiées (`INV-1`),
-  idempotente (`INV-5`).
-- **`resoudre_norme`** — résout une norme et son statut, y compris à une date
-  passée (reconstruction temporelle, `INV-3`/`INV-6`).
-- **`verifier_integrite`** — recalcule l'empreinte réelle de chaque fichier et
-  la compare à l'empreinte déclarée par l'acte le plus récent.
-- **`resoudre_index`** — reconstruit l'ensemble des actes à partir des fichiers
-  primaires et le compare à l'index dérivé.
-- **Tableau de bord web** — vue en lecture seule (`public/index.php`).
+- **`BaselineOperationnelle`** — initialise ou réinitialise l'index depuis
+  `resources/index-baseline-v1.json`, dont l'empreinte SHA-256 est vérifiée
+  avant toute écriture. La reconstruction est transactionnelle et idempotente ;
+  une baseline altérée est refusée sans détruire l'index existant.
+- **`resoudreNorme`** — résout une norme et son statut, y compris à une date
+  passée (reconstruction temporelle).
+- **`resoudreSource`** — délègue à `CTR-15`, titulaire du contrat des sources.
+- **`resoudreCapacite`** — résout l'état d'une capacité, dimension par
+  dimension, à une date donnée.
+- **`diagnostiquerIndex`** — diagnostic opérationnel : intégrité de la baseline
+  et concordance des volumes réellement présents dans l'index.
 
-## Invariants portés (voir la conception d'implémentation, Titre II)
+## Ce qui est tenu par le code
 
-`INV-1` empreinte exacte · `INV-3` historique en ajout seul · `INV-4` adoption
-distincte de la publication · `INV-5` index dérivé, jamais autoritatif ·
-`INV-6` supersession traçable. L'ajout seul est tenu par le code (aucun
-`UPDATE`/`DELETE` sur `statut`, `adoption`, `relation_evolution`) et, en
-déploiement, durci par les privilèges PostgreSQL du rôle applicatif.
+Historique en ajout seul (aucun `UPDATE`/`DELETE` sur `statut`, `adoption`,
+`relation_evolution`), index reconstructible et jamais autoritatif sur les
+registres persistants, empreinte de la source d'initialisation vérifiée. En
+déploiement, l'ajout seul est en outre durci par les privilèges PostgreSQL du
+rôle applicatif.
 
 ## Exécuter en local
 
 Aucune dépendance, aucun secret. PHP 8.2+ avec `pdo_sqlite` suffit.
 
 ```bash
-# Preuve P3 de reconstruction temporelle (doit sortir 0)
+# Garde de reconstruction temporelle (doit sortir 0)
 php core/registre-normes/tests/temporel_p3.php
-
-# Tableau de bord (puis ouvrir http://127.0.0.1:8080)
-php -S 127.0.0.1:8080 -t core/registre-normes/public
 ```
 
-L'index SQLite se construit tout seul au premier accès, depuis le corpus.
+La console Laravel initialise l'index depuis la baseline au premier accès s'il
+est encore vide. La réindexation explicite passe par
+`php artisan registre:reindexer`.
 
 ## Déploiement actif — serveur local
 
-Le service actif n'est pas ce point d'entrée autonome. Nginx sert le monolithe
-Laravel dans `apps/console-laravel/public`, via PHP 8.3-FPM. Le monolithe appelle
-ce module pour reconstruire et lire l'index.
+Nginx sert le monolithe Laravel dans `apps/console-laravel/public`, via PHP
+8.3-FPM. Le monolithe appelle ce module pour initialiser et lire l'index.
 
 En exploitation, `DATABASE_URL` désigne la base PostgreSQL locale dédiée à
 l'index. **`DATABASE_URL` est un secret** : elle réside dans l'environnement
@@ -60,6 +55,5 @@ sont décrits dans `ops/core-foundation/README.md`.
 
 ## Ce que ce module n'est pas
 
-Il ne rend aucune capacité opérationnelle au sens fort, n'admet aucun produit,
-n'accepte aucun risque et ne constate pas `G0`. C'est un miroir consultable et
-vérifiable du Core, en lecture seule.
+Il n'est pas un magasin métier, ne porte aucun dossier de satellite et ne juge
+personne. C'est l'index technique commun du Core, en lecture seule.

@@ -4,55 +4,41 @@ declare(strict_types=1);
 
 namespace Gamad\RegistreSources;
 
-use Gamad\RegistreNormes\GitBlob;
-
 /**
  * Les trois opérations de lecture du contrat CTR-15 — Registre des sources
  * (CAP-CORE-006, conception adoptée par ADOPTION-0032, Titre III, Article 12).
  *
- * Lecture et attestation seulement : aucune écriture applicative du corpus
- * (INV-4). Les seules écritures passent par des actes d'adoption signés.
+ * Lecture seulement : le service interroge l'index technique et ne lit aucun
+ * fichier.
  *
- * Ce service porte quatre invariants propres à la capacité :
+ * Ce service porte trois invariants propres à la capacité :
  *
  *   INV-7  identité canonique — une source se désigne par sa référence, jamais
- *          par son chemin de fichier ; renommer un fichier ne renomme pas la
- *          source (menace M-6).
- *   INV-8  rang fondé, jamais inventé — le rang restitué est celui que le
- *          corpus établit. Tant qu'aucune autorité ne l'a qualifié, la valeur
- *          rendue est INDETERMINE : le service déclare son ignorance plutôt
- *          que de présumer un rang (Article 116 du registre des capacités).
- *   INV-9  authenticité distincte de l'adoption — qu'un acte adopte une source
- *          n'authentifie pas son contenu. Les deux valeurs sont rendues côte à
- *          côte et ne se contaminent jamais (menaces M-1, M-3).
+ *          par un chemin de fichier ; renommer un fichier ne renomme pas la
+ *          source.
+ *   INV-8  rang fondé, jamais inventé — tant qu'aucune autorité ne l'a
+ *          qualifié, la valeur rendue est INDETERMINE : le service déclare son
+ *          ignorance plutôt que de présumer un rang.
  *   INV-11 non-effacement de la provenance — la lignée est tenue en ajout
- *          seul ; aucune relation n'est jamais supprimée (menace M-2).
+ *          seul ; aucune relation n'est jamais supprimée.
  *
  * Ce service est le titulaire du contrat CTR-15. CTR-04 (CAP-CORE-007) lui
  * délègue la résolution des sources : le registre des normes dépend des
- * sources, et non l'inverse (Article 42 du registre des capacités).
+ * sources, et non l'inverse.
  */
 final class Ctr15
 {
-    /**
-     * La capacité souveraine que ce module sert (INV-41).
-     *
-     * Une famille de contrat peut servir deux capacités — `CTR-10` sert
-     * l'audit et l'intégrité. Le numéro de famille ne suffit donc pas à
-     * rattacher un module ; le module le déclare lui-même.
-     */
+    /** La capacité que ce module sert. */
     public const CAPACITE = 'CAP-CORE-006';
 
-    public function __construct(
-        private \PDO $pdo,
-        private string $corpus,
-    ) {
+    public function __construct(private \PDO $pdo)
+    {
     }
 
     /**
      * Résout une source reconnue : son identité, sa catégorie, son niveau
-     * d'authenticité et — si le corpus la connaît aussi comme norme versionnée
-     * — son rang, son statut et l'acte qui l'a adoptée.
+     * d'authenticité et — si elle est aussi connue comme norme versionnée —
+     * son rang, son statut et l'acte qui l'a adoptée.
      *
      * Sans date : l'état courant. Avec une date : l'état à cette date.
      *
@@ -85,67 +71,6 @@ final class Ctr15
             'statut'             => $version['statut'] ?? null,
             'adoption_reference' => $version['adoption_reference'] ?? null,
             'versionnee'         => $version !== null,
-        ];
-    }
-
-    /**
-     * Vérifie l'authenticité matérielle d'une source : recalcule l'empreinte du
-     * fichier porteur et la compare à celle que le corpus déclare (INV-1).
-     *
-     * L'empreinte réelle n'est jamais recopiée depuis l'index : elle est
-     * recalculée à partir du fichier, faute de quoi la vérification ne
-     * vérifierait rien.
-     *
-     * `verifiable` est faux pour une source que le corpus ne porte pas en
-     * fichier — statuts sur papier, silsila, archive externe. Dans ce cas
-     * `concorde` vaut `null` et non `false` : rien n'a été comparé, et déclarer
-     * une discordance non constatée serait un mensonge symétrique du silence
-     * (INV-9).
-     *
-     * @return array<string,mixed>|null `null` si la source est inconnue
-     */
-    public function verifierAuthenticite(string $reference): ?array
-    {
-        $st = $this->pdo->prepare('SELECT reference, authenticite FROM source WHERE reference = ?');
-        $st->execute([$reference]);
-        $source = $st->fetch();
-        if ($source === false) {
-            return null;
-        }
-
-        $sv = $this->pdo->prepare(
-            'SELECT chemin, empreinte_git FROM version_norme
-             WHERE norme_reference = ? ORDER BY version DESC LIMIT 1'
-        );
-        $sv->execute([$reference]);
-        $version = $sv->fetch();
-
-        if ($version === false) {
-            return [
-                'reference'          => $source['reference'],
-                'authenticite'       => $source['authenticite'],
-                'chemin'             => null,
-                'empreinte_declaree' => null,
-                'empreinte_reelle'   => null,
-                'concorde'           => null,
-                'verifiable'         => false,
-                'motif'              => 'Source non portée en fichier par le corpus : aucune empreinte à comparer.',
-            ];
-        }
-
-        $fichier = $this->corpus . '/' . $version['chemin'];
-        $present = is_file($fichier);
-        $reelle  = $present ? GitBlob::hashFile($fichier) : null;
-
-        return [
-            'reference'          => $source['reference'],
-            'authenticite'       => $source['authenticite'],
-            'chemin'             => $version['chemin'],
-            'empreinte_declaree' => $version['empreinte_git'],
-            'empreinte_reelle'   => $reelle,
-            'concorde'           => $present ? $reelle === $version['empreinte_git'] : false,
-            'verifiable'         => true,
-            'motif'              => $present ? null : 'Fichier déclaré absent du dépôt.',
         ];
     }
 
@@ -196,15 +121,15 @@ final class Ctr15
      * versionnée, et le statut en vigueur à la date demandée.
      *
      * Requête propre au registre des sources, et non un appel à CTR-04 : la
-     * dépendance va des normes vers les sources (Article 42 du registre des
-     * capacités). L'inverse ferait dépendre la racine de ce qu'elle fonde.
+     * dépendance va des normes vers les sources. L'inverse ferait dépendre la
+     * racine de ce qu'elle fonde.
      *
      * @return array<string,mixed>|null
      */
     private function versionEtStatut(string $reference, ?string $date): ?array
     {
         $sv = $this->pdo->prepare(
-            'SELECT v.id, v.version, v.empreinte_git, v.chemin, n.rang_code
+            'SELECT v.id, v.version, n.rang_code
              FROM version_norme v JOIN norme n ON n.reference = v.norme_reference
              WHERE v.norme_reference = ? ORDER BY v.version DESC LIMIT 1'
         );
@@ -232,8 +157,6 @@ final class Ctr15
 
         return [
             'version'            => $version['version'],
-            'empreinte_git'      => $version['empreinte_git'],
-            'chemin'             => $version['chemin'],
             'rang'               => $version['rang_code'],
             'statut'             => $statut['valeur'] ?? null,
             'date_effet'         => $statut['date_effet'] ?? null,

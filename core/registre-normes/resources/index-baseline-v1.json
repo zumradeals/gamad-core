@@ -2,15 +2,15 @@
     "format": "gamad-core-index-baseline",
     "version": 1,
     "source": {
-        "type": "migration-legacy-genesis-ii",
+        "type": "photographie-technique-index",
         "commit": "3e0203c1e5e980373bccd086e19c633c612bebb1",
-        "note": "Photographie technique transitoire de l’index avant découplage de la commande registre:reindexer."
+        "note": "Photographie technique de l’index opérationnel. Le corpus documentaire historique a été retiré du dépôt ; cette source ne référence plus aucun fichier Markdown et sert uniquement à initialiser un index vide."
     },
     "compteurs": {
         "adoptions": 66,
-        "normes": 98,
-        "versions": 98,
-        "statuts": 98,
+        "normes": 95,
+        "versions": 95,
+        "statuts": 95,
         "etats": 40,
         "rangs": 9,
         "sources": 26,
@@ -18,7 +18,7 @@
         "entites": 7,
         "regles": 14,
         "mandats": 1,
-        "indetermines": 98
+        "indetermines": 95
     },
     "tables": {
         "adoption": {
@@ -509,43 +509,43 @@
                     "reference": "AGENT-IA-001",
                     "type": "agent",
                     "libelle": "ChatGPT",
-                    "source": "genesis-ii/registres/ia/REGISTRE-INITIAL-USAGES-IA-0001.md"
+                    "source": "REGISTRE-INITIAL-USAGES-IA-0001"
                 },
                 {
                     "reference": "AGENT-IA-002",
                     "type": "agent",
                     "libelle": "Claude",
-                    "source": "genesis-ii/registres/ia/REGISTRE-INITIAL-USAGES-IA-0001.md"
+                    "source": "REGISTRE-INITIAL-USAGES-IA-0001"
                 },
                 {
                     "reference": "AUT-GAMAD-001",
                     "type": "personne",
                     "libelle": "Koné Djakaridja, dit Zakaria le Soufi",
-                    "source": "genesis-ii/registres/autorites/REGISTRE-INITIAL-AUTORITES-MANDATS-0001.md"
+                    "source": "REGISTRE-INITIAL-AUTORITES-MANDATS-0001"
                 },
                 {
                     "reference": "PRD-GAMAD-001",
                     "type": "produit",
                     "libelle": "GAMAD ID",
-                    "source": "genesis-ii/registres/produits/REGISTRE-INITIAL-PRODUITS-0001.md"
+                    "source": "REGISTRE-INITIAL-PRODUITS-0001"
                 },
                 {
                     "reference": "PRD-GAMAD-002",
                     "type": "produit",
                     "libelle": "GAMAD Drive",
-                    "source": "genesis-ii/registres/produits/REGISTRE-INITIAL-PRODUITS-0001.md"
+                    "source": "REGISTRE-INITIAL-PRODUITS-0001"
                 },
                 {
                     "reference": "PRD-GAMAD-003",
                     "type": "produit",
                     "libelle": "Wasplex",
-                    "source": "genesis-ii/registres/produits/REGISTRE-INITIAL-PRODUITS-0001.md"
+                    "source": "REGISTRE-INITIAL-PRODUITS-0001"
                 },
                 {
                     "reference": "PRD-GAMAD-004",
                     "type": "produit",
                     "libelle": "IKOMA",
-                    "source": "genesis-ii/registres/produits/REGISTRE-INITIAL-PRODUITS-0001.md"
+                    "source": "REGISTRE-INITIAL-PRODUITS-0001"
                 }
             ]
         },
@@ -1364,12 +1364,6 @@
                     "domaine": "registres/donnees"
                 },
                 {
-                    "reference": "CLAUDE",
-                    "titre": "CLAUDE.md",
-                    "rang_code": "INDETERMINE",
-                    "domaine": "genesis-ii"
-                },
-                {
                     "reference": "CONCEPTION-CAP-CORE-001-REGISTRE-DES-IDENTITES-0001",
                     "titre": "CONCEPTION-CAP-CORE-001-REGISTRE-DES-IDENTITES-0001.md",
                     "rang_code": "INDETERMINE",
@@ -1914,18 +1908,6 @@
                     "titre": "STATUT-CONSOLIDE-0020-0001.md",
                     "rang_code": "INDETERMINE",
                     "domaine": "registre"
-                },
-                {
-                    "reference": "integrite-documentaire.yml",
-                    "titre": "integrite-documentaire.yml",
-                    "rang_code": "INDETERMINE",
-                    "domaine": "workflows"
-                },
-                {
-                    "reference": "verifier-integrite.py",
-                    "titre": "verifier-integrite.py",
-                    "rang_code": "INDETERMINE",
-                    "domaine": "genesis-ii"
                 }
             ]
         },
@@ -2770,285 +2752,264 @@
                     "id": 58,
                     "version_norme_id": 58,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0033"
+                    "date_effet": "2026-07-27",
+                    "adoption_reference": "ADOPTION-0021"
                 },
                 {
                     "id": 59,
                     "version_norme_id": 59,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-27",
-                    "adoption_reference": "ADOPTION-0021"
+                    "date_effet": "2026-07-28",
+                    "adoption_reference": "ADOPTION-0041"
                 },
                 {
                     "id": 60,
                     "version_norme_id": 60,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-27",
-                    "adoption_reference": "ADOPTION-0021"
+                    "adoption_reference": "ADOPTION-0023"
                 },
                 {
                     "id": 61,
                     "version_norme_id": 61,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0041"
+                    "date_effet": "2026-07-27",
+                    "adoption_reference": "ADOPTION-0026"
                 },
                 {
                     "id": 62,
                     "version_norme_id": 62,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-27",
-                    "adoption_reference": "ADOPTION-0023"
+                    "date_effet": "2026-07-29",
+                    "adoption_reference": "ADOPTION-0064"
                 },
                 {
                     "id": 63,
                     "version_norme_id": 63,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-27",
-                    "adoption_reference": "ADOPTION-0026"
+                    "adoption_reference": "ADOPTION-0027"
                 },
                 {
                     "id": 64,
                     "version_norme_id": 64,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0064"
+                    "date_effet": "2026-07-27",
+                    "adoption_reference": "ADOPTION-0028"
                 },
                 {
                     "id": 65,
                     "version_norme_id": 65,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-27",
-                    "adoption_reference": "ADOPTION-0027"
+                    "date_effet": "2026-07-28",
+                    "adoption_reference": "ADOPTION-0032"
                 },
                 {
                     "id": 66,
                     "version_norme_id": 66,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-27",
-                    "adoption_reference": "ADOPTION-0028"
+                    "date_effet": "2026-07-30",
+                    "adoption_reference": "ADOPTION-0066"
                 },
                 {
                     "id": 67,
                     "version_norme_id": 67,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0032"
+                    "adoption_reference": "ADOPTION-0033"
                 },
                 {
                     "id": 68,
                     "version_norme_id": 68,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-30",
-                    "adoption_reference": "ADOPTION-0066"
+                    "date_effet": "2026-07-28",
+                    "adoption_reference": "ADOPTION-0035"
                 },
                 {
                     "id": 69,
                     "version_norme_id": 69,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0033"
+                    "adoption_reference": "ADOPTION-0038"
                 },
                 {
                     "id": 70,
                     "version_norme_id": 70,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0035"
+                    "adoption_reference": "ADOPTION-0039"
                 },
                 {
                     "id": 71,
                     "version_norme_id": 71,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0038"
+                    "adoption_reference": "ADOPTION-0040"
                 },
                 {
                     "id": 72,
                     "version_norme_id": 72,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0039"
+                    "adoption_reference": "ADOPTION-0043"
                 },
                 {
                     "id": 73,
                     "version_norme_id": 73,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0040"
+                    "adoption_reference": "ADOPTION-0044"
                 },
                 {
                     "id": 74,
                     "version_norme_id": 74,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0043"
+                    "date_effet": "2026-07-29",
+                    "adoption_reference": "ADOPTION-0064"
                 },
                 {
                     "id": 75,
                     "version_norme_id": 75,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0044"
+                    "adoption_reference": "ADOPTION-0047"
                 },
                 {
                     "id": 76,
                     "version_norme_id": 76,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0064"
+                    "adoption_reference": "ADOPTION-0051"
                 },
                 {
                     "id": 77,
                     "version_norme_id": 77,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-28",
-                    "adoption_reference": "ADOPTION-0047"
+                    "date_effet": "2026-07-29",
+                    "adoption_reference": "ADOPTION-0053"
                 },
                 {
                     "id": 78,
                     "version_norme_id": 78,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0051"
+                    "adoption_reference": "ADOPTION-0053"
                 },
                 {
                     "id": 79,
                     "version_norme_id": 79,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0053"
+                    "adoption_reference": "ADOPTION-0055"
                 },
                 {
                     "id": 80,
                     "version_norme_id": 80,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0053"
+                    "adoption_reference": "ADOPTION-0057"
                 },
                 {
                     "id": 81,
                     "version_norme_id": 81,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0055"
+                    "adoption_reference": "ADOPTION-0058"
                 },
                 {
                     "id": 82,
                     "version_norme_id": 82,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0057"
+                    "adoption_reference": "ADOPTION-0065"
                 },
                 {
                     "id": 83,
                     "version_norme_id": 83,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0058"
+                    "date_effet": "2026-07-30",
+                    "adoption_reference": "ADOPTION-0066"
                 },
                 {
                     "id": 84,
                     "version_norme_id": 84,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0065"
+                    "date_effet": "2026-07-25",
+                    "adoption_reference": "ADOPTION-0010"
                 },
                 {
                     "id": 85,
                     "version_norme_id": 85,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-29",
-                    "adoption_reference": "ADOPTION-0065"
+                    "date_effet": "2026-07-25",
+                    "adoption_reference": "ADOPTION-0011"
                 },
                 {
                     "id": 86,
                     "version_norme_id": 86,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-30",
-                    "adoption_reference": "ADOPTION-0066"
+                    "date_effet": "2026-07-25",
+                    "adoption_reference": "ADOPTION-0009"
                 },
                 {
                     "id": 87,
                     "version_norme_id": 87,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-25",
-                    "adoption_reference": "ADOPTION-0010"
+                    "adoption_reference": "ADOPTION-0008"
                 },
                 {
                     "id": 88,
                     "version_norme_id": 88,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-25",
-                    "adoption_reference": "ADOPTION-0011"
+                    "date_effet": "2026-07-24",
+                    "adoption_reference": "ADOPTION-0006"
                 },
                 {
                     "id": 89,
                     "version_norme_id": 89,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-25",
-                    "adoption_reference": "ADOPTION-0009"
+                    "date_effet": "2026-07-24",
+                    "adoption_reference": "ADOPTION-0003"
                 },
                 {
                     "id": 90,
                     "version_norme_id": 90,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-25",
-                    "adoption_reference": "ADOPTION-0008"
+                    "date_effet": "2026-07-24",
+                    "adoption_reference": "ADOPTION-0004"
                 },
                 {
                     "id": 91,
                     "version_norme_id": 91,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-24",
-                    "adoption_reference": "ADOPTION-0006"
+                    "adoption_reference": "ADOPTION-0005"
                 },
                 {
                     "id": 92,
                     "version_norme_id": 92,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-24",
-                    "adoption_reference": "ADOPTION-0003"
+                    "adoption_reference": "ADOPTION-0007"
                 },
                 {
                     "id": 93,
                     "version_norme_id": 93,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-24",
-                    "adoption_reference": "ADOPTION-0004"
+                    "date_effet": "2026-07-25",
+                    "adoption_reference": "ADOPTION-0012"
                 },
                 {
                     "id": 94,
                     "version_norme_id": 94,
                     "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-24",
-                    "adoption_reference": "ADOPTION-0005"
-                },
-                {
-                    "id": 95,
-                    "version_norme_id": 95,
-                    "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-24",
-                    "adoption_reference": "ADOPTION-0007"
-                },
-                {
-                    "id": 96,
-                    "version_norme_id": 96,
-                    "valeur": "EN VIGUEUR",
-                    "date_effet": "2026-07-25",
-                    "adoption_reference": "ADOPTION-0012"
-                },
-                {
-                    "id": 97,
-                    "version_norme_id": 97,
-                    "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-26",
                     "adoption_reference": "ADOPTION-0013"
                 },
                 {
-                    "id": 98,
-                    "version_norme_id": 98,
+                    "id": 95,
+                    "version_norme_id": 95,
                     "valeur": "EN VIGUEUR",
                     "date_effet": "2026-07-24",
                     "adoption_reference": "ADOPTION-0002"
@@ -3073,696 +3034,483 @@
             "colonnes": [
                 "id",
                 "norme_reference",
-                "version",
-                "empreinte_git",
-                "chemin"
+                "version"
             ],
             "lignes": [
                 {
                     "id": 1,
                     "norme_reference": "MATRICE-INITIALE-LOI-PREUVE-0001-matrice-loi-domaine-responsable-controle-preuve",
-                    "version": "0.1",
-                    "empreinte_git": "5d5550f9fda74a2db4d851b262650198647afb02",
-                    "chemin": "genesis-ii/matrices/MATRICE-INITIALE-LOI-PREUVE-0001-matrice-loi-domaine-responsable-controle-preuve.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 2,
                     "norme_reference": "REGISTRE-LEXICAL-INITIAL-0001",
-                    "version": "0.1",
-                    "empreinte_git": "636b636a0c6ec665842c65c075d95e92bddd939d",
-                    "chemin": "genesis-ii/registres/lexique/REGISTRE-LEXICAL-INITIAL-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 3,
                     "norme_reference": "REGISTRE-DES-ADOPTIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "d035a4108e25788dcb7cf02afa902d6c68ed5366",
-                    "chemin": "genesis-ii/registres/sources/REGISTRE-DES-ADOPTIONS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 4,
                     "norme_reference": "REGISTRE-INITIAL-AMENDEMENTS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "4c9589824c6f3739201f0fea1bf8bbd5e7e71819",
-                    "chemin": "genesis-ii/registres/sources/REGISTRE-INITIAL-AMENDEMENTS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 5,
                     "norme_reference": "REGISTRE-INITIAL-ARCHIVES-EMPREINTES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "75c8e60ad167cc19e7843a6f9809206f8f7e1a21",
-                    "chemin": "genesis-ii/registres/sources/REGISTRE-INITIAL-ARCHIVES-EMPREINTES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 6,
                     "norme_reference": "REGISTRE-INITIAL-AUTHENTIFICATIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "86f8d007f4de6d540eb7ad280b8161126a9a35e1",
-                    "chemin": "genesis-ii/registres/sources/REGISTRE-INITIAL-AUTHENTIFICATIONS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 7,
                     "norme_reference": "REGISTRE-INITIAL-CONTESTATIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "36d137a35bd7d0954f551d04c935717e95a37f94",
-                    "chemin": "genesis-ii/registres/sources/REGISTRE-INITIAL-CONTESTATIONS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 8,
                     "norme_reference": "REGISTRE-INITIAL-SOURCES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "7bfd28fc3cb84b5643a0e5c10e059d9a22c72090",
-                    "chemin": "genesis-ii/registres/sources/REGISTRE-INITIAL-SOURCES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 9,
                     "norme_reference": "REGISTRE-INITIAL-TRADUCTIONS-CONSOLIDATIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "6605279ca3948c0fc012b33b81d4c7d06655a7f0",
-                    "chemin": "genesis-ii/registres/sources/REGISTRE-INITIAL-TRADUCTIONS-CONSOLIDATIONS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 10,
                     "norme_reference": "MODELES-INITIAUX-SECURITE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "61f0de017b2a589f9dd0a9b8671b153208a3e1f6",
-                    "chemin": "genesis-ii/modeles/securite/MODELES-INITIAUX-SECURITE-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 11,
                     "norme_reference": "REGISTRE-AGENTS-SENSIBLES-SECURITE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "43437f49d2cd60dc883bbbdf63762c796aaee7b2",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-AGENTS-SENSIBLES-SECURITE-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 12,
                     "norme_reference": "REGISTRE-CONTINUITE-EXERCICES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "de930f535563ce9ce3fe435d8eba8e8529873786",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-CONTINUITE-EXERCICES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 13,
                     "norme_reference": "REGISTRE-CRYPTOGRAPHIQUE-INITIAL-0001",
-                    "version": "0.1",
-                    "empreinte_git": "c46b8c72cb8c548177b972c393c8795fdb4e7960",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-CRYPTOGRAPHIQUE-INITIAL-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 14,
                     "norme_reference": "REGISTRE-INITIAL-ACCES-PRIVILEGIES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "0081c114cb47ec6e6a6fccefd68cd6bb590c10e3",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-INITIAL-ACCES-PRIVILEGIES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 15,
                     "norme_reference": "REGISTRE-INITIAL-ACTIFS-CRITIQUES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "07ab551073060c6b37c0feb65132736a20d780e4",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-INITIAL-ACTIFS-CRITIQUES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 16,
                     "norme_reference": "REGISTRE-INITIAL-EXCEPTIONS-SECURITE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "18844c6c0d89dd4fbd2f096d5c14be901e978214",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-INITIAL-EXCEPTIONS-SECURITE-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 17,
                     "norme_reference": "REGISTRE-INITIAL-INCIDENTS-SECURITE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "61c2544214d0d542c33bf27d026befd92cf73927",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-INITIAL-INCIDENTS-SECURITE-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 18,
                     "norme_reference": "REGISTRE-INITIAL-RISQUES-CONTROLES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "22e52b0fb3ebe457052b828159a1c3797136d9c0",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-INITIAL-RISQUES-CONTROLES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 19,
                     "norme_reference": "REGISTRE-INITIAL-SAUVEGARDES-RESTAURATIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "7081d312833410b36e5bbb561c08183ff345d059",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-INITIAL-SAUVEGARDES-RESTAURATIONS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 20,
                     "norme_reference": "REGISTRE-INITIAL-TIERS-CRITIQUES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "5d549170968b3045d70b60b218fd57ffd5d2ecaa",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-INITIAL-TIERS-CRITIQUES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 21,
                     "norme_reference": "REGISTRE-INITIAL-VULNERABILITES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "a7d91897cf1d7df783dc53e539393f88f788f4a0",
-                    "chemin": "genesis-ii/registres/securite/REGISTRE-INITIAL-VULNERABILITES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 22,
                     "norme_reference": "MODELES-INITIAUX-DONNEES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "704ce93d10d1b117fb7b840d6cf4c8142d2e6d63",
-                    "chemin": "genesis-ii/modeles/donnees/MODELES-INITIAUX-DONNEES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 23,
                     "norme_reference": "CALENDRIER-CONSERVATION-ARCHIVAGE-SUPPRESSION-0001",
-                    "version": "0.1",
-                    "empreinte_git": "78faffc692567ab9e1369c7a7b024cac1fa9addf",
-                    "chemin": "genesis-ii/registres/donnees/CALENDRIER-CONSERVATION-ARCHIVAGE-SUPPRESSION-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 24,
                     "norme_reference": "CATALOGUE-INITIAL-JEUX-DE-DONNEES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "d5ea2a3245f8367f68908faf34ed0bd3324f3477",
-                    "chemin": "genesis-ii/registres/donnees/CATALOGUE-INITIAL-JEUX-DE-DONNEES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 25,
                     "norme_reference": "REGISTRE-ANALYSES-IMPACT-0001",
-                    "version": "0.1",
-                    "empreinte_git": "6d7625f763164287c616f1b4c6af51d73e317d68",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-ANALYSES-IMPACT-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 26,
                     "norme_reference": "REGISTRE-CLASSIFICATIONS-DONNEES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "26deb789a220b6bc2a15bfb0e5ae9c47c389cd2c",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-CLASSIFICATIONS-DONNEES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 27,
                     "norme_reference": "REGISTRE-DEMANDES-DROITS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "ad1b4204881520ea25cb11e58d0f41d4be1bbe90",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-DEMANDES-DROITS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 28,
                     "norme_reference": "REGISTRE-DOMAINES-RESPONSABILITES-DONNEES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "6276474697a82982cb3ba499bdc2ac270801eca3",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-DOMAINES-RESPONSABILITES-DONNEES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 29,
                     "norme_reference": "REGISTRE-EXCEPTIONS-RISQUES-DONNEES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "fcd691c2e97c6169956fcae77b4a737c375dfbc9",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-EXCEPTIONS-RISQUES-DONNEES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 30,
                     "norme_reference": "REGISTRE-FINALITES-TRAITEMENTS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "4709546ab89836aef788eb85102dc3888b52bc39",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-FINALITES-TRAITEMENTS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 31,
                     "norme_reference": "REGISTRE-FLUX-PARTAGES-TIERS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "b066a7288c81b5083a39e2dc89be484513d519de",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-FLUX-PARTAGES-TIERS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 32,
                     "norme_reference": "REGISTRE-INCIDENTS-DONNEES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "8f4e74b3b343aaa665274c2289dc61b83bcd6d9b",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-INCIDENTS-DONNEES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 33,
                     "norme_reference": "REGISTRE-QUALITE-CORRECTIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "8654bb9ba1b4f80dd647309835f40952e4c07f78",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-QUALITE-CORRECTIONS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 34,
                     "norme_reference": "REGISTRE-SOURCES-PROVENANCES-LIGNEES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "f9a32538848da370a0b7a4c35a22d522dc6f203a",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-SOURCES-PROVENANCES-LIGNEES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 35,
                     "norme_reference": "REGISTRE-USAGES-ANALYTIQUES-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "c65882794040615f778ca6fd547e55c039963567",
-                    "chemin": "genesis-ii/registres/donnees/REGISTRE-USAGES-ANALYTIQUES-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 36,
                     "norme_reference": "MODELES-INITIAUX-INGENIERIE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "700c74cc056038a1495377192ab88baceafddaa7",
-                    "chemin": "genesis-ii/modeles/ingenierie/MODELES-INITIAUX-INGENIERIE-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 37,
                     "norme_reference": "REGISTRE-DES-CONTRIBUTIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "493ef28a071602093c84803fab38103b9c690f91",
-                    "chemin": "genesis-ii/registres/ingenierie/REGISTRE-DES-CONTRIBUTIONS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 38,
                     "norme_reference": "REGISTRE-DES-DEPENDANCES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "377016b4b7a5c9ca1632d6da9dc73df7ecb17192",
-                    "chemin": "genesis-ii/registres/ingenierie/REGISTRE-DES-DEPENDANCES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 39,
                     "norme_reference": "REGISTRE-DES-DEPLOIEMENTS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "035135a2717e4238af3753e6fd217443b3bb370e",
-                    "chemin": "genesis-ii/registres/ingenierie/REGISTRE-DES-DEPLOIEMENTS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 40,
                     "norme_reference": "REGISTRE-DES-DEPOTS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "b29c47aa070b2e00b5bf35f48152627675296866",
-                    "chemin": "genesis-ii/registres/ingenierie/REGISTRE-DES-DEPOTS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 41,
                     "norme_reference": "REGISTRE-DES-MIGRATIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "0196f57bf287f0a6b439531b05a4f93091a722a7",
-                    "chemin": "genesis-ii/registres/ingenierie/REGISTRE-DES-MIGRATIONS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 42,
                     "norme_reference": "REGISTRE-EXCEPTIONS-INGENIERIE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "3de42a849bbcc6f38bb42bac49b738a7ec235c05",
-                    "chemin": "genesis-ii/registres/ingenierie/REGISTRE-EXCEPTIONS-INGENIERIE-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 43,
                     "norme_reference": "REGISTRE-VERSIONS-RELEASES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "f712806c50dba2f4c39e0280d2bb8872b4875f1a",
-                    "chemin": "genesis-ii/registres/ingenierie/REGISTRE-VERSIONS-RELEASES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 44,
                     "norme_reference": "MODELES-INITIAUX-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "3c084453491db7e33f99a6a2bf75334c208b68d3",
-                    "chemin": "genesis-ii/modeles/ia/MODELES-INITIAUX-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 45,
                     "norme_reference": "REGISTRE-DECISIONS-ASSISTEES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "32ebfeb8a0ea8ba308ac921caf2eee75ccdf0712",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-DECISIONS-ASSISTEES-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 46,
                     "norme_reference": "REGISTRE-EVALUATIONS-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "10bc93dc045b3dea79b8794b1e1425900340cec4",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-EVALUATIONS-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 47,
                     "norme_reference": "REGISTRE-EXCEPTIONS-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "3d71fb801b88242ade6f5bfe05752cacf60d6400",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-EXCEPTIONS-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 48,
                     "norme_reference": "REGISTRE-INCIDENTS-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "bce9b0b443a478ff6945bc4c142afc707a228fcd",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-INCIDENTS-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 49,
                     "norme_reference": "REGISTRE-MISSIONS-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "1d70730c9ed8742b538bb05b8e9642454eb9d8be",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-MISSIONS-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 50,
                     "norme_reference": "REGISTRE-MODELES-FOURNISSEURS-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "5a09ef912ca084af6dfbb8fe315a27f1b311f5e5",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-MODELES-FOURNISSEURS-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 51,
                     "norme_reference": "REGISTRE-PERMISSIONS-OUTILS-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "2eb007ac953a1e867bf6560d9fc1ec569ed47654",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-PERMISSIONS-OUTILS-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 52,
                     "norme_reference": "REGISTRE-REVOCATIONS-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "050c7983e67ed271bcf4e93dafccd4384a707b88",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-REVOCATIONS-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 53,
                     "norme_reference": "REGISTRE-USAGES-DEPLOIEMENTS-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "008fc646e1ea7c0a721f89c75e9cb8bc3cea0a83",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-USAGES-DEPLOIEMENTS-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 54,
                     "norme_reference": "REGISTRE-INITIAL-USAGES-IA-0001",
-                    "version": "0.1",
-                    "empreinte_git": "713d86d8c6942f4a683df22f5e19c36e99c47ca5",
-                    "chemin": "genesis-ii/registres/ia/REGISTRE-INITIAL-USAGES-IA-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 55,
                     "norme_reference": "MODELES-INITIAUX-PRODUITS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "a955fb1f43e980f637cdfda032ce12336ab3ea31",
-                    "chemin": "genesis-ii/modeles/produits/MODELES-INITIAUX-PRODUITS-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 56,
                     "norme_reference": "DOSSIER-AUDIT-G0-0001",
-                    "version": "0.1",
-                    "empreinte_git": "d918daacc9fb5cbdba2433aaf8980d46846d0212",
-                    "chemin": "genesis-ii/audit/DOSSIER-AUDIT-G0-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 57,
                     "norme_reference": "ACTE-DE-CONSTAT-G0-0001",
-                    "version": "0.1",
-                    "empreinte_git": "4e56819187a87431587d58ea41f49304bdc4d31b",
-                    "chemin": "genesis-ii/audit/ACTE-DE-CONSTAT-G0-0001.md"
+                    "version": "0.1"
                 },
                 {
                     "id": 58,
-                    "norme_reference": "verifier-integrite.py",
-                    "version": "0.1",
-                    "empreinte_git": "dfc06afb708ae4bf2ba7e0ef32450d7224823008",
-                    "chemin": "outils/verifier-integrite.py"
+                    "norme_reference": "STATUT-CONSOLIDE-0020-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 59,
-                    "norme_reference": "integrite-documentaire.yml",
-                    "version": "0.1",
-                    "empreinte_git": "2b828d8c4feaded5c68804cd20b541a694c184e9",
-                    "chemin": ".github/workflows/integrite-documentaire.yml"
+                    "norme_reference": "REGISTRE-INITIAL-AUTORITES-MANDATS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 60,
-                    "norme_reference": "STATUT-CONSOLIDE-0020-0001",
-                    "version": "0.1",
-                    "empreinte_git": "6bb6637d41bf5bbbba690e4c28cbbf7d3d5ef939",
-                    "chemin": "genesis-ii/registre/STATUT-CONSOLIDE-0020-0001.md"
+                    "norme_reference": "REGISTRE-INITIAL-PRODUITS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 61,
-                    "norme_reference": "REGISTRE-INITIAL-AUTORITES-MANDATS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "ef385122ed9c249c8b57ca38e0b73717e3420731",
-                    "chemin": "genesis-ii/registres/autorites/REGISTRE-INITIAL-AUTORITES-MANDATS-0001.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-007-REGISTRE-DES-NORMES-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 62,
-                    "norme_reference": "REGISTRE-INITIAL-PRODUITS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "61eb2762c84db20b9a1e1b21b4c6d52b9807e1b4",
-                    "chemin": "genesis-ii/registres/produits/REGISTRE-INITIAL-PRODUITS-0001.md"
+                    "norme_reference": "REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 63,
-                    "norme_reference": "CONCEPTION-CAP-CORE-007-REGISTRE-DES-NORMES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "2832324413bde694c8a47de003128f2c14857fa8",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-007-REGISTRE-DES-NORMES-0001.md"
+                    "norme_reference": "DECISION-TECHNOLOGIQUE-CAP-CORE-007-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 64,
-                    "norme_reference": "REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "8d832d7231ebd4e1086995cf5a3fcbb631b6b74a",
-                    "chemin": "genesis-ii/registres/capacites/REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001.md"
+                    "norme_reference": "CONCEPTION-IMPLEMENTATION-CTR-04-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 65,
-                    "norme_reference": "DECISION-TECHNOLOGIQUE-CAP-CORE-007-0001",
-                    "version": "0.1",
-                    "empreinte_git": "abef9ff4aa21a2d6461a4ad5d6b453b25789f68d",
-                    "chemin": "genesis-ii/conception/DECISION-TECHNOLOGIQUE-CAP-CORE-007-0001.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-006-REGISTRE-DES-SOURCES-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 66,
-                    "norme_reference": "CONCEPTION-IMPLEMENTATION-CTR-04-0001",
-                    "version": "0.1",
-                    "empreinte_git": "d395b4e7253ade4d42163e181568579368bd92be",
-                    "chemin": "genesis-ii/conception/CONCEPTION-IMPLEMENTATION-CTR-04-0001.md"
+                    "norme_reference": "REGISTRE-INITIAL-DECISIONS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 67,
-                    "norme_reference": "CONCEPTION-CAP-CORE-006-REGISTRE-DES-SOURCES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "e8ca07b4465adcab52bcdfc0b954c3a7c38f8359",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-006-REGISTRE-DES-SOURCES-0001.md"
+                    "norme_reference": "CONCEPTION-LIVRAISON-LARAVEL-CTR-04-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 68,
-                    "norme_reference": "REGISTRE-INITIAL-DECISIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "c0eaf9508bd577856e7a2f9102398049e0fd148c",
-                    "chemin": "genesis-ii/registres/decisions/REGISTRE-INITIAL-DECISIONS-0001.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-003-REGISTRE-DES-AUTORITES-MANDATS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 69,
-                    "norme_reference": "CONCEPTION-LIVRAISON-LARAVEL-CTR-04-0001",
-                    "version": "0.1",
-                    "empreinte_git": "dd1083f8ada2422f32d9e98fbbdd7ffd32628b30",
-                    "chemin": "genesis-ii/conception/CONCEPTION-LIVRAISON-LARAVEL-CTR-04-0001.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-001-REGISTRE-DES-IDENTITES-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 70,
-                    "norme_reference": "CONCEPTION-CAP-CORE-003-REGISTRE-DES-AUTORITES-MANDATS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "41032f7fb285a690e4b6767e0cb2faae92dc1129",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-003-REGISTRE-DES-AUTORITES-MANDATS-0001.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-005-AUTHENTIFICATION-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 71,
-                    "norme_reference": "CONCEPTION-CAP-CORE-001-REGISTRE-DES-IDENTITES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "c31816ceb713ae4ed37d9b8958aeb8f16f9323e8",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-001-REGISTRE-DES-IDENTITES-0001.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-004-AUTORISATION-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 72,
-                    "norme_reference": "CONCEPTION-CAP-CORE-005-AUTHENTIFICATION-0001",
-                    "version": "0.1",
-                    "empreinte_git": "55c6945079b7f7b1ee31f0c61b36c8c4f96dd752",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-005-AUTHENTIFICATION-0001.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-015-PREUVES-INTEGRITE-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 73,
-                    "norme_reference": "CONCEPTION-CAP-CORE-004-AUTORISATION-0001",
-                    "version": "0.1",
-                    "empreinte_git": "1cd4138cd58e91133c6fbeef27d23564e26f6577",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-004-AUTORISATION-0001.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-020-ANNUAIRE-CAPACITES-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 74,
-                    "norme_reference": "CONCEPTION-CAP-CORE-015-PREUVES-INTEGRITE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "85d0618fc2bbcfb91d788ca073eb47c713361bc6",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-015-PREUVES-INTEGRITE-0001.md"
+                    "norme_reference": "CORE-ATLAS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 75,
-                    "norme_reference": "CONCEPTION-CAP-CORE-020-ANNUAIRE-CAPACITES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "5981ee12e8e906e4de4133452786394fca5e1fab",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-020-ANNUAIRE-CAPACITES-0001.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-009-REGISTRE-DES-CONTRATS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 76,
-                    "norme_reference": "CORE-ATLAS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "80cee4ecd6647a224491f734ba95ae1690588c9a",
-                    "chemin": "genesis-ii/atlas/CORE-ATLAS-0001-atlas-initial-gamad-core.md"
+                    "norme_reference": "CONCEPTION-CAP-CORE-008-REGISTRE-DES-DECISIONS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 77,
-                    "norme_reference": "CONCEPTION-CAP-CORE-009-REGISTRE-DES-CONTRATS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "4416ac457e11c80111153e9d4e7172c43aa0520c",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-009-REGISTRE-DES-CONTRATS-0001.md"
+                    "norme_reference": "REGISTRE-INITIAL-ORGANISATIONS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 78,
-                    "norme_reference": "CONCEPTION-CAP-CORE-008-REGISTRE-DES-DECISIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "10fb943268ab918491ff7a9e799f0482a047d0af",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CAP-CORE-008-REGISTRE-DES-DECISIONS-0001.md"
+                    "norme_reference": "CONCEPTION-DOM-04-ORGANISATIONS-PRODUITS-REALMS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 79,
-                    "norme_reference": "REGISTRE-INITIAL-ORGANISATIONS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "357752d7084a71b58b47bec6f0c58f6132fe0a24",
-                    "chemin": "genesis-ii/registres/organisations/REGISTRE-INITIAL-ORGANISATIONS-0001.md"
+                    "norme_reference": "CONCEPTION-DOM-10-RISQUES-INCIDENTS-CONTINUITE-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 80,
-                    "norme_reference": "CONCEPTION-DOM-04-ORGANISATIONS-PRODUITS-REALMS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "92bff64aa6878a9bdec558f863222cd08fb2b3bf",
-                    "chemin": "genesis-ii/conception/CONCEPTION-DOM-04-ORGANISATIONS-PRODUITS-REALMS-0001.md"
+                    "norme_reference": "CONCEPTION-LOT-FINAL-LEXIQUE-AUDIT-EVENEMENTS-SECRETS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 81,
-                    "norme_reference": "CONCEPTION-DOM-10-RISQUES-INCIDENTS-CONTINUITE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "e5c89912e09610a965661a73c4b9b2abe2574d84",
-                    "chemin": "genesis-ii/conception/CONCEPTION-DOM-10-RISQUES-INCIDENTS-CONTINUITE-0001.md"
+                    "norme_reference": "CONCEPTION-CONTROLE-ADMISSION-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 82,
-                    "norme_reference": "CONCEPTION-LOT-FINAL-LEXIQUE-AUDIT-EVENEMENTS-SECRETS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "0329ce5b27d2b3494077f0c31d352b1bde5c7adf",
-                    "chemin": "genesis-ii/conception/CONCEPTION-LOT-FINAL-LEXIQUE-AUDIT-EVENEMENTS-SECRETS-0001.md"
+                    "norme_reference": "LOI-PRIMAUTE-EXECUTION-VETO-DIRIGEANT-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 83,
-                    "norme_reference": "CONCEPTION-CONTROLE-ADMISSION-0001",
-                    "version": "0.1",
-                    "empreinte_git": "5c6a03a489f1d332f51095d5acfca57ffd490961",
-                    "chemin": "genesis-ii/conception/CONCEPTION-CONTROLE-ADMISSION-0001.md"
+                    "norme_reference": "POLITIQUE-INSCRIPTION-IDENTITES-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 84,
-                    "norme_reference": "LOI-PRIMAUTE-EXECUTION-VETO-DIRIGEANT-0001",
-                    "version": "0.1",
-                    "empreinte_git": "5ebc475254079bfbd622ddfc847a47cc200ec51b",
-                    "chemin": "genesis-ii/lois/LOI-PRIMAUTE-EXECUTION-VETO-DIRIGEANT-0001.md"
+                    "norme_reference": "CORE-CHARTER-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 85,
-                    "norme_reference": "CLAUDE",
-                    "version": "0.1",
-                    "empreinte_git": "7eec973b36fa31faf40b2966f593020815d475bc",
-                    "chemin": "CLAUDE.md"
+                    "norme_reference": "PRODUCT-CONSTITUTION-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 86,
-                    "norme_reference": "POLITIQUE-INSCRIPTION-IDENTITES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "7232b18ebefd4318d981942b2713dc0c49e7176d",
-                    "chemin": "genesis-ii/politiques/POLITIQUE-INSCRIPTION-IDENTITES-0001.md"
+                    "norme_reference": "AI-GOVERNANCE-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 87,
-                    "norme_reference": "CORE-CHARTER-0001",
-                    "version": "0.1",
-                    "empreinte_git": "8236a2734646b0b568759e6316e0627c3cceb81f",
-                    "chemin": "genesis-ii/charte/CORE-CHARTER-0001-charte-gamad-core.md"
+                    "norme_reference": "DATA-GOVERNANCE-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 88,
-                    "norme_reference": "PRODUCT-CONSTITUTION-0001",
-                    "version": "0.1",
-                    "empreinte_git": "a57eae1cc4520854146d061b4382140879c1a204",
-                    "chemin": "genesis-ii/constitution/PRODUCT-CONSTITUTION-0001-constitution-produits.md"
+                    "norme_reference": "ENGINEERING-GOVERNANCE-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 89,
-                    "norme_reference": "AI-GOVERNANCE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "4c7dce37f71fda389d344f6534781a5064ec2ca6",
-                    "chemin": "genesis-ii/gouvernance/AI-GOVERNANCE-0001-gouvernance-agents-artificiels-missions-permissions-supervision-evaluation-revocation.md"
+                    "norme_reference": "GOVERNANCE-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 90,
-                    "norme_reference": "DATA-GOVERNANCE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "1071786f13c88ab2dad13442a3edccd9e18d7159",
-                    "chemin": "genesis-ii/gouvernance/DATA-GOVERNANCE-0001-gouvernance-donnees-finalites-responsabilites-classification-conservation-partage-droits.md"
+                    "norme_reference": "GOVERNANCE-0002",
+                    "version": "0.1"
                 },
                 {
                     "id": 91,
-                    "norme_reference": "ENGINEERING-GOVERNANCE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "ac472d5d033067ce0d1c86cdd8e914df40559887",
-                    "chemin": "genesis-ii/gouvernance/ENGINEERING-GOVERNANCE-0001-gouvernance-depot-versions-mises-production.md"
+                    "norme_reference": "GOVERNANCE-0003",
+                    "version": "0.1"
                 },
                 {
                     "id": 92,
-                    "norme_reference": "GOVERNANCE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "5197629d6f2949813e772e3c0c0504601e60f91e",
-                    "chemin": "genesis-ii/gouvernance/GOVERNANCE-0001-constitution-gouvernance-gamad-core.md"
+                    "norme_reference": "SECURITY-GOVERNANCE-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 93,
-                    "norme_reference": "GOVERNANCE-0002",
-                    "version": "0.1",
-                    "empreinte_git": "8ab1b28cc547a4fe72733a2ee5faea7e385ff557",
-                    "chemin": "genesis-ii/gouvernance/GOVERNANCE-0002-autorites-roles-nominations-delegations.md"
+                    "norme_reference": "LEXICON-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 94,
-                    "norme_reference": "GOVERNANCE-0003",
-                    "version": "0.1",
-                    "empreinte_git": "2aa3c459dfb097b3fb5b0926b3ec1bebfab57a95",
-                    "chemin": "genesis-ii/gouvernance/GOVERNANCE-0003-cycle-decisions-deliberations-validations-registres.md"
+                    "norme_reference": "CORE-LAWS-0001",
+                    "version": "0.1"
                 },
                 {
                     "id": 95,
-                    "norme_reference": "SECURITY-GOVERNANCE-0001",
-                    "version": "0.1",
-                    "empreinte_git": "23601e927437f5c100ca1f57ffd0c69c50efe09d",
-                    "chemin": "genesis-ii/gouvernance/SECURITY-GOVERNANCE-0001-gouvernance-acces-secrets-incidents-continuite.md"
-                },
-                {
-                    "id": 96,
-                    "norme_reference": "LEXICON-0001",
-                    "version": "0.1",
-                    "empreinte_git": "b3e83f2ccd6d117ed111b3d4eec6304d61e4a648",
-                    "chemin": "genesis-ii/lexique/LEXICON-0001-lexique-canonique-gamad-core.md"
-                },
-                {
-                    "id": 97,
-                    "norme_reference": "CORE-LAWS-0001",
-                    "version": "0.1",
-                    "empreinte_git": "2cd8a1106737f6605796320fa078c74d2bc9a320",
-                    "chemin": "genesis-ii/lois/CORE-LAWS-0001-premieres-lois-invariants-gamad-core.md"
-                },
-                {
-                    "id": 98,
                     "norme_reference": "SOURCES-0001",
-                    "version": "0.1",
-                    "empreinte_git": "e4bc8160c5e99fdbf52da30e554ddcde153fe216",
-                    "chemin": "genesis-ii/sources/SOURCES-0001-hierarchie-authenticite-autorite-sources-gamad.md"
+                    "version": "0.1"
                 }
             ]
         }

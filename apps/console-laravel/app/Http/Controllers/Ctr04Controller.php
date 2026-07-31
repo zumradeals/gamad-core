@@ -4,34 +4,41 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Support\CheminsOperationnels;
 use App\Support\EtatFondation;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAutorisation\Ctr03;
 use Gamad\RegistreAutorites\Ctr02;
 use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Ctr04;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Livraison HTTP du contrat CTR-04 — lecture et attestation seulement (INV-4).
+ * Livraison HTTP du contrat CTR-04 — lecture seulement.
  *
  * Ce contrôleur ne contient aucune logique de résolution propre : il traduit
- * la requête en appel à Gamad\RegistreNormes\Ctr04 (cœur adopté, ADOPTION-0028
- * et ADOPTION-0029, non modifié par la présente couche) et la réponse de la
- * méthode en HTTP. Aucune méthode d'écriture n'est déclarée ici ni routée.
+ * la requête en appel à Gamad\RegistreNormes\Ctr04 et la réponse de la méthode
+ * en HTTP. Aucune méthode d'écriture n'est déclarée ici ni routée.
  */
 final class Ctr04Controller
 {
     private function ctr04(): Ctr04
     {
+        return new Ctr04($this->index());
+    }
+
+    /**
+     * L'index technique, initialisé depuis la baseline opérationnelle s'il est
+     * encore vide. Aucune reconstruction n'est déclenchée sur un index peuplé :
+     * la réindexation est une opération explicite (`registre:reindexer`).
+     */
+    private function index(): \PDO
+    {
         $pdo = Db::connect();
-        $corpus = dirname(base_path(), 2);
 
         $vide = true;
         try {
@@ -40,46 +47,29 @@ final class Ctr04Controller
             $vide = true;
         }
         if ($vide) {
-            (new Ingestion($pdo, $corpus))->executer();
+            BaselineOperationnelle::standard()->reconstruire($pdo);
         }
 
-        return new Ctr04($pdo, $corpus);
+        return $pdo;
     }
 
     public function tableauDeBord(Request $request, EtatFondation $etatFondation): View
     {
-        $ctr04 = $this->ctr04();
-        $pdo = Db::connect();
+        $pdo = $this->index();
+        $ctr04 = new Ctr04($pdo);
         $acteur = (string) $request->attributes->get('gamad_entite');
-        $corpus = dirname(base_path(), 2);
 
-        $adoptions = $pdo->query(
-            'SELECT reference, autorite, date_adoption, signature_presente FROM adoption ORDER BY reference'
-        )->fetchAll();
-        $integrite = CheminsOperationnels::appliquer(
-            $ctr04->verifierIntegrite(),
-            $corpus,
-        );
-        $index = $ctr04->resoudreIndex();
+        $diagnostic = $ctr04->diagnostiquerIndex();
 
-        $indetermines = (int) $pdo->query(
-            "SELECT count(*) FROM norme WHERE rang_code = 'INDETERMINE'"
-        )->fetchColumn();
-
-        $concordants = array_filter($integrite, fn ($l) => $l['concorde']);
-        $divergents = array_filter($integrite, fn ($l) => ! $l['concorde']);
-
-        $p3 = [];
-        foreach ([['2026-07-26', 'EN CONCEPTION'], ['2026-07-27', 'CONÇUE'], ['2026-08-01', 'CONÇUE']] as [$d, $attendu]) {
-            $r = $ctr04->resoudreCapacite('CAP-CORE-007', 'conception', $d);
-            $p3[] = [
-                'date' => $d,
-                'attendu' => $attendu,
-                'obtenu' => $r['valeur'] ?? '(aucun)',
-                'ok' => ($r['valeur'] ?? null) === $attendu,
+        $capacites = [];
+        foreach (['CAP-CORE-001', 'CAP-CORE-003', 'CAP-CORE-004', 'CAP-CORE-005', 'CAP-CORE-007'] as $reference) {
+            $etat = $ctr04->resoudreCapacite($reference, 'conception');
+            $capacites[] = [
+                'reference' => $reference,
+                'valeur' => $etat['valeur'] ?? 'INDETERMINE',
+                'date_effet' => $etat['date_effet'] ?? null,
             ];
         }
-        $p3Ok = count(array_filter($p3, fn ($c) => $c['ok'])) === count($p3);
 
         $identites = (new Ctr01($pdo, IdentiteMagasin::connecter()))->resoudreInventaire();
         $parType = array_count_values(array_map(
@@ -99,8 +89,10 @@ final class Ctr04Controller
                 'SELECT reference,categorie,type_evenement,acteur,action,decision,cree_le
                  FROM evenement_operationnel ORDER BY sequence_id DESC LIMIT 8'
             )->fetchAll();
+            $journalDisponible = true;
         } catch (\Throwable) {
             $activite = [];
+            $journalDisponible = false;
         }
 
         $alertes = [];
@@ -111,11 +103,18 @@ final class Ctr04Controller
                 'detail' => 'Une dépendance ou une exigence de production ne répond pas.',
             ];
         }
-        if (count($divergents) > 0 || count($index['divergences']) > 0) {
+        if (! $journalDisponible) {
             $alertes[] = [
                 'niveau' => 'danger',
-                'titre' => 'Une divergence d’intégrité est détectée',
-                'detail' => 'Consultez les contrôles avant toute nouvelle opération sensible.',
+                'titre' => 'Le journal opérationnel est illisible',
+                'detail' => 'Les traces d’audit ne peuvent pas être consultées depuis la console.',
+            ];
+        }
+        if (! $diagnostic['coherent']) {
+            $alertes[] = [
+                'niveau' => 'danger',
+                'titre' => 'L’index technique diverge de sa source d’initialisation',
+                'detail' => implode(' · ', array_slice($diagnostic['divergences'], 0, 3)),
             ];
         }
         if ($decisionInscription['decision'] !== 'PERMIS') {
@@ -135,19 +134,15 @@ final class Ctr04Controller
 
         return view('tableau-de-bord', [
             'acteur' => $acteur,
-            'adoptions' => $adoptions,
-            'concordants' => $concordants,
-            'divergents' => $divergents,
-            'index' => $index,
-            'p3' => $p3,
-            'p3Ok' => $p3Ok,
-            'indetermines' => $indetermines,
+            'diagnostic' => $diagnostic,
+            'capacites' => $capacites,
             'identites' => $identites,
             'parType' => $parType,
             'mandat' => $mandat,
             'decisionInscription' => $decisionInscription,
             'fondation' => $fondation,
             'activite' => $activite,
+            'journalDisponible' => $journalDisponible,
             'alertes' => $alertes,
         ]);
     }
@@ -193,18 +188,14 @@ final class Ctr04Controller
         return response()->json($resultat);
     }
 
-    public function verifierIntegrite(?string $reference = null): JsonResponse
+    /**
+     * Diagnostic opérationnel de l'index : intégrité de la source
+     * d'initialisation et concordance des volumes présents.
+     */
+    public function diagnostiquerIndex(): JsonResponse
     {
-        $lignes = CheminsOperationnels::appliquer(
-            $this->ctr04()->verifierIntegrite($reference),
-            dirname(base_path(), 2),
-        );
+        $diagnostic = $this->ctr04()->diagnostiquerIndex();
 
-        return response()->json($lignes);
-    }
-
-    public function resoudreIndex(): JsonResponse
-    {
-        return response()->json($this->ctr04()->resoudreIndex());
+        return response()->json($diagnostic, $diagnostic['coherent'] ? 200 : 409);
     }
 }

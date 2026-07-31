@@ -36,8 +36,7 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::get('/interdits', [Ctr03Controller::class, 'interdits'])->name('ctr03.interdits');
     Route::get('/autorisation', [Ctr03Controller::class, 'autoriser'])->name('ctr03.autoriser');
     Route::get('/vacances', [Ctr02Controller::class, 'resoudreVacance'])->name('ctr02.resoudre-vacance');
-    Route::get('/integrite/{reference?}', [Ctr04Controller::class, 'verifierIntegrite'])->name('ctr04.verifier-integrite');
-    Route::get('/index', [Ctr04Controller::class, 'resoudreIndex'])->name('ctr04.resoudre-index');
+    Route::get('/index/diagnostic', [Ctr04Controller::class, 'diagnostiquerIndex'])->name('ctr04.diagnostiquer-index');
 });
 
 // Accès : la seule porte ouverte sans session (CAP-CORE-005).
