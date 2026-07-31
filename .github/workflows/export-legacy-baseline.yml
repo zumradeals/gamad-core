@@ -1,0 +1,66 @@
+name: Export technique de migration Genesis II
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exporter:
+    name: Exporter l’index technique de la base PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt et son historique
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_sqlite
+
+      - name: Reconstruire l’ancien index depuis la base de la PR
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_SHA:-}" ]; then
+            BASE_SHA="$(git rev-parse HEAD^)"
+          fi
+          git worktree add /tmp/gamad-core-base "$BASE_SHA"
+          export DATABASE_URL=
+          export SQLITE_PATH=/tmp/gamad-legacy.sqlite
+          php -r '
+            require "/tmp/gamad-core-base/core/registre-normes/bootstrap.php";
+            $pdo = Gamad\RegistreNormes\Db::connect();
+            (new Gamad\RegistreNormes\Ingestion($pdo, "/tmp/gamad-core-base"))->executer();
+            $tables = [
+              "rang_normatif", "source", "norme", "adoption", "version_norme",
+              "statut", "etat_capacite", "politique", "regle", "entite",
+              "etat_entite", "denomination", "titulaire", "fonction",
+              "etat_fonction", "mandat", "etat_mandat", "delegation",
+              "relation_evolution"
+            ];
+            $export = ["format" => 1, "generated_from" => getenv("BASE_SHA"), "tables" => []];
+            foreach ($tables as $table) {
+              $export["tables"][$table] = $pdo->query("SELECT * FROM {$table}")->fetchAll(PDO::FETCH_ASSOC);
+            }
+            file_put_contents(
+              "/tmp/gamad-operational-baseline.json",
+              json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            );
+          '
+
+      - name: Publier le socle de migration
+        uses: actions/upload-artifact@v4
+        with:
+          name: gamad-operational-baseline
+          path: /tmp/gamad-operational-baseline.json
+          retention-days: 3
