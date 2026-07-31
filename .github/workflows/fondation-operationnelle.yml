@@ -37,6 +37,9 @@ jobs:
       - name: Éprouver la réindexation par baseline
         run: php apps/console-laravel/tests/Integration/reindexation_baseline_p1.php
 
+      - name: Éprouver l'initialisation CTR-01 par baseline
+        run: php apps/console-laravel/tests/Integration/ctr01_baseline_p1.php
+
       - name: Vérifier le raccordement des variables Laravel
         run: php apps/console-laravel/tests/Integration/laravel_env_p0.php
 
