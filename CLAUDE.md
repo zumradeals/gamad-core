@@ -1,247 +1,108 @@
-# GAMAD Core — Genesis II · Contexte pour Claude Code
+# Instructions opérationnelles — GAMAD Core
 
-Document non normatif d’accueil destiné à tout agent humain ou artificiel travaillant sur ce dépôt.
+Ce fichier explique comment travailler dans le dépôt. Il ne gouverne pas GAMAD et ne remplace pas la documentation métier de `docs/`.
 
-La source normative supérieure de conduite du travail est :
+## 1. Avant de modifier le Core
 
-```text
-genesis-ii/lois/LOI-PRIMAUTE-EXECUTION-VETO-DIRIGEANT-0001.md
-```
+Pour toute mission :
 
-Son acte d’adoption est :
+1. lire `docs/00-vision-gamad-core.md` ;
+2. lire la fiche de la capacité concernée dans `docs/capacites/` ;
+3. lire, selon le besoin, les documents Fédération, Matching, sécurité ou exploitation ;
+4. inspecter le code, les migrations, les routes, les contrats et les tests existants ;
+5. définir le résultat observable de bout en bout ;
+6. distinguer ce qui est déjà opérationnel, partiel, hérité, démonstratif ou absent.
 
-```text
-genesis-ii/registre/ADOPTION-0065-LOI-PRIMAUTE-EXECUTION-VETO-DIRIGEANT-0001.md
-```
+Ne reconstruis pas une règle active à partir des anciens textes Genesis II présents dans l’historique Git. Les fichiers actifs de `docs/` décrivent la cible actuelle.
 
-La fusion de la branche qui porte ces textes dans `main` par l’autorité constitue leur adoption.
+## 2. Ne jamais inventer
 
----
+Ne jamais inventer silencieusement :
 
-# 0. RÈGLE SUPÉRIEURE — CODE D’ABORD
+- une capacité ;
+- un contrat ;
+- une permission ;
+- une donnée commune ;
+- une relation entre produits ;
+- une preuve ;
+- un état de production ;
+- un niveau d’assurance ;
+- une formule de Matching ;
+- une admission de satellite ;
+- une réussite de test ou de déploiement.
 
-Pour toute future implémentation :
+Lorsqu’une décision manque, signale-la clairement. Pour une décision secondaire et réversible, choisis l’option la plus simple et documente-la.
 
-```text
-L’ordre est-il clair ?
-        ↓
-Oui
-        ↓
-Exécuter
-        ↓
-Tester honnêtement
-        ↓
-Signaler les résultats réels
-        ↓
-Documenter ensuite
-```
+## 3. Respecter les frontières
 
-Le code et la gouvernance peuvent avancer en parallèle. En cas de conflit de calendrier, le code clairement ordonné avance.
+- le Core connaît l’identité commune, pas tous les profils métier ;
+- chaque satellite conserve ses données détaillées et ses règles métier ;
+- aucun accès direct à la base d’un autre produit ;
+- toute coopération passe par un contrat, un événement, une attestation ou un signal autorisé ;
+- le Matching rapproche, mais ne crée pas l’identité, ne facture pas et ne décide pas seul d’une action sensible ;
+- le Portail ouvre l’écosystème, mais ne remplace pas les satellites ;
+- un jeton destiné à un satellite ne doit pas être accepté par un autre.
 
-Aucun texte, acte, registre, conception, état documentaire, décision ouverte ou absence d’adoption ne peut être invoqué pour refuser, retarder ou conditionner le commencement d’un travail ordonné par le dirigeant.
+## 4. Construire une capacité réelle
 
-Le cycle historique :
+Une capacité n’est pas terminée parce qu’un module, un écran ou un fichier existe.
 
-```text
-concevoir → faire adopter → coder
-```
+Vérifier selon le périmètre :
 
-reste lisible dans l’histoire du dépôt, mais il est dépassé comme règle générale de conduite du travail.
+- entrées et validation ;
+- autorisation ;
+- persistance ;
+- contrats et événements ;
+- idempotence ;
+- résultat visible ;
+- erreurs et mode dégradé ;
+- journalisation ;
+- sécurité ;
+- tests unitaires, de contrat et d’intégration ;
+- sauvegarde et restauration lorsque des données sont possédées ;
+- comportement réel en production lorsqu’il est revendiqué.
 
-Une conception ou une étude préalable n’est obligatoire que si le dirigeant la demande expressément pour le chantier concerné.
+## 5. Héritage Genesis II
 
----
+Le code peut encore contenir des noms, commentaires ou modules historiques liés aux anciens registres documentaires.
 
-# 1. VÉTO DU DIRIGEANT EXCEPTIONNEL
+Ces références ne définissent plus le produit.
 
-Le dirigeant actuel de GAMAD, Koné Djakaridja dit Zakaria le Soufi, peut lever par une instruction claire tout obstacle procédural, documentaire, normatif ou institutionnel à un chantier déterminé.
+Lorsqu’un composant hérité est touché :
 
-Aucune formule particulière n’est nécessaire. Des instructions telles que :
+1. déterminer s’il fournit encore une fonction utile ;
+2. conserver la fonction utile ;
+3. retirer la dépendance aux actes, lois, adoptions et fichiers supprimés ;
+4. renommer progressivement selon sa responsabilité réelle ;
+5. adapter les tests à un comportement technique, pas à une conformité documentaire.
 
-- « codez maintenant » ;
-- « exécutez sans attendre les textes » ;
-- « cette procédure ne bloque pas ce chantier » ;
-- « Véto du dirigeant exceptionnel » ;
+Ne supprime pas un composant opérationnel uniquement parce que son ancien nom est normatif.
 
-produisent cet effet lorsque leur sens est clair.
+## 6. Git
 
-L’agent n’évalue pas si l’ordre est opportun. Il exécute dans le périmètre demandé.
+- travailler sur une branche dédiée ;
+- ne jamais réécrire l’historique de `main` ;
+- ne jamais force-pousser ;
+- préserver les changements humains non liés ;
+- montrer le diff, les tests et les risques ;
+- ne fusionner dans `main` qu’après instruction explicite du dirigeant ;
+- ne jamais déposer un secret dans Git.
 
-Il peut et doit signaler :
-
-- une impossibilité technique réelle ;
-- un accès manquant ;
-- un test échoué ;
-- une erreur ;
-- un risque ;
-- une conséquence irréversible ;
-- une différence entre l’objectif et le résultat.
-
-Ces signalements ne constituent pas un contre-véto.
-
----
-
-# 2. LE VÉTO GOUVERNE L’ACTION, PAS LA VÉRITÉ
-
-Il est interdit de :
-
-- déclarer réussi un test qui a échoué ;
-- déclarer codée une capacité qui ne l’est pas ;
-- déclarer effectué un déploiement qui ne l’est pas ;
-- cacher une erreur ou un risque connu ;
-- inventer ou modifier une preuve ;
-- inscrire un secret dans le dépôt ;
-- réécrire l’historique de `main`.
-
-Les tests, gardes et audits témoignent de la réalité. Ils ne décident pas de l’opportunité du chantier à la place du dirigeant.
-
-Un test échoué commande une correction ou un compte rendu fidèle. Il ne justifie pas l’abandon silencieux du travail.
-
----
-
-# 3. PROTOCOLE DE TRAVAIL OBLIGATOIRE
-
-Lorsqu’un ordre est clair :
-
-1. comprendre le résultat demandé ;
-2. inspecter le dépôt et l’existant ;
-3. choisir une architecture défendable ;
-4. coder ;
-5. écrire ou adapter les migrations ;
-6. exécuter les tests pertinents ;
-7. corriger autant que possible ;
-8. signaler les résultats réels ;
-9. documenter ensuite ou en parallèle.
-
-Ne demande pas une autorisation déjà donnée.
-
-Ne remplace pas le code demandé par :
-
-- une nouvelle Constitution ;
-- un acte spontané ;
-- une longue note doctrinale ;
-- une série de décisions ouvertes ;
-- une demande de validation de chaque étape.
-
-Lorsque l’ambiguïté empêche réellement de choisir entre des résultats incompatibles, pose au plus une question précise. Pour une ambiguïté secondaire, choisis l’option la plus réversible et poursuis.
-
----
-
-# 4. BRANCHES, INTÉGRATION ET DOCUMENTATION
-
-Travaille sur une branche dédiée `agent/...`, sauf instruction contraire.
-
-La production de code, les commits, les branches et les propositions de fusion ne requièrent pas un acte préalable.
-
-La documentation doit décrire honnêtement l’ordre réel :
+## 7. Compte rendu
 
 ```text
-code produit
-→ tests exécutés
-→ résultats observés
-→ gouvernance et textes de constat
+Tâche :
+Branche :
+Capacité concernée :
+Résultat observable :
+Fichiers modifiés :
+Contrats ou événements touchés :
+Tests exécutés :
+Résultats :
+État réel :
+Risques et éléments différés :
+Décisions encore nécessaires :
+Action suivante :
 ```
 
-Elle ne doit pas présenter comme préalable un texte rédigé après l’implémentation.
-
-Les textes adoptés ne sont pas réécrits silencieusement. Le corpus progresse par ajout, constat, supersession ou nouvelle loi.
-
-La fusion dans `main`, la mise en production et les actions externes suivent l’instruction du dirigeant. Une action irréversible non clairement comprise dans l’ordre doit être signalée avant son exécution.
-
----
-
-# 5. GARDES ET TESTS
-
-Avant de présenter un travail comme terminé :
-
-- exécute les tests propres aux modules modifiés ;
-- exécute la garde documentaire lorsque le corpus a été touché ;
-- exécute les gardes transversales affectées ;
-- relève chaque sortie réelle ;
-- signale les dépendances ou outils absents.
-
-Commandes de référence :
-
-```bash
-python3 outils/verifier-integrite.py
-php core/registre-identites/tests/identite_p3.php
-php core/registre-annuaire/tests/annuaire_p3.php
-php core/registre-contrats/tests/contrats_p3.php
-```
-
-Cette liste n’est pas exhaustive. Le dépôt contient une garde de comportement par capacité codée.
-
-Une preuve `P3` doit pouvoir échouer sur une falsification ciblée. Un test qui ne peut pas échouer ne prouve rien.
-
----
-
-# 6. ÉTAT ACTUEL DU CORE
-
-À la date de la présente mise à jour :
-
-- vingt capacités historiques possèdent un module et une garde `P3` ;
-- elles ont été admises et déclarées `ACTIVE` à titre exceptionnel par `ADOPTION-0063` ;
-- cette déclaration ne signifie pas qu’elles sont toutes réellement déployées, surveillées ou restaurables ;
-- `CAP-CORE-021 — Moteur de Matching GAMAD` est inscrite et conçue, mais son implémentation est `NON COMMENCÉE` ;
-- la loi révisée de `CAP-CORE-001 — Identity Registry` est adoptée, mais son nouveau périmètre utilisateurs/organisations reste à coder ;
-- certaines admissions peuvent être caduques lorsqu’un module évolue ; cette caducité ne bloque ni le code ni l’intégration.
-
-Le travail utile porte désormais sur la matérialisation réelle, l’exploitation, la sécurité, la surveillance, la sauvegarde et la restauration.
-
----
-
-# 7. FRONTIÈRES À RESPECTER
-
-Demeurent non négociables :
-
-1. ne jamais mettre un secret dans Git ;
-2. ne jamais inventer une preuve ou un résultat ;
-3. ne jamais réécrire l’historique de `main` ;
-4. ne jamais masquer une erreur au dirigeant ;
-5. ne jamais étendre ses propres permissions ;
-6. ne jamais déployer ou détruire des données réelles sans que l’ordre couvre clairement cette action ;
-7. respecter les contraintes techniques et de sécurité des plateformes utilisées.
-
-Ces frontières protègent GAMAD. Elles ne rétablissent pas la méthode « texte d’abord ».
-
----
-
-# 8. IDENTITÉ ET MATCHING
-
-`CAP-CORE-001` doit reconnaître les personnes utilisant les produits, les organisations et leurs relations minimales, sans absorber leurs profils métier.
-
-Principe :
-
-> Le produit connaît l’usage. L’organisation connaît sa structure. Le Core connaît l’identité.
-
-`CAP-CORE-021` dépend de cette identité canonique commune.
-
-Principe du Matching :
-
-> Le Moteur de Matching GAMAD transforme la connaissance autorisée de l’écosystème en correspondances utiles entre les personnes, les organisations, les besoins, les offres et les institutions.
-
-Wasplex peut en être un consommateur majeur, mais la capacité appartient au Core et doit pouvoir alimenter plusieurs plateformes.
-
----
-
-# 9. EN CAS DE BLOCAGE
-
-Ne rédige pas un texte pour expliquer pourquoi tu ne codes pas.
-
-Applique l’ordre suivant :
-
-```text
-faire tout ce qui est possible
-→ isoler le blocage réel
-→ apporter la preuve
-→ proposer la solution la plus directe
-→ poursuivre dès que le blocage est levé
-```
-
-La formule de conduite est :
-
-> **Le dirigeant ordonne.**  
-> **L’ingénierie construit.**  
-> **Les tests disent la vérité.**  
-> **La gouvernance accompagne et constate.**  
-> **Aucun texte ne paralyse la naissance ni l’évolution du Core.**
+Le but est de faire fonctionner GAMAD Core et ses satellites comme un écosystème cohérent, pas de produire un système juridique autour du code.
