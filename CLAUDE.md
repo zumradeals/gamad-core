@@ -12,7 +12,7 @@ Avant tout chantier :
 4. identifier les consommateurs et les dépendances ;
 5. vérifier l’état réel avant toute modification ou suppression.
 
-Les documents Genesis II restent temporairement présents pour les composants qui en dépendent encore. Ils sont historiques et transitoires ; ils ne doivent pas servir à créer de nouveaux blocages, lois ou actes.
+L’ancien corpus normatif a été supprimé du dépôt. Les sources techniques sont le code, les configurations, les migrations, la baseline opérationnelle et les tests. Aucun texte normatif n’est requis avant de coder.
 
 ## 2. Méthode de travail
 
@@ -42,7 +42,8 @@ Ne jamais :
 - réécrire l’historique de `main` ;
 - étendre ses propres permissions ;
 - supprimer des tests pour obtenir artificiellement du vert ;
-- supprimer `genesis-ii/` tant que des composants utiles en dépendent ;
+- réintroduire un corpus normatif ou un parseur de Markdown comme source runtime ;
+- rendre le système plus permissif pour faire passer un test ;
 - créer une Constitution, une loi, un acte ou un registre pour remplacer le code demandé.
 
 ## 4. Branches et actions externes
@@ -51,19 +52,19 @@ Ne jamais :
 - garder les commits cohérents et vérifiables ;
 - ne pas fusionner dans `main` sans instruction explicite du dirigeant ;
 - ne pas déployer, détruire ou modifier des données réelles sans instruction explicite ;
-- séparer les changements documentaires, les migrations runtime et les suppressions finales.
+- séparer les changements documentaires, les migrations runtime et les suppressions.
 
 ## 5. Tests et vérité
 
 Avant de présenter un chantier comme terminé :
 
 - exécuter les tests des modules modifiés ;
-- exécuter les intégrations et gardes affectées ;
+- exécuter les intégrations et gardes affectées, y compris `core/journal-operationnel/tests/fondation_operationnelle_p3.php` ;
 - vérifier les migrations, configurations et chemins d’exploitation ;
 - signaler les tests non exécutés et les outils absents ;
 - indiquer les limites et les décisions produit restantes.
 
-États autorisés : `ABSENT`, `DÉMONSTRATIF`, `PARTIEL`, `IMPLÉMENTÉ`, `EXPLOITÉ`, `HÉRITÉ À MIGRER`, `CONTRADICTOIRE` et `À VÉRIFIER`.
+États autorisés : `ABSENT`, `DÉMONSTRATIF`, `PARTIEL`, `IMPLÉMENTÉ`, `EXPLOITÉ`, `CONTRADICTOIRE` et `À VÉRIFIER`.
 
 Un test local n’est pas une preuve de déploiement. Un document n’est pas une preuve d’exécution.
 
@@ -79,16 +80,13 @@ Le Core peut utiliser des signaux autorisés pour une finalité explicite. Il ne
 
 Le Matching produit des correspondances contextualisées entre personnes, organisations, besoins, offres et institutions. Il ne crée pas une réputation humaine universelle, ne facture pas et n’exécute pas les règles économiques des satellites.
 
-## 8. Transition hors Genesis II
+## 8. Sources techniques
 
-La transition suit cet ordre :
+La transition hors de l’ancien corpus normatif est terminée : le corpus, son parseur, ses contrôles d’intégrité documentaire et les modules qui n’en étaient que des lecteurs ont été supprimés.
 
-1. documentation opérationnelle simple ;
-2. remplacement des lectures de `genesis-ii/` module par module avec tests verts ;
-3. suppression des parseurs devenus inutiles ;
-4. suppression finale du corpus lorsque plus aucune dépendance runtime utile ne subsiste.
+L’index technique s’initialise depuis `core/registre-normes/resources/index-baseline-v1.json`, dont l’empreinte SHA-256 est vérifiée avant toute écriture. Une donnée technique manquante s’ajoute à une source explicite et versionnée, jamais à un texte déclaratif.
 
-Chaque parseur historique reste présent jusqu’à ce que son remplaçant soit fonctionnel et testé.
+L’historique ancien reste récupérable dans Git. Voir `docs/06-transition-hors-genesis-ii.md`.
 
 ## 9. Compte rendu attendu
 

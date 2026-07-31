@@ -1,6 +1,6 @@
 # Documentation active de GAMAD Core
 
-Cette documentation décrit directement le produit, ses frontières et les capacités à construire. Elle remplace progressivement la lecture des anciens textes Genesis II pour les nouveaux chantiers.
+Cette documentation décrit directement le produit, ses frontières et les capacités à construire. Elle a remplacé l’ancien corpus normatif, supprimé du dépôt.
 
 Elle ne prouve pas qu’une fonction est implémentée. L’état réel doit toujours être vérifié dans le code, les migrations, les tests et l’exploitation.
 
@@ -16,12 +16,11 @@ Elle ne prouve pas qu’une fonction est implémentée. L’état réel doit tou
 8. [`07-consignes-operationnelles-agents.md`](07-consignes-operationnelles-agents.md)
 9. [`capacites/README.md`](capacites/README.md)
 10. [`capacites/CATALOGUE.md`](capacites/CATALOGUE.md)
+11. [`capacites/CAP-CORE-001-identity-registry.md`](capacites/CAP-CORE-001-identity-registry.md)
 
-## Situation temporaire de `CLAUDE.md`
+## `CLAUDE.md`
 
-Le fichier racine `CLAUDE.md` reste inchangé pendant cette première étape, car l’ancien contrôle d’intégrité Genesis II vérifie encore son empreinte Git.
-
-Les consignes cibles sont déjà écrites dans `07-consignes-operationnelles-agents.md`. Leur déplacement définitif vers `CLAUDE.md` sera réalisé dans la première PR technique, en même temps que le découplage du contrôle historique.
+Le fichier racine `CLAUDE.md` porte les consignes opérationnelles appliquées dans le dépôt. Il reprend `07-consignes-operationnelles-agents.md` et évolue librement : aucun contrôle d’empreinte documentaire ne le fige plus.
 
 ## Règle de mise à jour
 

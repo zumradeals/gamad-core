@@ -1,7 +1,7 @@
 # Core Operational Foundation v1 — exploitation
 
-Ce lot remplace le démarrage direct de `core/registre-normes/public` par le
-monolithe Laravel. Il ne déploie pas vingt-et-un microservices.
+Ce lot sert le Core par le monolithe Laravel. Il ne déploie pas vingt-et-un
+microservices.
 
 La cible unique est le serveur actuel :
 
@@ -223,6 +223,5 @@ les trois timers. Toute modification d’une unité doit être suivie de
 La spécification HTTP est dans
 `apps/console-laravel/openapi/core-v1.yaml`.
 
-Le déploiement initial de ce socle est constaté sans réécriture du registre
-historique scellé dans
-`genesis-ii/registres/ingenierie/ENTREE-DEPLOIEMENT-20260730-0001.md`.
+Le déploiement initial de ce socle a été constaté le 30 juillet 2026. Son
+historique reste consultable dans l’historique Git du dépôt.

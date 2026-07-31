@@ -1,31 +1,36 @@
 # Catalogue initial des capacités GAMAD Core
 
-Ce catalogue sert de carte de travail. Les statuts indiquent seulement ce qui doit être vérifié ou migré ; ils ne remplacent pas l’audit du code.
+Ce catalogue est la carte de travail du Core. Les états sont établis par
+inspection du code, des tests et de la CI ; ils ne sont jamais déduits d’un
+document.
 
-| Référence | Capacité | Finalité | État documentaire de départ |
-|---|---|---|---|
-| CAP-CORE-001 | Identity Registry | Reconnaître les identités canoniques et leurs relations minimales | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-002 | Organizations Registry | Gérer les organisations et leur structure commune | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-003 | Authorities & Mandates | Résoudre les fonctions, titulaires, mandats et délégations | Dépendances historiques identifiées — `HÉRITÉ À MIGRER` |
-| CAP-CORE-004 | Authorization | Décider si une action commune est permise ou refusée | Politique encore dérivée du corpus — `HÉRITÉ À MIGRER` |
-| CAP-CORE-005 | Authentication & Access | Authentifier, ouvrir et révoquer les sessions | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-006 | Sources Registry | Identifier les sources techniques reconnues | Parseur documentaire historique — `HÉRITÉ À MIGRER` |
-| CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | Ancien registre normatif — `HÉRITÉ À REDÉFINIR` |
-| CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | Ancien registre lié aux actes — `HÉRITÉ À REDÉFINIR` |
-| CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | Ancien lexique normatif — `HÉRITÉ À REDÉFINIR` |
-| CAP-CORE-011 | Products Registry | Référencer les satellites, services et points d’entrée | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | Anciennes preuves documentaires dominantes — `HÉRITÉ À MIGRER` |
-| CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | Module historique présent — `À VÉRIFIER` |
-| CAP-CORE-020 | Directory & Atlas | Produire un annuaire opérationnel des capacités et produits | Fortement dérivé de Genesis II — `HÉRITÉ À MIGRER` |
-| CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | Conception existante, moteur complet non prouvé — `PARTIEL OU ABSENT À VÉRIFIER` |
-| CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | Capacité cible — `À CONCEVOIR ET IMPLÉMENTER` |
+| Référence | Capacité | Finalité | Code livré | État réel |
+|---|---|---|---|---|
+| CAP-CORE-001 | Identity Registry | Reconnaître les identités canoniques et leurs relations minimales | `core/registre-identites`, console et API v1 | `IMPLÉMENTÉ` — garde et intégrations vertes |
+| CAP-CORE-002 | Organizations Registry | Gérer les organisations et leur structure commune | aucun | `ABSENT` — l’ancien module ne lisait qu’un texte |
+| CAP-CORE-003 | Authorities & Mandates | Résoudre les fonctions, titulaires, mandats et délégations | `core/registre-autorites` | `IMPLÉMENTÉ` — résolution datée éprouvée |
+| CAP-CORE-004 | Authorization | Décider si une action commune est permise ou refusée | `core/registre-autorisation` | `IMPLÉMENTÉ` — refus par défaut éprouvé |
+| CAP-CORE-005 | Authentication & Access | Authentifier, ouvrir et révoquer les sessions | `core/registre-acces`, passkeys | `IMPLÉMENTÉ` — sessions, révocation et WebAuthn éprouvés |
+| CAP-CORE-006 | Sources Registry | Identifier les sources techniques reconnues | `core/registre-sources` | `PARTIEL` — lecture de l’index seulement |
+| CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | `core/registre-normes` | `PARTIEL` — lecture et diagnostic ; aucune écriture gouvernée |
+| CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | aucun ; traces dans le journal opérationnel | `ABSENT` |
+| CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | aucun ; contrats portés par le code et `openapi/core-v1.yaml` | `ABSENT` |
+| CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | aucun | `ABSENT` |
+| CAP-CORE-011 | Products Registry | Référencer les satellites, services et points d’entrée | données techniques dans l’index | `PARTIEL` — quatre produits en données, aucun service dédié |
+| CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | aucun | `ABSENT` |
+| CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | `core/journal-operationnel` | `IMPLÉMENTÉ` — chaîne append-only vérifiée, trigger PostgreSQL |
+| CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-operationnel` en écriture seule | `PARTIEL` — aucune publication vers les satellites |
+| CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | empreinte de baseline, chaîne du journal | `PARTIEL` — pas de service d’empreintes général |
+| CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | aucun ; secrets hors dépôt | `ABSENT` |
+| CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `ABSENT` |
+| CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `ABSENT` |
+| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation` | `EXPLOITÉ` — sauvegarde et exercice de restauration exécutés par la CI |
+| CAP-CORE-020 | Directory & Atlas | Produire un annuaire opérationnel des capacités et produits | aucun | `ABSENT` — l’ancien module dérivait d’un corpus supprimé |
+| CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | aucun | `ABSENT` |
+| CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | aucun | `ABSENT` |
+
+Un état `ABSENT` est une information utile : il nomme un chantier ouvert plutôt
+qu’il ne dissimule un manque derrière un module qui ne rendait aucun service.
 
 ## Regroupement fonctionnel
 
@@ -63,29 +68,28 @@ Ce catalogue sert de carte de travail. Les statuts indiquent seulement ce qui do
 - CAP-CORE-021 — Matching Engine
 - CAP-CORE-022 — Satellite Federation
 
-## Règles de migration
+## Règles de construction
 
 Pour chaque capacité :
 
 1. inventorier les contrats et consommateurs réels ;
-2. identifier les lectures directes de `genesis-ii/` ;
-3. distinguer la fonction utile de l’ancien habillage normatif ;
-4. créer une fiche individuelle fondée sur le code ;
-5. migrer les données nécessaires vers une source technique ;
-6. conserver ou améliorer les gardes de comportement ;
-7. supprimer seulement les composants devenus réellement inutiles.
+2. définir la responsabilité et la frontière Core / satellite ;
+3. créer une fiche individuelle fondée sur le code ;
+4. porter les données nécessaires dans une source technique versionnée ;
+5. écrire une garde de comportement avec sa contre-épreuve ;
+6. raccorder la garde à `core-operational-tests.yml` ;
+7. mettre l’état de ce catalogue à jour d’après le résultat réel.
 
 ## Priorité proposée
 
-La première migration technique doit cibler le chemin critique utilisé par la console et l’API :
+Le chemin critique est livré. Les chantiers ouverts, par ordre d’utilité :
 
 ```text
-CAP-CORE-001 identité
-→ CAP-CORE-003 mandats
-→ CAP-CORE-004 autorisation
-→ CAP-CORE-005 authentification
-→ CAP-CORE-011 produits
-→ CAP-CORE-022 fédération
+CAP-CORE-022 fédération des satellites
+→ CAP-CORE-011 registre des produits
+→ CAP-CORE-002 organisations
+→ CAP-CORE-014 publication d’événements
+→ CAP-CORE-021 Matching
 ```
 
-Cette proposition doit être confirmée après un audit précis des dépendances et des tests du dépôt.
+Cette proposition reste une proposition : elle se confirme produit par produit.

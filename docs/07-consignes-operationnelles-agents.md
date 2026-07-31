@@ -2,7 +2,7 @@
 
 Ce document décrit la méthode de travail cible de GAMAD Core. Il ne constitue ni une loi, ni un acte, ni une preuve d’implémentation.
 
-Le fichier racine `CLAUDE.md` applique désormais ces consignes. Son contenu opérationnel peut évoluer avec le dépôt sans modifier les empreintes historiques du corpus Genesis II.
+Le fichier racine `CLAUDE.md` applique ces consignes. Son contenu évolue librement avec le dépôt : aucun contrôle d’empreinte documentaire ne le fige plus.
 
 ## 1. Avant de modifier le dépôt
 
@@ -40,8 +40,9 @@ Ne jamais :
 - placer un secret dans Git ;
 - réécrire l’historique de `main` ;
 - créer une Constitution, une loi ou un acte d’adoption pour piloter un chantier ;
-- supprimer `genesis-ii/` tant que des modules ou tests en dépendent ;
-- supprimer des tests pour obtenir artificiellement du vert.
+- réintroduire un corpus normatif ou un parseur de Markdown comme source runtime ;
+- supprimer des tests pour obtenir artificiellement du vert ;
+- rendre le système plus permissif pour faire passer un test.
 
 ## 4. Branches et intégration
 
@@ -59,7 +60,8 @@ Avant de présenter un chantier comme terminé :
 - exécuter les intégrations affectées ;
 - vérifier les migrations et configurations ;
 - signaler les tests non exécutés ;
-- utiliser un état honnête : `ABSENT`, `DÉMONSTRATIF`, `PARTIEL`, `IMPLÉMENTÉ`, `EXPLOITÉ`, `HÉRITÉ À MIGRER`, `CONTRADICTOIRE` ou `À VÉRIFIER`.
+- exécuter les gardes de capacité affectées et la garde du socle opérationnel ;
+- utiliser un état honnête : `ABSENT`, `DÉMONSTRATIF`, `PARTIEL`, `IMPLÉMENTÉ`, `EXPLOITÉ`, `CONTRADICTOIRE` ou `À VÉRIFIER`.
 
 La documentation n’est pas une preuve d’exécution. Un test local n’est pas une preuve de déploiement.
 
@@ -75,13 +77,13 @@ Le Core peut consommer des signaux autorisés pour une finalité explicite. Il n
 
 Le Matching produit des correspondances contextualisées. Il ne produit pas une réputation humaine universelle, ne facture pas et n’exécute pas les règles économiques des satellites.
 
-## 8. Transition hors Genesis II
+## 8. Sources techniques
 
-1. documentation simple sans changement runtime ;
-2. remplacement des lectures de `genesis-ii/` module par module ;
-3. suppression de l’ancien corpus lorsque toutes les dépendances utiles ont disparu.
+La transition hors de l’ancien corpus normatif est terminée. Les sources techniques sont le code, les configurations, les migrations, la baseline opérationnelle et les tests.
 
-Chaque parseur historique reste présent jusqu’à ce que son remplaçant soit fonctionnel et testé.
+Aucun texte normatif n’est requis avant de coder. Lorsqu’une donnée technique manque, elle est ajoutée à une source explicite et versionnée — table, configuration, baseline — jamais à un texte déclaratif.
+
+Le détail de la migration achevée figure dans [`06-transition-hors-genesis-ii.md`](06-transition-hors-genesis-ii.md).
 
 ## 9. Compte rendu attendu
 
