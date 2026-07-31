@@ -13,8 +13,15 @@ Elle ne prouve pas qu’une fonction est implémentée. L’état réel doit tou
 5. [`04-donnees-securite-et-finalites.md`](04-donnees-securite-et-finalites.md)
 6. [`05-exploitation-continuite-et-preuves.md`](05-exploitation-continuite-et-preuves.md)
 7. [`06-transition-hors-genesis-ii.md`](06-transition-hors-genesis-ii.md)
-8. [`capacites/README.md`](capacites/README.md)
-9. [`capacites/CATALOGUE.md`](capacites/CATALOGUE.md)
+8. [`07-consignes-operationnelles-agents.md`](07-consignes-operationnelles-agents.md)
+9. [`capacites/README.md`](capacites/README.md)
+10. [`capacites/CATALOGUE.md`](capacites/CATALOGUE.md)
+
+## Situation temporaire de `CLAUDE.md`
+
+Le fichier racine `CLAUDE.md` reste inchangé pendant cette première étape, car l’ancien contrôle d’intégrité Genesis II vérifie encore son empreinte Git.
+
+Les consignes cibles sont déjà écrites dans `07-consignes-operationnelles-agents.md`. Leur déplacement définitif vers `CLAUDE.md` sera réalisé dans la première PR technique, en même temps que le découplage du contrôle historique.
 
 ## Règle de mise à jour
 
