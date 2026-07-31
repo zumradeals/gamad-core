@@ -1,0 +1,27 @@
+name: Export temporaire de la branche de simplification
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exporter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Préparer l’archive
+        run: |
+          git archive --format=zip --output=/tmp/gamad-core-working-tree.zip HEAD
+      - name: Publier l’archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: gamad-core-working-tree
+          path: /tmp/gamad-core-working-tree.zip
+          retention-days: 2
