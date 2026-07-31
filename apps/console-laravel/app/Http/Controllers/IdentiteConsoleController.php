@@ -10,8 +10,8 @@ use Gamad\RegistreAutorites\Ctr02;
 use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,7 +27,7 @@ final class IdentiteConsoleController
             $vide = true;
         }
         if ($vide) {
-            (new Ingestion($index, dirname(base_path(), 2)))->executer();
+            BaselineOperationnelle::standard()->reconstruire($index);
         }
 
         return new Ctr01($index, Magasin::connecter());
