@@ -11,23 +11,35 @@ opérationnelle qui doivent pouvoir évoluer avec le dépôt.
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+RACINE = Path(__file__).resolve().parent.parent
 CONTROLEUR_HISTORIQUE = Path(__file__).with_name("verifier-integrite.py")
+CONFIGURATION_OPERATIONNELLE = RACINE / "config" / "integrite-operationnelle.json"
 
-CHEMINS_OPERATIONNELS_HORS_EMPREINTE = {
-    "CLAUDE.md": (
-        "consignes opérationnelles évolutives ; l'ancienne empreinte reste "
-        "un constat historique dans Genesis II"
-    ),
-    ".github/workflows/integrite-documentaire.yml": (
-        "workflow actif de vérification ; son contenu suit le point d'entrée "
-        "opérationnel sans réécrire les adoptions historiques"
-    ),
-}
+
+def charger_chemins_operationnels() -> dict[str, str]:
+    """Charge les exceptions ; une configuration invalide ferme par défaut."""
+    try:
+        donnees = json.loads(CONFIGURATION_OPERATIONNELLE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    chemins = donnees.get("paths")
+    if not isinstance(chemins, dict):
+        return {}
+
+    return {
+        chemin: motif
+        for chemin, motif in chemins.items()
+        if isinstance(chemin, str)
+        and chemin
+        and isinstance(motif, str)
+    }
 
 
 def charger_controleur_historique() -> ModuleType:
@@ -58,6 +70,7 @@ def controle_c5_operationnel(
         print("  [SAUTÉ] C5 — Empreintes Git déclarées (Git indisponible)")
         return
 
+    chemins_operationnels = charger_chemins_operationnels()
     declarations: dict[str, dict[int, dict[str, list[str]]]] = {}
     for fichier in historique.fichiers_du_corpus(racine):
         relatif = fichier.relative_to(racine).as_posix()
@@ -112,7 +125,7 @@ def controle_c5_operationnel(
             )
             continue
 
-        if chemin in CHEMINS_OPERATIONNELS_HORS_EMPREINTE:
+        if chemin in chemins_operationnels:
             operationnels_decouples.add(chemin)
             continue
         if chemin in historique.CHEMINS_HORS_DEPOT:
@@ -136,12 +149,10 @@ def controle_c5_operationnel(
     for chemin in sorted(operationnels_decouples):
         print(
             f"          · `{chemin}` découplé de l'empreinte historique — "
-            f"{CHEMINS_OPERATIONNELS_HORS_EMPREINTE[chemin]}"
+            f"{chemins_operationnels[chemin]}"
         )
 
-    inutilises = sorted(
-        set(CHEMINS_OPERATIONNELS_HORS_EMPREINTE) - operationnels_decouples
-    )
+    inutilises = sorted(set(chemins_operationnels) - operationnels_decouples)
     for chemin in inutilises:
         rapport.avertissement(
             f"C5 — chemin opérationnel déclaré mais non rencontré : `{chemin}`"

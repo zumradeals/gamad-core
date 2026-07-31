@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\CheminsOperationnels;
 use App\Support\EtatFondation;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAutorisation\Ctr03;
@@ -50,11 +51,15 @@ final class Ctr04Controller
         $ctr04 = $this->ctr04();
         $pdo = Db::connect();
         $acteur = (string) $request->attributes->get('gamad_entite');
+        $corpus = dirname(base_path(), 2);
 
         $adoptions = $pdo->query(
             'SELECT reference, autorite, date_adoption, signature_presente FROM adoption ORDER BY reference'
         )->fetchAll();
-        $integrite = $ctr04->verifierIntegrite();
+        $integrite = CheminsOperationnels::appliquer(
+            $ctr04->verifierIntegrite(),
+            $corpus,
+        );
         $index = $ctr04->resoudreIndex();
 
         $indetermines = (int) $pdo->query(
@@ -190,7 +195,12 @@ final class Ctr04Controller
 
     public function verifierIntegrite(?string $reference = null): JsonResponse
     {
-        return response()->json($this->ctr04()->verifierIntegrite($reference));
+        $lignes = CheminsOperationnels::appliquer(
+            $this->ctr04()->verifierIntegrite($reference),
+            dirname(base_path(), 2),
+        );
+
+        return response()->json($lignes);
     }
 
     public function resoudreIndex(): JsonResponse
