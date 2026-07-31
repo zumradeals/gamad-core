@@ -1,0 +1,77 @@
+name: Appliquer la simplification technique GAMAD Core
+
+on:
+  push:
+    branches:
+      - sirr/simplification-gamad-core
+
+permissions:
+  contents: write
+
+jobs:
+  appliquer:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer la branche
+        uses: actions/checkout@v4
+        with:
+          ref: sirr/simplification-gamad-core
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Appliquer le paquet de migration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          rm -rf \
+            archives \
+            core/registre-annuaire \
+            core/registre-audit \
+            core/registre-continuite \
+            core/registre-contrats \
+            core/registre-decisions \
+            core/registre-evenements \
+            core/registre-incidents \
+            core/registre-lexique \
+            core/registre-normes \
+            core/registre-organisations \
+            core/registre-preuves \
+            core/registre-produits \
+            core/registre-realms \
+            core/registre-risques \
+            core/registre-secrets \
+            core/registre-sources
+
+          rm -f \
+            .github/workflows/export-legacy-baseline.yml \
+            .github/workflows/export-working-tree.yml \
+            .github/workflows/gardes-comportement.yml \
+            .github/workflows/registre-normes.yml \
+            apps/console-laravel/app/Console/Commands/ReindexerCommand.php \
+            apps/console-laravel/app/Http/Controllers/Ctr04Controller.php \
+            core/journal-operationnel/tests/fondation_operationnelle_p3.php \
+            core/registre-acces/tests/authentification_p3.php \
+            core/registre-autorisation/tests/autorisation_p3.php \
+            core/registre-autorites/tests/mandat_p3.php \
+            core/registre-identites/tests/identite_p3.php
+
+          base64 --decode .migration/simplification-files.tar.gz.b64 > /tmp/gamad-simplification-files.tar.gz
+          tar -xzf /tmp/gamad-simplification-files.tar.gz -C .
+
+          rm -rf .migration
+          rm -f .github/workflows/apply-simplification.yml
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Aucune modification à appliquer."
+            exit 0
+          fi
+
+          git commit -m "refactor(core): remplacer Genesis II par la fondation opérationnelle"
+          git push origin HEAD:sirr/simplification-gamad-core
