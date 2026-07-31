@@ -34,6 +34,9 @@ jobs:
         working-directory: apps/console-laravel
         run: composer install --no-interaction --prefer-dist
 
+      - name: Éprouver la réindexation par baseline
+        run: php apps/console-laravel/tests/Integration/reindexation_baseline_p1.php
+
       - name: Vérifier le raccordement des variables Laravel
         run: php apps/console-laravel/tests/Integration/laravel_env_p0.php
 

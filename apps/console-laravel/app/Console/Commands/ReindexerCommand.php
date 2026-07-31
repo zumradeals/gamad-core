@@ -4,162 +4,65 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use Gamad\RegistreNormes\Ctr04;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 use Illuminate\Console\Command;
-use Symfony\Component\Process\Process;
 
 /**
- * Reconstruit l'index dérivé depuis le corpus versionné.
+ * Reconstruit l'index technique depuis une baseline opérationnelle versionnée.
  *
- * Livrée au titre de CAP-CORE-006 (CONCEPTION-CAP-CORE-006-…-0001, Titre IV,
- * Articles 15 et 16, adoptée par ADOPTION-0032). Solde la dette contractée par
- * ADOPTION-0031 : la réindexation de production avait dû être exécutée par un
- * script rédigé hors du dépôt, hors de portée des gardes et hors de la main de
- * l'autorité.
- *
- * Aucune écriture du corpus (INV-4) : le sens demeure unique, des fichiers vers
- * l'index (INV-5). Aucun secret en argument : la connexion procède de
- * DATABASE_URL, comme le reste du service.
+ * La commande ne parcourt plus le corpus Genesis II. La source importée est
+ * contrôlée par empreinte, validée structurellement et appliquée dans une
+ * transaction unique. Une erreur laisse l'index précédent intact.
  */
 final class ReindexerCommand extends Command
 {
     protected $signature = 'registre:reindexer';
 
-    protected $description = "Reconstruit l'index dérivé depuis le corpus, après vérification de toutes les gardes.";
+    protected $description = "Reconstruit l'index technique depuis la baseline opérationnelle versionnée.";
 
     public function handle(): int
     {
-        $corpus = $this->corpus();
-
-        $this->line("Corpus : {$corpus}");
-        $this->newLine();
-
-        // Article 16 : un index reconstruit depuis un corpus incohérent
-        // propagerait l'incohérence. La commande refuse alors de s'exécuter.
-        if (!$this->gardesVertes($corpus)) {
-            $this->newLine();
-            $this->error('Réindexation REFUSÉE : toutes les gardes ne sont pas vertes.');
-            $this->line("Corriger le corpus, puis relancer. Aucun index n'a été touché.");
-
-            return self::FAILURE;
-        }
-
+        $baseline = BaselineOperationnelle::standard();
+        $this->line(sprintf(
+            'Baseline : v%d · SHA-256 %s',
+            $baseline->version(),
+            $baseline->empreinte(),
+        ));
+        $this->line('Fichier : '.$baseline->chemin());
         $this->newLine();
 
         try {
             $pdo = Db::connect();
-            $this->line('Moteur : ' . Db::driver($pdo));
-
-            $r = (new Ingestion($pdo, $corpus))->executer();
-            $this->info(sprintf(
-                'Index reconstruit : %d adoptions, %d normes, %d versions, %d statuts, '
-                . "%d états de capacité, %d fonctions, %d mandat(s).",
-                $r['adoptions'],
-                $r['normes'],
-                $r['versions'],
-                $r['statuts'],
-                $r['etats'],
-                $r['fonctions'],
-                $r['mandats'],
-            ));
-
-            $index = (new Ctr04($pdo, $corpus))->resoudreIndex();
+            $this->line('Moteur : '.Db::driver($pdo));
+            $resultat = $baseline->reconstruire($pdo);
         } catch (\Throwable $e) {
-            $this->error('Échec de la reconstruction : ' . $e->getMessage());
+            $this->error('Réindexation refusée : '.$e->getMessage());
+            $this->line("Aucune reconstruction partielle n'a été conservée.");
 
             return self::FAILURE;
         }
 
-        $this->line(sprintf(
-            'Cohérence : %d actes primaires, %d en index.',
-            $index['actes_primaires'],
-            $index['index'],
+        $this->info(sprintf(
+            'Index reconstruit : %d normes, %d versions, %d politiques, %d règles, '
+            .'%d identités, %d fonctions et %d mandat(s).',
+            $resultat['normes'],
+            $resultat['versions'],
+            (int) $pdo->query('SELECT count(*) FROM politique')->fetchColumn(),
+            $resultat['regles'],
+            $resultat['entites'],
+            $resultat['fonctions'],
+            $resultat['mandats'],
         ));
-
-        if ($index['divergences'] !== []) {
-            $this->newLine();
-            $this->error(sprintf('%d divergence(s) d\'index :', count($index['divergences'])));
-            foreach ($index['divergences'] as $d) {
-                $this->line("  · {$d}");
-            }
-
-            return self::FAILURE;
-        }
-
+        $this->line(sprintf(
+            'Compatibilité héritée conservée : %d adoptions, %d statuts et %d états de capacité.',
+            $resultat['adoptions'],
+            $resultat['statuts'],
+            $resultat['etats'],
+        ));
         $this->newLine();
-        $this->info('Aucune divergence. Index conforme au corpus.');
+        $this->info('Réindexation opérationnelle terminée sans lecture du corpus Markdown.');
 
         return self::SUCCESS;
-    }
-
-    /**
-     * Localise la racine du corpus selon la même convention que le cœur adopté
-     * (`core/registre-normes/bootstrap.php`) : `CORPUS_PATH` s'il est fourni,
-     * sinon deux niveaux au-dessus de l'application. Une convention unique,
-     * non deux — et la commande en devient éprouvable contre un corpus de test.
-     */
-    private function corpus(): string
-    {
-        $corpus = getenv('CORPUS_PATH');
-
-        return (is_string($corpus) && $corpus !== '') ? $corpus : dirname(base_path(), 2);
-    }
-
-    /**
-     * Exécute les gardes du dépôt, séparément et sans les réécrire
-     * (ADOPTION-0027, Art. 4). Le contrôle documentaire Python et les tests de
-     * comportement PHP demeurent des programmes distincts ; cette commande les
-     * invoque, elle ne les absorbe pas.
-     */
-    private function gardesVertes(string $corpus): bool
-    {
-        // Doctrine arrêtée par ADOPTION-0035, Art. 2.2 : une garde documentaire
-        // unique, et une garde de comportement par capacité codée. Les gardes
-        // de comportement sont donc DÉCOUVERTES, non énumérées : ajouter une
-        // capacité et sa garde suffit à la placer sous ce contrôle.
-        $gardes = ['Garde documentaire — intégrité' => ['python3', 'outils/verifier-integrite.py']];
-
-        foreach (glob($corpus . '/core/*/tests/*_p3.php') ?: [] as $test) {
-            $module = basename(dirname($test, 2));
-            $gardes["Garde de comportement — {$module}"] = ['php', ltrim(str_replace($corpus, '', $test), '/')];
-        }
-
-        $toutes = true;
-        $environnementGarde = [
-            // Les gardes d'admission consultent l'histoire Git. Le dépôt de
-            // production appartient à root alors que cette commande s'exécute
-            // sous PHP-FPM : déclarer uniquement ce corpus comme sûr évite une
-            // configuration globale de Git pour www-data.
-            'GIT_CONFIG_COUNT' => '1',
-            'GIT_CONFIG_KEY_0' => 'safe.directory',
-            'GIT_CONFIG_VALUE_0' => $corpus,
-        ];
-
-        foreach ($gardes as $libelle => $commande) {
-            $process = new Process(
-                $commande,
-                $corpus,
-                env: $environnementGarde,
-                timeout: 300,
-            );
-            $process->run();
-
-            if ($process->isSuccessful()) {
-                $this->line("  <info>[OK]</info>    {$libelle}");
-                continue;
-            }
-
-            $toutes = false;
-            $this->line("  <error>[ÉCHEC]</error> {$libelle} (code " . $process->getExitCode() . ')');
-            foreach (preg_split('/\R/', trim($process->getErrorOutput() ?: $process->getOutput())) ?: [] as $ligne) {
-                if ($ligne !== '') {
-                    $this->line("          {$ligne}");
-                }
-            }
-        }
-
-        return $toutes;
     }
 }
