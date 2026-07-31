@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Gamad\RegistreAutorites\Ctr02;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,14 +16,14 @@ use Illuminate\Http\Request;
  * Lecture et attestation seulement (INV-4). Ce contrôleur ne contient aucune
  * logique propre : il traduit la requête en appel à Gamad\RegistreAutorites\Ctr02
  * et la réponse en HTTP. Aucune route d'écriture n'est déclarée : nommer,
- * suspendre ou révoquer demeure un acte signé, jamais une opération de service.
+ * suspendre ou révoquer demeure une opération administrative contrôlée,
+ * jamais une opération anonyme de service.
  */
 final class Ctr02Controller
 {
     private function ctr02(): Ctr02
     {
         $pdo = Db::connect();
-        $corpus = dirname(base_path(), 2);
 
         $vide = true;
         try {
@@ -32,7 +32,7 @@ final class Ctr02Controller
             $vide = true;
         }
         if ($vide) {
-            (new Ingestion($pdo, $corpus))->executer();
+            BaselineOperationnelle::standard()->reconstruire($pdo);
         }
 
         return new Ctr02($pdo);
