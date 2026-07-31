@@ -27,6 +27,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          if [ ! -f .migration/chunks/part-11 ]; then
+            echo "Fragments de migration encore incomplets."
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -62,7 +67,7 @@ jobs:
             core/registre-autorites/tests/mandat_p3.php \
             core/registre-identites/tests/identite_p3.php
 
-          base64 --decode .migration/simplification-files.tar.gz.b64 > /tmp/gamad-simplification-files.tar.gz
+          cat .migration/chunks/part-* | base64 --decode > /tmp/gamad-simplification-files.tar.gz
           tar -xzf /tmp/gamad-simplification-files.tar.gz -C .
 
           rm -rf .migration
