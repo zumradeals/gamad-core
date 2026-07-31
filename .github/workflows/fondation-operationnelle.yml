@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   socle-p0-p1:
@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
       - name: Installer PHP
         uses: shivammathur/setup-php@v2
@@ -36,30 +34,8 @@ jobs:
         working-directory: apps/console-laravel
         run: composer install --no-interaction --prefer-dist
 
-      - name: Exporter temporairement la baseline opérationnelle
-        run: php outils/exporter-baseline-index.php .migration/index-baseline.json
-
-      - name: Publier la baseline temporaire
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamad-index-baseline
-          path: .migration/index-baseline.json
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: Versionner la baseline sur la branche
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        shell: bash
-        run: |
-          set -euo pipefail
-          sed -E -i 's/"commit": "[0-9a-f]{40}"/"commit": "3e0203c1e5e980373bccd086e19c633c612bebb1"/' .migration/index-baseline.json
-          mkdir -p core/registre-normes/resources
-          cp .migration/index-baseline.json core/registre-normes/resources/index-baseline-v1.json
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add core/registre-normes/resources/index-baseline-v1.json
-          git commit -m "chore(core): versionner la baseline opérationnelle"
-          git push origin HEAD:${{ github.head_ref }}
+      - name: Éprouver la réindexation par baseline
+        run: php apps/console-laravel/tests/Integration/reindexation_baseline_p1.php
 
       - name: Vérifier le raccordement des variables Laravel
         run: php apps/console-laravel/tests/Integration/laravel_env_p0.php
