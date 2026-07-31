@@ -2,8 +2,9 @@
 
 Le module sert deux régimes de vérité sans les mélanger :
 
-- `entite`, `etat_entite` et `denomination` sont dérivées du corpus par
-  `RegistreNormes\Ingestion` et peuvent être reconstruites ;
+- `entite`, `etat_entite` et `denomination` appartiennent à l'index technique,
+  initialisé par `RegistreNormes\BaselineOperationnelle`, et peuvent être
+  reconstruites à volonté ;
 - les tables créées par `SchemaInscription::migrer()` constituent le registre
   persistant et ne figurent jamais dans la liste de suppression de l'index.
 
@@ -23,7 +24,7 @@ $ctr01 = new Ctr01($indexDerive, Magasin::connecter());
 ```
 
 Le second argument reste optionnel pour la compatibilité et les tests de
-migration. Même dans ce mode, une réingestion ne supprime pas les tables
+migration. Même dans ce mode, une réindexation ne supprime pas les tables
 persistantes.
 
 Les commandes d'inscription et de rattachement exigent une politique, un

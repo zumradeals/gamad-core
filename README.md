@@ -20,24 +20,21 @@ Ordre conseillé :
 
 ## État de la transition
 
-Le dossier `genesis-ii/` reste temporairement présent parce que certains modules et tests reconstruisent encore leurs données depuis cet ancien corpus.
+La transition hors de l’ancien corpus normatif est **terminée**. Le dépôt est
+piloté par le code, les configurations, les migrations, les tests et `docs/`.
 
-Il n’est plus destiné à piloter les nouveaux chantiers. Sa suppression interviendra seulement après migration de toutes les dépendances runtime vers des configurations, contrats et registres techniques explicites.
-
-La transition est séparée en trois étapes :
-
-1. documentation simple et opérationnelle ;
-2. migration technique des dépendances à Genesis II, module par module, avec tests verts ;
-3. suppression finale du corpus et des parseurs devenus inutiles.
+Aucun texte normatif n’est requis avant de coder. L’historique ancien reste
+récupérable dans Git. Le détail figure dans
+[`docs/06-transition-hors-genesis-ii.md`](docs/06-transition-hors-genesis-ii.md).
 
 ## Structure principale
 
 ```text
 apps/        applications et console
 core/        capacités et services partagés
-outils/      scripts d’exploitation et de contrôle
+ops/         exploitation, sauvegarde et restauration
 docs/        documentation active simple
-genesis-ii/  ancien corpus conservé temporairement pour compatibilité runtime
+archives/    archives historiques, sans rôle runtime
 ```
 
 ## Principe de travail

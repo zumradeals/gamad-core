@@ -3,19 +3,19 @@
 declare(strict_types=1);
 
 /**
- * Preuve P3 — reconstruction temporelle (conception d'implémentation, Titre V).
+ * Garde de comportement de CAP-CORE-007 — reconstruction temporelle.
  *
- * Vérifie qu'à une date passée donnée, le service restitue le statut RÉELLEMENT
- * en vigueur à cette date. Cas d'essai fondé sur un fait déjà vrai : l'état de
- * conception de CAP-CORE-007, EN CONCEPTION jusqu'à ADOPTION-0026, CONÇUE
- * ensuite. Ce test est la preuve P3 aujourd'hui manquante de la capacité.
+ * Vérifie qu'à une date passée donnée, le service restitue l'état RÉELLEMENT
+ * en vigueur à cette date, et que le diagnostic de l'index constate ce qui est
+ * réellement présent. L'index est initialisé depuis la baseline opérationnelle,
+ * sans lecture d'aucun fichier documentaire.
  *
  * Exécution : php core/registre-normes/tests/temporel_p3.php
- * Code de sortie : 0 si la preuve passe, 1 sinon.
+ * Code de sortie : 0 si la garde passe, 1 sinon.
  */
 
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Ctr04;
-use Gamad\RegistreNormes\Ingestion;
 use Gamad\RegistreNormes\Db;
 
 require __DIR__ . '/../bootstrap.php';
@@ -23,26 +23,26 @@ require __DIR__ . '/../bootstrap.php';
 // Base éphémère dédiée au test, indépendante de tout déploiement.
 $fichier = sys_get_temp_dir() . '/regn-p3-' . getmypid() . '.sqlite';
 @unlink($fichier);
+register_shutdown_function(static fn () => @unlink($fichier));
 putenv('DATABASE_URL='); // force SQLite
 putenv('SQLITE_PATH=' . $fichier);
 
 $pdo = Db::connect();
-(new Ingestion($pdo, REGN_CORPUS))->executer();
-$ctr04 = new Ctr04($pdo, REGN_CORPUS);
+$baseline = BaselineOperationnelle::standard();
+$baseline->reconstruire($pdo);
+$ctr04 = new Ctr04($pdo, $baseline);
 
 $cas = [
-    ['2026-07-26', 'EN CONCEPTION', 'la veille de son adoption'],
-    ['2026-07-27', 'CONÇUE',        'le jour de ADOPTION-0026'],
-    ['2026-08-01', 'CONÇUE',        'après adoption'],
+    ['2026-07-26', 'EN CONCEPTION', 'avant le changement d’état'],
+    ['2026-07-27', 'CONÇUE',        "le jour de l'état suivant"],
+    ['2026-08-01', 'CONÇUE',        'après le changement d’état'],
 ];
 
 $echecs = 0;
-echo "PREUVE P3 — RECONSTRUCTION TEMPORELLE DE CAP-CORE-007\n\n";
+echo "GARDE — RECONSTRUCTION TEMPORELLE DE CAP-CORE-007\n\n";
 foreach ($cas as [$date, $attendu, $libelle]) {
-    // Depuis la séparation des vocabulaires (INV-10), l'état de conception
-    // d'une capacité se résout par `resoudreCapacite` et non par
-    // `resoudreNorme` : une capacité n'est pas une norme. Les cas d'essai,
-    // les dates et les valeurs attendues sont inchangés.
+    // L'état de conception d'une capacité se résout par `resoudreCapacite` et
+    // non par `resoudreNorme` : une capacité n'est pas une norme.
     $r = $ctr04->resoudreCapacite('CAP-CORE-007', 'conception', $date);
     $obtenu = $r['valeur'] ?? '(aucun)';
     $ok = $obtenu === $attendu;
@@ -53,27 +53,56 @@ foreach ($cas as [$date, $attendu, $libelle]) {
     }
 }
 
-$index = $ctr04->resoudreIndex();
-$indexOk = $index['actes_primaires'] === $index['index'] && $index['divergences'] === [];
+// Une date antérieure à tout état connu ne doit pas inventer un état.
+$avant = $ctr04->resoudreCapacite('CAP-CORE-007', 'conception', '2020-01-01');
+$ok = $avant === null;
 printf(
-    "  %s  cohérence après réindexation : %d actes primaires, %d indexés\n",
-    $indexOk ? '[OK]  ' : '[ÉCHEC]',
-    $index['actes_primaires'],
-    $index['index'],
+    "  %s  aucun état n'est inventé avant le premier état connu\n",
+    $ok ? '[OK]  ' : '[ÉCHEC]',
 );
-if (!$indexOk) {
+if (!$ok) {
     $echecs++;
-    foreach ($index['divergences'] as $divergence) {
+}
+
+// Une capacité inconnue rend null : le service déclare son ignorance.
+$ok = $ctr04->resoudreCapacite('CAP-CORE-999', 'conception') === null;
+printf("  %s  une capacité inconnue rend null, sans valeur approchante\n", $ok ? '[OK]  ' : '[ÉCHEC]');
+if (!$ok) {
+    $echecs++;
+}
+
+// Diagnostic opérationnel : la baseline est intègre et l'index concorde.
+$diagnostic = $ctr04->diagnostiquerIndex();
+$ok = $diagnostic['coherent'] === true && $diagnostic['baseline']['concorde'] === true;
+printf(
+    "  %s  diagnostic de l'index : %s, %d divergence(s)\n",
+    $ok ? '[OK]  ' : '[ÉCHEC]',
+    $diagnostic['baseline']['concorde'] ? 'baseline intègre' : 'baseline altérée',
+    count($diagnostic['divergences']),
+);
+if (!$ok) {
+    $echecs++;
+    foreach ($diagnostic['divergences'] as $divergence) {
         echo "          {$divergence}\n";
     }
 }
 
-@unlink($fichier);
+// Contre-épreuve : un index amputé DOIT être signalé par le diagnostic.
+$pdo->exec("DELETE FROM etat_capacite WHERE capacite_reference = 'CAP-CORE-007'");
+$apres = $ctr04->diagnostiquerIndex();
+$ok = $apres['coherent'] === false && $apres['divergences'] !== [];
+printf(
+    "  %s  un index amputé est signalé, non présumé conforme\n",
+    $ok ? '[OK]  ' : '[ÉCHEC]',
+);
+if (!$ok) {
+    $echecs++;
+}
 
 echo "\n";
 if ($echecs === 0) {
-    echo "Preuve P3 : ÉTABLIE. CAP-CORE-007 atteint le niveau de preuve P3.\n";
+    echo "Garde CAP-CORE-007 : ÉTABLIE.\n";
     exit(0);
 }
-echo "Preuve P3 : NON ÉTABLIE ({$echecs} écart(s)).\n";
+echo "Garde CAP-CORE-007 : NON ÉTABLIE ({$echecs} écart(s)).\n";
 exit(1);

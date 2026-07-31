@@ -7,25 +7,20 @@ namespace Gamad\RegistreNormes;
 use Gamad\RegistreSources\Ctr15;
 
 /**
- * Les trois opérations de lecture du contrat CTR-04 (conception adoptée,
- * Titre III ; conception d'implémentation, Titre IV). Lecture et attestation
- * seulement : aucune écriture applicative du corpus (INV-4, Article 68 du
- * registre des capacités).
+ * Les opérations de lecture du contrat CTR-04 — registre des normes.
+ *
+ * Lecture seulement : le service interroge l'index technique et ne lit aucun
+ * fichier. L'initialisation contrôlée de cet index relève de
+ * {@see BaselineOperationnelle}, jamais d'un appelant.
  */
 final class Ctr04
 {
-    /**
-     * La capacité souveraine que ce module sert (INV-41).
-     *
-     * Une famille de contrat peut servir deux capacités — `CTR-10` sert
-     * l'audit et l'intégrité. Le numéro de famille ne suffit donc pas à
-     * rattacher un module ; le module le déclare lui-même.
-     */
+    /** La capacité que ce module sert. */
     public const CAPACITE = 'CAP-CORE-007';
 
     public function __construct(
         private \PDO $pdo,
-        private string $corpus,
+        private ?BaselineOperationnelle $baseline = null,
     ) {
     }
 
@@ -38,7 +33,7 @@ final class Ctr04
      */
     public function resoudreNorme(string $reference, ?string $version = null, ?string $date = null): ?array
     {
-        $sql = 'SELECT v.id, v.norme_reference, v.version, v.empreinte_git, v.chemin, n.rang_code
+        $sql = 'SELECT v.id, v.norme_reference, v.version, n.rang_code
                 FROM version_norme v JOIN norme n ON n.reference = v.norme_reference
                 WHERE v.norme_reference = ?';
         $args = [$reference];
@@ -74,8 +69,6 @@ final class Ctr04
         return [
             'reference'          => $v['norme_reference'],
             'version'            => $v['version'],
-            'empreinte_git'      => $v['empreinte_git'],
-            'chemin'             => $v['chemin'],
             'rang'               => $v['rang_code'],
             'statut'             => $statut['valeur'] ?? null,
             'date_effet'         => $statut['date_effet'] ?? null,
@@ -86,27 +79,23 @@ final class Ctr04
 
     /**
      * Résout une source reconnue : son identité, sa catégorie, son niveau
-     * d'authenticité et, si le corpus la connaît aussi comme norme, son statut.
+     * d'authenticité et, si elle est aussi connue comme norme, son statut.
      *
      * L'authenticité (`AUTH-0` à `AUTH-4`) et le statut d'adoption sont rendus
-     * côte à côte mais jamais confondus (`INV-9`) : une source peut être
-     * authentifiée et abrogée, ou de provenance seulement déclarée et faire
-     * règle. Le rang est celui du corpus, `INDETERMINE` tant qu'aucune autorité
-     * ne l'a établi (`INV-8`).
+     * côte à côte mais jamais confondus : une source peut être authentifiée et
+     * abrogée, ou de provenance seulement déclarée et faire règle. Le rang
+     * rendu est `INDETERMINE` tant qu'aucune autorité ne l'a établi.
      *
-     * Depuis le premier incrément à garde propre de `CAP-CORE-006`, cette
-     * opération **délègue** à `CTR-15`, seul titulaire du contrat des sources.
-     * Le comportement est inchangé ; ce qui change est le sens de la
-     * dépendance, désormais conforme à l'Article 42 du registre des capacités :
+     * L'opération délègue à `CTR-15`, seul titulaire du contrat des sources :
      * le registre des normes dépend des sources, jamais l'inverse. La méthode
-     * demeure exposée ici pour les appelants existants (tableau de bord,
-     * couche Laravel), qui n'ont pas à connaître ce déplacement.
+     * demeure exposée ici pour les appelants existants, qui n'ont pas à
+     * connaître ce déplacement.
      *
      * @return array<string,mixed>|null
      */
     public function resoudreSource(string $reference, ?string $date = null): ?array
     {
-        return (new Ctr15($this->pdo, $this->corpus))->resoudreSource($reference, $date);
+        return (new Ctr15($this->pdo))->resoudreSource($reference, $date);
     }
 
     /**
@@ -115,8 +104,8 @@ final class Ctr04
      * Distincte de `resoudreNorme` à dessein : l'état d'une capacité
      * (`EN CONCEPTION`, `CONÇUE`, …) et le statut d'une norme
      * (`EN VIGUEUR`, `ABROGE`, …) sont deux vocabulaires que rien n'autorise à
-     * mêler (`INV-10`). En particulier, `en_vigueur` n'est pas calculé ici :
-     * la question n'a pas de sens pour une capacité.
+     * mêler. En particulier, `en_vigueur` n'est pas calculé ici : la question
+     * n'a pas de sens pour une capacité.
      *
      * @return array<string,mixed>|null
      */
@@ -149,78 +138,19 @@ final class Ctr04
     }
 
     /**
-     * Recalcule l'empreinte réelle de chaque fichier référencé et la compare à
-     * l'empreinte déclarée. L'empreinte réelle n'est jamais recopiée : elle est
-     * recalculée (INV-1). Retourne une ligne par version.
+     * Diagnostic opérationnel de l'index : intégrité de la source
+     * d'initialisation et concordance des volumes réellement présents.
      *
-     * @return list<array<string,mixed>>
-     */
-    public function verifierIntegrite(?string $reference = null): array
-    {
-        $sql = 'SELECT norme_reference, version, empreinte_git, chemin FROM version_norme';
-        $args = [];
-        if ($reference !== null) {
-            $sql .= ' WHERE norme_reference = ?';
-            $args[] = $reference;
-        }
-        $sql .= ' ORDER BY chemin';
-        $st = $this->pdo->prepare($sql);
-        $st->execute($args);
-
-        $lignes = [];
-        foreach ($st->fetchAll() as $v) {
-            $fichier = $this->corpus . '/' . $v['chemin'];
-            $present = is_file($fichier);
-            $reelle  = $present ? GitBlob::hashFile($fichier) : null;
-            $lignes[] = [
-                'reference'         => $v['norme_reference'],
-                'chemin'            => $v['chemin'],
-                'empreinte_declaree' => $v['empreinte_git'],
-                'empreinte_reelle'  => $reelle,
-                'fichier_present'   => $present,
-                'concorde'          => $present && $reelle === $v['empreinte_git'],
-            ];
-        }
-
-        return $lignes;
-    }
-
-    /**
-     * Reconstruit l'ensemble des actes d'adoption à partir des fichiers
-     * primaires (répertoire des actes) et le compare à l'index dérivé (INV-5).
-     * Les constats d'exécution compagnons ne sont pas des actes distincts.
+     * Remplace les anciens contrôles d'empreinte de fichiers : l'index ne
+     * dérive plus d'un corpus documentaire, et vérifier des empreintes de
+     * fichiers absents ne prouverait rien.
      *
-     * @return array{actes_primaires:int,index:int,divergences:list<string>}
+     * @return array{baseline:array<string,mixed>,index:array<string,mixed>,
+     *               divergences:list<string>,coherent:bool}
      */
-    public function resoudreIndex(): array
+    public function diagnostiquerIndex(): array
     {
-        $primaires = [];
-        foreach (glob($this->corpus . '/genesis-ii/registre/ADOPTION-*.md') ?: [] as $f) {
-            // Seul le suffixe compagnon est exclu. Un mot « EXECUTION » dans
-            // le titre d'un acte primaire (ADOPTION-0065) ne le transforme
-            // pas en constat d'exécution.
-            if (preg_match('/-EXECUTION\.md$/', basename($f)) === 1) {
-                continue;
-            }
-            if (preg_match('/(ADOPTION-\d{4})/', basename($f), $m)) {
-                $primaires[$m[1]] = true;
-            }
-        }
-
-        $index = [];
-        foreach ($this->pdo->query('SELECT reference FROM adoption')->fetchAll() as $r) {
-            $index[$r['reference']] = true;
-        }
-
-        $divergences = array_merge(
-            array_map(fn ($r) => "acte présent, absent de l'index : {$r}", array_keys(array_diff_key($primaires, $index))),
-            array_map(fn ($r) => "index cite un acte absent du dépôt : {$r}", array_keys(array_diff_key($index, $primaires))),
-        );
-
-        return [
-            'actes_primaires' => count($primaires),
-            'index'           => count($index),
-            'divergences'     => array_values($divergences),
-        ];
+        return ($this->baseline ?? BaselineOperationnelle::standard())
+            ->diagnostiquer($this->pdo);
     }
 }

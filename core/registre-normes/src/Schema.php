@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Gamad\RegistreNormes;
 
 /**
- * Schéma relationnel de l'index dérivé (conception d'implémentation, Titre II).
+ * Schéma relationnel de l'index technique.
  *
- * Portable PostgreSQL / SQLite. L'index étant dérivé et reconstructible, la
- * création commence par supprimer les tables : rejouer l'ingestion produit
- * toujours le même index (idempotence, INV-5). L'invariant d'ajout seul
- * (INV-3) est tenu par le code applicatif — Ingestion et Ctr04 n'émettent
- * jamais d'UPDATE ni de DELETE sur `statut`, `adoption` et
- * `relation_evolution` ; en déploiement, il est en outre durci par les
- * privilèges PostgreSQL (voir README).
+ * Portable PostgreSQL / SQLite. L'index est reconstructible : la création
+ * commence par supprimer les tables, de sorte que rejouer la reconstruction
+ * depuis la baseline produise toujours le même index (idempotence). L'ajout
+ * seul de `statut`, `adoption` et `relation_evolution` est tenu par le code
+ * applicatif — CTR-04 n'émet jamais d'UPDATE ni de DELETE — et durci en
+ * déploiement par les privilèges PostgreSQL (voir README).
  */
 final class Schema
 {
@@ -33,10 +32,10 @@ final class Schema
             $pdo->exec("DROP TABLE IF EXISTS {$t}");
         }
 
-        // Hiérarchie normative de SOURCES-0001, Articles 25 à 33 (INV-8).
-        // Le rang d'une norme procède de cette table et d'elle seule ; il n'est
-        // jamais inventé. `INDETERMINE` y figure comme rang explicite : le
-        // service déclare son ignorance plutôt que de présumer.
+        // Hiérarchie normative de référence. Le rang d'une norme procède de
+        // cette table et d'elle seule ; il n'est jamais inventé. `INDETERMINE`
+        // y figure comme rang explicite : le service déclare son ignorance
+        // plutôt que de présumer.
         $pdo->exec(<<<SQL
             CREATE TABLE rang_normatif (
                 code    TEXT PRIMARY KEY,
@@ -46,9 +45,9 @@ final class Schema
             )
         SQL);
 
-        // Une source reconnue au sens de SOURCES-0001. L'authenticité (AUTH-n)
-        // y est distincte du statut d'adoption (INV-9) : une source peut être
-        // authentifiée et abrogée, ou de provenance déclarée et faire règle.
+        // Une source reconnue. L'authenticité (AUTH-n) y est distincte du
+        // statut d'adoption : une source peut être authentifiée et abrogée,
+        // ou de provenance déclarée et faire règle.
         $pdo->exec(<<<SQL
             CREATE TABLE source (
                 reference    TEXT PRIMARY KEY,
@@ -77,13 +76,14 @@ final class Schema
             )
         SQL);
 
+        // Une version de norme est identifiée par sa référence canonique et son
+        // numéro, jamais par un chemin de fichier : renommer un fichier ne
+        // renomme pas une norme, et l'index ne référence plus aucun document.
         $pdo->exec(<<<SQL
             CREATE TABLE version_norme (
                 id              {$id},
                 norme_reference TEXT NOT NULL REFERENCES norme(reference),
                 version         TEXT NOT NULL,
-                empreinte_git   TEXT NOT NULL,
-                chemin          TEXT NOT NULL,
                 UNIQUE (norme_reference, version)
             )
         SQL);
@@ -98,10 +98,9 @@ final class Schema
             )
         SQL);
 
-        // État d'une capacité souveraine, en ajout seul (INV-3), fondé sur un
-        // acte (INV-4). Séparé de `statut` : un état de capacité et un statut
-        // de norme sont deux vocabulaires distincts et ne partagent pas une
-        // colonne (INV-10, CONCEPTION-CAP-CORE-006, Art. 6 et 10).
+        // État d'une capacité, en ajout seul. Séparé de `statut` : un état de
+        // capacité et un statut de norme sont deux vocabulaires distincts et
+        // ne partagent pas une colonne.
         $pdo->exec(<<<SQL
             CREATE TABLE etat_capacite (
                 id                 {$id},
@@ -114,9 +113,9 @@ final class Schema
             )
         SQL);
 
-        // CAP-CORE-004 — politiques d'autorisation (CONCEPTION-CAP-CORE-004).
-        // Les politiques sont DÉRIVÉES du corpus, jamais écrites dans le code
-        // du moteur (INV-29) : changer une règle exige un acte, non un correctif.
+        // CAP-CORE-004 — politiques d'autorisation. Les politiques sont des
+        // DONNÉES de l'index, jamais du code du moteur : changer une règle est
+        // un changement de données tracé, non un correctif enfoui.
         $pdo->exec(<<<SQL
             CREATE TABLE politique (
                 reference          TEXT PRIMARY KEY,
@@ -128,7 +127,7 @@ final class Schema
         SQL);
 
         // `sujet_type` NULL = la règle vaut pour TOUT sujet, titulaire du
-        // mandat compris (INV-30). Un moteur qui exempterait l'autorité de ses
+        // mandat compris. Un moteur qui exempterait l'autorité de ses
         // propres bornes ne serait pas un moteur d'autorisation.
         $pdo->exec(<<<SQL
             CREATE TABLE regle (
@@ -141,9 +140,9 @@ final class Schema
             )
         SQL);
 
-        // CAP-CORE-001 — identités (CONCEPTION-CAP-CORE-001, Titre II).
+        // CAP-CORE-001 — identités.
         // AUCUNE colonne de profil, de dossier métier, de réputation ni de
-        // jugement : l'exclusion d'INV-19 est tenue par la STRUCTURE, non par
+        // jugement : l'exclusion est tenue par la STRUCTURE, non par
         // la discipline. Un registre d'identités souverain qui accumulerait des
         // jugements sur les personnes deviendrait un instrument de pouvoir sur
         // elles ; il n'y a pas d'endroit où les mettre.
@@ -168,7 +167,7 @@ final class Schema
         SQL);
 
         // Dénominations relevées : plusieurs lignes pour une référence signalent
-        // une divergence du corpus, que le service expose sans la trancher.
+        // une divergence de provenance, que le service expose sans la trancher.
         $pdo->exec(<<<SQL
             CREATE TABLE denomination (
                 id               {$id},
@@ -178,9 +177,8 @@ final class Schema
             )
         SQL);
 
-        // CAP-CORE-003 — autorités et mandats (CONCEPTION-CAP-CORE-003, Titre II).
-        // Les vocabulaires d'état sont repris LITTÉRALEMENT des Articles 11 à 13
-        // du registre adopté ; aucune valeur nouvelle n'est introduite.
+        // CAP-CORE-003 — autorités et mandats. Les vocabulaires d'état sont des
+        // données de l'index ; aucune valeur n'est introduite par le code.
         $pdo->exec(<<<SQL
             CREATE TABLE titulaire (
                 reference TEXT PRIMARY KEY,
@@ -197,7 +195,7 @@ final class Schema
             )
         SQL);
 
-        // État d'une fonction, en ajout seul (INV-3). Article 11 : 10 valeurs.
+        // État d'une fonction, en ajout seul.
         $pdo->exec(<<<SQL
             CREATE TABLE etat_fonction (
                 id                 {$id},
@@ -220,7 +218,7 @@ final class Schema
             )
         SQL);
 
-        // État d'un mandat, en ajout seul (INV-3). Article 12 : 12 valeurs.
+        // État d'un mandat, en ajout seul.
         $pdo->exec(<<<SQL
             CREATE TABLE etat_mandat (
                 id                 {$id},

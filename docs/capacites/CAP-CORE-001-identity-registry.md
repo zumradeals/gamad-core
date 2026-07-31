@@ -1184,20 +1184,20 @@ Claude ne doit pas :
 
 ---
 
-# 18. DOCUMENTS CANONIQUES À LIRE AVANT RÉDACTION
+# 18. SOURCES À LIRE AVANT RÉDACTION
 
-Claude doit lire intégralement, au minimum :
+Le corpus documentaire Genesis II a été retiré du dépôt : les sources de cette
+fiche sont désormais le code, les tests et la documentation opérationnelle. Il
+faut lire intégralement, au minimum :
 
 ```text
-genesis-ii/conception/CONCEPTION-CAP-CORE-001-REGISTRE-DES-IDENTITES-0001.md
-genesis-ii/registre/ADOPTION-0038-CAP-CORE-001-0001.md
-genesis-ii/registre/ADOPTION-0063-ADMISSION-EXCEPTIONNELLE-VINGT-0001.md
-genesis-ii/registres/capacites/REGISTRE-INITIAL-CAPACITES-SOUVERAINES-0001.md
-genesis-ii/constitution/PRODUCT-CONSTITUTION-0001-constitution-produits.md
-genesis-ii/gouvernance/DATA-GOVERNANCE-0001-gouvernance-donnees-finalites-responsabilites-classification-conservation-partage-droits.md
-genesis-ii/gouvernance/SECURITY-GOVERNANCE-0001-gouvernance-acces-secrets-incidents-continuite.md
-genesis-ii/gouvernance/GOVERNANCE-0001-constitution-gouvernance-gamad-core.md
+docs/01-architecture-core-portail-satellites.md
+docs/02-compte-gamad-et-federation.md
+docs/04-donnees-securite-et-finalites.md
+docs/capacites/CATALOGUE.md
+core/registre-identites/README.md
 core/registre-identites/src/Ctr01.php
+core/registre-identites/src/SchemaInscription.php
 core/registre-identites/tests/identite_p3.php
 apps/console-laravel/app/Http/Controllers/Ctr01Controller.php
 apps/console-laravel/routes/web.php

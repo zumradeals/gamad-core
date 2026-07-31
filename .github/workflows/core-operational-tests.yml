@@ -1,0 +1,153 @@
+name: Core — tests opérationnels
+
+# Éprouve le comportement réel du Core : gardes de capacité, intégration HTTP,
+# authentification, journal append-only, PostgreSQL, sauvegarde et restauration.
+#
+# Les jobs sont séparés pour le diagnostic, non pour la forme : un échec de
+# garde de capacité ne se confond pas avec un échec d'intégration ni avec un
+# échec de socle PostgreSQL.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gardes-capacites:
+    name: Garde de capacité — ${{ matrix.capacite }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - capacite: CAP-CORE-001 (identités)
+            garde: core/registre-identites/tests/identite_p3.php
+          - capacite: CAP-CORE-003 (autorités et mandats)
+            garde: core/registre-autorites/tests/mandat_p3.php
+          - capacite: CAP-CORE-004 (autorisation)
+            garde: core/registre-autorisation/tests/autorisation_p3.php
+          - capacite: CAP-CORE-005 (accès)
+            garde: core/registre-acces/tests/authentification_p3.php
+          - capacite: CAP-CORE-006 (sources)
+            garde: core/registre-sources/tests/sources_p3.php
+          - capacite: CAP-CORE-007 (normes)
+            garde: core/registre-normes/tests/temporel_p3.php
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_sqlite
+
+      - name: Exécuter la garde
+        run: php ${{ matrix.garde }}
+
+  socle-et-integration:
+    name: Socle, console, API et refus par défaut
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_sqlite
+
+      - name: Éprouver le socle opérationnel et le journal append-only
+        run: php core/journal-operationnel/tests/fondation_operationnelle_p3.php
+
+      - name: Installer le monolithe Laravel
+        working-directory: apps/console-laravel
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Vérifier la cohérence de composer.json
+        working-directory: apps/console-laravel
+        run: composer validate --no-check-publish --no-interaction
+
+      - name: Éprouver la réindexation par baseline
+        run: php apps/console-laravel/tests/Integration/reindexation_baseline_p1.php
+
+      - name: Éprouver l'initialisation CTR-01 par baseline
+        run: php apps/console-laravel/tests/Integration/ctr01_baseline_p1.php
+
+      - name: Éprouver l'initialisation CTR-02 par baseline
+        run: php apps/console-laravel/tests/Integration/ctr02_baseline_p1.php
+
+      - name: Éprouver l'initialisation CTR-03 par baseline
+        run: php apps/console-laravel/tests/Integration/ctr03_baseline_p1.php
+
+      - name: Éprouver CTR-04 et le diagnostic d'index par baseline
+        run: php apps/console-laravel/tests/Integration/ctr04_baseline_p1.php
+
+      - name: Vérifier le raccordement des variables Laravel
+        run: php apps/console-laravel/tests/Integration/laravel_env_p0.php
+
+      - name: Exécuter l'intégration HTTP v1
+        run: php apps/console-laravel/tests/Integration/api_v1_p1.php
+
+      - name: Éprouver l'authentification console
+        run: php apps/console-laravel/tests/Integration/console_auth_p1.php
+
+      - name: Éprouver la console quotidienne
+        run: php apps/console-laravel/tests/Integration/console_ux_p1.php
+
+      - name: Éprouver le facteur fort WebAuthn A2
+        run: php apps/console-laravel/tests/Integration/passkey_a2_p2.php
+
+      - name: Éprouver l'import SQLite
+        run: php apps/console-laravel/tests/Integration/import_sqlite_p0.php
+
+  postgresql-sauvegarde-restauration:
+    name: PostgreSQL réel, sauvegarde et restauration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_sqlite, pdo_pgsql
+
+      - name: Installer le monolithe Laravel
+        working-directory: apps/console-laravel
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Éprouver PostgreSQL, la sauvegarde et l'exercice de restauration
+        run: apps/console-laravel/tests/Integration/postgresql_p0.sh
+
+  syntaxe-php:
+    name: Syntaxe PHP du Core et de la console
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Contrôler chaque fichier PHP livré
+        run: |
+          find core apps -type f -name '*.php' \
+            -not -path '*/vendor/*' \
+            -print0 | xargs -0 -n1 -P4 php -l > /dev/null

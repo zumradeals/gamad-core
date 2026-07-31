@@ -3,17 +3,18 @@
 declare(strict_types=1);
 
 /**
- * Preuve P3 de CAP-CORE-001 — corpus historique + registre persistant.
+ * Garde de comportement de CAP-CORE-001 — index technique + registre
+ * persistant, tenus séparés.
  *
  * Exécution : php core/registre-identites/tests/identite_p3.php
- * Code de sortie : 0 si toutes les preuves et contre-épreuves passent.
+ * Code de sortie : 0 si toutes les épreuves et contre-épreuves passent.
  */
 
 use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreIdentites\SchemaInscription;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 
 require __DIR__ . '/../../registre-normes/bootstrap.php';
 require __DIR__ . '/../src/PolitiqueInscription.php';
@@ -30,7 +31,7 @@ foreach ([$indexFichier, $registreFichier, $partageFichier] as $fichier) {
 putenv('DATABASE_URL=');
 putenv('SQLITE_PATH=' . $indexFichier);
 $index = Db::connect();
-(new Ingestion($index, REGN_CORPUS))->executer();
+BaselineOperationnelle::standard()->reconstruire($index);
 
 $registre = new PDO('sqlite:' . $registreFichier);
 $registre->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -38,7 +39,7 @@ $registre->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 $ctr01 = new Ctr01($index, $registre);
 
 $echecs = 0;
-echo "PREUVE P3 — IDENTITY REGISTRY PERSISTANT (CAP-CORE-001)\n\n";
+echo "GARDE — IDENTITY REGISTRY PERSISTANT (CAP-CORE-001)\n\n";
 
 $verifier = static function (bool $ok, string $message) use (&$echecs): void {
     echo $ok ? "  [OK]    {$message}\n" : "  [ÉCHEC] {$message}\n";
@@ -47,7 +48,7 @@ $verifier = static function (bool $ok, string $message) use (&$echecs): void {
     }
 };
 
-// 1 et 13 — appels historiques et reconstruction temporelle inchangés.
+// 1 et 13 — lectures datées et reconstruction temporelle inchangées.
 $cas = [
     ['2026-07-26', 'HISTORIQUE À QUALIFIER'],
     ['2026-07-27', 'DISSOUS — IDENTITÉ RENDUE AU CORE'],
@@ -55,16 +56,16 @@ $cas = [
 ];
 foreach ($cas as [$date, $attendu]) {
     $obtenu = $ctr01->resoudreIdentite('PRD-GAMAD-001', $date)['etat'] ?? null;
-    $verifier($obtenu === $attendu, "appel historique resoudreIdentite au {$date}");
+    $verifier($obtenu === $attendu, "resoudreIdentite à la date {$date}");
 }
 $inventaireInitial = $ctr01->resoudreInventaire();
 $verifier(count(array_filter(
     $inventaireInitial,
     static fn (array $i): bool => $i['regime'] === Ctr01::DERIVE,
-)) >= 7, 'les sept identités historiques du corpus restent résolues');
+)) >= 7, 'les sept identités techniques de l’index restent résolues');
 $verifier(
     array_filter($ctr01->resoudreDenominations(), static fn (array $d): bool => $d['divergente']) !== [],
-    'resoudreDenominations signale toujours la divergence historique',
+    'resoudreDenominations signale toujours une divergence de dénomination',
 );
 
 // 2 — une personne peut être inscrite par un produit reconnu.
@@ -282,8 +283,8 @@ $verifier(
     'une correspondance probable reste en attente de validation',
 );
 
-// 7 — réindexation avec bases séparées.
-(new Ingestion($index, REGN_CORPUS))->executer();
+// 7 — réindexation depuis la baseline, avec bases séparées.
+BaselineOperationnelle::standard()->reconstruire($index);
 $ctr01 = new Ctr01($index, $registre);
 $verifier(
     ($ctr01->resoudreIdentite($personneRef)['reference'] ?? null) === $personneRef
@@ -295,7 +296,7 @@ $verifier(
 // dans la liste destructrice de Schema::create().
 putenv('SQLITE_PATH=' . $partageFichier);
 $partage = Db::connect();
-(new Ingestion($partage, REGN_CORPUS))->executer();
+BaselineOperationnelle::standard()->reconstruire($partage);
 $ctrPartage = new Ctr01($partage);
 $idPartagee = $ctrPartage->inscrireIdentite([
     'canal' => 'PRODUIT_RECONNU',
@@ -307,7 +308,7 @@ $idPartagee = $ctrPartage->inscrireIdentite([
     'preuve' => 'EVT-P3-PARTAGE-001',
     'date' => '2026-07-30',
 ]);
-(new Ingestion($partage, REGN_CORPUS))->executer();
+BaselineOperationnelle::standard()->reconstruire($partage);
 $ctrPartage = new Ctr01($partage);
 $verifier(
     ($ctrPartage->resoudreIdentite((string) $idPartagee['reference'])['reference'] ?? null)
@@ -329,13 +330,13 @@ foreach (SchemaInscription::TABLES as $table) {
     }
 }
 $verifier($colonnesInterdites === [], 'le schéma ne contient aucune colonne de profil ou de jugement');
-$routes = (string) file_get_contents(REGN_CORPUS . '/apps/console-laravel/routes/web.php');
-$routesApi = (string) file_get_contents(REGN_CORPUS . '/apps/console-laravel/routes/api.php');
+$routes = (string) file_get_contents(GAMAD_RACINE . '/apps/console-laravel/routes/web.php');
+$routesApi = (string) file_get_contents(GAMAD_RACINE . '/apps/console-laravel/routes/api.php');
 $controleurConsole = (string) file_get_contents(
-    REGN_CORPUS . '/apps/console-laravel/app/Http/Controllers/IdentiteConsoleController.php'
+    GAMAD_RACINE . '/apps/console-laravel/app/Http/Controllers/IdentiteConsoleController.php'
 );
 $casUsage = (string) file_get_contents(
-    REGN_CORPUS . '/apps/console-laravel/app/Application/Identites/InscrireIdentite.php'
+    GAMAD_RACINE . '/apps/console-laravel/app/Application/Identites/InscrireIdentite.php'
 );
 $verifier(
     str_contains($routes, "Route::middleware('gamad.session')")
@@ -349,7 +350,7 @@ $verifier(
         && str_contains($routesApi, "Route::post('/identites'")
         && str_contains(
             (string) file_get_contents(
-                REGN_CORPUS . '/apps/console-laravel/app/Http/Controllers/Api/V1/IdentiteController.php'
+                GAMAD_RACINE . '/apps/console-laravel/app/Http/Controllers/Api/V1/IdentiteController.php'
             ),
             'InscrireIdentite $inscrire',
         )
@@ -396,8 +397,8 @@ foreach ([$indexFichier, $registreFichier, $partageFichier] as $fichier) {
 
 echo "\n";
 if ($echecs === 0) {
-    echo "Preuve P3 : ÉTABLIE. CAP-CORE-001 couvre le registre persistant révisé.\n";
+    echo "Garde CAP-CORE-001 : ÉTABLIE.\n";
     exit(0);
 }
-echo "Preuve P3 : NON ÉTABLIE ({$echecs} écart(s)).\n";
+echo "Garde CAP-CORE-001 : NON ÉTABLIE ({$echecs} écart(s)).\n";
 exit(1);

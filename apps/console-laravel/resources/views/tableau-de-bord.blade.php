@@ -43,7 +43,7 @@
         </h2>
         <p class="hero-status__copy">
             @if($corePret && $alertes === [])
-                Les quatre registres répondent, les contrôles sont cohérents et votre mandat autorise les opérations prévues.
+                Les quatre magasins répondent, l’index est cohérent et votre mandat autorise les opérations prévues.
             @else
                 Les services disponibles sont affichés ci-dessous. Toute action non autorisée restera fermée par défaut.
             @endif
@@ -57,7 +57,7 @@
         <div class="health-orbit__ring {{ $corePret ? '' : 'health-orbit__ring--danger' }}">
             <span>
                 <span class="health-orbit__state">{{ $corePret ? 'Prêt' : 'À vérifier' }}</span>
-                <span class="health-orbit__label">4 registres souverains</span>
+                <span class="health-orbit__label">4 magasins opérationnels</span>
             </span>
         </div>
     </div>
@@ -229,28 +229,62 @@
     <section class="card span-5" aria-labelledby="integrity-title">
         <div class="card__header">
             <div>
-                <h2 class="card__title" id="integrity-title">Cohérence et preuves</h2>
-                <p class="card__description">Les indicateurs techniques restent disponibles, sans dominer l’accueil.</p>
+                <h2 class="card__title" id="integrity-title">Index technique</h2>
+                <p class="card__description">Intégrité de la source d’initialisation et volumes présents.</p>
             </div>
+            <span class="status {{ $diagnostic['coherent'] ? 'status--success' : 'status--danger' }}">
+                {{ $diagnostic['coherent'] ? 'Cohérent' : 'À vérifier' }}
+            </span>
         </div>
         <div class="card__body">
             <dl class="detail-list">
                 <div class="detail-row">
-                    <dt>Actes d’adoption</dt>
-                    <dd>{{ count($adoptions) }}</dd>
+                    <dt>Empreinte de la baseline</dt>
+                    <dd>{{ $diagnostic['baseline']['concorde'] ? 'SHA-256 vérifiée' : 'non concordante' }}</dd>
                 </div>
                 <div class="detail-row">
-                    <dt>Fichiers intègres</dt>
-                    <dd>{{ count($concordants) }}</dd>
+                    <dt>Index lisible</dt>
+                    <dd>{{ $diagnostic['index']['lisible'] ? 'oui' : 'non' }}</dd>
                 </div>
                 <div class="detail-row">
                     <dt>Divergences</dt>
-                    <dd>{{ count($divergents) + count($index['divergences']) }}</dd>
+                    <dd>{{ count($diagnostic['divergences']) }}</dd>
                 </div>
                 <div class="detail-row">
-                    <dt>Preuve temporelle</dt>
-                    <dd>{{ $p3Ok ? 'P3 établie' : 'À vérifier' }}</dd>
+                    <dt>Journal opérationnel</dt>
+                    <dd>{{ $journalDisponible ? 'disponible' : 'illisible' }}</dd>
                 </div>
+            </dl>
+            @if(! $diagnostic['coherent'])
+                <ul class="detail-list">
+                    @foreach($diagnostic['divergences'] as $divergence)
+                        <li class="technical-reference">{{ $divergence }}</li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    </section>
+
+    <section class="card span-12" aria-labelledby="capacites-title">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="capacites-title">État des capacités</h2>
+                <p class="card__description">Ce que l’index technique déclare, sans interprétation.</p>
+            </div>
+        </div>
+        <div class="card__body">
+            <dl class="detail-list">
+                @foreach($capacites as $capacite)
+                    <div class="detail-row">
+                        <dt>{{ $capacite['reference'] }}</dt>
+                        <dd>
+                            {{ $capacite['valeur'] }}
+                            @if($capacite['date_effet'])
+                                <span class="technical-reference">depuis {{ $capacite['date_effet'] }}</span>
+                            @endif
+                        </dd>
+                    </div>
+                @endforeach
             </dl>
         </div>
     </section>

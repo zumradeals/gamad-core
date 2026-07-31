@@ -43,9 +43,9 @@ $premier = $baseline->reconstruire($pdo);
 $verifier(
     $premier === [
         'adoptions' => 66,
-        'normes' => 98,
-        'versions' => 98,
-        'statuts' => 98,
+        'normes' => 95,
+        'versions' => 95,
+        'statuts' => 95,
         'etats' => 40,
         'rangs' => 9,
         'sources' => 26,
@@ -53,7 +53,7 @@ $verifier(
         'entites' => 7,
         'regles' => 14,
         'mandats' => 1,
-        'indetermines' => 98,
+        'indetermines' => 95,
     ],
     'la baseline reconstruit les données techniques attendues',
 );
@@ -67,7 +67,7 @@ $verifier(
 $second = $baseline->reconstruire($pdo);
 $verifier(
     $second === $premier
-        && (int) $pdo->query('SELECT count(*) FROM version_norme')->fetchColumn() === 98,
+        && (int) $pdo->query('SELECT count(*) FROM version_norme')->fetchColumn() === 95,
     'la reconstruction est idempotente',
 );
 
@@ -100,13 +100,13 @@ try {
 }
 $verifier(
     $corruptionRefusee
-        && (int) $pdo->query('SELECT count(*) FROM version_norme')->fetchColumn() === 98,
+        && (int) $pdo->query('SELECT count(*) FROM version_norme')->fetchColumn() === 95,
     'une baseline altérée est refusée sans détruire l’index existant',
 );
 
 $verifier(
-    ! str_contains(str_replace('\\', '/', $baseline->chemin()), '/genesis-ii/'),
-    'la source de réindexation est stockée hors du corpus historique',
+    ! str_contains($brut, 'genesis-ii/'),
+    'la source de réindexation ne référence plus aucun fichier du corpus historique',
 );
 
 echo "\n";
