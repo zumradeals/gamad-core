@@ -1,0 +1,6 @@
+{
+  "paths": {
+    "CLAUDE.md": "Consignes opérationnelles évolutives ; l’ancienne empreinte reste un constat historique dans Genesis II.",
+    ".github/workflows/integrite-documentaire.yml": "Workflow actif de vérification ; son contenu suit le point d’entrée opérationnel sans réécrire les adoptions historiques."
+  }
+}

@@ -2,7 +2,7 @@
 
 Ce document décrit la méthode de travail cible de GAMAD Core. Il ne constitue ni une loi, ni un acte, ni une preuve d’implémentation.
 
-Le fichier racine `CLAUDE.md` reste temporairement dans son état historique parce que l’ancien contrôle d’intégrité le verrouille encore par empreinte. Son découplage fera l’objet d’une migration technique séparée.
+Le fichier racine `CLAUDE.md` applique désormais ces consignes. Son contenu opérationnel peut évoluer avec le dépôt sans modifier les empreintes historiques du corpus Genesis II.
 
 ## 1. Avant de modifier le dépôt
 
