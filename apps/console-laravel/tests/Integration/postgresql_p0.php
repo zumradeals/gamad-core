@@ -7,13 +7,12 @@ use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
 $application = dirname(__DIR__, 2);
-$racine = dirname($application, 2);
 require $application . '/vendor/autoload.php';
 
 $echecs = 0;
@@ -27,7 +26,7 @@ $verifier = static function (bool $ok, string $libelle) use (&$echecs): void {
 echo "INTÉGRATION — POSTGRESQL P0\n\n";
 
 $index = Db::connect();
-(new Ingestion($index, $racine))->executer();
+BaselineOperationnelle::standard()->reconstruire($index);
 $acces = AccesMagasin::connecter();
 $identites = IdentiteMagasin::connecter();
 $journalPdo = JournalMagasin::connecter();

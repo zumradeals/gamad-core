@@ -3,9 +3,8 @@
 declare(strict_types=1);
 
 /**
- * Preuve P3 de CAP-CORE-004 — refus par défaut et opposabilité des limites.
- *
- * Garde propre à la capacité (doctrine d'ADOPTION-0035, Art. 2.2).
+ * Garde de comportement de CAP-CORE-004 — refus par défaut et opposabilité des
+ * limites.
  *
  * Ce que le test éprouve :
  *   · une action inconnue est REFUSÉE (INV-27) — l'absence de règle n'est
@@ -14,14 +13,14 @@ declare(strict_types=1);
  *   · une limite de l'Article 49 est REFUSÉE AU TITULAIRE DU MANDAT LUI-MÊME
  *     (INV-30) — c'est l'assertion centrale de cette capacité ;
  *   · toute décision porte un motif non vide (INV-28) ;
- *   · les règles proviennent du corpus, non du code (INV-29).
+ *   · les règles sont des données de l'index, non du code (INV-29).
  *
  * Exécution : php core/registre-autorisation/tests/autorisation_p3.php
  */
 
 use Gamad\RegistreAutorisation\Ctr03;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 
 require __DIR__ . '/../../registre-normes/bootstrap.php';
 require __DIR__ . '/../src/Ctr03.php';
@@ -32,7 +31,7 @@ putenv('DATABASE_URL=');
 putenv('SQLITE_PATH=' . $fichier);
 
 $pdo = Db::connect();
-(new Ingestion($pdo, REGN_CORPUS))->executer();
+BaselineOperationnelle::standard()->reconstruire($pdo);
 $ctr03 = new Ctr03($pdo);
 
 $echecs = 0;
@@ -43,9 +42,9 @@ $verifier = function (bool $ok, string $libelle) use (&$echecs): void {
     }
 };
 
-echo "PREUVE P3 — REFUS PAR DÉFAUT ET OPPOSABILITÉ DES LIMITES (CAP-CORE-004)\n\n";
+echo "GARDE — REFUS PAR DÉFAUT ET OPPOSABILITÉ DES LIMITES (CAP-CORE-004)\n\n";
 
-// Le titulaire du mandat, tel que le Registre des autorités l'inscrit.
+// Le titulaire du mandat, tel que l'index l'inscrit.
 $titulaire = 'AUT-GAMAD-001';
 
 // --- INV-27 : une action qu'aucune politique ne prévoit est refusée.
@@ -100,11 +99,11 @@ foreach ([$inconnue, $competence] as $d) {
 }
 $verifier($sansMotif === 0, 'toute décision porte un motif non vide (INV-28)');
 
-// --- INV-29 : les règles viennent du corpus, avec leur source citée.
+// --- INV-29 : les règles viennent de l'index, avec leur source citée.
 $interdits = $ctr03->resoudreInterdits();
 $verifier(
     count($interdits) >= 7 && str_contains((string) ($interdits[0]['source'] ?? ''), 'Art. 49'),
-    sprintf('%d interdits dérivés du corpus, source citée (INV-29)', count($interdits)),
+    sprintf('%d interdits dérivés de l’index, source citée (INV-29)', count($interdits)),
 );
 
 // --- Les interdits s'opposent à tout sujet, non à une catégorie.
@@ -116,12 +115,20 @@ foreach ($interdits as $i) {
 }
 $verifier($opposableATous, 'les interdits sont opposables à tout sujet, titulaire compris');
 
+// --- Contre-épreuve : sans politique, tout est refusé, jamais permis.
+$pdo->exec('DELETE FROM regle');
+$apres = $ctr03->autoriser($titulaire, 'inscrire une identité', 'personne');
+$verifier(
+    $apres['decision'] === 'REFUSÉ' && $apres['politique'] === null,
+    'un index sans règle refuse tout : l’absence n’est jamais une permission',
+);
+
 @unlink($fichier);
 
 echo "\n";
 if ($echecs === 0) {
-    echo "Preuve P3 : ÉTABLIE. CAP-CORE-004 atteint le niveau de preuve P3.\n";
+    echo "Garde CAP-CORE-004 : ÉTABLIE.\n";
     exit(0);
 }
-echo "Preuve P3 : NON ÉTABLIE ({$echecs} écart(s)).\n";
+echo "Garde CAP-CORE-004 : NON ÉTABLIE ({$echecs} écart(s)).\n";
 exit(1);

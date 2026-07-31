@@ -3,30 +3,26 @@
 declare(strict_types=1);
 
 /**
- * Preuve P3 de CAP-CORE-003 — vérification d'un mandat À LA DATE DE L'ACTE.
- *
- * Garde de comportement propre à cette capacité, au sens de la doctrine
- * arrêtée par ADOPTION-0035, Art. 2.2 : une capacité n'hérite pas de la preuve
- * d'une autre, et ne peut atteindre P3 que par une garde éprouvant son propre
- * contrat.
+ * Garde de comportement de CAP-CORE-003 — vérification d'un mandat À LA DATE
+ * DE L'ACTE.
  *
  * Ce que le test vérifie (INV-14, INV-15) :
  *   · un acte postérieur au début du mandat est VÉRIFIÉ ;
  *   · un acte contemporain de la fondation du mandat est CONSTITUTIF, non
  *     VÉRIFIÉ — la chaîne de mandats se termine, elle ne boucle pas ;
- *   · les données proviennent du corpus, non de constantes du code.
+ *   · les données proviennent de l'index, non de constantes du code ;
+ *   · une vacance est restituée, jamais masquée.
  *
- * CONTRE-ÉPREUVE OBLIGATOIRE (ADOPTION-0032, Art. 3) : exécuté contre un corpus
- * dont le début du mandat a été délibérément déplacé, ce test DOIT échouer.
- * Un test qui ne peut pas échouer ne prouve rien. Voir le mode --falsification.
+ * CONTRE-ÉPREUVE : exécutée en fin de fichier sur un index dont le début du
+ * mandat a été déplacé. Un test qui ne peut pas échouer ne prouve rien.
  *
  * Exécution : php core/registre-autorites/tests/mandat_p3.php
- * Code de sortie : 0 si la preuve passe, 1 sinon.
+ * Code de sortie : 0 si la garde passe, 1 sinon.
  */
 
 use Gamad\RegistreAutorites\Ctr02;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 
 require __DIR__ . '/../../registre-normes/bootstrap.php';
 require __DIR__ . '/../src/Ctr02.php';
@@ -38,13 +34,13 @@ putenv('DATABASE_URL=');
 putenv('SQLITE_PATH=' . $fichier);
 
 $pdo = Db::connect();
-(new Ingestion($pdo, REGN_CORPUS))->executer();
+BaselineOperationnelle::standard()->reconstruire($pdo);
 $ctr02 = new Ctr02($pdo);
 
 /**
- * Cas d'essai fondés sur des faits déjà vrais du corpus :
- * MANDAT-GENESIS-II-0001 débute le 24 juillet 2026 (Article 47 du registre
- * adopté) ; ADOPTION-0001 à 0005 sont du même jour ; ADOPTION-0026 du 27.
+ * Cas d'essai fondés sur des faits présents dans l'index : le mandat courant
+ * débute le 24 juillet 2026 ; ADOPTION-0001 à 0005 sont du même jour ;
+ * ADOPTION-0026 du 27.
  */
 $cas = [
     ['ADOPTION-0001', 'CONSTITUTIF', 'le jour même où le mandat est fondé'],
@@ -54,7 +50,7 @@ $cas = [
 ];
 
 $echecs = 0;
-echo "PREUVE P3 — VÉRIFICATION DU MANDAT À LA DATE DE L'ACTE (CAP-CORE-003)\n\n";
+echo "GARDE — VÉRIFICATION DU MANDAT À LA DATE DE L'ACTE (CAP-CORE-003)\n\n";
 
 foreach ($cas as [$acte, $attendu, $libelle]) {
     $r = $ctr02->verifierActe($acte);
@@ -85,18 +81,31 @@ if (($m['mandat'] ?? null) === null || !str_starts_with((string) ($m['etat'] ?? 
 // La vacance est un fait institutionnel : elle doit être restituée, non masquée.
 $vacantes = $ctr02->resoudreVacance();
 if ($vacantes === []) {
-    echo "  [ÉCHEC] aucune fonction vacante restituée, alors que le corpus en déclare\n";
+    echo "  [ÉCHEC] aucune fonction vacante restituée, alors que l'index en porte\n";
     $echecs++;
 } else {
     printf("  [OK]    %d fonction(s) vacante(s) restituée(s)\n", count($vacantes));
+}
+
+// Contre-épreuve : déplacer le début du mandat DOIT changer le verdict.
+$pdo->exec("UPDATE mandat SET debut = '2026-07-28'");
+$contre = $ctr02->verifierActe('ADOPTION-0026');
+if (($contre['verdict'] ?? null) === 'VÉRIFIÉ') {
+    echo "  [ÉCHEC] un mandat commençant après l'acte rend encore un acte VÉRIFIÉ\n";
+    $echecs++;
+} else {
+    printf(
+        "  [OK]    contre-épreuve : mandat déplacé, verdict %s au lieu de VÉRIFIÉ\n",
+        (string) ($contre['verdict'] ?? '(introuvable)'),
+    );
 }
 
 @unlink($fichier);
 
 echo "\n";
 if ($echecs === 0) {
-    echo "Preuve P3 : ÉTABLIE. CAP-CORE-003 atteint le niveau de preuve P3.\n";
+    echo "Garde CAP-CORE-003 : ÉTABLIE.\n";
     exit(0);
 }
-echo "Preuve P3 : NON ÉTABLIE ({$echecs} écart(s)).\n";
+echo "Garde CAP-CORE-003 : NON ÉTABLIE ({$echecs} écart(s)).\n";
 exit(1);

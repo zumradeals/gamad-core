@@ -14,13 +14,12 @@ use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
 $application = dirname(__DIR__, 2);
-$racine = dirname($application, 2);
 $temp = sys_get_temp_dir() . '/gamad-api-v1-' . getmypid();
 $fichiers = [
     'index' => $temp . '-index.sqlite',
@@ -67,7 +66,7 @@ foreach ($environnement as $cle => $valeur) {
 require $application . '/vendor/autoload.php';
 
 $index = Db::connect();
-(new Ingestion($index, $racine))->executer();
+BaselineOperationnelle::standard()->reconstruire($index);
 $secret = 'Secret-P3-API-2026!';
 (new Ctr16(AccesMagasin::connecter()))->inscrireAuthentificateur('AUT-GAMAD-001', $secret);
 IdentiteMagasin::connecter();
