@@ -1,9 +1,10 @@
 name: Appliquer la simplification technique GAMAD Core
 
 on:
-  push:
+  pull_request:
     branches:
-      - sirr/simplification-gamad-core
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
