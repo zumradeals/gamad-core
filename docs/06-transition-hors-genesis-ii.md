@@ -64,7 +64,7 @@ L’ordre définitif dépendra de l’audit des dépendances.
 
 ### 4.1 Première migration réalisée — `registre:reindexer`
 
-**État : IMPLÉMENTÉ sur la branche de migration, sous réserve de fusion après tests.**
+**État : IMPLÉMENTÉ dans `main`.**
 
 La commande de réindexation ne reconstruit plus l’index en parcourant les fichiers Markdown de Genesis II. Elle utilise désormais :
 
@@ -77,7 +77,22 @@ La commande de réindexation ne reconstruit plus l’index en parcourant les fic
 
 La baseline conserve temporairement les données nécessaires à la compatibilité des consommateurs non encore migrés : normes, statuts, politiques, règles, identités techniques, fonctions et mandat actif. Elle ne réintroduit pas les textes Markdown et n’est pas présentée comme le modèle final du Core.
 
-Cette migration ne permet pas encore de supprimer `Ingestion.php` ni `genesis-ii/`, car la console, l’API et plusieurs gardes les utilisent toujours directement.
+### 4.2 Deuxième migration — contrôleur HTTP `CTR-01`
+
+**État : IMPLÉMENTÉ sur la branche de migration, sous réserve de fusion après tests.**
+
+Le contrôleur de lecture des identités n’appelle plus `Ingestion` lorsqu’il rencontre un index absent ou vide. Il initialise désormais l’index avec `BaselineOperationnelle::standard()`.
+
+Le test d’intégration dédié vérifie :
+
+- un démarrage sans index préconstruit ;
+- l’ouverture d’une session API sans initialisation implicite de l’index ;
+- la reconstruction lors de la première lecture d’identité ;
+- la présence des sept identités techniques et des quatorze règles attendues ;
+- la réutilisation stable de l’index lors d’une seconde lecture ;
+- l’absence de référence à `Ingestion` et à `genesis-ii` dans le contrôleur.
+
+Cette migration ne permet pas encore de supprimer `Ingestion.php` ni `genesis-ii/`, car d’autres contrôleurs, la console et plusieurs gardes les utilisent toujours directement.
 
 ## 5. Étape 3 — Suppression finale
 
