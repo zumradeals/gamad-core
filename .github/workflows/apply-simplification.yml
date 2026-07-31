@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Appliquer le paquet de migration
+      - name: Vérifier et appliquer le paquet de migration
         shell: bash
         run: |
           set -euo pipefail
@@ -31,6 +31,26 @@ jobs:
             echo "Fragments de migration encore incomplets."
             exit 0
           fi
+
+          echo "Empreintes reçues :"
+          sha256sum .migration/chunks/part-*
+
+          cat > /tmp/chunks.sha256 <<'EOF'
+          511c43044a8034d71d24b75dc1a54033bc1fb4fb4ba32fa3200dcabcd9636dd5  .migration/chunks/part-00
+          f5e4b91451b6a315611540cacda22bbea9304ac53f3d17c10ebb4415a08ea92e  .migration/chunks/part-01
+          7a75a67269d14a862a308beac15723b33787659c3b453919f7950a1a2e5ff645  .migration/chunks/part-02
+          ea3fbd34d67e0196e1c77eb91bff707c79a660f1cfd3f9ed52b95580daf81ccb  .migration/chunks/part-03
+          dd1833a19a0bd9ef112b0fd3f6b2b3e022eabc6344bc6715a8ee3c51e3c0e4a5  .migration/chunks/part-04
+          ee84cb106cb8d7b5c4ce47ca929a8bdb0f9627645c0a2aa6d802bc1b0622ebfc  .migration/chunks/part-05
+          34719b92420b105b0c9a927930c3271cfce488e0e01494015cf8f075e07362be  .migration/chunks/part-06
+          c589f48d3f31a7572200f4008f66fe321847906e0d173e3d69978048773dc4f1  .migration/chunks/part-07
+          0d8a4b25cdfc976cb2700bf30dd664f07b276acc9c7d0698100ba34cb2401774  .migration/chunks/part-08
+          a20ca86a8d81799d5150d2bdff54d6bda239307dcea32f70b13aa9641994ba7b  .migration/chunks/part-09
+          37123952d79dbafc0b38b704a3828421059940db2d10417a69bd6ec192532047  .migration/chunks/part-10
+          e3199e4fabf9c5dc5a433efdb7e266d199f0fe743dacfb3ddb9717133ae13c3f  .migration/chunks/part-11
+          EOF
+          sed -i 's/^          //' /tmp/chunks.sha256
+          sha256sum --check /tmp/chunks.sha256
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
