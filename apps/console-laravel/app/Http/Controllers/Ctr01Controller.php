@@ -7,8 +7,8 @@ namespace App\Http\Controllers;
 use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
+use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
-use Gamad\RegistreNormes\Ingestion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,7 +32,7 @@ final class Ctr01Controller
             $vide = true;
         }
         if ($vide) {
-            (new Ingestion($pdo, dirname(base_path(), 2)))->executer();
+            BaselineOperationnelle::standard()->reconstruire($pdo);
         }
 
         return new Ctr01($pdo, Magasin::connecter());
