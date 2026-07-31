@@ -134,7 +134,7 @@ $identite = $requete('GET', '/api/v1/identites/AUT-GAMAD-001', null, $jeton);
 $verifier(
     $identite['statut'] === 200
         && ($identite['corps']['reference'] ?? null) === 'AUT-GAMAD-001'
-        && ($identite['corps']['type'] ?? null) === 'agent',
+        && ($identite['corps']['type'] ?? null) === 'personne',
     'CTR-01 résout l’identité canonique depuis un index initialement vide',
 );
 
