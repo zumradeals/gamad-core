@@ -55,12 +55,29 @@ console et API critiques
 → identité
 → autorisation
 → autorités et mandats
-→ produits et federation
+→ produits et fédération
 → contrats et événements
 → autres registres encore utiles
 ```
 
 L’ordre définitif dépendra de l’audit des dépendances.
+
+### 4.1 Première migration réalisée — `registre:reindexer`
+
+**État : IMPLÉMENTÉ sur la branche de migration, sous réserve de fusion après tests.**
+
+La commande de réindexation ne reconstruit plus l’index en parcourant les fichiers Markdown de Genesis II. Elle utilise désormais :
+
+- `core/registre-normes/resources/index-baseline-v1.json` comme photographie technique versionnée ;
+- `BaselineOperationnelle` comme importeur contrôlé ;
+- une empreinte SHA-256 fixe ;
+- une validation du format, des tables, des colonnes, des identifiants et des compteurs ;
+- une transaction unique avec retour arrière en cas d’échec ;
+- un test d’intégration dédié et exécuté par la CI.
+
+La baseline conserve temporairement les données nécessaires à la compatibilité des consommateurs non encore migrés : normes, statuts, politiques, règles, identités techniques, fonctions et mandat actif. Elle ne réintroduit pas les textes Markdown et n’est pas présentée comme le modèle final du Core.
+
+Cette migration ne permet pas encore de supprimer `Ingestion.php` ni `genesis-ii/`, car la console, l’API et plusieurs gardes les utilisent toujours directement.
 
 ## 5. Étape 3 — Suppression finale
 
