@@ -4,6 +4,9 @@ name: Intégrité documentaire
 # Ce contrôle est technique : il ne constate pas la Porte G0, n'adopte aucun
 # texte et ne rend aucune capacité opérationnelle. Il vérifie seulement que le
 # dépôt dit la vérité sur lui-même.
+#
+# Le point d'entrée opérationnel conserve le contrôleur historique intact et
+# découple uniquement les fichiers de conduite qui doivent évoluer avec le dépôt.
 
 on:
   push:
@@ -36,4 +39,4 @@ jobs:
           python-version: '3.11'
 
       - name: Exécuter le contrôle d'intégrité
-        run: python3 outils/verifier-integrite.py
+        run: python3 outils/verifier-integrite-operationnel.py
