@@ -32,7 +32,7 @@ final class MigrerFondationCommand extends Command
                 'IDENTITY_REGISTRY_URL',
                 'JOURNAL_OPERATIONNEL_URL',
             ] as $variable) {
-                if (trim((string) getenv($variable)) === '') {
+                if (trim((string) $this->environnement($variable)) === '') {
                     $this->error("{$variable} est obligatoire en production.");
 
                     return self::FAILURE;
@@ -71,5 +71,39 @@ final class MigrerFondationCommand extends Command
         $this->line('L’index documentaire se reconstruit avec `php artisan registre:reindexer`.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Laravel ne charge PAS `.env` lorsque la configuration est en cache : le
+     * bootstrapper s'arrête net si `bootstrap/cache/config.php` existe. Un
+     * `getenv()` seul rendait donc la garde de production faussement bloquante
+     * après le premier `php artisan optimize` — la commande refusait de migrer
+     * en annonçant une variable absente, alors que les quatre connexions
+     * fonctionnaient parfaitement depuis la configuration mise en cache.
+     *
+     * La garde consulte donc les mêmes sources que les magasins eux-mêmes.
+     */
+    private function environnement(string $nom): ?string
+    {
+        $configuration = match ($nom) {
+            'DATABASE_URL' => 'database.connections.gamad_index.url',
+            'MAGASIN_URL' => 'database.connections.gamad_access.url',
+            'IDENTITY_REGISTRY_URL' => 'database.connections.gamad_identity.url',
+            'JOURNAL_OPERATIONNEL_URL' => 'database.connections.gamad_journal.url',
+            default => null,
+        };
+
+        foreach ([
+            getenv($nom),
+            $configuration === null ? null : config($configuration),
+            $_ENV[$nom] ?? null,
+            $_SERVER[$nom] ?? null,
+        ] as $valeur) {
+            if (is_string($valeur) && trim($valeur) !== '') {
+                return $valeur;
+            }
+        }
+
+        return null;
     }
 }
