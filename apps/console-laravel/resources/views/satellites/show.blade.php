@@ -6,6 +6,7 @@
 @php
     $reference = (string) $satellite['reference'];
     $jeton = session('jeton_federe');
+    $identifiantLivre = session('identifiant_livre');
 @endphp
 
 <nav class="breadcrumbs" aria-label="Fil d’Ariane">
@@ -33,6 +34,50 @@
 
 @if($errors->has('acces'))
     <div class="form-error" role="alert" style="margin-bottom:18px">{{ $errors->first('acces') }}</div>
+@endif
+@if($errors->has('identifiant'))
+    <div class="form-error" role="alert" style="margin-bottom:18px">{{ $errors->first('identifiant') }}</div>
+@endif
+
+@if($identifiantLivre)
+    <section class="card card--raised" style="margin-bottom:22px" aria-labelledby="secret-titre">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="secret-titre">Secret de raccordement — notez-le maintenant</h2>
+                <p class="card__description">
+                    Il n’est affiché qu’ici et ne sera jamais réaffiché : le Core n’en conserve
+                    qu’une empreinte irréversible. Si vous quittez cette page sans le noter,
+                    il faudra en délivrer un autre.
+                </p>
+            </div>
+        </div>
+        <div class="card__body">
+            <p class="technical-reference" style="word-break:break-all;font-size:16px;line-height:1.6">
+                {{ $identifiantLivre['secret'] }}
+            </p>
+            <dl class="detail-list" style="margin-top:14px">
+                <div class="detail-row">
+                    <dt>Pour le produit</dt>
+                    <dd class="technical-reference">{{ $identifiantLivre['produit'] }}</dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Référence de l’identifiant</dt>
+                    <dd class="technical-reference">{{ $identifiantLivre['reference'] }}</dd>
+                </div>
+            </dl>
+            <div class="alert alert--danger" style="margin-top:16px">
+                <span class="alert__dot" aria-hidden="true"></span>
+                <span>
+                    <span class="alert__title">Transmettez-le par un canal sûr</span>
+                    <span class="alert__detail">
+                        Ni e-mail, ni message instantané, ni capture d’écran. S’il fuite,
+                        retirez-le depuis cette page : les sessions ouvertes avec lui tombent
+                        immédiatement.
+                    </span>
+                </span>
+            </div>
+        </div>
+    </section>
 @endif
 
 @if($jeton)
@@ -90,15 +135,14 @@
                     <dd class="technical-reference">{{ $adresseApi }}</dd>
                 </div>
                 <div class="detail-row">
-                    <dt>3. Secret de connexion</dt>
+                    <dt>3. Secret de raccordement</dt>
                     <dd>
                         @if($identifiantsConfigures)
-                            Déjà créé. Il n’est jamais réaffiché : s’il est perdu, en créer un nouveau
-                            et révoquer l’ancien.
+                            Déjà délivré. Il n’est jamais réaffiché : s’il est perdu, en délivrer
+                            un nouveau puis retirer l’ancien, ci-dessous.
                         @else
-                            À créer par vous, hors de cet écran, avec la commande
-                            <span class="technical-reference">identite:authentifier {{ $reference }}</span>.
-                            Le secret est saisi par vous seul et n’est jamais conservé en clair.
+                            À délivrer ci-dessous. Le Core l’engendre lui-même et ne le montre
+                            qu’une fois.
                         @endif
                     </dd>
                 </div>
@@ -187,6 +231,107 @@
                     </div>
                     <button class="button button--primary button--full" type="submit">Ouvrir l’accès</button>
                 </form>
+            @endif
+        </div>
+    </section>
+
+    <section class="card span-12" aria-labelledby="identifiants-titre">
+        <div class="card__header">
+            <div>
+                <h2 class="card__title" id="identifiants-titre">Identifiants de raccordement</h2>
+                <p class="card__description">
+                    Le secret avec lequel {{ $satellite['libelle'] }} s’authentifie auprès du Core.
+                    Il ne donne aucun accès aux données d’une personne : il sert au produit à se
+                    présenter, rien de plus.
+                </p>
+            </div>
+            @if($peutDelivrer)
+                <span class="status {{ $identifiantsConfigures ? 'status--success' : 'status--warning' }}">
+                    {{ count($identifiants) }} / {{ $maxIdentifiants }} actif{{ count($identifiants) > 1 ? 's' : '' }}
+                </span>
+            @endif
+        </div>
+        <div class="card__body">
+            @if(! $peutDelivrer)
+                <div class="alert">
+                    <span class="alert__dot" aria-hidden="true"></span>
+                    <span>
+                        <span class="alert__title">Réservé à l’autorité d’inscription</span>
+                        <span class="alert__detail">
+                            Le raccordement est
+                            {{ $identifiantsConfigures ? 'déjà fait pour ce produit' : 'à faire par l’autorité' }}.
+                            Un satellite ne délivre pas ses propres identifiants.
+                        </span>
+                    </span>
+                </div>
+            @else
+                @if($identifiants === [])
+                    <div class="empty-state" style="padding:24px 18px">
+                        <div class="empty-state__symbol" aria-hidden="true">⚿</div>
+                        <h2>Aucun identifiant actif</h2>
+                        <p>Ce produit ne peut pas encore se présenter au Core.</p>
+                    </div>
+                @else
+                    <dl class="detail-list">
+                        @foreach($identifiants as $identifiant)
+                            <div class="detail-row">
+                                <dt class="technical-reference">{{ $identifiant['reference'] }}</dt>
+                                <dd style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+                                    <span>
+                                        {{ $identifiant['delivre_par_console'] ? 'Délivré' : 'Créé en ligne de commande' }}
+                                        le {{ substr((string) $identifiant['cree_le'], 0, 10) }}
+                                    </span>
+                                    <form method="POST"
+                                          action="{{ route('console.satellites.retirer', $reference) }}"
+                                          onsubmit="return confirm('Retirer cet identifiant ? {{ $satellite['libelle'] }} ne pourra plus se présenter au Core avec lui, et les sessions ouvertes avec lui seront fermées.');">
+                                        @csrf
+                                        <input type="hidden" name="authentificateur" value="{{ $identifiant['reference'] }}">
+                                        <button class="button button--secondary" type="submit">Retirer</button>
+                                    </form>
+                                </dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                @endif
+
+                @if(! $satellite['federable'])
+                    <div class="alert alert--danger" style="margin-top:18px">
+                        <span class="alert__dot" aria-hidden="true"></span>
+                        <span>
+                            <span class="alert__title">Produit non entériné</span>
+                            <span class="alert__detail">
+                                Le Core ne délivre pas la clé d’une porte qu’il refuse d’ouvrir.
+                            </span>
+                        </span>
+                    </div>
+                @elseif(count($identifiants) >= $maxIdentifiants)
+                    <div class="alert" style="margin-top:18px">
+                        <span class="alert__dot" aria-hidden="true"></span>
+                        <span>
+                            <span class="alert__title">Maximum atteint</span>
+                            <span class="alert__detail">
+                                {{ $maxIdentifiants }} identifiants actifs au plus. Retirez-en un avant
+                                d’en délivrer un nouveau — c’est ce qui empêche un secret oublié de
+                                rester valable indéfiniment.
+                            </span>
+                        </span>
+                    </div>
+                @else
+                    <form method="POST"
+                          action="{{ route('console.satellites.delivrer', $reference) }}"
+                          style="margin-top:18px"
+                          onsubmit="return confirm('Délivrer un secret de raccordement ? Il ne sera affiché qu’une seule fois.');">
+                        @csrf
+                        <button class="button button--primary" type="submit">
+                            {{ $identifiants === [] ? 'Délivrer le secret' : 'Délivrer un secret de remplacement' }}
+                        </button>
+                    </form>
+                    <p class="field-help" style="margin-top:10px">
+                        Le Core engendre le secret ; vous ne le tapez pas. Il est affiché une seule
+                        fois, conservé sous forme d’empreinte irréversible, et n’entre jamais au
+                        journal d’audit. Session en cours : {{ $assuranceSession ?: 'assurance inconnue' }}.
+                    </p>
+                @endif
             @endif
         </div>
     </section>

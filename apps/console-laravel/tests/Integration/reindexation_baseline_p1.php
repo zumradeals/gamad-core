@@ -51,7 +51,7 @@ $verifier(
         'sources' => 26,
         'fonctions' => 24,
         'entites' => 7,
-        'regles' => 16,
+        'regles' => 18,
         'mandats' => 1,
         'indetermines' => 95,
     ],

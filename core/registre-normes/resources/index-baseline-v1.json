@@ -16,7 +16,7 @@
         "sources": 26,
         "fonctions": 24,
         "entites": 7,
-        "regles": 16,
+        "regles": 18,
         "mandats": 1,
         "indetermines": 95
     },
@@ -2157,6 +2157,22 @@
                     "action": "révoquer-un-accès-fédéré-à-un-produit-reconnu",
                     "sujet_type": null,
                     "motif": "Le porteur, le satellite concerné ou l'autorité d'inscription peuvent fermer un accès fédéré. La fermeture ne supprime ni l'identité GAMAD ni les données détenues par le satellite."
+                },
+                {
+                    "id": 17,
+                    "politique_reference": "POL-FEDERATION-SATELLITES-V1",
+                    "effet": "PERMET",
+                    "action": "délivrer-un-identifiant-de-raccordement-à-un-satellite",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription délivre l'identifiant avec lequel un satellite reconnu s'authentifie auprès du Core. Le secret est engendré par le Core, montré une seule fois et conservé sous forme d'empreinte."
+                },
+                {
+                    "id": 18,
+                    "politique_reference": "POL-FEDERATION-SATELLITES-V1",
+                    "effet": "PERMET",
+                    "action": "retirer-un-identifiant-de-raccordement-à-un-satellite",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription retire un identifiant de raccordement. Le retrait ferme aussi les sessions Core ouvertes avec cet identifiant."
                 }
             ]
         },

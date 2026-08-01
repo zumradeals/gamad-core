@@ -136,6 +136,9 @@ $verifier = static function (bool $ok, string $libelle) use (&$echecs): void {
 
 $controleur = $app->make(SatelliteConsoleController::class);
 $accesSatellites = $app->make(App\Application\Federation\AccesSatellites::class);
+$afficher = static fn (Request $requete, string $produit): string => $controleur
+    ->show($requete, $accesSatellites, $produit)
+    ->getContent();
 
 echo "INTÉGRATION — CONSOLE DES SATELLITES P1 (CAP-CORE-022)\n\n";
 
@@ -151,12 +154,12 @@ $verifier(
 );
 
 // 2 — la fiche de raccordement porte les quatre informations à remettre.
-$fiche = $controleur->show($requete("/satellites/{$DRIVE}"), $DRIVE)->render();
+$fiche = $afficher($requete("/satellites/{$DRIVE}"), $DRIVE);
 $verifier(
     str_contains($fiche, 'Fiche de raccordement')
         && str_contains($fiche, '1. Référence du produit')
         && str_contains($fiche, '2. Adresse du Core')
-        && str_contains($fiche, '3. Secret de connexion')
+        && str_contains($fiche, '3. Secret de raccordement')
         && str_contains($fiche, '4. Les trois portes')
         && str_contains($fiche, 'https://console.test/api/v1')
         && str_contains($fiche, "POST /produits/{$DRIVE}/verification"),
@@ -166,7 +169,7 @@ $verifier(
 // 3 — l'état des identifiants du satellite est constaté, jamais présumé.
 $avantSecret = str_contains($fiche, 'Identifiants Core à créer');
 $ctr16->inscrireAuthentificateur($DRIVE, 'Secret-Satellite-Drive-1!');
-$apresSecret = $controleur->show($requete("/satellites/{$DRIVE}"), $DRIVE)->render();
+$apresSecret = $afficher($requete("/satellites/{$DRIVE}"), $DRIVE);
 $verifier(
     $avantSecret
         && str_contains($apresSecret, 'Identifiants Core configurés')
@@ -183,7 +186,7 @@ $ouverture = $controleur->ouvrir(
     $accesSatellites,
     $DRIVE,
 );
-$apresOuverture = $controleur->show($requete("/satellites/{$DRIVE}"), $DRIVE)->render();
+$apresOuverture = $afficher($requete("/satellites/{$DRIVE}"), $DRIVE);
 $verifier(
     $ouverture->getStatusCode() === 302
         && str_contains((string) $ouverture->getTargetUrl(), "/satellites/{$DRIVE}")
@@ -197,7 +200,7 @@ $verifier(
 
 // 5 — le jeton disparaît de l'écran au rechargement suivant.
 $sessionLaravel->forget('jeton_federe');
-$rechargement = $controleur->show($requete("/satellites/{$DRIVE}"), $DRIVE)->render();
+$rechargement = $afficher($requete("/satellites/{$DRIVE}"), $DRIVE);
 $verifier(
     ! str_contains($rechargement, 'Jeton d’ouverture')
         && ! str_contains($rechargement, 'FED-')
@@ -217,14 +220,14 @@ $controleur->ouvrir(
 $liens = (int) $registre
     ->query("SELECT count(*) FROM relation_produit WHERE produit_reference = '{$DRIVE}'")
     ->fetchColumn();
-$apresRepetition = $controleur->show($requete("/satellites/{$DRIVE}"), $DRIVE)->render();
+$apresRepetition = $afficher($requete("/satellites/{$DRIVE}"), $DRIVE);
 $verifier(
     $liens === 1 && str_contains($apresRepetition, '1 accès actif'),
     'ouvrir deux fois le même accès ne crée pas un second compte',
 );
 
 // 7 — un partenaire non entériné n'offre aucun formulaire d'ouverture.
-$ficheWasplex = $controleur->show($requete("/satellites/{$WASPLEX}"), $WASPLEX)->render();
+$ficheWasplex = $afficher($requete("/satellites/{$WASPLEX}"), $WASPLEX);
 $verifier(
     str_contains($ficheWasplex, 'Produit non entériné')
         && ! str_contains($ficheWasplex, 'Ouvrir l’accès</button>'),
@@ -232,10 +235,7 @@ $verifier(
 );
 
 // 8 — isolation : un satellite ne lit pas les porteurs d'un autre satellite.
-$vueEtrangere = $controleur->show(
-    $requete("/satellites/{$DRIVE}", 'GET', [], $WASPLEX),
-    $DRIVE,
-)->render();
+$vueEtrangere = $afficher($requete("/satellites/{$DRIVE}", 'GET', [], $WASPLEX), $DRIVE);
 $verifier(
     str_contains($vueEtrangere, 'Liste non lisible depuis cette session')
         && ! str_contains($vueEtrangere, 'Aïcha la testeuse')
@@ -249,7 +249,7 @@ $revocation = $controleur->revoquer(
     $accesSatellites,
     $DRIVE,
 );
-$apresRevocation = $controleur->show($requete("/satellites/{$DRIVE}"), $DRIVE)->render();
+$apresRevocation = $afficher($requete("/satellites/{$DRIVE}"), $DRIVE);
 $verifier(
     $revocation->getStatusCode() === 302
         && str_contains((string) $sessionLaravel->get('succes'), 'Accès révoqué')
@@ -259,14 +259,111 @@ $verifier(
     'la révocation depuis la console ferme l’accès sans supprimer l’identité',
 );
 
-// 10 — la console ne contourne pas le cas d'usage gouverné.
+// 10 — délivrer un secret de raccordement depuis l'écran.
+$delivrance = $controleur->delivrer(
+    $requete("/satellites/{$DRIVE}/identifiants", 'POST'),
+    $accesSatellites,
+    $DRIVE,
+);
+$secretLivre = (string) ($sessionLaravel->get('identifiant_livre')['secret'] ?? '');
+$referenceLivree = (string) ($sessionLaravel->get('identifiant_livre')['reference'] ?? '');
+$ecranSecret = $afficher($requete("/satellites/{$DRIVE}"), $DRIVE);
+$sessionSatellite = $ctr16->etablirSession($DRIVE, $secretLivre);
+$verifier(
+    $delivrance->getStatusCode() === 302
+        && str_starts_with($secretLivre, 'SAT-')
+        && strlen($secretLivre) >= 52
+        && str_contains($ecranSecret, 'Secret de raccordement — notez-le maintenant')
+        && str_contains($ecranSecret, $secretLivre)
+        && $sessionSatellite !== null,
+    'l’autorité délivre un secret fort, montré une fois, qui ouvre réellement une session',
+);
+
+// 11 — le secret n'existe en clair ni en base, ni au journal.
+$empreintes = $magasin
+    ->query("SELECT count(*) FROM authentificateur WHERE empreinte = ".$magasin->quote($secretLivre))
+    ->fetchColumn();
+$journalBrut = (string) file_get_contents($fichiers['journal']);
+$magasinBrut = (string) file_get_contents($fichiers['acces']);
+$verifier(
+    (int) $empreintes === 0
+        && ! str_contains($journalBrut, $secretLivre)
+        && ! str_contains($magasinBrut, $secretLivre)
+        && str_contains($journalBrut, 'IDENTIFIANT_SATELLITE_DELIVRE'),
+    'le secret n’est ni conservé en clair ni porté au journal, seule sa délivrance l’est',
+);
+
+// 12 — l'écran ne réaffiche jamais le secret.
+$sessionLaravel->forget('identifiant_livre');
+$apresSecretLivre = $afficher($requete("/satellites/{$DRIVE}"), $DRIVE);
+$verifier(
+    ! str_contains($apresSecretLivre, $secretLivre)
+        && ! str_contains($apresSecretLivre, 'notez-le maintenant')
+        && str_contains($apresSecretLivre, $referenceLivree),
+    'le secret disparaît au rechargement, sa référence reste administrable',
+);
+
+// 13 — le plafond d'identifiants actifs est opposable.
+$troisieme = $accesSatellites->delivrerIdentifiant($DRIVE, PolitiqueInscription::AUTORITE_INSCRIPTION);
+$verifier(
+    $troisieme['statut'] === 422
+        && ($troisieme['corps']['resultat']['refus'] ?? null) === 'MAXIMUM_ATTEINT',
+    'un satellite ne cumule pas les secrets actifs au-delà du plafond',
+);
+
+// 14 — contre-épreuves de compétence : ni le satellite, ni un tiers.
+$parLeSatellite = $accesSatellites->delivrerIdentifiant($DRIVE, $DRIVE);
+$parLeTiers = $accesSatellites->delivrerIdentifiant($DRIVE, $porteur);
+$verifier(
+    $parLeSatellite['statut'] === 403
+        && ($parLeSatellite['corps']['erreur'] ?? null) === 'AUTORISATION_REFUSEE'
+        && $parLeTiers['statut'] === 403,
+    'un satellite ne délivre pas ses propres identifiants, un tiers non plus',
+);
+
+// 15 — un produit non entériné ne reçoit aucun identifiant.
+$identifiantWasplex = $accesSatellites->delivrerIdentifiant(
+    $WASPLEX,
+    PolitiqueInscription::AUTORITE_INSCRIPTION,
+);
+$verifier(
+    $identifiantWasplex['statut'] === 422
+        && ($identifiantWasplex['corps']['resultat']['refus'] ?? null) === 'PRODUIT_NON_RECONNU',
+    'le Core ne délivre pas la clé d’une porte qu’il refuse d’ouvrir',
+);
+
+// 16 — retirer un identifiant ferme les sessions ouvertes avec lui.
+$retraitEtranger = $accesSatellites->retirerIdentifiant(
+    $WASPLEX,
+    $referenceLivree,
+    PolitiqueInscription::AUTORITE_INSCRIPTION,
+);
+$retrait = $controleur->retirer(
+    $requete("/satellites/{$DRIVE}/identifiants/retrait", 'POST', [
+        'authentificateur' => $referenceLivree,
+    ]),
+    $accesSatellites,
+    $DRIVE,
+);
+$verdictApresRetrait = $ctr16->verifierSession((string) $sessionSatellite['session']);
+$verifier(
+    ($retraitEtranger['corps']['resultat']['refus'] ?? null) === 'IDENTIFIANT_INTROUVABLE'
+        && $retrait->getStatusCode() === 302
+        && $verdictApresRetrait['valide'] === false
+        && $ctr16->etablirSession($DRIVE, $secretLivre) === null,
+    'le retrait ferme le secret et les sessions qu’il avait ouvertes',
+);
+
+// 17 — la console ne contourne pas le cas d'usage gouverné.
 $source = (string) file_get_contents(
     dirname(__DIR__, 2).'/app/Http/Controllers/SatelliteConsoleController.php'
 );
 $verifier(
     str_contains($source, 'AccesSatellites $acces')
         && ! str_contains($source, 'rattacherProduit')
-        && ! str_contains($source, 'cloreRelationProduit'),
+        && ! str_contains($source, 'cloreRelationProduit')
+        && ! str_contains($source, 'inscrireAuthentificateur')
+        && ! str_contains($source, 'revoquerAuthentificateur'),
     'l’écran passe par le cas d’usage gouverné et n’écrit jamais en direct',
 );
 

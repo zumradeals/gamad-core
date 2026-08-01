@@ -43,6 +43,14 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/satellites/{produit}/revocation', [SatelliteConsoleController::class, 'revoquer'])
         ->middleware('throttle:20,1')
         ->name('console.satellites.revoquer');
+    // Raccordement du satellite lui-même. Le secret est engendré par le Core
+    // et remis une seule fois ; la cadence est volontairement basse.
+    Route::post('/satellites/{produit}/identifiants', [SatelliteConsoleController::class, 'delivrer'])
+        ->middleware('throttle:5,1')
+        ->name('console.satellites.delivrer');
+    Route::post('/satellites/{produit}/identifiants/retrait', [SatelliteConsoleController::class, 'retirer'])
+        ->middleware('throttle:10,1')
+        ->name('console.satellites.retirer');
 
     Route::get('/denominations', [Ctr01Controller::class, 'resoudreDenominations'])->name('ctr01.denominations');
     Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat'])->name('ctr02.resoudre-mandat');

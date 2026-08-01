@@ -6,6 +6,7 @@ namespace App\Application\Federation;
 
 use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
+use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreAutorisation\Ctr03;
 use Gamad\RegistreFederation\Federation;
@@ -296,6 +297,257 @@ final class AccesSatellites
     }
 
     /**
+     * Délivre au satellite l'identifiant avec lequel il s'authentifiera auprès
+     * du Core.
+     *
+     * Le secret est engendré par le Core, remis une seule fois à l'appelant, et
+     * conservé sous forme d'empreinte non réversible par CAP-CORE-005. Il
+     * n'entre jamais au journal : la preuve ne porte que la référence de
+     * l'authentificateur.
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
+    public function delivrerIdentifiant(
+        string $produit,
+        string $acteur,
+        ?string $correlation = null,
+    ): array {
+        try {
+            $federation = $this->federation();
+            $decision = (new Ctr03(Db::connect()))->autoriser(
+                $acteur,
+                PolitiqueFederation::ACTION_IDENTIFIANT,
+                $produit,
+            );
+            $journal = $this->journal();
+            $preuve = $journal->enregistrer([
+                'categorie' => 'FEDERATION',
+                'type' => 'DECISION_IDENTIFIANT_SATELLITE',
+                'acteur' => $acteur,
+                'action' => PolitiqueFederation::ACTION_IDENTIFIANT,
+                'ressource' => $produit,
+                'decision' => $decision['decision'] === 'PERMIS' ? 'PERMIS' : 'REFUSE',
+                'motif' => $decision['motif'],
+                'correlation_id' => $correlation,
+                'donnees' => ['politique' => $decision['politique']],
+            ]);
+        } catch (\Throwable) {
+            return $this->socleIndisponible();
+        }
+
+        if ($decision['decision'] !== 'PERMIS') {
+            return [
+                'statut' => 403,
+                'corps' => [
+                    'erreur' => 'AUTORISATION_REFUSEE',
+                    'decision' => $decision,
+                    'preuve' => $preuve,
+                ],
+            ];
+        }
+
+        // Un satellite non entériné ne reçoit pas d'identifiant : le Core ne
+        // délivre pas la clé d'une porte qu'il refuse d'ouvrir.
+        $catalogue = array_column($federation->catalogueProduits(), null, 'reference');
+        $satellite = $catalogue[$produit] ?? null;
+        if ($satellite === null || $satellite['federable'] !== true) {
+            return [
+                'statut' => 422,
+                'corps' => [
+                    'erreur' => 'IDENTIFIANT_REFUSE',
+                    'resultat' => [
+                        'refus' => $satellite === null ? 'PRODUIT_INCONNU' : 'PRODUIT_NON_RECONNU',
+                        'detail' => $satellite === null
+                            ? "produit `{$produit}` inconnu du Core"
+                            : 'l’état du produit ne vaut pas reconnaissance',
+                    ],
+                    'preuve' => $preuve,
+                ],
+            ];
+        }
+
+        try {
+            $ctr16 = new Ctr16(AccesMagasin::connecter());
+            $actifs = $this->identifiantsActifs($ctr16, $produit);
+            if (count($actifs) >= PolitiqueFederation::MAX_IDENTIFIANTS) {
+                return [
+                    'statut' => 422,
+                    'corps' => [
+                        'erreur' => 'IDENTIFIANT_REFUSE',
+                        'resultat' => [
+                            'refus' => 'MAXIMUM_ATTEINT',
+                            'detail' => sprintf(
+                                'ce satellite a déjà %d identifiants actifs ; retirez-en un avant d’en délivrer un nouveau',
+                                count($actifs),
+                            ),
+                        ],
+                        'preuve' => $preuve,
+                    ],
+                ];
+            }
+
+            $secret = PolitiqueFederation::engendrerSecret();
+            $reference = $ctr16->inscrireAuthentificateur(
+                $produit,
+                $secret,
+                PolitiqueFederation::TYPE_IDENTIFIANT,
+            );
+        } catch (\Throwable) {
+            return [
+                'statut' => 503,
+                'corps' => [
+                    'erreur' => 'MAGASIN_ACCES_INDISPONIBLE',
+                    'message' => 'L’intention est tracée, mais aucun identifiant n’a été délivré.',
+                    'preuve' => $preuve,
+                ],
+            ];
+        }
+
+        $preuveDelivrance = $this->tracer($journal, [
+            'categorie' => 'FEDERATION',
+            'type' => 'IDENTIFIANT_SATELLITE_DELIVRE',
+            'acteur' => $acteur,
+            'action' => PolitiqueFederation::ACTION_IDENTIFIANT,
+            'ressource' => $produit,
+            'decision' => 'EXECUTEE',
+            'correlation_id' => $preuve['correlation_id'],
+            'donnees' => [
+                'authentificateur' => $reference,
+                'type' => PolitiqueFederation::TYPE_IDENTIFIANT,
+                'identifiants_actifs' => count($actifs) + 1,
+            ],
+        ]) ?? $preuve;
+
+        return [
+            'statut' => 201,
+            'corps' => [
+                'identifiant' => [
+                    'reference' => $reference,
+                    'produit' => $produit,
+                    'secret' => $secret,
+                    'type' => PolitiqueFederation::TYPE_IDENTIFIANT,
+                ],
+                'preuve' => $preuveDelivrance,
+            ],
+        ];
+    }
+
+    /**
+     * Retire un identifiant de raccordement. Les sessions Core ouvertes avec
+     * lui cessent d'être valides, et les jetons fédérés qui en dépendaient
+     * tombent avec elles.
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
+    public function retirerIdentifiant(
+        string $produit,
+        string $authentificateur,
+        string $acteur,
+        ?string $correlation = null,
+    ): array {
+        try {
+            $decision = (new Ctr03(Db::connect()))->autoriser(
+                $acteur,
+                PolitiqueFederation::ACTION_RETRAIT_IDENTIFIANT,
+                $produit,
+            );
+            $journal = $this->journal();
+            $preuve = $journal->enregistrer([
+                'categorie' => 'FEDERATION',
+                'type' => 'DECISION_RETRAIT_IDENTIFIANT',
+                'acteur' => $acteur,
+                'action' => PolitiqueFederation::ACTION_RETRAIT_IDENTIFIANT,
+                'ressource' => $produit,
+                'decision' => $decision['decision'] === 'PERMIS' ? 'PERMIS' : 'REFUSE',
+                'motif' => $decision['motif'],
+                'correlation_id' => $correlation,
+                'donnees' => ['authentificateur' => $authentificateur],
+            ]);
+        } catch (\Throwable) {
+            return $this->socleIndisponible();
+        }
+
+        if ($decision['decision'] !== 'PERMIS') {
+            return [
+                'statut' => 403,
+                'corps' => [
+                    'erreur' => 'AUTORISATION_REFUSEE',
+                    'decision' => $decision,
+                    'preuve' => $preuve,
+                ],
+            ];
+        }
+
+        try {
+            $ctr16 = new Ctr16(AccesMagasin::connecter());
+            // La référence doit appartenir à ce satellite : une référence
+            // devinée ne doit pas permettre de révoquer l'accès d'un autre.
+            $sien = array_filter(
+                $this->identifiantsActifs($ctr16, $produit),
+                static fn (array $a): bool => $a['reference'] === $authentificateur,
+            );
+            $retire = $sien !== [] && $ctr16->revoquerAuthentificateur($authentificateur);
+        } catch (\Throwable) {
+            return [
+                'statut' => 503,
+                'corps' => [
+                    'erreur' => 'MAGASIN_ACCES_INDISPONIBLE',
+                    'message' => 'L’intention est tracée, mais aucun retrait n’a été confirmé.',
+                    'preuve' => $preuve,
+                ],
+            ];
+        }
+
+        if (! $retire) {
+            return [
+                'statut' => 422,
+                'corps' => [
+                    'erreur' => 'RETRAIT_REFUSE',
+                    'resultat' => [
+                        'refus' => 'IDENTIFIANT_INTROUVABLE',
+                        'detail' => 'aucun identifiant actif de ce satellite ne porte cette référence',
+                    ],
+                    'preuve' => $preuve,
+                ],
+            ];
+        }
+
+        $preuveRetrait = $this->tracer($journal, [
+            'categorie' => 'FEDERATION',
+            'type' => 'IDENTIFIANT_SATELLITE_RETIRE',
+            'acteur' => $acteur,
+            'action' => PolitiqueFederation::ACTION_RETRAIT_IDENTIFIANT,
+            'ressource' => $produit,
+            'decision' => 'EXECUTEE',
+            'correlation_id' => $preuve['correlation_id'],
+            'donnees' => ['authentificateur' => $authentificateur],
+        ]) ?? $preuve;
+
+        return [
+            'statut' => 200,
+            'corps' => [
+                'retrait' => ['authentificateur' => $authentificateur, 'produit' => $produit],
+                'preuve' => $preuveRetrait,
+            ],
+        ];
+    }
+
+    /**
+     * Identifiants de raccordement actifs d'un satellite. Aucune empreinte
+     * n'est restituée : seules la référence et la date servent l'exploitation.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function identifiants(string $produit): array
+    {
+        try {
+            return $this->identifiantsActifs(new Ctr16(AccesMagasin::connecter()), $produit);
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
      * Catalogue des satellites et accès de l'identité appelante.
      *
      * @return array{statut:int,corps:array<string,mixed>}
@@ -316,6 +568,34 @@ final class AccesSatellites
         } catch (\Throwable) {
             return $this->socleIndisponible();
         }
+    }
+
+    /**
+     * Tout authentificateur actif d'un produit est un identifiant de
+     * raccordement : un produit n'est pas une personne, il n'a pas d'autre
+     * usage d'un secret. Le type est restitué pour distinguer ceux que la
+     * console a délivrés de ceux créés en ligne de commande, mais il ne filtre
+     * pas la liste — un secret hérité doit rester retirable ici.
+     *
+     * Aucune empreinte n'est restituée.
+     *
+     * @return list<array<string,mixed>>
+     */
+    private function identifiantsActifs(Ctr16 $ctr16, string $produit): array
+    {
+        return array_values(array_map(
+            static fn (array $a): array => [
+                'reference' => $a['reference'],
+                'type' => $a['type'],
+                'assurance' => $a['niveau_assurance'],
+                'cree_le' => $a['cree_le'],
+                'delivre_par_console' => $a['type'] === PolitiqueFederation::TYPE_IDENTIFIANT,
+            ],
+            array_filter(
+                $ctr16->attester($produit)['authentificateurs'],
+                static fn (array $a): bool => $a['etat'] === 'ACTIF',
+            ),
+        ));
     }
 
     private function federation(): Federation

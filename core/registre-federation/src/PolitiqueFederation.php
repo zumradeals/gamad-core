@@ -30,6 +30,41 @@ final class PolitiqueFederation
     /** Action soumise à CAP-CORE-004 avant toute révocation d'accès. */
     public const ACTION_REVOCATION = 'révoquer un accès fédéré à un produit reconnu';
 
+    /**
+     * Actions de raccordement : délivrer et retirer l'identifiant avec lequel
+     * un satellite s'authentifie auprès du Core.
+     *
+     * Elles sont distinctes des actions d'accès : ouvrir un accès concerne une
+     * personne, délivrer un identifiant concerne le satellite lui-même. La
+     * politique les réserve à l'autorité d'inscription.
+     */
+    public const ACTION_IDENTIFIANT = 'délivrer un identifiant de raccordement à un satellite';
+    public const ACTION_RETRAIT_IDENTIFIANT = 'retirer un identifiant de raccordement à un satellite';
+
+    /** Type d'authentificateur inscrit pour un satellite (CAP-CORE-005). */
+    public const TYPE_IDENTIFIANT = 'secret_raccordement_satellite';
+
+    /**
+     * Deux identifiants actifs au plus : le courant, et son remplaçant pendant
+     * une rotation. Au-delà, un secret oublié resterait valable indéfiniment.
+     */
+    public const MAX_IDENTIFIANTS = 2;
+
+    /** Octets d'entropie d'un secret de raccordement. */
+    public const ENTROPIE_SECRET = 24;
+
+    /**
+     * Engendre un secret de raccordement.
+     *
+     * Le Core l'engendre lui-même plutôt que de le faire saisir : un secret de
+     * service tapé par une personne est court, réutilisé et mémorisable. Celui-ci
+     * ne l'est pas, n'est jamais conservé en clair, et n'est montré qu'une fois.
+     */
+    public static function engendrerSecret(): string
+    {
+        return 'SAT-'.strtoupper(bin2hex(random_bytes(self::ENTROPIE_SECRET)));
+    }
+
     /** Source technique inscrite dans les relations produites par la fédération. */
     public const SOURCE = 'CAP-CORE-022 — fédération des satellites';
 
