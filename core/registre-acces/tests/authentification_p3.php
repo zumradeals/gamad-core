@@ -257,6 +257,68 @@ $verifier(
     'la migration additive conserve la session sans conserver son bearer en clair',
 );
 
+
+// Codes de secours : le second chemin, à usage unique.
+$entiteSecours = 'ENTITE-SECOURS';
+$ctr16->inscrireAuthentificateur($entiteSecours, 'Mot-de-passe-initial-1!');
+$codes = $ctr16->engendrerCodesSecours($entiteSecours);
+$verifier(
+    count($codes) === 8
+        && count(array_unique($codes)) === 8
+        && $ctr16->codesSecoursRestants($entiteSecours) === 8
+        && preg_match('/^[0-9A-F]{4}(-[0-9A-F]{4}){3}$/', $codes[0]) === 1,
+    'un jeu de huit codes de secours distincts est engendré',
+);
+
+$sessionCode = $ctr16->etablirSession($entiteSecours, $codes[0]);
+$rejeu = $ctr16->etablirSession($entiteSecours, $codes[0]);
+$verifier(
+    ($sessionCode['code_secours_consomme'] ?? false) === true
+        && ($ctr16->verifierSession((string) $sessionCode['session'])['valide'] ?? false) === true
+        && $rejeu === null
+        && $ctr16->codesSecoursRestants($entiteSecours) === 7,
+    'un code de secours ouvre une session une fois, et une seule',
+);
+
+$consomme = $ctr16->consommerCodeSecours($entiteSecours, $codes[1]);
+$consommeDeux = $ctr16->consommerCodeSecours($entiteSecours, $codes[1]);
+$verifier(
+    $consomme === true && $consommeDeux === false
+        && $ctr16->codesSecoursRestants($entiteSecours) === 6,
+    'un code consommé hors session ne se rejoue pas davantage',
+);
+
+$anciens = $codes;
+$ctr16->engendrerCodesSecours($entiteSecours);
+$verifier(
+    $ctr16->codesSecoursRestants($entiteSecours) === 8
+        && $ctr16->consommerCodeSecours($entiteSecours, $anciens[2]) === false,
+    'engendrer un nouveau jeu annule le précédent',
+);
+
+// Le magasin ne conserve aucun code en clair.
+$brut = (string) file_get_contents($fichier);
+$verifier(
+    !str_contains($brut, $anciens[3]) && !str_contains($brut, $codes[3] ?? 'inexistant'),
+    'aucun code de secours n’est conservé en clair',
+);
+
+// Nul ne retire son dernier moyen d'accès, pas même en le demandant.
+$entiteSeule = 'ENTITE-MOYEN-UNIQUE';
+$seul = $ctr16->inscrireAuthentificateur($entiteSeule, 'Mot-de-passe-unique-1!');
+$refusDernier = $ctr16->revoquerMoyenAcces($entiteSeule, $seul);
+$second = $ctr16->inscrireAuthentificateur($entiteSeule, 'Mot-de-passe-second-1!');
+$retrait = $ctr16->revoquerMoyenAcces($entiteSeule, $seul);
+$etranger = $ctr16->revoquerMoyenAcces('ENTITE-AUTRE', $second);
+$verifier(
+    ($refusDernier['refus'] ?? null) === 'DERNIER_MOYEN'
+        && ($retrait['etat'] ?? null) === 'RÉVOQUÉ'
+        && ($etranger['refus'] ?? null) === 'MOYEN_INTROUVABLE'
+        && $ctr16->etablirSession($entiteSeule, 'Mot-de-passe-unique-1!') === null
+        && $ctr16->etablirSession($entiteSeule, 'Mot-de-passe-second-1!') !== null,
+    'le dernier moyen d’accès ne se retire pas, et nul ne retire celui d’autrui',
+);
+
 unset($magasin);
 @unlink($fichier);
 unset($migre);

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AccesConsoleController;
 use App\Http\Controllers\AccesController;
 use App\Http\Controllers\ContinuiteConsoleController;
 use App\Http\Controllers\Ctr01Controller;
@@ -52,6 +53,20 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/satellites/{produit}/identifiants/retrait', [SatelliteConsoleController::class, 'retirer'])
         ->middleware('throttle:10,1')
         ->name('console.satellites.retirer');
+
+    // CAP-CORE-005 — moyens d'accès personnels. Le sujet vient de la session ;
+    // on ne gère jamais l'accès d'autrui.
+    Route::get('/mon-acces', [AccesConsoleController::class, 'index'])
+        ->name('console.acces.index');
+    Route::post('/mon-acces/codes-de-secours', [AccesConsoleController::class, 'engendrerCodes'])
+        ->middleware('throttle:5,1')
+        ->name('console.acces.codes');
+    Route::post('/mon-acces/passkey', [AccesConsoleController::class, 'autoriserPasskey'])
+        ->middleware('throttle:5,1')
+        ->name('console.acces.passkey');
+    Route::post('/mon-acces/retrait', [AccesConsoleController::class, 'retirer'])
+        ->middleware('throttle:10,1')
+        ->name('console.acces.retirer');
 
     // CAP-CORE-019 — continuité. La console ne lance rien : elle écrit des
     // réglages et dépose des demandes qu'une unité systemd sert.

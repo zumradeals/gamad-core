@@ -34,16 +34,21 @@
                        id="entite"
                        autocomplete="username"
                        placeholder="AUT-GAMAD-001"
+                       value="{{ session('passkey_entite', '') }}"
                        required
-                       autofocus>
+                       @if(! session('passkey_entite')) autofocus @endif>
             </div>
 
             <div class="field">
                 <label for="jeton">Code d’enrôlement à usage unique</label>
+                {{-- Rempli quand l'autorisation vient d'être accordée depuis
+                     « Mon accès » : le jeton ne transite pas par l'écran, il ne
+                     survit pas au rechargement. --}}
                 <input class="input"
                        id="jeton"
                        type="password"
                        autocomplete="one-time-code"
+                       value="{{ session('passkey_jeton', '') }}"
                        required>
             </div>
 
