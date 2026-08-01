@@ -24,7 +24,7 @@ document.
 | CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | aucun ; secrets hors dépôt | `ABSENT` |
 | CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `ABSENT` |
 | CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `ABSENT` |
-| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation` | `EXPLOITÉ` — sauvegarde et exercice de restauration exécutés par la CI |
+| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation` | `PARTIEL` — sauvegarde quotidienne et exercice de restauration éprouvés ; copie hors machine livrée mais **désactivée**, donc toutes les copies vivent encore sur le disque protégé |
 | CAP-CORE-020 | Directory & Atlas | Produire un annuaire opérationnel des capacités et produits | aucun | `ABSENT` — l’ancien module dérivait d’un corpus supprimé |
 | CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | aucun | `ABSENT` |
 | CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | `core/registre-federation`, API v1 `/produits*` | `IMPLÉMENTÉ` — parcours pilote GamaDrive éprouvé ; aucun satellite réel raccordé |
@@ -87,7 +87,8 @@ le Core sait ouvrir une identité sur GamaDrive, borner le jeton, le révoquer e
 le prouver. Les chantiers ouverts, par ordre d’utilité :
 
 ```text
-intégration réelle de GamaDrive V2 sur CAP-CORE-022
+CAP-CORE-019 activer la copie hors machine et la relire
+→ intégration réelle de GamaDrive V2 sur CAP-CORE-022
 → CAP-CORE-011 registre des produits, en écriture gouvernée
 → CAP-CORE-002 organisations
 → CAP-CORE-014 publication d’événements vers les satellites
@@ -97,3 +98,8 @@ intégration réelle de GamaDrive V2 sur CAP-CORE-022
 Cette proposition reste une proposition : elle se confirme produit par produit.
 Tant qu’aucun satellite ne consomme la fédération, elle est `IMPLÉMENTÉE`, pas
 `EXPLOITÉE`.
+
+La continuité passe devant le reste pour une raison simple : le 1er août 2026,
+l’inspection du serveur a montré huit lots de sauvegarde, tous sur le disque
+qu’ils protègent, et aucune copie ailleurs. L’exercice de restauration prouve
+que les dumps se rechargent — encore faut-il qu’ils existent encore.

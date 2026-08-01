@@ -1,0 +1,27 @@
+[Unit]
+Description=Copie hors machine du dernier lot de sauvegarde GAMAD Core
+# Se déclenche après la sauvegarde, et seulement si elle a réussi : transporter
+# un lot produit par une sauvegarde en échec donnerait une fausse continuité.
+After=gamad-core-backup.service
+Requires=gamad-core-backup.service
+OnFailure=gamad-core-operations-alert@offsite.service
+
+[Service]
+Type=oneshot
+User=postgres
+Group=postgres
+EnvironmentFile=/etc/gamad-core/backup.env
+ExecStart=/var/www/gamad-core/ops/core-foundation/offsite.sh
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+# Le miroir local et la source des lots. Ajouter ici le point de montage si la
+# destination est un volume local plutôt qu'un hôte distant.
+ReadWritePaths=/var/backups/gamad-core
+
+[Install]
+# Rattachée à la sauvegarde : aucun minuteur propre, aucune cadence à tenir à
+# jour en double. Tant que GAMAD_OFFSITE_DEST est vide, l'unité s'exécute et
+# ne transporte rien.
+WantedBy=gamad-core-backup.service
