@@ -71,7 +71,10 @@ ecrire_etat() {
         nombre_lots="$(find "${lots_dir%/}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)"
     fi
 
-    local stage="${GAMAD_OFFSITE_STAGE:-${lots_dir%/}/../hors-machine}"
+    local stage="${GAMAD_OFFSITE_STAGE:-}"
+    if [[ -z "$stage" && -n "$lots_dir" ]]; then
+        stage="$(dirname "${lots_dir%/}")/hors-machine"
+    fi
     local derniere_archive="" nombre_copies=0
     if [[ -d "$stage" ]]; then
         derniere_archive="$(find "$stage" -maxdepth 1 -type f -name '*.tar.gz.gpg' 2>/dev/null | sort | tail -1)"

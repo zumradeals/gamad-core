@@ -86,8 +86,13 @@ if ! ( cd "$lot" && sha256sum --quiet --check SHA256SUMS ); then
     exit 1
 fi
 
-stage="${GAMAD_OFFSITE_STAGE:-${GAMAD_BACKUP_DIR%/}/../hors-machine}"
-mkdir -p "$stage"
+stage="${GAMAD_OFFSITE_STAGE:-$(dirname "${GAMAD_BACKUP_DIR%/}")/hors-machine}"
+if ! mkdir -p "$stage" 2>/dev/null || [[ ! -w "$stage" ]]; then
+    echo "Refus : le miroir local ${stage} ne peut être ni créé ni écrit." >&2
+    echo "Il doit appartenir au compte qui exécute la sauvegarde. Exécuter" >&2
+    echo "ops/core-foundation/installer-continuite.sh en root pour le préparer." >&2
+    exit 2
+fi
 temporaire="$(mktemp -d)"
 trap 'rm -rf -- "$temporaire"' EXIT
 
