@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
+use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
 use Illuminate\Console\Command;
@@ -40,9 +41,13 @@ final class MigrerFondationCommand extends Command
         }
 
         try {
+            $acces = AccesMagasin::connecter();
+            // Les jetons fédérés vivent dans le magasin d'accès : leur validité
+            // dépend en permanence de la session Core qui les a produits.
+            SchemaFederation::migrer($acces);
             $cibles = [
                 'index reconstructible' => Db::connect(),
-                'accès/authentification' => AccesMagasin::connecter(),
+                'accès/authentification/fédération' => $acces,
                 'identités persistantes' => IdentiteMagasin::connecter(),
                 'journal opérationnel' => JournalMagasin::connecter(),
             ];

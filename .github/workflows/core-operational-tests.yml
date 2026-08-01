@@ -40,6 +40,8 @@ jobs:
             garde: core/registre-sources/tests/sources_p3.php
           - capacite: CAP-CORE-007 (normes)
             garde: core/registre-normes/tests/temporel_p3.php
+          - capacite: CAP-CORE-022 (fédération)
+            garde: core/registre-federation/tests/federation_p3.php
 
     steps:
       - name: Récupérer le dépôt
@@ -99,6 +101,9 @@ jobs:
 
       - name: Exécuter l'intégration HTTP v1
         run: php apps/console-laravel/tests/Integration/api_v1_p1.php
+
+      - name: Éprouver le parcours fédéré GamaDrive
+        run: php apps/console-laravel/tests/Integration/federation_v1_p1.php
 
       - name: Éprouver l'authentification console
         run: php apps/console-laravel/tests/Integration/console_auth_p1.php

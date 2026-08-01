@@ -97,3 +97,18 @@ La fédération doit être validée sur un produit pilote avec un parcours réel
 8. audit du parcours.
 
 GamaDrive V2 peut servir de premier pilote, puis Wasplex de deuxième intégration. Ce choix doit être confirmé par le chantier concerné et par l’état réel des produits.
+
+## 8. État d’implémentation
+
+La première tranche existe et est éprouvée en CI : `core/registre-federation`,
+API v1 `/produits`, `/produits/{produit}/ouverture`, `/produits/{produit}/verification`
+et `/produits/{produit}/revocation`.
+
+Le pilote est GamaDrive, seul produit dont l’état dérivé porte la
+reconnaissance. Wasplex et IKOMA sont refusés tant qu’ils restent partenaires
+externes non entérinés.
+
+Aucun satellite réel ne consomme encore la fédération : le parcours est
+`IMPLÉMENTÉ`, pas `EXPLOITÉ`. L’état détaillé, les bornes du jeton et les
+manques figurent dans
+[`capacites/CAP-CORE-022-satellite-federation.md`](capacites/CAP-CORE-022-satellite-federation.md).

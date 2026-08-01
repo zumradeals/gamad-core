@@ -14,6 +14,7 @@ tags:
   - name: Sessions
   - name: Identités
   - name: Autorisation
+  - name: Fédération
 paths:
   /health/live:
     get:
@@ -283,6 +284,151 @@ paths:
           description: Mandat résolu.
         "404":
           description: Aucun mandat applicable.
+  /produits:
+    get:
+      tags: [Fédération]
+      operationId: listerProduits
+      summary: Catalogue des satellites et accès de l'identité appelante.
+      description: >-
+        Ne restitue que ce que le Portail peut montrer : nom du produit, état
+        d'activation, niveau d'accès et dernière ouverture. Aucune donnée métier
+        du satellite ne traverse cette frontière.
+      security:
+        - bearerSession: []
+      responses:
+        "200":
+          description: Produits connus et accès actifs du porteur.
+        "401":
+          description: Session invalide.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits/{produit}/ouverture:
+    post:
+      tags: [Fédération]
+      operationId: ouvrirAccesFedere
+      summary: Provisionne le compte local et émet un jeton borné au satellite.
+      description: >-
+        Le provisionnement est idempotent : répéter la demande ne crée pas un
+        second compte local. Le jeton émis est limité à ce satellite, à une
+        durée courte, aux portées de la liste close, à la session Core et au
+        niveau d'assurance qui l'ont produit. Il n'est retourné qu'une fois.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Produit"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                identite:
+                  type: string
+                  maxLength: 64
+                  description: >-
+                    Par défaut l'identité de la session. Ouvrir pour autrui
+                    n'est possible qu'à l'autorité d'inscription.
+                relation_type:
+                  type: string
+                  enum:
+                    [
+                      UTILISATEUR,
+                      CLIENT,
+                      ANNONCEUR,
+                      ADMINISTRATEUR,
+                      OPERATEUR,
+                      RESPONSABLE_PRODUIT,
+                      PROPRIETAIRE_INSTITUTIONNEL,
+                      PARTENAIRE,
+                    ]
+                sujet_local_opaque:
+                  type: string
+                  maxLength: 256
+                duree:
+                  type: integer
+                  minimum: 30
+                  maximum: 300
+      responses:
+        "201":
+          description: Accès ouvert, jeton fédéré remis une seule fois.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'ouverture.
+        "422":
+          description: >-
+            Produit non reconnu, identité non utilisable, acteur incompétent ou
+            durée hors bornes.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits/{produit}/verification:
+    post:
+      tags: [Fédération]
+      operationId: verifierJetonFedere
+      summary: Échange un jeton fédéré contre l'identité qu'il porte.
+      description: >-
+        Réservé au satellite destinataire, qui s'authentifie sous sa propre
+        référence produit. Le jeton est à usage unique et toutes ses conditions
+        sont revérifiées à la présentation : audience, expiration, révocation,
+        session Core et lien produit.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Produit"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jeton]
+              properties:
+                jeton:
+                  type: string
+                  maxLength: 256
+                  writeOnly: true
+      responses:
+        "200":
+          description: Jeton valide et consommé ; identité et portées restituées.
+        "401":
+          description: Jeton inconnu, étranger, expiré, révoqué ou déjà consommé.
+        "403":
+          description: L'appelant n'est pas le satellite destinataire.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits/{produit}/revocation:
+    post:
+      tags: [Fédération]
+      operationId: revoquerAccesFedere
+      summary: Ferme le lien produit et les jetons encore ouverts.
+      description: >-
+        Ouverte au porteur, au satellite concerné et à l'autorité. Fermer un
+        accès ne supprime ni l'identité GAMAD ni les données que le satellite
+        détient légalement.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Produit"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                identite:
+                  type: string
+                  maxLength: 64
+      responses:
+        "200":
+          description: Lien clos et jetons fermés.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la révocation.
+        "422":
+          description: Aucun accès actif à révoquer.
+        "503":
+          description: Une dépendance requise est indisponible.
 components:
   securitySchemes:
     bearerSession:
@@ -296,6 +442,14 @@ components:
       required: true
       schema:
         type: string
+    Produit:
+      in: path
+      name: produit
+      required: true
+      description: Référence du satellite ; elle est aussi l'audience du jeton.
+      schema:
+        type: string
+        maxLength: 64
   schemas:
     Vie:
       type: object

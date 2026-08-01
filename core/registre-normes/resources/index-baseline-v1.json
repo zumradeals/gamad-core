@@ -4,7 +4,7 @@
     "source": {
         "type": "photographie-technique-index",
         "commit": "3e0203c1e5e980373bccd086e19c633c612bebb1",
-        "note": "Photographie technique de l’index opérationnel. Le corpus documentaire historique a été retiré du dépôt ; cette source ne référence plus aucun fichier Markdown et sert uniquement à initialiser un index vide."
+        "note": "Photographie technique de l’index opérationnel. Le corpus documentaire historique a été retiré du dépôt ; cette source ne référence plus aucun fichier Markdown et sert uniquement à initialiser un index vide. La politique technique POL-FEDERATION-SATELLITES-V1 y est portée en source versionnée : CAP-CORE-022 ne décide pas lui-même de l’ouverture, il la fait décider par CAP-CORE-004."
     },
     "compteurs": {
         "adoptions": 66,
@@ -16,7 +16,7 @@
         "sources": 26,
         "fonctions": 24,
         "entites": 7,
-        "regles": 14,
+        "regles": 16,
         "mandats": 1,
         "indetermines": 95
     },
@@ -1940,6 +1940,13 @@
                     "libelle": "Limites du mandat transitoire",
                     "source": "REGISTRE-INITIAL-AUTORITES-MANDATS-0001, Art. 49",
                     "adoption_reference": "ADOPTION-0017"
+                },
+                {
+                    "reference": "POL-FEDERATION-SATELLITES-V1",
+                    "version": "1.0",
+                    "libelle": "Politique technique d’ouverture fédérée des satellites",
+                    "source": "core/registre-federation — CAP-CORE-022",
+                    "adoption_reference": null
                 }
             ]
         },
@@ -2134,6 +2141,22 @@
                     "action": "inscrire-une-identité",
                     "sujet_type": "AUT-GAMAD-001",
                     "motif": "L'autorité d'inscription peut inscrire une identité par un canal réservé lorsque son mandat actif est vérifié."
+                },
+                {
+                    "id": 15,
+                    "politique_reference": "POL-FEDERATION-SATELLITES-V1",
+                    "effet": "PERMET",
+                    "action": "ouvrir-un-accès-fédéré-à-un-produit-reconnu",
+                    "sujet_type": null,
+                    "motif": "Une identité authentifiée ouvre son propre accès à un produit reconnu ; l'autorité d'inscription peut l'ouvrir pour autrui. Le jeton émis ne vaut que pour le satellite désigné et pour une session locale."
+                },
+                {
+                    "id": 16,
+                    "politique_reference": "POL-FEDERATION-SATELLITES-V1",
+                    "effet": "PERMET",
+                    "action": "révoquer-un-accès-fédéré-à-un-produit-reconnu",
+                    "sujet_type": null,
+                    "motif": "Le porteur, le satellite concerné ou l'autorité d'inscription peuvent fermer un accès fédéré. La fermeture ne supprime ni l'identité GAMAD ni les données détenues par le satellite."
                 }
             ]
         },

@@ -15,7 +15,7 @@ final class BaselineOperationnelle
 {
     private const FORMAT = 'gamad-core-index-baseline';
     private const VERSION = 1;
-    private const EMPREINTE_SHA256 = '5eaab46d389876422fe5caf27229aa8f730e373236157921c28c543800add56e';
+    private const EMPREINTE_SHA256 = '2f0850133e75efb42acc15fc14c4f6781045e57d9c95a701d7beb1aab6ba9ef0';
 
     /**
      * Ordre d'insertion respectant les dépendances relationnelles du schéma.

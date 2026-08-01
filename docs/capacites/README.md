@@ -50,6 +50,7 @@ Le catalogue de travail se trouve dans [`CATALOGUE.md`](CATALOGUE.md).
 
 Les fiches individuelles sont ajoutées ou complétées au début du chantier technique de chaque capacité. Cette méthode évite de produire vingt-deux documents détaillés à partir d’informations non vérifiées.
 
-Fiche disponible :
+Fiches disponibles :
 
 - [`CAP-CORE-001-identity-registry.md`](CAP-CORE-001-identity-registry.md)
+- [`CAP-CORE-022-satellite-federation.md`](CAP-CORE-022-satellite-federation.md)
