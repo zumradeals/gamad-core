@@ -109,6 +109,21 @@ conserves="$(find "$destination" -maxdepth 1 -type f -name '*.tar.gz.gpg' | wc -
     && [[ -f "${destination}/20260801T040000Z.tar.gz.gpg" ]]
 verifier $? "la rétention retire les lots les plus anciens de la destination"
 
+# 6 bis — un miroir local impossible à créer est nommé, pas subi.
+#
+# Le blocage passe par un fichier ordinaire en guise de parent : un simple
+# retrait de droits ne prouverait rien, root les ignore et l'épreuve serait
+# verte sans rien démontrer.
+: > "${temp}/fichier-bloquant"
+set +e
+sortie="$(GAMAD_OFFSITE_DEST="$destination" \
+    GAMAD_OFFSITE_STAGE="${temp}/fichier-bloquant/hors-machine" \
+    "${racine}/offsite.sh" 2>&1)"
+code=$?
+set -e
+[[ "$code" != "0" ]] && [[ "$sortie" == *"miroir local"* ]] && [[ "$sortie" == *"installer-continuite.sh"* ]]
+verifier $? "un miroir local impossible à créer produit un refus explicite, pas une erreur brute"
+
 # 7 — l'exercice de restauration relit la copie distante, empreintes comprises.
 sortie="$(GAMAD_OFFSITE_DEST="$destination" \
     GAMAD_OFFSITE_PASSPHRASE_FILE="$phrase" \

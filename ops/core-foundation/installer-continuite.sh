@@ -44,6 +44,19 @@ install -d -o root -g "$groupe" -m 2770 "$partage"
 install -d -o root -g "$groupe" -m 2770 "${partage}/demandes"
 echo "  [+] ${partage} (2770 root:${groupe})"
 
+echo "— Miroir local des copies"
+# La sauvegarde tourne sous un compte non privilégié : le miroir doit lui
+# appartenir. Sans cela, la copie hors machine échoue sur un `mkdir` refusé,
+# après une sauvegarde pourtant réussie.
+lots="/var/backups/gamad-core/daily"
+if [[ -r /etc/gamad-core/backup.env ]]; then
+    lots="$(sed -n 's/^GAMAD_BACKUP_DIR=//p' /etc/gamad-core/backup.env | tail -1)"
+    lots="${lots:-/var/backups/gamad-core/daily}"
+fi
+miroir="$(dirname "${lots%/}")/hors-machine"
+install -d -o "$utilisateur_ops" -g "$utilisateur_ops" -m 0700 "$miroir"
+echo "  [+] ${miroir} (0700 ${utilisateur_ops})"
+
 echo "— Unités systemd"
 for unite in gamad-core-offsite.service gamad-core-continuite.service gamad-core-continuite.path; do
     install -o root -g root -m 0644 "${racine}/systemd/${unite}" "/etc/systemd/system/${unite}"
