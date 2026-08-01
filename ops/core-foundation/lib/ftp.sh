@@ -57,9 +57,14 @@ ftp_preparer() {
         case "${GAMAD_OFFSITE_FTP_TLS:-opportuniste}" in
             exige) printf 'ssl-reqd\n' ;;
             aucun) ;;
+            epingle)
+                # Le certificat est chiffré et authentifié — non par un nom
+                # d'hôte, mais par la clé publique relevée au raccordement.
+                printf 'ssl-reqd\ninsecure\npinnedpubkey = "sha256//%s"\n' "$(ftp_epreinte)"
+                ;;
             opportuniste|'') printf 'ssl\n' ;;
             *)
-                echo "GAMAD_OFFSITE_FTP_TLS doit valoir exige, opportuniste ou aucun." >&2
+                echo "GAMAD_OFFSITE_FTP_TLS doit valoir exige, epingle, opportuniste ou aucun." >&2
                 exit 2
                 ;;
         esac
@@ -67,6 +72,66 @@ ftp_preparer() {
 
     # Le fichier disparaît quoi qu'il arrive, y compris sur interruption.
     gamad_a_nettoyer "$abri"
+}
+
+# Empreinte de la clé publique du serveur.
+#
+# Beaucoup d'hébergements mutualisés présentent un certificat parfaitement
+# valide, mais émis pour un autre nom que celui du serveur FTP. La vérification
+# par nom d'hôte échoue alors, et la tentation est de la désactiver — ce qui
+# rendrait le transport vulnérable à une interception.
+#
+# L'épinglage garde le chiffrement ET l'authentification : le serveur est
+# reconnu à sa clé, relevée une fois au raccordement. Le risque résiduel est
+# celui du premier contact : si cette toute première connexion était déjà
+# interceptée, c'est la clé de l'intercepteur qui serait retenue. Le jour où le
+# serveur change légitimement de certificat, le transport s'arrête et l'écran
+# demande de relever l'empreinte à nouveau — un arrêt bruyant valant mieux
+# qu'une confiance silencieuse.
+ftp_epreinte() {
+    local fichier="${GAMAD_OFFSITE_PIN_FILE:-}"
+    if [[ -n "$fichier" && -s "$fichier" ]]; then
+        tr -d '\r\n' < "$fichier"
+        return
+    fi
+
+    local hote port
+    hote="$(ftp_hote "$GAMAD_OFFSITE_DEST")"
+    port="$(ftp_port "$GAMAD_OFFSITE_DEST")"
+    local empreinte
+    empreinte="$(openssl s_client -connect "${hote}:${port}" -starttls ftp -servername "$hote" \
+        </dev/null 2>/dev/null \
+        | openssl x509 -pubkey -noout 2>/dev/null \
+        | openssl pkey -pubin -outform der 2>/dev/null \
+        | openssl dgst -sha256 -binary 2>/dev/null \
+        | base64)"
+
+    if [[ -z "$empreinte" ]]; then
+        echo "Refus : impossible de relever l'empreinte TLS de ${hote}:${port}." >&2
+        exit 2
+    fi
+    if [[ -n "$fichier" ]]; then
+        printf '%s\n' "$empreinte" > "$fichier"
+        chmod 0660 "$fichier" 2>/dev/null || true
+        echo "Empreinte TLS relevée et retenue pour ${hote} : ${empreinte}" >&2
+    fi
+    printf '%s' "$empreinte"
+}
+
+ftp_hote() {
+    local sans_schema="${1#*://}"
+    local hote="${sans_schema%%/*}"
+    printf '%s' "${hote%%:*}"
+}
+
+ftp_port() {
+    local sans_schema="${1#*://}"
+    local hote="${sans_schema%%/*}"
+    if [[ "$hote" == *:* ]]; then
+        printf '%s' "${hote##*:}"
+    else
+        printf '21'
+    fi
 }
 
 ftp_curl() {

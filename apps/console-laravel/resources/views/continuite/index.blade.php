@@ -115,11 +115,23 @@
                     <dd>{{ $rapport['lots_locaux'] ?? 0 }} — dernière : {{ $rapport['dernier_lot_local'] ?? 'aucune' }}</dd>
                 </div>
                 <div class="detail-row">
-                    <dt>Copies envoyées ailleurs</dt>
+                    <dt>Copies préparées</dt>
                     <dd>
                         {{ $rapport['copies_hors_machine'] ?? 0 }}
                         @if($ageJours !== null)
                             — la plus récente date de {{ $ageJours === 0 ? "moins d'un jour" : $ageJours.' jour(s)' }}
+                        @endif
+                    </dd>
+                </div>
+                <div class="detail-row">
+                    <dt>Dernier envoi confirmé</dt>
+                    <dd>
+                        @if(! empty($rapport['dernier_envoi_confirme']))
+                            <span class="status status--success">Parti</span>
+                            {{ $rapport['dernier_envoi_confirme'] }}
+                        @else
+                            <span class="status status--danger">Jamais</span>
+                            aucune copie n’a encore quitté ce serveur
                         @endif
                     </dd>
                 </div>
@@ -131,7 +143,14 @@
                     <div class="detail-row">
                         <dt>Protection du transfert</dt>
                         <dd>
-                            @if($etat['tls'] === 'exige')
+                            @if($etat['tls'] === 'epingle')
+                                Chiffré, et le serveur est reconnu à son empreinte.
+                                @if($etat['empreinte_tls'])
+                                    <br><span class="technical-reference">{{ $etat['empreinte_tls'] }}</span>
+                                @else
+                                    <br>Empreinte relevée au premier envoi.
+                                @endif
+                            @elseif($etat['tls'] === 'exige')
                                 Chiffré, exigé — le transfert échoue si le serveur ne le propose pas.
                             @elseif($etat['tls'] === 'aucun')
                                 Aucune. Le mot de passe circule en clair sur le réseau.
@@ -277,8 +296,9 @@
                         <select class="select" id="tls" name="tls" required>
                             @foreach($modesTls as $mode)
                                 <option value="{{ $mode }}" @selected(old('tls', $etat['tls']) === $mode)>
-                                    @if($mode === 'exige') Chiffrement obligatoire (le plus sûr)
-                                    @elseif($mode === 'opportuniste') Chiffrer si possible (recommandé)
+                                    @if($mode === 'epingle') Chiffré, serveur reconnu à son empreinte (recommandé)
+                                    @elseif($mode === 'exige') Chiffrement obligatoire, nom du serveur vérifié
+                                    @elseif($mode === 'opportuniste') Chiffrer si le serveur l’accepte
                                     @else Aucune protection
                                     @endif
                                 </option>

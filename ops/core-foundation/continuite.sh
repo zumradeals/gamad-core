@@ -83,12 +83,22 @@ ecrire_etat() {
 
     # Les opérations précédentes sont conservées telles quelles si la présente
     # exécution ne les concerne pas : un état ne doit jamais effacer une trace.
-    local precedent_operation='null' precedent_exercice='null'
+    local precedent_operation='null' precedent_exercice='null' precedent_envoi='null'
     if [[ -r "$etat" ]]; then
+        precedent_envoi="$(sed -n 's/.*"dernier_envoi_confirme":[[:space:]]*\("[^"]*"\|null\).*/\1/p' "$etat" | head -1)"
+        [[ -z "$precedent_envoi" ]] && precedent_envoi='null'
         precedent_operation="$(sed -n 's/.*"derniere_operation":[[:space:]]*\({[^}]*}\|null\).*/\1/p' "$etat" | head -1)"
         precedent_exercice="$(sed -n 's/.*"dernier_exercice":[[:space:]]*\({[^}]*}\|null\).*/\1/p' "$etat" | head -1)"
         [[ -z "$precedent_operation" ]] && precedent_operation='null'
         [[ -z "$precedent_exercice" ]] && precedent_exercice='null'
+    fi
+
+    # Une copie n'est dite « partie » que si le transport a réussi. Compter le
+    # miroir local comme un envoi donnerait une fausse assurance — précisément
+    # ce qu'une page de continuité ne doit jamais faire.
+    local envoi="$precedent_envoi"
+    if [[ "$action" == "sauvegarde" && "$resultat" == "succes" && -n "${GAMAD_OFFSITE_DEST:-}" ]]; then
+        envoi="$(json_texte "$(date -u +%Y-%m-%dT%H:%M:%SZ)")"
     fi
 
     local operation="$precedent_operation" exercice="$precedent_exercice"
@@ -116,6 +126,7 @@ ecrire_etat() {
   "dernier_lot_local": $(json_texte "$([[ -n "$dernier_lot" ]] && basename "$dernier_lot")"),
   "copies_hors_machine": ${nombre_copies:-0},
   "derniere_copie": $(json_texte "$([[ -n "$derniere_archive" ]] && basename "$derniere_archive")"),
+  "dernier_envoi_confirme": ${envoi},
   "derniere_operation": ${operation},
   "dernier_exercice": ${exercice}
 }
@@ -134,7 +145,14 @@ executer() {
             { "${racine}/backup.sh" && "${racine}/offsite.sh"; } > "$journal" 2>&1 || code=$?
             ;;
         exercice)
-            "${racine}/offsite-drill.sh" > "$journal" 2>&1 || code=$?
+            # Cibles isolées, distinctes des bases d'exploitation. `restore-drill.sh`
+            # refuse de lui-même toute cible qui porterait un nom de production.
+            GAMAD_RESTORE_INDEX_PGDATABASE="${GAMAD_DRILL_INDEX_PGDATABASE:-drill_index}" \
+            GAMAD_RESTORE_ACCESS_PGDATABASE="${GAMAD_DRILL_ACCESS_PGDATABASE:-drill_access}" \
+            GAMAD_RESTORE_IDENTITY_PGDATABASE="${GAMAD_DRILL_IDENTITY_PGDATABASE:-drill_identity}" \
+            GAMAD_RESTORE_JOURNAL_PGDATABASE="${GAMAD_DRILL_JOURNAL_PGDATABASE:-drill_journal}" \
+            GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases \
+                "${racine}/offsite-drill.sh" > "$journal" 2>&1 || code=$?
             ;;
         *)
             echo "Action inconnue : ${action}" >&2

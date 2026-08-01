@@ -81,6 +81,10 @@ set -e
     && grep -q '"action": "sauvegarde"' "${partage}/etat.json"
 verifier $? "une demande est consommée une seule fois et son échec est visible"
 
+# 4 bis — un échec ne se compte jamais comme un envoi confirmé.
+grep -q '"dernier_envoi_confirme": null' "${partage}/etat.json"
+verifier $? "une opération échouée ne fait pas croire qu’une copie est partie"
+
 # 5 — la trace de l'échec précédent survit à un simple recalcul d'état.
 "${racine}/continuite.sh" etat >/dev/null
 grep -q '"resultat": "echec"' "${partage}/etat.json"
@@ -96,6 +100,30 @@ touch "${partage}/demandes/effacer-tout.demande"
 "${racine}/continuite.sh" servir-demande >/dev/null 2>&1 || true
 [[ -e "${partage}/demandes/effacer-tout.demande" ]]
 verifier $? "un fichier-signal hors liste close est ignoré, jamais exécuté"
+
+# 8 — un exercice ne se restaure jamais sur une base d'exploitation.
+set +e
+sortie="$(GAMAD_RESTORE_SOURCE=/tmp \
+    GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases \
+    GAMAD_INDEX_PGDATABASE=registre_normes \
+    GAMAD_RESTORE_INDEX_PGDATABASE=registre_normes \
+    GAMAD_RESTORE_ACCESS_PGDATABASE=drill_access \
+    GAMAD_RESTORE_IDENTITY_PGDATABASE=drill_identity \
+    GAMAD_RESTORE_JOURNAL_PGDATABASE=drill_journal \
+    "${racine}/restore-drill.sh" 2>&1)"
+code=$?
+set -e
+[[ "$code" != "0" ]] && [[ "$sortie" == *"base"* ]] && [[ "$sortie" == *"exploitation"* ]]
+verifier $? "restaurer un exercice sur une base d’exploitation est refusé"
+
+# 9 — la confirmation reste exigée : la garde ne la remplace pas.
+set +e
+GAMAD_RESTORE_SOURCE=/tmp GAMAD_RESTORE_INDEX_PGDATABASE=drill_index \
+    "${racine}/restore-drill.sh" >/dev/null 2>&1
+code=$?
+set -e
+[[ "$code" != "0" ]]
+verifier $? "un exercice sans confirmation explicite reste refusé"
 
 echo
 if [[ "$echecs" == "0" ]]; then
