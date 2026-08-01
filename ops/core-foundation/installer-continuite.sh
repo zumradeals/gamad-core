@@ -57,6 +57,21 @@ miroir="$(dirname "${lots%/}")/hors-machine"
 install -d -o "$utilisateur_ops" -g "$utilisateur_ops" -m 0700 "$miroir"
 echo "  [+] ${miroir} (0700 ${utilisateur_ops})"
 
+echo "— Bases isolées de l'exercice de restauration"
+# Un exercice qui n'a nulle part où restaurer n'est pas un exercice. Ces bases
+# sont vides, distinctes de l'exploitation, et `restore-drill.sh` refuse de
+# lui-même toute cible portant un nom de production.
+for base in drill_index drill_access drill_identity drill_journal; do
+    if su -s /bin/sh "$utilisateur_ops" -c "psql -lqtA 2>/dev/null | cut -d'|' -f1 | grep -qx '${base}'"; then
+        echo "  [=] ${base} existe déjà"
+    elif su -s /bin/sh "$utilisateur_ops" -c "createdb '${base}'" 2>/dev/null; then
+        echo "  [+] ${base} créée"
+    else
+        echo "  [!] ${base} n’a pas pu être créée — l’exercice de restauration restera limité"
+        echo "      à la vérification des empreintes, sans rechargement PostgreSQL."
+    fi
+done
+
 echo "— Unités systemd"
 for unite in gamad-core-offsite.service gamad-core-continuite.service gamad-core-continuite.path; do
     install -o root -g root -m 0644 "${racine}/systemd/${unite}" "/etc/systemd/system/${unite}"

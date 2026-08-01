@@ -32,8 +32,17 @@ final class Continuite
     /** @var list<string> */
     public const OPERATIONS = ['sauvegarde', 'exercice'];
 
-    /** @var list<string> */
-    public const MODES_TLS = ['exige', 'opportuniste', 'aucun'];
+    /**
+     * Modes de protection du transfert, du plus sûr au plus faible.
+     *
+     * `epingle` est le défaut : beaucoup d'hébergements mutualisés présentent
+     * un certificat valide mais émis pour un autre nom que celui du serveur
+     * FTP. L'épinglage garde le chiffrement ET l'authentification là où la
+     * vérification par nom d'hôte échouerait.
+     *
+     * @var list<string>
+     */
+    public const MODES_TLS = ['epingle', 'exige', 'opportuniste', 'aucun'];
 
     private string $partage;
 
@@ -79,7 +88,10 @@ final class Continuite
             'configuree' => ($reglages['GAMAD_OFFSITE_DEST'] ?? '') !== '',
             'destination' => $reglages['GAMAD_OFFSITE_DEST'] ?? null,
             'utilisateur' => $reglages['GAMAD_OFFSITE_FTP_USER'] ?? null,
-            'tls' => $reglages['GAMAD_OFFSITE_FTP_TLS'] ?? 'opportuniste',
+            'tls' => $reglages['GAMAD_OFFSITE_FTP_TLS'] ?? 'epingle',
+            'empreinte_tls' => is_file($this->partage.'/ftp.pin')
+                ? trim((string) @file_get_contents($this->partage.'/ftp.pin'))
+                : null,
             'retention' => (int) ($reglages['GAMAD_OFFSITE_RETENTION'] ?? 14),
             'secret_present' => is_file($this->partage.'/ftp.secret'),
             'chiffrement_present' => is_file($this->partage.'/chiffrement.secret'),
@@ -156,13 +168,20 @@ final class Continuite
                 $this->ecrireSecret('chiffrement.secret', $phrase);
             }
 
+            // Changer d'hôte invalide l'empreinte retenue : la conserver
+            // ferait échouer le transport sans dire pourquoi.
+            $ancien = $this->reglages()['GAMAD_OFFSITE_DEST'] ?? '';
             $destination = sprintf('ftp://%s/%s', $hote, $chemin);
+            if ($ancien !== '' && $ancien !== $destination) {
+                @unlink($this->partage.'/ftp.pin');
+            }
             $this->ecrireFichier('offsite.env', implode("\n", [
                 '# Écrit par la console GAMAD Core. Ne pas modifier à la main.',
                 'GAMAD_OFFSITE_DEST='.$destination,
                 'GAMAD_OFFSITE_FTP_USER='.$utilisateur,
                 'GAMAD_OFFSITE_FTP_SECRET_FILE='.$this->partage.'/ftp.secret',
                 'GAMAD_OFFSITE_FTP_TLS='.$tls,
+                'GAMAD_OFFSITE_PIN_FILE='.$this->partage.'/ftp.pin',
                 'GAMAD_OFFSITE_PASSPHRASE_FILE='.$this->partage.'/chiffrement.secret',
                 'GAMAD_OFFSITE_RETENTION='.$retention,
                 '',
