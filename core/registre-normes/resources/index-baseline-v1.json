@@ -16,7 +16,7 @@
         "sources": 26,
         "fonctions": 24,
         "entites": 7,
-        "regles": 18,
+        "regles": 20,
         "mandats": 1,
         "indetermines": 95
     },
@@ -1947,6 +1947,13 @@
                     "libelle": "Politique technique d’ouverture fédérée des satellites",
                     "source": "core/registre-federation — CAP-CORE-022",
                     "adoption_reference": null
+                },
+                {
+                    "reference": "POL-CONTINUITE-V1",
+                    "version": "1.0",
+                    "libelle": "Politique technique de continuité et de sauvegarde",
+                    "source": "ops/core-foundation — CAP-CORE-019",
+                    "adoption_reference": null
                 }
             ]
         },
@@ -2173,6 +2180,22 @@
                     "action": "retirer-un-identifiant-de-raccordement-à-un-satellite",
                     "sujet_type": "AUT-GAMAD-001",
                     "motif": "Seule l'autorité d'inscription retire un identifiant de raccordement. Le retrait ferme aussi les sessions Core ouvertes avec cet identifiant."
+                },
+                {
+                    "id": 19,
+                    "politique_reference": "POL-CONTINUITE-V1",
+                    "effet": "PERMET",
+                    "action": "configurer-la-continuité-des-sauvegardes",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription configure la destination des copies hors machine. Les identifiants saisis sont écrits hors du dépôt, dans un répertoire lisible du seul groupe de continuité."
+                },
+                {
+                    "id": 20,
+                    "politique_reference": "POL-CONTINUITE-V1",
+                    "effet": "PERMET",
+                    "action": "déclencher-une-opération-de-continuité",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription déclenche une sauvegarde ou un exercice de restauration depuis la console. La console ne les exécute pas : elle les demande."
                 }
             ]
         },
