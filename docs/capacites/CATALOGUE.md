@@ -16,7 +16,7 @@ document.
 | CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | aucun ; traces dans le journal opérationnel | `ABSENT` |
 | CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | aucun ; contrats portés par le code et `openapi/core-v1.yaml` | `ABSENT` |
 | CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | aucun | `ABSENT` |
-| CAP-CORE-011 | Products Registry | Référencer les satellites, services et points d’entrée | données techniques dans l’index | `PARTIEL` — quatre produits en données, aucun service dédié |
+| CAP-CORE-011 | Products Registry | Référencer les satellites, services et points d’entrée | données techniques dans l’index, catalogue servi par `core/registre-federation` | `PARTIEL` — quatre produits en données, lecture et distinction du fédérable ; aucune écriture gouvernée |
 | CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | aucun | `ABSENT` |
 | CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | `core/journal-operationnel` | `IMPLÉMENTÉ` — chaîne append-only vérifiée, trigger PostgreSQL |
 | CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-operationnel` en écriture seule | `PARTIEL` — aucune publication vers les satellites |
@@ -27,7 +27,7 @@ document.
 | CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation` | `EXPLOITÉ` — sauvegarde et exercice de restauration exécutés par la CI |
 | CAP-CORE-020 | Directory & Atlas | Produire un annuaire opérationnel des capacités et produits | aucun | `ABSENT` — l’ancien module dérivait d’un corpus supprimé |
 | CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | aucun | `ABSENT` |
-| CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | aucun | `ABSENT` |
+| CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | `core/registre-federation`, API v1 `/produits*` | `IMPLÉMENTÉ` — parcours pilote GamaDrive éprouvé ; aucun satellite réel raccordé |
 
 Un état `ABSENT` est une information utile : il nomme un chantier ouvert plutôt
 qu’il ne dissimule un manque derrière un module qui ne rendait aucun service.
@@ -82,14 +82,18 @@ Pour chaque capacité :
 
 ## Priorité proposée
 
-Le chemin critique est livré. Les chantiers ouverts, par ordre d’utilité :
+Le chemin critique est livré. La première tranche de CAP-CORE-022 l’est aussi :
+le Core sait ouvrir une identité sur GamaDrive, borner le jeton, le révoquer et
+le prouver. Les chantiers ouverts, par ordre d’utilité :
 
 ```text
-CAP-CORE-022 fédération des satellites
-→ CAP-CORE-011 registre des produits
+intégration réelle de GamaDrive V2 sur CAP-CORE-022
+→ CAP-CORE-011 registre des produits, en écriture gouvernée
 → CAP-CORE-002 organisations
-→ CAP-CORE-014 publication d’événements
+→ CAP-CORE-014 publication d’événements vers les satellites
 → CAP-CORE-021 Matching
 ```
 
 Cette proposition reste une proposition : elle se confirme produit par produit.
+Tant qu’aucun satellite ne consomme la fédération, elle est `IMPLÉMENTÉE`, pas
+`EXPLOITÉE`.

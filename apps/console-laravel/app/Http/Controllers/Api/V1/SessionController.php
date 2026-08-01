@@ -8,6 +8,7 @@ use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
+use Gamad\RegistreFederation\Federation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -78,7 +79,15 @@ final class SessionController
         $reference = (string) $request->attributes->get('gamad_session', '');
         $acteur = (string) $request->attributes->get('gamad_entite', '');
         try {
-            $revoquee = (new Ctr16(Magasin::connecter()))->revoquerSession($reference);
+            $magasin = Magasin::connecter();
+            // Déconnexion globale : les jetons fédérés encore ouverts tombent
+            // avec la session Core qui les a produits (CAP-CORE-022).
+            $jetonsFederes = Federation::fermerJetonsDeSession(
+                $magasin,
+                Federation::empreinteSession($reference),
+                'session Core fermée',
+            );
+            $revoquee = (new Ctr16($magasin))->revoquerSession($reference);
         } catch (\Throwable) {
             return response()->json([
                 'erreur' => 'MAGASIN_ACCES_INDISPONIBLE',
@@ -94,6 +103,7 @@ final class SessionController
                 'action' => 'fermer la session API courante',
                 'decision' => $revoquee ? 'EXECUTEE' : 'SANS_EFFET',
                 'correlation_id' => $request->attributes->get('gamad_correlation'),
+                'donnees' => ['jetons_federes_fermes' => $jetonsFederes],
             ]);
         } catch (\Throwable) {
             return response()->json([
@@ -102,6 +112,10 @@ final class SessionController
             ], 503);
         }
 
-        return response()->json(['revoquee' => $revoquee, 'preuve' => $preuve]);
+        return response()->json([
+            'revoquee' => $revoquee,
+            'jetons_federes_fermes' => $jetonsFederes,
+            'preuve' => $preuve,
+        ]);
     }
 }

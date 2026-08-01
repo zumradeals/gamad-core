@@ -13,6 +13,7 @@ use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
+use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
@@ -68,7 +69,11 @@ require $application . '/vendor/autoload.php';
 $index = Db::connect();
 BaselineOperationnelle::standard()->reconstruire($index);
 $secret = 'Secret-P3-API-2026!';
-(new Ctr16(AccesMagasin::connecter()))->inscrireAuthentificateur('AUT-GAMAD-001', $secret);
+$acces = AccesMagasin::connecter();
+// Le magasin d'accès porte aussi les jetons fédérés (CAP-CORE-022) ; la
+// readiness les exige, comme `core:fondation:migrer` les applique.
+SchemaFederation::migrer($acces);
+(new Ctr16($acces))->inscrireAuthentificateur('AUT-GAMAD-001', $secret);
 IdentiteMagasin::connecter();
 
 $app = require $application . '/bootstrap/app.php';

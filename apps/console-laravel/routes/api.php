@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AutorisationController;
+use App\Http\Controllers\Api\V1\FederationController;
 use App\Http\Controllers\Api\V1\FondationController;
 use App\Http\Controllers\Api\V1\IdentiteController;
 use App\Http\Controllers\Api\V1\PasskeySessionController;
@@ -30,6 +31,16 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         Route::get('/identites/{reference}/regime', [Ctr01Controller::class, 'resoudreRegime']);
         Route::get('/identites/{reference}/assurance', [Ctr01Controller::class, 'resoudreAssurance']);
         Route::post('/identites', [IdentiteController::class, 'store'])
+            ->middleware('throttle:20,1');
+
+        // CAP-CORE-022 — fédération. `{produit}` est l'audience : elle borne
+        // l'ouverture, la vérification et la révocation.
+        Route::get('/produits', [FederationController::class, 'index']);
+        Route::post('/produits/{produit}/ouverture', [FederationController::class, 'ouvrir'])
+            ->middleware('throttle:20,1');
+        Route::post('/produits/{produit}/verification', [FederationController::class, 'verifier'])
+            ->middleware('throttle:60,1');
+        Route::post('/produits/{produit}/revocation', [FederationController::class, 'revoquer'])
             ->middleware('throttle:20,1');
 
         Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat']);

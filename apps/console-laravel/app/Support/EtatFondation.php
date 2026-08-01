@@ -25,6 +25,8 @@ final class EtatFondation
             'autorisation_enrolement_passkey',
             'ceremonie_passkey',
             'session_ouverte',
+            'migration_registre_federation',
+            'jeton_federe',
         ];
         if ($production || config('session.driver') === 'database') {
             $tablesAcces[] = 'migrations';

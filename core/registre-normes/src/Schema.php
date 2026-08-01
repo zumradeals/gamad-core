@@ -116,13 +116,18 @@ final class Schema
         // CAP-CORE-004 — politiques d'autorisation. Les politiques sont des
         // DONNÉES de l'index, jamais du code du moteur : changer une règle est
         // un changement de données tracé, non un correctif enfoui.
+        //
+        // `adoption_reference` est nullable depuis la sortie de l'ancien corpus :
+        // une politique technique procède désormais d'une source versionnée du
+        // dépôt. Exiger une adoption obligerait à en fabriquer une, ce qui
+        // reviendrait à inventer une preuve.
         $pdo->exec(<<<SQL
             CREATE TABLE politique (
                 reference          TEXT PRIMARY KEY,
                 version            TEXT NOT NULL,
                 libelle            TEXT NOT NULL,
                 source             TEXT NOT NULL,
-                adoption_reference TEXT NOT NULL REFERENCES adoption(reference)
+                adoption_reference TEXT REFERENCES adoption(reference)
             )
         SQL);
 

@@ -15,6 +15,7 @@ use App\Http\Controllers\IdentiteConsoleController;
 use App\Support\EtatFondation;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
+use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
@@ -76,7 +77,7 @@ require $application.'/vendor/autoload.php';
 
 $index = Db::connect();
 BaselineOperationnelle::standard()->reconstruire($index);
-AccesMagasin::connecter();
+SchemaFederation::migrer(AccesMagasin::connecter());
 IdentiteMagasin::connecter();
 JournalMagasin::connecter();
 
