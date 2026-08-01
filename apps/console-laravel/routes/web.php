@@ -9,6 +9,7 @@ use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
 use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\PasskeyController;
+use App\Http\Controllers\SatelliteConsoleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,6 +31,19 @@ Route::middleware('gamad.session')->group(function (): void {
         ->name('console.identites.store');
     Route::get('/identites/{reference}', [IdentiteConsoleController::class, 'show'])
         ->name('console.identites.show');
+    // CAP-CORE-022 — fédération. Les écritures passent par le même cas d'usage
+    // gouverné que l'API v1 ; la console n'ouvre aucun chemin parallèle.
+    Route::get('/satellites', [SatelliteConsoleController::class, 'index'])
+        ->name('console.satellites.index');
+    Route::get('/satellites/{produit}', [SatelliteConsoleController::class, 'show'])
+        ->name('console.satellites.show');
+    Route::post('/satellites/{produit}/acces', [SatelliteConsoleController::class, 'ouvrir'])
+        ->middleware('throttle:20,1')
+        ->name('console.satellites.ouvrir');
+    Route::post('/satellites/{produit}/revocation', [SatelliteConsoleController::class, 'revoquer'])
+        ->middleware('throttle:20,1')
+        ->name('console.satellites.revoquer');
+
     Route::get('/denominations', [Ctr01Controller::class, 'resoudreDenominations'])->name('ctr01.denominations');
     Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat'])->name('ctr02.resoudre-mandat');
     Route::get('/actes/{reference}/verification', [Ctr02Controller::class, 'verifierActe'])->name('ctr02.verifier-acte');

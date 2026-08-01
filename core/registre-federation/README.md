@@ -49,7 +49,15 @@ présence de `jeton_federe`.
 ```bash
 php core/registre-federation/tests/federation_p3.php
 php apps/console-laravel/tests/Integration/federation_v1_p1.php
+php apps/console-laravel/tests/Integration/federation_console_p1.php
 ```
+
+## Administration
+
+L'écran **Satellites** de la console sert l'exploitation courante : état des
+produits, fiche de raccordement à remettre à l'équipe du satellite, porteurs
+d'un accès actif, ouverture et révocation. Il appelle le même cas d'usage
+gouverné que l'API — la console n'écrit jamais en direct.
 
 La fiche de capacité, avec l’état réel et les manques, est dans
 [`docs/capacites/CAP-CORE-022-satellite-federation.md`](../../docs/capacites/CAP-CORE-022-satellite-federation.md).

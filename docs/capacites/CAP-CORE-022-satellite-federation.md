@@ -53,7 +53,11 @@ empreinte SHA-256 l’est. Aucune donnée économique, aucun profil, aucun jugem
 
 - `Federation::catalogueProduits()` — satellites connus et fédérables ;
 - `Federation::resoudreAcces()` — vue Portail d’une identité : produit, état
-  d’activation, niveau d’accès, dernière ouverture.
+  d’activation, niveau d’accès, dernière ouverture ;
+- `Federation::resoudrePorteurs()` — vue transversale d’un satellite, que
+  CAP-CORE-001 refuse délibérément de servir à un produit. Elle est donc bornée
+  par le code au satellite concerné et à l’autorité d’inscription : un satellite
+  qui ouvrirait une session Core ne lit jamais les porteurs d’un autre.
 
 **Événements :** `FEDERATION` dans le journal opérationnel —
 `DECISION_OUVERTURE_PRODUIT`, `OUVERTURE_PRODUIT`,
@@ -89,14 +93,25 @@ la migration ; la readiness la vérifie.
 **Code actuel :** `core/registre-federation/`,
 `apps/console-laravel/app/Application/Federation/AccesSatellites.php`,
 `apps/console-laravel/app/Http/Controllers/Api/V1/FederationController.php`,
-routes `/api/v1/produits*`, contrat `apps/console-laravel/openapi/core-v1.yaml`.
+`apps/console-laravel/app/Http/Controllers/SatelliteConsoleController.php`,
+`apps/console-laravel/resources/views/satellites/`, routes `/api/v1/produits*`
+et `/satellites*`, contrat `apps/console-laravel/openapi/core-v1.yaml`.
+
+**Écran d’administration :** `Satellites` dans la console — liste des produits
+avec leur état d’ouverture, fiche de raccordement des quatre informations à
+remettre à l’équipe du satellite, porteurs d’un accès actif, ouverture et
+révocation avec confirmation. L’écran n’ouvre aucun chemin parallèle : il
+appelle le même cas d’usage gouverné que l’API, et n’écrit jamais en direct
+dans le registre des identités. Le jeton n’y est montré qu’une fois.
 
 **Tests actuels :**
 
-- `core/registre-federation/tests/federation_p3.php` — 16 épreuves et
+- `core/registre-federation/tests/federation_p3.php` — 17 épreuves et
   contre-épreuves, raccordée à la CI ;
 - `apps/console-laravel/tests/Integration/federation_v1_p1.php` — parcours HTTP
-  complet sur le pilote, raccordé à la CI.
+  complet sur le pilote, raccordé à la CI ;
+- `apps/console-laravel/tests/Integration/federation_console_p1.php` — 10
+  épreuves de l’écran d’administration, raccordée à la CI.
 
 **État réel :** `IMPLÉMENTÉ` — le parcours d’ouverture, de vérification, de
 révocation et de déconnexion globale est éprouvé de bout en bout sur GamaDrive.
@@ -106,7 +121,9 @@ Aucun satellite réel ne le consomme encore : l’exploitation reste à établir
 
 - aucune intégration réelle côté GamaDrive V2 ; le satellite est joué par sa
   session Core dans les épreuves ;
-- pas de vue console web pour le porteur — l’accès passe par l’API ;
+- le secret de connexion d’un satellite se crée en ligne de commande
+  (`identite:authentifier`), pas depuis la console ; la console constate son
+  existence sans jamais l’afficher ;
 - pas de suspension temporaire distincte de la révocation ;
 - pas de publication d’événement vers les satellites (CAP-CORE-014 reste
   `PARTIEL`) : un satellite n’est pas notifié d’une révocation, il la constate

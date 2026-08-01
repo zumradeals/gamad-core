@@ -115,6 +115,66 @@ final class Federation
         return $lignes;
     }
 
+    /**
+     * Porteurs d'un accès actif à un satellite — la vue transversale que
+     * CAP-CORE-001 refuse délibérément de servir à un produit.
+     *
+     * Elle est donc bornée ici, et par le code : seuls le satellite lui-même et
+     * l'autorité d'inscription l'obtiennent. Un satellite qui ouvrirait une
+     * session Core ne lit jamais la liste des porteurs d'un autre satellite.
+     *
+     * @return array<string,mixed> porteurs, ou un refus motivé
+     */
+    public function resoudrePorteurs(string $produit, string $acteur, ?string $date = null): array
+    {
+        if ($acteur !== $produit && $acteur !== PolitiqueInscription::AUTORITE_INSCRIPTION) {
+            return $this->refus(
+                'ACTEUR_INCOMPETENT',
+                'la liste des porteurs n’est lisible que par le satellite concerné ou par l’autorité',
+            );
+        }
+
+        $st = $this->registre->prepare(
+            'SELECT DISTINCT identite_reference FROM relation_produit
+             WHERE produit_reference = ? ORDER BY identite_reference'
+        );
+        $st->execute([$produit]);
+
+        $porteurs = [];
+        foreach ($st->fetchAll() as $ligne) {
+            $identite = (string) $ligne['identite_reference'];
+            $lien = $this->lienActif($identite, $produit, $date);
+            if ($lien === null) {
+                continue;
+            }
+
+            $derniere = $this->magasinAcces->prepare(
+                'SELECT max(emis_le) FROM jeton_federe
+                 WHERE identite_reference = ? AND produit_reference = ?'
+            );
+            $derniere->execute([$identite, $produit]);
+            $ouverture = $derniere->fetchColumn();
+            $resolue = $this->identites->resoudreIdentite($identite);
+
+            $porteurs[] = [
+                'identite' => $identite,
+                'libelle' => $resolue['libelle'] ?? $identite,
+                'etat_identite' => $resolue['etat'] ?? null,
+                'relation' => $lien['reference'],
+                'niveau_acces' => $lien['relation_type'],
+                'assurance' => $lien['assurance'],
+                'depuis' => $lien['date_debut'],
+                'derniere_ouverture' => $ouverture === false ? null : $ouverture,
+            ];
+        }
+
+        usort($porteurs, static fn (array $a, array $b): int =>
+            [$a['libelle'], $a['identite']] <=> [$b['libelle'], $b['identite']]
+        );
+
+        return ['produit' => $produit, 'porteurs' => $porteurs];
+    }
+
     // ------------------------------------------------------------------
     // Ouverture
 
