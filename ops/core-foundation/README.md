@@ -184,6 +184,56 @@ La CI exécute ce cycle complet sur huit bases PostgreSQL temporaires (quatre
 sources et quatre cibles isolées) via
 `apps/console-laravel/tests/Integration/postgresql_p0.sh`.
 
+## Copie hors machine
+
+Une sauvegarde qui vit sur le disque qu'elle protège ne protège de rien : la
+panne qui emporte les bases emporte les copies. `offsite.sh` transporte le
+dernier lot vers une destination distincte.
+
+Le mécanisme est livré **désactivé**. Tant que `GAMAD_OFFSITE_DEST` est vide,
+le script s'exécute, constate qu'il est désactivé et rend la main sans que rien
+ne quitte la machine. L'activer tient en deux variables dans
+`/etc/gamad-core/backup.env` : la destination, et le chiffrement.
+
+```text
+GAMAD_OFFSITE_DEST=sauvegarde@hote-distant:/srv/gamad-core
+GAMAD_OFFSITE_PASSPHRASE_FILE=/etc/gamad-core/offsite.passphrase
+```
+
+Quatre règles tiennent ce transport :
+
+1. **rien ne part en clair.** Sans destinataire GPG ni phrase secrète, le
+   script refuse. Un dump non chiffré qui quitte la machine emporte les
+   empreintes de sessions et le registre des identités ;
+2. **rien ne part sans vérification.** Les empreintes du lot sont contrôlées
+   avant l'empaquetage ; un lot corrompu est refusé plutôt que transporté ;
+3. **la rétention s'applique au miroir local**, où elle est inspectable, puis
+   se propage par `rsync --delete`. Aucune suppression n'est commandée à
+   distance ;
+4. **la copie est relue.** `offsite-drill.sh` récupère l'archive la plus
+   récente, vérifie son empreinte avant tout déchiffrement, la déchiffre et
+   délègue à `restore-drill.sh`. Une sauvegarde jamais relue n'est pas une
+   sauvegarde, c'est une intention.
+
+Installer l'unité qui l'enchaîne à la sauvegarde quotidienne :
+
+```bash
+cp ops/core-foundation/systemd/gamad-core-offsite.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable gamad-core-offsite.service
+```
+
+L'unité n'a pas de minuteur propre : elle est rattachée à
+`gamad-core-backup.service` et ne s'exécute que si la sauvegarde a réussi.
+
+**La phrase secrète doit être conservée ailleurs que sur ce serveur.** Sans
+elle, les copies sont illisibles le jour où le serveur est perdu — c'est-à-dire
+le seul jour où elles servent.
+
+`ops/core-foundation/tests/copie_hors_machine_p1.sh` éprouve tout le cycle sans
+aucun identifiant, un répertoire temporaire tenant lieu de destination
+distante.
+
 ## Sondes et alertes initiales
 
 - liveness : `GET /api/v1/health/live`;

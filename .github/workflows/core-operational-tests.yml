@@ -141,6 +141,9 @@ jobs:
       - name: Éprouver PostgreSQL, la sauvegarde et l'exercice de restauration
         run: apps/console-laravel/tests/Integration/postgresql_p0.sh
 
+      - name: Éprouver la copie hors machine et sa relecture
+        run: ops/core-foundation/tests/copie_hors_machine_p1.sh
+
   syntaxe-php:
     name: Syntaxe PHP du Core et de la console
     runs-on: ubuntu-latest
