@@ -144,6 +144,9 @@ jobs:
       - name: Éprouver la copie hors machine et sa relecture
         run: ops/core-foundation/tests/copie_hors_machine_p1.sh
 
+      - name: Éprouver le transport FTP contre un serveur réel
+        run: ops/core-foundation/tests/copie_hors_machine_ftp_p1.sh
+
   syntaxe-php:
     name: Syntaxe PHP du Core et de la console
     runs-on: ubuntu-latest

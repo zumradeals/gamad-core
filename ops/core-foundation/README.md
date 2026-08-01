@@ -200,6 +200,42 @@ GAMAD_OFFSITE_DEST=sauvegarde@hote-distant:/srv/gamad-core
 GAMAD_OFFSITE_PASSPHRASE_FILE=/etc/gamad-core/offsite.passphrase
 ```
 
+Trois transports sont reconnus, choisis d'après la forme de la destination :
+
+| Destination | Transport | Remarque |
+|---|---|---|
+| `/mnt/copies` | `rsync` local | volume monté, disque externe |
+| `sauvegarde@hote:/chemin` | `rsync` sur SSH | le plus sûr : clé, pas de mot de passe, serveur authentifié |
+| `ftp://hote/chemin` | `curl` | voir l'avertissement ci-dessous |
+
+### Si la destination est en FTP
+
+Le FTP est le transport le plus faible supporté ici. Il est fourni parce que
+certains espaces de sauvegarde n'offrent rien d'autre.
+
+Les archives partent chiffrées : **leur contenu ne risque rien**. Deux dangers
+demeurent, et aucun script ne peut les supprimer :
+
+- en FTP nu, le mot de passe traverse le réseau en clair. Qui l'intercepte ne
+  peut pas lire les copies, mais il peut les **effacer** ;
+- le serveur n'est pas authentifié : la copie peut être détournée.
+
+D'où le réglage par défaut `GAMAD_OFFSITE_FTP_TLS=opportuniste` : le transport
+tente TLS à chaque connexion et ne retombe en clair que si le serveur le
+refuse. Passer à `exige` dès que l'hébergeur le permet.
+
+```text
+GAMAD_OFFSITE_DEST=ftp://hote-distant/gamad-core
+GAMAD_OFFSITE_FTP_USER=identifiant
+GAMAD_OFFSITE_FTP_SECRET_FILE=/etc/gamad-core/offsite-ftp.secret
+GAMAD_OFFSITE_FTP_TLS=opportuniste
+```
+
+Le mot de passe n'est jamais passé en argument : `ps` expose la ligne de
+commande de tous les processus à tous les utilisateurs. Il transite par un
+fichier de configuration curl créé en 0600 dans un répertoire temporaire privé,
+effacé à la sortie y compris sur interruption.
+
 Quatre règles tiennent ce transport :
 
 1. **rien ne part en clair.** Sans destinataire GPG ni phrase secrète, le
@@ -230,9 +266,21 @@ L'unité n'a pas de minuteur propre : elle est rattachée à
 elle, les copies sont illisibles le jour où le serveur est perdu — c'est-à-dire
 le seul jour où elles servent.
 
-`ops/core-foundation/tests/copie_hors_machine_p1.sh` éprouve tout le cycle sans
-aucun identifiant, un répertoire temporaire tenant lieu de destination
-distante.
+Deux épreuves couvrent ce cycle, sans aucun identifiant :
+
+- `tests/copie_hors_machine_p1.sh` — un répertoire temporaire tient lieu de
+  destination ;
+- `tests/copie_hors_machine_ftp_p1.sh` — le transport dialogue avec un
+  véritable serveur FTP, le double `tests/serveur_ftp_double.py`.
+
+**Limite assumée** : le double d'épreuve prouve la logique du transport, pas la
+compatibilité avec le serveur d'un hébergeur donné. Seule la première exécution
+réelle le prouvera. La lancer à la main avant de compter sur la copie :
+
+```bash
+GAMAD_OFFSITE_DEST=ftp://… …autres variables… ops/core-foundation/offsite.sh
+GAMAD_OFFSITE_DRILL_DUMPS_ONLY=1 ops/core-foundation/offsite-drill.sh
+```
 
 ## Sondes et alertes initiales
 

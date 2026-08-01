@@ -27,11 +27,29 @@ racine="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 temporaire="$(mktemp -d)"
 trap 'rm -rf -- "$temporaire"' EXIT
 
-rsync_options=(--archive)
-if [[ -n "${GAMAD_OFFSITE_SSH_KEY:-}" ]]; then
-    rsync_options+=(--rsh "ssh -i ${GAMAD_OFFSITE_SSH_KEY} -o StrictHostKeyChecking=yes")
-fi
-rsync "${rsync_options[@]}" "${GAMAD_OFFSITE_DEST%/}/" "${temporaire}/recuperation/"
+mkdir -p "${temporaire}/recuperation"
+case "$GAMAD_OFFSITE_DEST" in
+    ftp://*|ftps://*)
+        # shellcheck source=/dev/null
+        . "${racine}/lib/ftp.sh"
+        ftp_preparer
+        derniere="$(ftp_lister "$GAMAD_OFFSITE_DEST" | tail -1)"
+        if [[ -z "$derniere" ]]; then
+            echo "Aucune archive chiffrée à ${GAMAD_OFFSITE_DEST}." >&2
+            exit 1
+        fi
+        ftp_recuperer "$derniere" "$GAMAD_OFFSITE_DEST" "${temporaire}/recuperation/${derniere}"
+        ftp_recuperer "${derniere}.sha256" "$GAMAD_OFFSITE_DEST" \
+            "${temporaire}/recuperation/${derniere}.sha256"
+        ;;
+    *)
+        rsync_options=(--archive)
+        if [[ -n "${GAMAD_OFFSITE_SSH_KEY:-}" ]]; then
+            rsync_options+=(--rsh "ssh -i ${GAMAD_OFFSITE_SSH_KEY} -o StrictHostKeyChecking=yes")
+        fi
+        rsync "${rsync_options[@]}" "${GAMAD_OFFSITE_DEST%/}/" "${temporaire}/recuperation/"
+        ;;
+esac
 
 archive="$(find "${temporaire}/recuperation" -maxdepth 1 -type f -name '*.tar.gz.gpg' | sort | tail -1)"
 if [[ -z "$archive" ]]; then
