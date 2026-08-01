@@ -1,0 +1,20 @@
+[Unit]
+Description=Exécute une demande de continuité GAMAD Core
+After=postgresql.service
+OnFailure=gamad-core-operations-alert@continuite.service
+
+[Service]
+Type=oneshot
+User=postgres
+Group=postgres
+SupplementaryGroups=gamad-continuite
+EnvironmentFile=/etc/gamad-core/backup.env
+# Réglages écrits par la console. Le tiret rend le fichier facultatif : tant
+# que la destination n'est pas configurée, la sauvegarde reste locale.
+EnvironmentFile=-/var/lib/gamad-core/continuite/offsite.env
+ExecStart=/var/www/gamad-core/ops/core-foundation/continuite.sh servir-demande
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/backups/gamad-core /var/lib/gamad-core/continuite

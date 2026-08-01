@@ -24,7 +24,7 @@ document.
 | CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | aucun ; secrets hors dépôt | `ABSENT` |
 | CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `ABSENT` |
 | CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `ABSENT` |
-| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation` | `PARTIEL` — sauvegarde quotidienne et exercice de restauration éprouvés ; copie hors machine livrée mais **désactivée**, donc toutes les copies vivent encore sur le disque protégé |
+| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation`, écran Continuité | `PARTIEL` — sauvegarde quotidienne, exercice de restauration, copie hors machine (rsync, SSH, FTP) et pilotage depuis la console, tous éprouvés ; **aucune destination n'est encore configurée**, donc toutes les copies vivent sur le disque protégé |
 | CAP-CORE-020 | Directory & Atlas | Produire un annuaire opérationnel des capacités et produits | aucun | `ABSENT` — l’ancien module dérivait d’un corpus supprimé |
 | CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | aucun | `ABSENT` |
 | CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | `core/registre-federation`, API v1 `/produits*` | `IMPLÉMENTÉ` — parcours pilote GamaDrive éprouvé ; aucun satellite réel raccordé |

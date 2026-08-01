@@ -58,7 +58,7 @@ $ctr03 = $methode->invoke($controleur);
 
 $pdo = Db::connect();
 $regles = (int) $pdo->query('SELECT count(*) FROM regle')->fetchColumn();
-$verifier($regles === 18, 'la première résolution restaure les 18 règles techniques');
+$verifier($regles === 20, 'la première résolution restaure les 20 règles techniques');
 
 $permise = $ctr03->simuler('AUT-GAMAD-001', 'inscrire une identité', 'personne');
 $verifier(

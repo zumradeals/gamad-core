@@ -251,16 +251,50 @@ Quatre règles tiennent ce transport :
    délègue à `restore-drill.sh`. Une sauvegarde jamais relue n'est pas une
    sauvegarde, c'est une intention.
 
-Installer l'unité qui l'enchaîne à la sauvegarde quotidienne :
+Installer l'unité qui l'enchaîne à la sauvegarde quotidienne, ainsi que le
+pilotage depuis la console :
 
 ```bash
-cp ops/core-foundation/systemd/gamad-core-offsite.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable gamad-core-offsite.service
+sudo ops/core-foundation/installer-continuite.sh
+sudo systemctl reload php8.3-fpm
 ```
 
-L'unité n'a pas de minuteur propre : elle est rattachée à
+L'unité de copie n'a pas de minuteur propre : elle est rattachée à
 `gamad-core-backup.service` et ne s'exécute que si la sauvegarde a réussi.
+
+## Pilotage depuis la console
+
+La console tourne en `www-data`, la sauvegarde en `postgres`. La console ne
+reçoit **aucun** droit d'exécuter une commande système : elle écrit des
+réglages et dépose un fichier-signal dans `/var/lib/gamad-core/continuite`, que
+l'unité `gamad-core-continuite.path` surveille. Deux processus se parlent par
+un répertoire, et chacun garde ses droits.
+
+Le répertoire appartient au groupe `gamad-continuite`, dont `www-data` et
+`postgres` sont membres. C'est ce que l'installateur met en place.
+
+```text
+/var/lib/gamad-core/continuite/
+  offsite.env           réglages écrits par la console
+  ftp.secret            mot de passe de la destination
+  chiffrement.secret    phrase de chiffrement des archives
+  demandes/             fichiers-signal déposés par la console
+  etat.json             état écrit par l'exploitation, lu par la console
+  derniere-sortie.txt   sortie détaillée de la dernière opération
+```
+
+**Le mot de passe de la destination est le premier secret rejouable du Core.**
+Tout le reste y est conservé en empreinte irréversible ; celui-là doit être
+relu chaque nuit, donc stocké déchiffrable, en 0660 dans ce répertoire. C'est
+le prix du pilotage depuis la console, et il est assumé : qui compromet le
+serveur peut effacer les copies distantes. La parade n'est pas technique, elle
+tient au choix de la destination — un accès en écriture seule, ou un stockage
+à versions immuables.
+
+La phrase de chiffrement, elle, est engendrée par le Core et affichée une seule
+fois. **Elle doit être notée hors de ce serveur** : sans elle, les copies sont
+illisibles le jour où le serveur est perdu, c'est-à-dire le seul jour où elles
+servent.
 
 **La phrase secrète doit être conservée ailleurs que sur ce serveur.** Sans
 elle, les copies sont illisibles le jour où le serveur est perdu — c'est-à-dire

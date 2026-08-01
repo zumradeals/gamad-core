@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AccesController;
+use App\Http\Controllers\ContinuiteConsoleController;
 use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
 use App\Http\Controllers\Ctr03Controller;
@@ -51,6 +52,18 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/satellites/{produit}/identifiants/retrait', [SatelliteConsoleController::class, 'retirer'])
         ->middleware('throttle:10,1')
         ->name('console.satellites.retirer');
+
+    // CAP-CORE-019 — continuité. La console ne lance rien : elle écrit des
+    // réglages et dépose des demandes qu'une unité systemd sert.
+    Route::get('/continuite', [ContinuiteConsoleController::class, 'index'])
+        ->name('console.continuite.index');
+    Route::post('/continuite/destination', [ContinuiteConsoleController::class, 'configurer'])
+        ->middleware('throttle:10,1')
+        ->name('console.continuite.configurer');
+    Route::post('/continuite/{operation}', [ContinuiteConsoleController::class, 'declencher'])
+        ->whereIn('operation', ['sauvegarde', 'exercice'])
+        ->middleware('throttle:10,1')
+        ->name('console.continuite.declencher');
 
     Route::get('/denominations', [Ctr01Controller::class, 'resoudreDenominations'])->name('ctr01.denominations');
     Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat'])->name('ctr02.resoudre-mandat');

@@ -73,6 +73,14 @@
             </a>
 
             <span class="nav__label">Protéger</span>
+            <a class="nav__link"
+               href="{{ route('console.continuite.index') }}"
+               @if(request()->routeIs('console.continuite.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z"/><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+                </span>
+                Continuité
+            </a>
             <span class="nav__link nav__link--muted" aria-disabled="true">
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 2.8 7.8 7.5 9.5 4.7-1.7 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2 2 4-5"/></svg>

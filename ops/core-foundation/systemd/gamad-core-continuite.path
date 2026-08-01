@@ -1,0 +1,12 @@
+[Unit]
+Description=Surveille les demandes de continuité déposées par la console GAMAD Core
+
+[Path]
+# La console dépose un fichier-signal ; systemd l'observe et déclenche le
+# service. Aucun droit d'exécution n'est accordé à la console, aucun sudo,
+# aucune escalade de privilège : deux processus se parlent par un répertoire.
+PathExistsGlob=/var/lib/gamad-core/continuite/demandes/*.demande
+Unit=gamad-core-continuite.service
+
+[Install]
+WantedBy=multi-user.target

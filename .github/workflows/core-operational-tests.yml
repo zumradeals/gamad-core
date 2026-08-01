@@ -108,6 +108,9 @@ jobs:
       - name: Éprouver la console des satellites
         run: php apps/console-laravel/tests/Integration/federation_console_p1.php
 
+      - name: Éprouver la console de continuité
+        run: php apps/console-laravel/tests/Integration/continuite_console_p1.php
+
       - name: Éprouver l'authentification console
         run: php apps/console-laravel/tests/Integration/console_auth_p1.php
 
@@ -146,6 +149,9 @@ jobs:
 
       - name: Éprouver le transport FTP contre un serveur réel
         run: ops/core-foundation/tests/copie_hors_machine_ftp_p1.sh
+
+      - name: Éprouver la continuité pilotée depuis la console
+        run: ops/core-foundation/tests/continuite_p1.sh
 
   syntaxe-php:
     name: Syntaxe PHP du Core et de la console
