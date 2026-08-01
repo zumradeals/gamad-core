@@ -66,7 +66,7 @@ ftp_preparer() {
     } > "$FTP_CONFIG"
 
     # Le fichier disparaît quoi qu'il arrive, y compris sur interruption.
-    trap 'rm -rf -- "'"$abri"'"' EXIT INT TERM
+    gamad_a_nettoyer "$abri"
 }
 
 ftp_curl() {

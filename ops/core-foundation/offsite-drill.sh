@@ -24,8 +24,10 @@ racine="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 : "${GAMAD_OFFSITE_DEST:?GAMAD_OFFSITE_DEST doit désigner la copie hors machine}"
 
+# shellcheck source=/dev/null
+. "${racine}/lib/nettoyage.sh"
 temporaire="$(mktemp -d)"
-trap 'rm -rf -- "$temporaire"' EXIT
+gamad_a_nettoyer "$temporaire"
 
 mkdir -p "${temporaire}/recuperation"
 case "$GAMAD_OFFSITE_DEST" in
@@ -67,6 +69,10 @@ else
     echo "Refus : aucune empreinte n’accompagne l’archive." >&2
     exit 1
 fi
+
+# shellcheck source=/dev/null
+. "${racine}/lib/gpg.sh"
+gpg_preparer_home
 
 if [[ -n "${GAMAD_OFFSITE_PASSPHRASE_FILE:-}" ]]; then
     gpg --batch --yes --pinentry-mode loopback \

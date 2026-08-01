@@ -146,6 +146,24 @@ set -e
 [[ "$code" != "0" ]]
 verifier $? "une archive altérée en transit est refusée avant tout déchiffrement"
 
+# 9 — le chiffrement fonctionne quand le répertoire personnel est fermé,
+# comme sous `ProtectHome=true`. Sans foyer GPG jetable, gpg s'arrête net.
+fabriquer_lot 20260801T050000Z
+sortie="$(env HOME=/proc GNUPGHOME= GAMAD_OFFSITE_DEST="$destination" \
+    "${racine}/offsite.sh" "${lots}/20260801T050000Z" 2>&1)" && code=0 || code=$?
+[[ "$code" == "0" ]] \
+    && [[ -f "${destination}/20260801T050000Z.tar.gz.gpg" ]] \
+    && [[ "$sortie" != *"can't create directory"* ]]
+verifier $? "le chiffrement aboutit même sans répertoire personnel accessible"
+
+# 10 — aucune archive en clair ne survit à l'exécution.
+avant="$(find /tmp -maxdepth 2 -name '*.tar.gz' -newermt '-2 minutes' 2>/dev/null | wc -l)"
+fabriquer_lot 20260801T060000Z
+GAMAD_OFFSITE_DEST="$destination" "${racine}/offsite.sh" "${lots}/20260801T060000Z" >/dev/null
+apres="$(find /tmp -maxdepth 2 -name '*.tar.gz' -newermt '-2 minutes' 2>/dev/null | wc -l)"
+[[ "$apres" == "$avant" ]]
+verifier $? "l’archive non chiffrée ne survit pas au transport (avant ${avant}, après ${apres})"
+
 echo
 if [[ "$echecs" == "0" ]]; then
     echo "Copie hors machine P1 : ÉTABLIE."
