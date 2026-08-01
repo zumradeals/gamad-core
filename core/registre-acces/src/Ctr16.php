@@ -35,6 +35,26 @@ final class Ctr16
 
     private const MAX_PASSKEYS_PAR_ENTITE = 5;
 
+    /**
+     * Code de secours : un moyen d'accès de repli, à usage unique.
+     *
+     * Il n'est pas un facteur fort et ne prétend pas l'être. Il existe pour une
+     * raison précise : tant qu'une entité n'a qu'un seul moyen d'accès, le
+     * perdre ferme le Core à tout le monde. Un code de secours est donc un
+     * second chemin, tenu ailleurs que le premier.
+     *
+     * Il se comporte comme un authentificateur ordinaire à l'ouverture de
+     * session — même empreinte non réversible, même vérification — mais il est
+     * marqué CONSOMMÉ dans la foulée : un code lu une fois ne se rejoue pas.
+     *
+     * Consommé, et non révoqué : une session ne survit pas à la révocation de
+     * son authentificateur (M-21). Révoquer le code fermerait donc la session
+     * qu'il vient d'ouvrir, et le code n'aurait servi à rien.
+     */
+    public const TYPE_CODE_SECOURS = 'code_secours';
+
+    private const MAX_CODES_SECOURS = 8;
+
     public function __construct(
         private \PDO $magasin,
     ) {
@@ -84,8 +104,8 @@ final class Ctr16
     public function etablirSession(string $entite, #[\SensitiveParameter] string $secret): ?array
     {
         $st = $this->magasin->prepare(
-            "SELECT reference, empreinte, niveau_assurance FROM authentificateur
-             WHERE entite_reference = ? AND etat = 'ACTIF'"
+            "SELECT reference, empreinte, niveau_assurance, type FROM authentificateur
+             WHERE entite_reference = ? AND etat = 'ACTIF' AND consomme_le IS NULL"
         );
         $st->execute([$entite]);
 
@@ -94,14 +114,189 @@ final class Ctr16
                 continue;
             }
 
-            return $this->ouvrirSession(
+            $session = $this->ouvrirSession(
                 $entite,
                 (string) $a['reference'],
                 (string) $a['niveau_assurance'],
             );
+
+            // Un code de secours ne sert qu'une fois. Il est marqué consommé,
+            // non révoqué : révoquer fermerait la session qu'il vient d'ouvrir
+            // (M-21), et le code n'aurait alors servi à rien.
+            if ($a['type'] === self::TYPE_CODE_SECOURS) {
+                $this->marquerConsomme((string) $a['reference']);
+                $session['code_secours_consomme'] = true;
+            }
+
+            return $session;
         }
 
         return null;
+    }
+
+    /**
+     * Engendre un jeu de codes de secours et retire le jeu précédent.
+     *
+     * Les codes ne sont retournés qu'ici : le magasin n'en conserve que
+     * l'empreinte, comme pour tout secret.
+     *
+     * @return list<string>
+     */
+    public function engendrerCodesSecours(string $entite, int $nombre = self::MAX_CODES_SECOURS): array
+    {
+        if ($nombre < 1 || $nombre > self::MAX_CODES_SECOURS) {
+            throw new \InvalidArgumentException(
+                'Nombre de codes hors bornes (1 à '.self::MAX_CODES_SECOURS.').'
+            );
+        }
+
+        $codes = [];
+        $this->magasin->beginTransaction();
+        try {
+            // Les anciens codes sont dépensés, non révoqués : une session
+            // ouverte avec l'un d'eux survit à l'engendrement du jeu suivant.
+            $anciens = $this->magasin->prepare(
+                'UPDATE authentificateur SET consomme_le = ?
+                 WHERE entite_reference = ? AND type = ? AND consomme_le IS NULL'
+            );
+            $anciens->execute([$this->maintenant(), $entite, self::TYPE_CODE_SECOURS]);
+
+            for ($i = 0; $i < $nombre; $i++) {
+                $code = $this->engendrerCodeSecours();
+                $this->inscrireAuthentificateur(
+                    $entite,
+                    $code,
+                    self::TYPE_CODE_SECOURS,
+                    'AS1 — FACTEUR UNIQUE',
+                );
+                $codes[] = $code;
+            }
+            $this->magasin->commit();
+        } catch (\Throwable $e) {
+            if ($this->magasin->inTransaction()) {
+                $this->magasin->rollBack();
+            }
+            throw $e;
+        }
+
+        return $codes;
+    }
+
+    /**
+     * Consomme un code de secours sans ouvrir de session.
+     *
+     * Sert à autoriser une opération sensible — attacher un premier facteur
+     * fort — sans faire du seul mot de passe une autorisation suffisante.
+     */
+    public function consommerCodeSecours(string $entite, #[\SensitiveParameter] string $code): bool
+    {
+        $st = $this->magasin->prepare(
+            "SELECT reference, empreinte FROM authentificateur
+             WHERE entite_reference = ? AND type = ? AND etat = 'ACTIF'
+               AND consomme_le IS NULL"
+        );
+        $st->execute([$entite, self::TYPE_CODE_SECOURS]);
+
+        foreach ($st->fetchAll() as $a) {
+            if (password_verify($code, (string) $a['empreinte'])) {
+                return $this->marquerConsomme((string) $a['reference']);
+            }
+        }
+
+        return false;
+    }
+
+    /** Nombre de codes de secours encore utilisables. */
+    public function codesSecoursRestants(string $entite): int
+    {
+        $st = $this->magasin->prepare(
+            "SELECT count(*) FROM authentificateur
+             WHERE entite_reference = ? AND type = ? AND etat = 'ACTIF'
+               AND consomme_le IS NULL"
+        );
+        $st->execute([$entite, self::TYPE_CODE_SECOURS]);
+
+        return (int) $st->fetchColumn();
+    }
+
+    /**
+     * Retire un moyen d'accès, sauf s'il est le dernier.
+     *
+     * C'est la garde qui empêche de se fermer soi-même la porte. Elle vaut pour
+     * l'autorité comme pour quiconque : aucune qualité ne permet de retirer le
+     * dernier moyen d'accès d'une entité.
+     *
+     * @return array<string,mixed>
+     */
+    public function revoquerMoyenAcces(string $entite, string $reference): array
+    {
+        $this->magasin->beginTransaction();
+        try {
+            $st = $this->magasin->prepare(
+                "SELECT reference, type FROM authentificateur
+                 WHERE reference = ? AND entite_reference = ? AND etat = 'ACTIF'
+                   AND consomme_le IS NULL"
+            );
+            $st->execute([$reference, $entite]);
+            if ($st->fetch() === false) {
+                $this->magasin->rollBack();
+
+                return ['refus' => 'MOYEN_INTROUVABLE',
+                    'detail' => 'aucun moyen d’accès actif de cette entité ne porte cette référence'];
+            }
+
+            // Seuls les moyens DURABLES comptent. Un code de secours est à
+            // usage unique : laisser quelqu'un retirer son mot de passe parce
+            // qu'il lui reste six codes reviendrait à lui laisser six entrées
+            // et aucun moyen permanent — un piège, pas une protection.
+            $compter = $this->magasin->prepare(
+                "SELECT count(*) FROM authentificateur
+                 WHERE entite_reference = ? AND etat = 'ACTIF' AND consomme_le IS NULL
+                   AND type <> ?"
+            );
+            $compter->execute([$entite, self::TYPE_CODE_SECOURS]);
+            if ((int) $compter->fetchColumn() <= 1) {
+                $this->magasin->rollBack();
+
+                return ['refus' => 'DERNIER_MOYEN',
+                    'detail' => 'retirer le dernier moyen d’accès fermerait le Core à son porteur'];
+            }
+
+            $this->magasin->prepare(
+                "UPDATE passkey SET etat = 'RÉVOQUÉ', revoque_le = ?
+                 WHERE authentificateur_ref = ? AND etat = 'ACTIF'"
+            )->execute([$this->maintenant(), $reference]);
+            $this->magasin->prepare(
+                "UPDATE authentificateur SET etat = 'RÉVOQUÉ', revoque_le = ?
+                 WHERE reference = ? AND etat = 'ACTIF'"
+            )->execute([$this->maintenant(), $reference]);
+            $this->magasin->commit();
+
+            return ['reference' => $reference, 'etat' => 'RÉVOQUÉ'];
+        } catch (\Throwable $e) {
+            if ($this->magasin->inTransaction()) {
+                $this->magasin->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    private function marquerConsomme(string $reference): bool
+    {
+        $st = $this->magasin->prepare(
+            'UPDATE authentificateur SET consomme_le = ?
+             WHERE reference = ? AND consomme_le IS NULL'
+        );
+        $st->execute([$this->maintenant(), $reference]);
+
+        return $st->rowCount() === 1;
+    }
+
+    private function engendrerCodeSecours(): string
+    {
+        $brut = strtoupper(bin2hex(random_bytes(8)));
+
+        return implode('-', str_split($brut, 4));
     }
 
     /**

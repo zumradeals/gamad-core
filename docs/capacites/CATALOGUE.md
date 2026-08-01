@@ -10,7 +10,7 @@ document.
 | CAP-CORE-002 | Organizations Registry | Gérer les organisations et leur structure commune | aucun | `ABSENT` — l’ancien module ne lisait qu’un texte |
 | CAP-CORE-003 | Authorities & Mandates | Résoudre les fonctions, titulaires, mandats et délégations | `core/registre-autorites` | `IMPLÉMENTÉ` — résolution datée éprouvée |
 | CAP-CORE-004 | Authorization | Décider si une action commune est permise ou refusée | `core/registre-autorisation` | `IMPLÉMENTÉ` — refus par défaut éprouvé |
-| CAP-CORE-005 | Authentication & Access | Authentifier, ouvrir et révoquer les sessions | `core/registre-acces`, passkeys | `IMPLÉMENTÉ` — sessions, révocation et WebAuthn éprouvés |
+| CAP-CORE-005 | Authentication & Access | Authentifier, ouvrir et révoquer les sessions | `core/registre-acces`, passkeys, écran Mon accès | `IMPLÉMENTÉ` — sessions, révocation, WebAuthn, codes de secours à usage unique et garde du dernier moyen d’accès, tous éprouvés |
 | CAP-CORE-006 | Sources Registry | Identifier les sources techniques reconnues | `core/registre-sources` | `PARTIEL` — lecture de l’index seulement |
 | CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | `core/registre-normes` | `PARTIEL` — lecture et diagnostic ; aucune écriture gouvernée |
 | CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | aucun ; traces dans le journal opérationnel | `ABSENT` |
@@ -87,18 +87,19 @@ le Core sait ouvrir une identité sur GamaDrive, borner le jeton, le révoquer e
 le prouver. Les chantiers ouverts, par ordre d’utilité :
 
 ```text
-CAP-CORE-005 second chemin d’accès et facteur fort
-→ intégration réelle de GamaDrive V2 sur CAP-CORE-022
+intégration réelle de GamaDrive V2 sur CAP-CORE-022
 → CAP-CORE-011 registre des produits, en écriture gouvernée
 → CAP-CORE-002 organisations
 → CAP-CORE-014 publication d’événements vers les satellites
 → CAP-CORE-021 Matching
 ```
 
-CAP-CORE-005 passe en tête pour un motif constaté, non supposé : l’exercice de
-restauration du 1er août 2026 a relu **un seul authentificateur** dans tout le
-magasin d’accès. Un secret perdu ferme le Core à tout le monde, et aucune des
-autres capacités ne se rattrape sans lui.
+Le second chemin d’accès est livré : codes de secours à usage unique,
+attachement d’une passkey sans ligne de commande, et refus de retirer le
+dernier moyen d’accès durable. Reste à l’exercer — engendrer les codes depuis
+l’écran « Mon accès » et enrôler une passkey. Tant que ce n’est pas fait, le
+magasin d’accès ne contient toujours qu’un seul authentificateur, constaté le
+1er août 2026 par l’exercice de restauration.
 
 Cette proposition reste une proposition : elle se confirme produit par produit.
 Tant qu’aucun satellite ne consomme la fédération, elle est `IMPLÉMENTÉE`, pas

@@ -24,7 +24,7 @@ namespace Gamad\RegistreAcces;
  */
 final class Magasin
 {
-    public const VERSION = 3;
+    public const VERSION = 4;
 
     public static function creer(\PDO $pdo): void
     {
@@ -52,7 +52,8 @@ final class Magasin
                 niveau_assurance TEXT NOT NULL,
                 etat             TEXT NOT NULL,
                 cree_le          TEXT NOT NULL,
-                revoque_le       TEXT
+                revoque_le       TEXT,
+                consomme_le      TEXT
             )
         SQL);
 
@@ -71,6 +72,13 @@ final class Magasin
                 revoquee_le          TEXT
             )
         SQL);
+
+        // `consomme_le` marque un secret à usage unique — un code de secours —
+        // sans révoquer l'authentificateur. Révoquer fermerait la session qu'il
+        // vient d'ouvrir (M-21) : le code ne servirait alors à rien.
+        if (!self::colonnePresente($pdo, 'authentificateur', 'consomme_le')) {
+            $pdo->exec('ALTER TABLE authentificateur ADD COLUMN consomme_le TEXT');
+        }
 
         if (!self::colonnePresente($pdo, 'session_ouverte', 'jeton_empreinte')) {
             $pdo->exec('ALTER TABLE session_ouverte ADD COLUMN jeton_empreinte TEXT');

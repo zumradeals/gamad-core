@@ -81,13 +81,14 @@
                 </span>
                 Continuité
             </a>
-            <span class="nav__link nav__link--muted" aria-disabled="true">
+            <a class="nav__link"
+               href="{{ route('console.acces.index') }}"
+               @if(request()->routeIs('console.acces.*')) aria-current="page" @endif>
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 2.8 7.8 7.5 9.5 4.7-1.7 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2 2 4-5"/></svg>
                 </span>
-                Sécurité
-                <span class="nav__soon">Bientôt</span>
-            </span>
+                Mon accès
+            </a>
             <span class="nav__link nav__link--muted" aria-disabled="true">
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M4 18h16M6 18V9h4v9M14 18V5h4v13"/></svg>

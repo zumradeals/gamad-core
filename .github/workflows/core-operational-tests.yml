@@ -111,6 +111,9 @@ jobs:
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php
 
+      - name: Éprouver la console des moyens d'accès
+        run: php apps/console-laravel/tests/Integration/acces_console_p1.php
+
       - name: Éprouver l'authentification console
         run: php apps/console-laravel/tests/Integration/console_auth_p1.php
 
