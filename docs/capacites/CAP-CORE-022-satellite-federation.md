@@ -99,10 +99,28 @@ et `/satellites*`, contrat `apps/console-laravel/openapi/core-v1.yaml`.
 
 **Écran d’administration :** `Satellites` dans la console — liste des produits
 avec leur état d’ouverture, fiche de raccordement des quatre informations à
-remettre à l’équipe du satellite, porteurs d’un accès actif, ouverture et
-révocation avec confirmation. L’écran n’ouvre aucun chemin parallèle : il
-appelle le même cas d’usage gouverné que l’API, et n’écrit jamais en direct
-dans le registre des identités. Le jeton n’y est montré qu’une fois.
+remettre à l’équipe du satellite, identifiants de raccordement, porteurs d’un
+accès actif, ouverture et révocation avec confirmation. L’écran n’ouvre aucun
+chemin parallèle : il appelle le même cas d’usage gouverné que l’API, et
+n’écrit jamais en direct dans le registre des identités ni dans le magasin
+d’accès. Le jeton n’y est montré qu’une fois.
+
+**Identifiants de raccordement :** le secret avec lequel un satellite
+s’authentifie auprès du Core se délivre depuis la console. Il est **engendré
+par le Core** (24 octets d’entropie) et non saisi : un secret de service tapé
+par une personne est court et réutilisé. Six bornes le tiennent :
+
+1. l’action est réservée à `AUT-GAMAD-001` par la politique **et** par le code ;
+2. un produit non entériné n’en reçoit aucun ;
+3. deux identifiants actifs au plus, pour qu’un secret oublié ne survive pas ;
+4. il n’est montré qu’une fois, en flash, sur une page `no-store` ;
+5. il n’entre jamais au journal — la preuve ne porte que la référence de
+   l’authentificateur ;
+6. le retrait est immédiat et ferme les sessions Core ouvertes avec lui, donc
+   les jetons fédérés qui en dépendaient.
+
+Un identifiant créé en ligne de commande reste visible et retirable depuis
+l’écran ; son origine est distinguée.
 
 **Tests actuels :**
 
@@ -110,8 +128,9 @@ dans le registre des identités. Le jeton n’y est montré qu’une fois.
   contre-épreuves, raccordée à la CI ;
 - `apps/console-laravel/tests/Integration/federation_v1_p1.php` — parcours HTTP
   complet sur le pilote, raccordé à la CI ;
-- `apps/console-laravel/tests/Integration/federation_console_p1.php` — 10
-  épreuves de l’écran d’administration, raccordée à la CI.
+- `apps/console-laravel/tests/Integration/federation_console_p1.php` — 17
+  épreuves de l’écran d’administration, dont la délivrance et le retrait des
+  identifiants, raccordée à la CI.
 
 **État réel :** `IMPLÉMENTÉ` — le parcours d’ouverture, de vérification, de
 révocation et de déconnexion globale est éprouvé de bout en bout sur GamaDrive.
@@ -121,9 +140,10 @@ Aucun satellite réel ne le consomme encore : l’exploitation reste à établir
 
 - aucune intégration réelle côté GamaDrive V2 ; le satellite est joué par sa
   session Core dans les épreuves ;
-- le secret de connexion d’un satellite se crée en ligne de commande
-  (`identite:authentifier`), pas depuis la console ; la console constate son
-  existence sans jamais l’afficher ;
+- la délivrance d’un identifiant n’exige pas une session à facteur fort ;
+  l’écran affiche le niveau d’assurance de la session en cours mais ne le
+  contrôle pas. Exiger `A2` fermerait l’action à une autorité connectée par
+  mot de passe : c’est une décision d’exploitation, pas une évidence technique ;
 - pas de suspension temporaire distincte de la révocation ;
 - pas de publication d’événement vers les satellites (CAP-CORE-014 reste
   `PARTIEL`) : un satellite n’est pas notifié d’une révocation, il la constate

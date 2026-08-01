@@ -16,6 +16,7 @@ use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -50,7 +51,7 @@ final class SatelliteConsoleController
         ]);
     }
 
-    public function show(Request $request, string $produit): View
+    public function show(Request $request, AccesSatellites $acces, string $produit): Response
     {
         $federation = $this->federation();
         $catalogue = array_column($federation->catalogueProduits(), null, 'reference');
@@ -58,25 +59,81 @@ final class SatelliteConsoleController
 
         $acteur = (string) $request->attributes->get('gamad_entite');
         $porteurs = $federation->resoudrePorteurs($produit, $acteur);
+        $autorite = $acteur === PolitiqueInscription::AUTORITE_INSCRIPTION;
+        $identifiants = $autorite ? $acces->identifiants($produit) : [];
 
-        $identifiants = (new Ctr16(AccesMagasin::connecter()))->attester($produit);
-        $actifs = array_filter(
-            $identifiants['authentificateurs'],
-            static fn (array $a): bool => $a['etat'] === 'ACTIF',
-        );
+        $configures = $identifiants !== [];
+        if (! $autorite) {
+            // Un non-autorité ne lit pas la liste, mais doit savoir si le
+            // raccordement est fait. Seul le compte, jamais les références.
+            $atteste = (new Ctr16(AccesMagasin::connecter()))->attester($produit);
+            $configures = array_filter(
+                $atteste['authentificateurs'],
+                static fn (array $a): bool => $a['etat'] === 'ACTIF',
+            ) !== [];
+        }
 
-        return view('satellites.show', [
+        // La fiche porte des listes d'accès et, une fois, un secret : elle ne
+        // doit être conservée ni par le navigateur, ni par un intermédiaire.
+        return response()->view('satellites.show', [
             'satellite' => $catalogue[$produit],
             'porteurs' => $porteurs['porteurs'] ?? [],
             'lisible' => !isset($porteurs['refus']),
             'motifIllisible' => $porteurs['detail'] ?? null,
-            'identifiantsConfigures' => $actifs !== [],
-            'peutAdministrer' => $acteur === PolitiqueInscription::AUTORITE_INSCRIPTION
-                || $acteur === $produit,
+            'identifiants' => $identifiants,
+            'identifiantsConfigures' => $configures,
+            'peutDelivrer' => $autorite,
+            'maxIdentifiants' => PolitiqueFederation::MAX_IDENTIFIANTS,
+            'assuranceSession' => (string) $request->attributes->get('gamad_assurance', ''),
+            'peutAdministrer' => $autorite || $acteur === $produit,
             'adresseApi' => rtrim((string) config('app.url'), '/').'/api/v1',
             'relations' => PolitiqueInscription::RELATIONS_PRODUIT,
             'dureeJeton' => PolitiqueFederation::DUREE_JETON,
+        ], 200, ['Cache-Control' => 'no-store, no-cache, must-revalidate', 'Pragma' => 'no-cache']);
+    }
+
+    /**
+     * Le secret n'est remis qu'ici, une seule fois, en flash. Il n'est ni
+     * conservé en session, ni renvoyé dans une URL, ni mis en cache.
+     */
+    public function delivrer(Request $request, AccesSatellites $acces, string $produit): RedirectResponse
+    {
+        $execution = $acces->delivrerIdentifiant(
+            $produit,
+            (string) $request->attributes->get('gamad_entite'),
+        );
+
+        if ($execution['statut'] !== 201) {
+            return back()->withErrors(['identifiant' => $this->motif($execution['corps'])]);
+        }
+
+        return redirect()
+            ->route('console.satellites.show', $produit)
+            ->with('succes', 'Identifiant de raccordement délivré.')
+            ->with('identifiant_livre', $execution['corps']['identifiant'])
+            ->with('preuve', $execution['corps']['preuve']);
+    }
+
+    public function retirer(Request $request, AccesSatellites $acces, string $produit): RedirectResponse
+    {
+        $donnees = $request->validate([
+            'authentificateur' => ['required', 'string', 'max:64'],
         ]);
+
+        $execution = $acces->retirerIdentifiant(
+            $produit,
+            $donnees['authentificateur'],
+            (string) $request->attributes->get('gamad_entite'),
+        );
+
+        if ($execution['statut'] !== 200) {
+            return back()->withErrors(['identifiant' => $this->motif($execution['corps'])]);
+        }
+
+        return redirect()
+            ->route('console.satellites.show', $produit)
+            ->with('succes', 'Identifiant retiré. Les sessions ouvertes avec lui sont fermées.')
+            ->with('preuve', $execution['corps']['preuve']);
     }
 
     public function ouvrir(Request $request, AccesSatellites $acces, string $produit): RedirectResponse
