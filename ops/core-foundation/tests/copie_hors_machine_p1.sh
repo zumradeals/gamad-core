@@ -36,6 +36,14 @@ mkdir -p "$lots" "$destination"
 phrase="${temp}/phrase"
 printf 'phrase-secrete-epreuve-%s' "$RANDOM$RANDOM" > "$phrase"
 
+# L'épreuve appelle gpg directement pour ses contre-vérifications. Elle doit
+# donc se donner à elle-même un foyer, sans quoi elle échouerait pour tout
+# compte dont le répertoire personnel n'est pas inscriptible — et l'échec
+# viendrait de l'épreuve, pas du produit.
+export GNUPGHOME="${temp}/gnupg"
+mkdir -p "$GNUPGHOME"
+chmod 700 "$GNUPGHOME"
+
 fabriquer_lot() {
     local horodatage="$1"
     local dossier="${lots}/${horodatage}"
@@ -145,6 +153,31 @@ code=$?
 set -e
 [[ "$code" != "0" ]]
 verifier $? "une archive altérée en transit est refusée avant tout déchiffrement"
+
+# 9 — le chiffrement fonctionne quand le répertoire personnel est fermé,
+# comme sous `ProtectHome=true`. Sans foyer GPG jetable, gpg s'arrête net.
+fabriquer_lot 20260801T050000Z
+sortie="$(env HOME=/proc GNUPGHOME= GAMAD_OFFSITE_DEST="$destination" \
+    "${racine}/offsite.sh" "${lots}/20260801T050000Z" 2>&1)" && code=0 || code=$?
+[[ "$code" == "0" ]] \
+    && [[ -f "${destination}/20260801T050000Z.tar.gz.gpg" ]] \
+    && [[ "$sortie" != *"can't create directory"* ]]
+verifier $? "le chiffrement aboutit même sans répertoire personnel accessible"
+
+# 10 — rien ne survit dans les répertoires temporaires : ni l'archive en clair,
+# ni la configuration curl qui porte le mot de passe, ni le trousseau GPG.
+#
+# Le contrôle passe par un TMPDIR dédié plutôt que par une fouille de /tmp :
+# balayer /tmp dépend des droits de l'utilisateur qui exécute l'épreuve, et
+# n'aurait rien prouvé de déterministe.
+abri="${temp}/tmpdir"
+mkdir -p "$abri"
+fabriquer_lot 20260801T060000Z
+TMPDIR="$abri" GAMAD_OFFSITE_DEST="$destination" \
+    "${racine}/offsite.sh" "${lots}/20260801T060000Z" >/dev/null
+restes="$(find "$abri" -mindepth 1 | wc -l)"
+[[ "$restes" == "0" ]] && [[ -f "${destination}/20260801T060000Z.tar.gz.gpg" ]]
+verifier $? "aucun fichier temporaire ne survit au transport (${restes} reste(s))"
 
 echo
 if [[ "$echecs" == "0" ]]; then

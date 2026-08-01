@@ -91,7 +91,7 @@ verifier $? "le lot est déposé par FTP, chiffré, avec son empreinte"
 grep -q -- '--config' "${racine}/lib/ftp.sh" \
     && ! grep -qE -- '--user[ =]' "${racine}/lib/ftp.sh" \
     && grep -q 'chmod 700' "${racine}/lib/ftp.sh" \
-    && grep -qE "^\s*trap 'rm -rf" "${racine}/lib/ftp.sh"
+    && grep -q 'gamad_a_nettoyer' "${racine}/lib/ftp.sh"
 verifier $? "le mot de passe transite par un fichier de configuration éphémère, jamais par argv"
 
 # 3 — un mot de passe faux ferme le transport.

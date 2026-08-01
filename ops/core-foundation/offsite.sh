@@ -93,11 +93,17 @@ if ! mkdir -p "$stage" 2>/dev/null || [[ ! -w "$stage" ]]; then
     echo "ops/core-foundation/installer-continuite.sh en root pour le préparer." >&2
     exit 2
 fi
+# shellcheck source=/dev/null
+. "$(dirname "${BASH_SOURCE[0]}")/lib/nettoyage.sh"
 temporaire="$(mktemp -d)"
-trap 'rm -rf -- "$temporaire"' EXIT
+gamad_a_nettoyer "$temporaire"
 
 archive="${temporaire}/${horodatage}.tar.gz"
 tar --create --gzip --file "$archive" --directory "$(dirname "$lot")" "$horodatage"
+
+# shellcheck source=/dev/null
+. "$(dirname "${BASH_SOURCE[0]}")/lib/gpg.sh"
+gpg_preparer_home
 
 chiffre="${stage%/}/${horodatage}.tar.gz.gpg"
 if [[ -n "$recipient" ]]; then
