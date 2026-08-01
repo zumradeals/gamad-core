@@ -24,7 +24,7 @@ document.
 | CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | aucun ; secrets hors dépôt | `ABSENT` |
 | CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `ABSENT` |
 | CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `ABSENT` |
-| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation`, écran Continuité | `PARTIEL` — sauvegarde quotidienne, exercice de restauration, copie hors machine (rsync, SSH, FTP) et pilotage depuis la console, tous éprouvés ; **aucune destination n'est encore configurée**, donc toutes les copies vivent sur le disque protégé |
+| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation`, écran Continuité | `EXPLOITÉ` — copie chiffrée hors machine sur destination réelle, TLS épinglé, et exercice de restauration complet exécuté depuis cette copie le 1er août 2026 |
 | CAP-CORE-020 | Directory & Atlas | Produire un annuaire opérationnel des capacités et produits | aucun | `ABSENT` — l’ancien module dérivait d’un corpus supprimé |
 | CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | aucun | `ABSENT` |
 | CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | `core/registre-federation`, API v1 `/produits*` | `IMPLÉMENTÉ` — parcours pilote GamaDrive éprouvé ; aucun satellite réel raccordé |
@@ -87,7 +87,7 @@ le Core sait ouvrir une identité sur GamaDrive, borner le jeton, le révoquer e
 le prouver. Les chantiers ouverts, par ordre d’utilité :
 
 ```text
-CAP-CORE-019 activer la copie hors machine et la relire
+CAP-CORE-005 second chemin d’accès et facteur fort
 → intégration réelle de GamaDrive V2 sur CAP-CORE-022
 → CAP-CORE-011 registre des produits, en écriture gouvernée
 → CAP-CORE-002 organisations
@@ -95,11 +95,19 @@ CAP-CORE-019 activer la copie hors machine et la relire
 → CAP-CORE-021 Matching
 ```
 
+CAP-CORE-005 passe en tête pour un motif constaté, non supposé : l’exercice de
+restauration du 1er août 2026 a relu **un seul authentificateur** dans tout le
+magasin d’accès. Un secret perdu ferme le Core à tout le monde, et aucune des
+autres capacités ne se rattrape sans lui.
+
 Cette proposition reste une proposition : elle se confirme produit par produit.
 Tant qu’aucun satellite ne consomme la fédération, elle est `IMPLÉMENTÉE`, pas
 `EXPLOITÉE`.
 
-La continuité passe devant le reste pour une raison simple : le 1er août 2026,
-l’inspection du serveur a montré huit lots de sauvegarde, tous sur le disque
-qu’ils protègent, et aucune copie ailleurs. L’exercice de restauration prouve
-que les dumps se rechargent — encore faut-il qu’ils existent encore.
+La continuité est passée devant le reste, et elle est faite. Le 1er août 2026,
+l’inspection du serveur montrait huit lots de sauvegarde, tous sur le disque
+qu’ils protégeaient, et aucune copie ailleurs. Le même jour, une copie chiffrée
+est partie vers une destination distincte, en a été récupérée, et a été
+rechargée sur quatre bases isolées — sept identités dérivées, un
+authentificateur, vingt-deux événements relus. C’est cette exécution, et non le
+code qui la permet, qui fait passer CAP-CORE-019 à `EXPLOITÉ`.
