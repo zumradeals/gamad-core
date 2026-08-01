@@ -63,13 +63,14 @@
                 Autorités et accès
                 <span class="nav__soon">Bientôt</span>
             </span>
-            <span class="nav__link nav__link--muted" aria-disabled="true">
+            <a class="nav__link"
+               href="{{ route('console.satellites.index') }}"
+               @if(request()->routeIs('console.satellites.*')) aria-current="page" @endif>
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>
                 </span>
-                Écosystème
-                <span class="nav__soon">Bientôt</span>
-            </span>
+                Satellites
+            </a>
 
             <span class="nav__label">Protéger</span>
             <span class="nav__link nav__link--muted" aria-disabled="true">

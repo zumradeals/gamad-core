@@ -278,7 +278,26 @@ $verifier(
     'une identité provisoire ou A0 n’ouvre aucun accès fédéré',
 );
 
-// 14 — aucun jeton en clair dans le magasin, seulement son empreinte.
+// 14 — la vue transversale des porteurs reste bornée : le satellite concerné
+// et l'autorité la lisent, personne d'autre.
+$vueAutorite = $federation->resoudrePorteurs(
+    $DRIVE,
+    PolitiqueInscription::AUTORITE_INSCRIPTION,
+);
+$vueSatellite = $federation->resoudrePorteurs($DRIVE, $DRIVE);
+$vueEtrangere = $federation->resoudrePorteurs($DRIVE, $WASPLEX);
+$vuePorteur = $federation->resoudrePorteurs($DRIVE, $porteur);
+$referencesVues = array_column($vueAutorite['porteurs'] ?? [], 'identite');
+$verifier(
+    in_array($porteur, $referencesVues, true)
+        && in_array($tiers, $referencesVues, true)
+        && count($vueSatellite['porteurs'] ?? []) === count($referencesVues)
+        && ($vueEtrangere['refus'] ?? null) === 'ACTEUR_INCOMPETENT'
+        && ($vuePorteur['refus'] ?? null) === 'ACTEUR_INCOMPETENT',
+    'la liste des porteurs n’est lisible que par le satellite concerné ou l’autorité',
+);
+
+// 15 — aucun jeton en clair dans le magasin, seulement son empreinte.
 $contenu = (string) file_get_contents($fichiers['acces']);
 $empreinte = hash('sha256', (string) $reprise['jeton']);
 $verifier(
@@ -287,7 +306,7 @@ $verifier(
     'le magasin ne conserve que l’empreinte du jeton, jamais sa valeur',
 );
 
-// 15 — le schéma ne porte ni profil, ni jugement, ni donnée métier du satellite.
+// 16 — le schéma ne porte ni profil, ni jugement, ni donnée métier du satellite.
 $interdites = ['profil', 'reputation', 'réputation', 'jugement', 'plan', 'quota', 'abonnement'];
 $colonnesInterdites = [];
 foreach ($magasin->query('PRAGMA table_info(jeton_federe)')->fetchAll() as $colonne) {
@@ -303,7 +322,7 @@ $verifier(
     'le schéma des jetons ne porte aucune donnée économique ni aucun jugement',
 );
 
-// 16 — le parcours HTTP existe et reste gouverné.
+// 17 — le parcours HTTP existe et reste gouverné.
 $routesApi = (string) file_get_contents(GAMAD_RACINE . '/apps/console-laravel/routes/api.php');
 $casUsage = (string) file_get_contents(
     GAMAD_RACINE . '/apps/console-laravel/app/Application/Federation/AccesSatellites.php'
