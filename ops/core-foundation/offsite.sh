@@ -11,8 +11,12 @@
 #
 # Variables :
 #   GAMAD_BACKUP_DIR             répertoire des lots locaux (obligatoire)
-#   GAMAD_OFFSITE_DEST           destination rsync ; VIDE = désactivé
-#                                ex. /mnt/copie  ou  sauvegarde@hote:/chemin
+#   GAMAD_OFFSITE_DEST           destination ; VIDE = désactivé
+#                                rsync : /mnt/copie  ou  sauvegarde@hote:/chemin
+#                                FTP   : ftp://hote/chemin  ou  ftps://hote/chemin
+#   GAMAD_OFFSITE_FTP_USER       utilisateur FTP
+#   GAMAD_OFFSITE_FTP_SECRET_FILE fichier contenant le mot de passe FTP
+#   GAMAD_OFFSITE_FTP_TLS        exige | opportuniste (défaut) | aucun
 #   GAMAD_OFFSITE_RECIPIENT      destinataire GPG (chiffrement asymétrique)
 #   GAMAD_OFFSITE_PASSPHRASE_FILE fichier de phrase secrète (symétrique)
 #   GAMAD_OFFSITE_RETENTION      lots conservés à distance (défaut 14)
@@ -114,12 +118,21 @@ if (( ${#archives[@]} > retention )); then
     done
 fi
 
-rsync_options=(--archive --delete --checksum)
-if [[ -n "${GAMAD_OFFSITE_SSH_KEY:-}" ]]; then
-    rsync_options+=(--rsh "ssh -i ${GAMAD_OFFSITE_SSH_KEY} -o StrictHostKeyChecking=yes")
-fi
-
-rsync "${rsync_options[@]}" "${stage%/}/" "$destination"
+case "$destination" in
+    ftp://*|ftps://*)
+        # shellcheck source=/dev/null
+        . "$(dirname "${BASH_SOURCE[0]}")/lib/ftp.sh"
+        ftp_preparer
+        ftp_deposer_miroir "$stage" "$destination" "$retention"
+        ;;
+    *)
+        rsync_options=(--archive --delete --checksum)
+        if [[ -n "${GAMAD_OFFSITE_SSH_KEY:-}" ]]; then
+            rsync_options+=(--rsh "ssh -i ${GAMAD_OFFSITE_SSH_KEY} -o StrictHostKeyChecking=yes")
+        fi
+        rsync "${rsync_options[@]}" "${stage%/}/" "$destination"
+        ;;
+esac
 
 echo "Lot transporté : ${horodatage}"
 echo "Chiffrement : $([[ -n "$recipient" ]] && echo "destinataire ${recipient}" || echo 'phrase secrète AES256')"
