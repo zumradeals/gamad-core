@@ -40,6 +40,8 @@ jobs:
             garde: core/registre-sources/tests/sources_p3.php
           - capacite: CAP-CORE-007 (normes)
             garde: core/registre-normes/tests/temporel_p3.php
+          - capacite: CAP-CORE-007 (politiques)
+            garde: core/registre-politiques/tests/politiques_p3.php
           - capacite: CAP-CORE-011 (produits)
             garde: core/registre-produits/tests/produits_p3.php
           - capacite: CAP-CORE-022 (fédération)
@@ -124,6 +126,12 @@ jobs:
 
       - name: Éprouver la console des sources
         run: php apps/console-laravel/tests/Integration/sources_console_p1.php
+
+      - name: Éprouver le registre des politiques
+        run: php apps/console-laravel/tests/Integration/politiques_v1_p1.php
+
+      - name: Éprouver la console des politiques
+        run: php apps/console-laravel/tests/Integration/politiques_console_p1.php
 
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php

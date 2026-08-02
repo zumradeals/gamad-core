@@ -19,6 +19,7 @@ use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Illuminate\Contracts\Http\Kernel;
@@ -33,6 +34,7 @@ $fichiers = [
     'identites' => $temp.'-identites.sqlite',
     'produits' => $temp.'-produits.sqlite',
     'sources' => $temp.'-sources.sqlite',
+    'politiques' => $temp.'-politiques.sqlite',
     'journal' => $temp.'-journal.sqlite',
     'config' => $temp.'-config.php',
     'events' => $temp.'-events.php',
@@ -72,6 +74,8 @@ $environnement = [
     'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
     'SOURCE_REGISTRY_URL' => '',
     'SOURCE_REGISTRY_PATH' => $fichiers['sources'],
+    'POLICY_REGISTRY_URL' => '',
+    'POLICY_REGISTRY_PATH' => $fichiers['politiques'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
 ];
@@ -89,9 +93,11 @@ SchemaFederation::migrer(AccesMagasin::connecter());
 IdentiteMagasin::connecter();
 ProduitsMagasin::connecter();
 SourcesMagasin::connecter();
+PolitiquesMagasin::connecter();
 JournalMagasin::connecter();
 
 $app = require $application.'/bootstrap/app.php';
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
 $app->make(Kernel::class)->bootstrap();
 $session = $app->make('session')->driver();
 $session->start();
