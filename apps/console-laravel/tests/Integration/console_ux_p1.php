@@ -20,6 +20,7 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\ViewErrorBag;
@@ -31,6 +32,7 @@ $fichiers = [
     'acces' => $temp.'-acces.sqlite',
     'identites' => $temp.'-identites.sqlite',
     'produits' => $temp.'-produits.sqlite',
+    'sources' => $temp.'-sources.sqlite',
     'journal' => $temp.'-journal.sqlite',
     'config' => $temp.'-config.php',
     'events' => $temp.'-events.php',
@@ -68,6 +70,8 @@ $environnement = [
     'IDENTITY_REGISTRY_PATH' => $fichiers['identites'],
     'PRODUCT_REGISTRY_URL' => '',
     'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
+    'SOURCE_REGISTRY_URL' => '',
+    'SOURCE_REGISTRY_PATH' => $fichiers['sources'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
 ];
@@ -84,6 +88,7 @@ BaselineOperationnelle::standard()->reconstruire($index);
 SchemaFederation::migrer(AccesMagasin::connecter());
 IdentiteMagasin::connecter();
 ProduitsMagasin::connecter();
+SourcesMagasin::connecter();
 JournalMagasin::connecter();
 
 $app = require $application.'/bootstrap/app.php';

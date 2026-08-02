@@ -13,6 +13,9 @@ declare(strict_types=1);
 require __DIR__ . '/src/Db.php';
 require __DIR__ . '/src/Schema.php';
 require __DIR__ . '/src/BaselineOperationnelle.php';
+require __DIR__ . '/../registre-sources/src/Magasin.php';
+require __DIR__ . '/../registre-sources/src/SchemaSources.php';
+require __DIR__ . '/../registre-sources/src/PolitiqueSources.php';
 require __DIR__ . '/../registre-sources/src/Ctr15.php';
 require __DIR__ . '/src/Ctr04.php';
 

@@ -78,24 +78,138 @@ final class Ctr04
     }
 
     /**
-     * Résout une source reconnue : son identité, sa catégorie, son niveau
-     * d'authenticité et, si elle est aussi connue comme norme, son statut.
+     * Résout une source reconnue : sa fiche canonique du registre persistant
+     * de CAP-CORE-006, enrichie — quand elle existe — d'une projection
+     * normative historique.
      *
-     * L'authenticité (`AUTH-0` à `AUTH-4`) et le statut d'adoption sont rendus
-     * côte à côte mais jamais confondus : une source peut être authentifiée et
-     * abrogée, ou de provenance seulement déclarée et faire règle. Le rang
-     * rendu est `INDETERMINE` tant qu'aucune autorité ne l'a établi.
+     * L'opération délègue d'abord à `CTR-15`, seul titulaire du contrat des
+     * sources : le registre des normes dépend des sources, jamais l'inverse
+     * (fiche CAP-CORE-006, §7). `CTR-15` ne connaît plus les tables `norme`,
+     * `version_norme`, `statut`, `adoption` ni `relation_evolution` ; c'est ici,
+     * dans CAP-CORE-007, qu'une projection de compatibilité leur est
+     * éventuellement ajoutée pour les appelants existants qui lisent encore
+     * `titre`, `categorie`, `authenticite`, `rang`, `statut`,
+     * `adoption_reference` ou `versionnee`.
      *
-     * L'opération délègue à `CTR-15`, seul titulaire du contrat des sources :
-     * le registre des normes dépend des sources, jamais l'inverse. La méthode
-     * demeure exposée ici pour les appelants existants, qui n'ont pas à
-     * connaître ce déplacement.
+     * Cette projection reste facultative : l'absence d'une version normative
+     * correspondante ne fait jamais échouer la résolution, et son contenu
+     * n'est jamais requis pour que `CTR-15` fonctionne (fiche §16.2).
      *
      * @return array<string,mixed>|null
      */
     public function resoudreSource(string $reference, ?string $date = null): ?array
     {
-        return (new Ctr15($this->pdo))->resoudreSource($reference, $date);
+        $source = (new Ctr15())->resoudreSource($reference, $date);
+        if ($source === null) {
+            return null;
+        }
+
+        $verification = (new Ctr15())->resoudreVerificationCourante($reference, $date);
+        $finalites = (new Ctr15())->resoudreFinalites($reference);
+        $projectionLegacy = $this->projectionSourceLegacy($reference, $date);
+
+        return array_merge($projectionLegacy, [
+            'reference' => $source['reference'],
+            'etat' => $source['etat'],
+            'proprietaire' => $source['proprietaire_reference'],
+            'produit_producteur' => $source['produit_producteur_reference'],
+            'niveau_verification' => $verification['niveau'] ?? 'NON_VERIFIEE',
+            'verification_expire_le' => $verification['expire_le'] ?? null,
+            'finalites' => $finalites,
+            'regime' => 'REGISTRE_PERSISTANT',
+        ]);
+    }
+
+    /**
+     * Projection de compatibilité historique, construite ici — jamais dans
+     * `CTR-15` — à partir de l'ancien index documentaire. Une source inscrite
+     * après le passage de CAP-CORE-006 à GO n'y figure généralement pas : dans
+     * ce cas, la projection retombe sur les données du registre persistant
+     * plutôt que d'inventer une valeur.
+     *
+     * @return array<string,mixed>
+     */
+    private function projectionSourceLegacy(string $reference, ?string $date): array
+    {
+        $st = $this->pdo->prepare(
+            'SELECT reference, titre, categorie, authenticite, reserve FROM source WHERE reference = ?'
+        );
+        $st->execute([$reference]);
+        $legacy = $st->fetch();
+
+        if ($legacy === false) {
+            $courant = (new Ctr15())->resoudreSource($reference, $date) ?? [];
+
+            return [
+                'titre' => $courant['nom_affichage'] ?? null,
+                'categorie' => $courant['categorie'] ?? null,
+                'authenticite' => $courant['authenticite_legacy'] ?? null,
+                'reserve' => $courant['reserve'] ?? null,
+                'rang' => 'INDETERMINE',
+                'statut' => null,
+                'adoption_reference' => null,
+                'versionnee' => false,
+            ];
+        }
+
+        $version = $this->versionEtStatutLegacy($reference, $date);
+
+        return [
+            'titre' => $legacy['titre'],
+            'categorie' => $legacy['categorie'],
+            'authenticite' => $legacy['authenticite'],
+            'reserve' => $legacy['reserve'],
+            'rang' => $version['rang'] ?? 'INDETERMINE',
+            'statut' => $version['statut'] ?? null,
+            'adoption_reference' => $version['adoption_reference'] ?? null,
+            'versionnee' => $version !== null,
+        ];
+    }
+
+    /**
+     * Relève la version courante d'une source qui est aussi une norme
+     * versionnée dans l'ancien index, et le statut en vigueur à la date
+     * demandée. Réservé à la projection de compatibilité ci-dessus.
+     *
+     * @return array<string,mixed>|null
+     */
+    private function versionEtStatutLegacy(string $reference, ?string $date): ?array
+    {
+        $sv = $this->pdo->prepare(
+            'SELECT v.id, v.version, n.rang_code
+             FROM version_norme v JOIN norme n ON n.reference = v.norme_reference
+             WHERE v.norme_reference = ? ORDER BY v.version DESC LIMIT 1'
+        );
+        $sv->execute([$reference]);
+        $version = $sv->fetch();
+        if ($version === false) {
+            return null;
+        }
+
+        if ($date !== null) {
+            $ss = $this->pdo->prepare(
+                'SELECT valeur, date_effet, adoption_reference FROM statut
+                 WHERE version_norme_id = ? AND date_effet <= ?
+                 ORDER BY date_effet DESC, id DESC LIMIT 1'
+            );
+            $ss->execute([$version['id'], $date]);
+        } else {
+            $ss = $this->pdo->prepare(
+                'SELECT valeur, date_effet, adoption_reference FROM statut
+                 WHERE version_norme_id = ?
+                 ORDER BY date_effet DESC, id DESC LIMIT 1'
+            );
+            $ss->execute([$version['id']]);
+        }
+        $statut = $ss->fetch() ?: null;
+
+        return [
+            'version' => $version['version'],
+            'rang' => $version['rang_code'],
+            'statut' => $statut['valeur'] ?? null,
+            'date_effet' => $statut['date_effet'] ?? null,
+            'adoption_reference' => $statut['adoption_reference'] ?? null,
+        ];
     }
 
     /**

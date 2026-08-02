@@ -21,8 +21,8 @@ source la plus fine pour qui veut savoir ce qui existe réellement derrière un
 | CAP-CORE-003 | Authorities & Mandates | Résoudre les fonctions, titulaires, mandats et délégations | `core/registre-autorites` | `GO` — résolution datée éprouvée |
 | CAP-CORE-004 | Authorization | Décider si une action commune est permise ou refusée | `core/registre-autorisation` | `GO` — refus par défaut éprouvé |
 | CAP-CORE-005 | Authentication & Access | Authentifier, ouvrir et révoquer les sessions | `core/registre-acces`, passkeys, écran Mon accès | `GO` — sessions, révocation, WebAuthn, codes de secours à usage unique et garde du dernier moyen d’accès, tous éprouvés |
-| CAP-CORE-006 | Sources Registry | Identifier les sources techniques reconnues | `core/registre-sources` | `NO GO` — lecture de l’index seulement |
-| CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | `core/registre-normes` | `NO GO` — lecture et diagnostic ; aucune écriture gouvernée |
+| CAP-CORE-006 | Sources Registry | Référencer, gouverner et faire vivre le cycle des sources du Core | `core/registre-sources`, bootstrap idempotent, API v1 `/sources*`, écran Sources, `CTR-15` découplé du registre des normes | `GO` — registre persistant gouverné ; garde SQLite (38 épreuves) et exercice PostgreSQL réel verts en local le 2 août 2026 |
+| CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | `core/registre-normes` | `NO GO` — lecture et diagnostic ; aucune écriture gouvernée ; dépend désormais de CAP-CORE-006 pour la résolution des sources |
 | CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | aucun ; traces dans le journal opérationnel | `NO GO` |
 | CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | aucun ; contrats portés par le code et `openapi/core-v1.yaml` | `NO GO` |
 | CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | aucun | `NO GO` |
@@ -96,13 +96,18 @@ Le chemin critique est livré. La première tranche de CAP-CORE-022 l’est auss
 le Core sait ouvrir une identité sur GamaDrive, borner le jeton, le révoquer et
 le prouver. CAP-CORE-011 est livré à son tour : le catalogue fédéré que
 CAP-CORE-022 sert n’est plus dérivé d’un marqueur de texte, il vient d’un
-registre persistant et gouverné. Les chantiers ouverts, par ordre d’utilité :
+registre persistant et gouverné. CAP-CORE-006 suit le même chemin : la
+provenance des informations n’est plus une ligne de lecture seule dépendant
+du registre des normes, mais une fiche persistante et gouvernée, avec cycle
+de vie, révisions, vérifications expirables, finalités bornées et lignée
+acyclique — et la dépendance entre CAP-CORE-007 et CAP-CORE-006 est enfin
+dans le bon sens. Les chantiers ouverts, par ordre d’utilité :
 
 ```text
 intégration réelle de GamaDrive V2 sur CAP-CORE-022
 → CAP-CORE-002 organisations
 → CAP-CORE-014 publication d’événements vers les satellites
-→ CAP-CORE-021 Matching
+→ CAP-CORE-021 Matching, désormais consommateur naturel de CAP-CORE-006
 ```
 
 Le second chemin d’accès est livré : codes de secours à usage unique,

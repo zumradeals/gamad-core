@@ -29,6 +29,7 @@ $fichiers = [
     'identites' => $temp . '-identites.sqlite',
     'journal' => $temp . '-journal.sqlite',
     'produits' => $temp . '-produits.sqlite',
+    'sources' => $temp . '-sources.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -61,6 +62,8 @@ $environnement = [
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
     'PRODUCT_REGISTRY_URL' => '',
     'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
+    'SOURCE_REGISTRY_URL' => '',
+    'SOURCE_REGISTRY_PATH' => $fichiers['sources'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");

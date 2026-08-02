@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\IdentiteController;
 use App\Http\Controllers\Api\V1\PasskeySessionController;
 use App\Http\Controllers\Api\V1\ProduitController;
 use App\Http\Controllers\Api\V1\SessionController;
+use App\Http\Controllers\Api\V1\SourceController;
 use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
 use Illuminate\Support\Facades\Route;
@@ -65,6 +66,36 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
             '/produits/{reference}/environnements/{id}/fermeture',
             [ProduitController::class, 'fermerEnvironnement'],
         )->whereNumber('id')->middleware('throttle:20,1');
+
+        // CAP-CORE-006 — registre des sources. Découplé du registre des
+        // normes : `CTR-15` ne lit plus `norme`/`version_norme`/`statut`.
+        Route::get('/sources', [SourceController::class, 'index']);
+        Route::post('/sources', [SourceController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('/sources/{reference}', [SourceController::class, 'show']);
+        Route::patch('/sources/{reference}', [SourceController::class, 'update'])
+            ->middleware('throttle:20,1');
+        Route::get('/sources/{reference}/lignee', [SourceController::class, 'lignee']);
+        Route::get('/sources/{reference}/finalites', [SourceController::class, 'finalites']);
+        Route::get('/sources/{reference}/verification', [SourceController::class, 'verification']);
+        Route::post('/sources/{reference}/utilisabilite', [SourceController::class, 'utilisabilite'])
+            ->middleware('throttle:60,1');
+        Route::post('/sources/{reference}/activation', [SourceController::class, 'activer'])
+            ->middleware('throttle:20,1');
+        Route::post('/sources/{reference}/suspension', [SourceController::class, 'suspendre'])
+            ->middleware('throttle:20,1');
+        Route::post('/sources/{reference}/retrait', [SourceController::class, 'retirer'])
+            ->middleware('throttle:20,1');
+        Route::post('/sources/{reference}/finalites', [SourceController::class, 'declarerFinalite'])
+            ->middleware('throttle:20,1');
+        Route::post(
+            '/sources/{reference}/finalites/{id}/fermeture',
+            [SourceController::class, 'fermerFinalite'],
+        )->whereNumber('id')->middleware('throttle:20,1');
+        Route::post('/sources/{reference}/verifications', [SourceController::class, 'enregistrerVerification'])
+            ->middleware('throttle:20,1');
+        Route::post('/sources/{reference}/lignee', [SourceController::class, 'declarerLignee'])
+            ->middleware('throttle:20,1');
 
         Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat']);
         Route::post('/autorisation/decisions', [AutorisationController::class, 'store'])

@@ -39,6 +39,16 @@ final class ImportateurSqlite
         'produit_environnement',
     ];
 
+    /** @var list<string> */
+    private const TABLES_SOURCES = [
+        'source',
+        'source_cycle',
+        'source_revision',
+        'source_verification',
+        'source_finalite',
+        'source_lignee',
+    ];
+
     /** @return array<string,int> */
     public function importerAcces(string $source, \PDO $cible): array
     {
@@ -58,6 +68,12 @@ final class ImportateurSqlite
     public function importerProduits(string $source, \PDO $cible): array
     {
         return $this->importer($source, $cible, self::TABLES_PRODUITS);
+    }
+
+    /** @return array<string,int> */
+    public function importerSources(string $source, \PDO $cible): array
+    {
+        return $this->importer($source, $cible, self::TABLES_SOURCES);
     }
 
     /**

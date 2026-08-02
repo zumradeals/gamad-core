@@ -7,6 +7,7 @@ use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreSources\Magasin as SourcesMagasin;
 
 $application = dirname(__DIR__, 2);
 require $application . '/vendor/autoload.php';
@@ -21,6 +22,8 @@ $fichiers = [
     'identites_cible' => $prefixe . '-identites-cible.sqlite',
     'produits_source' => $prefixe . '-produits-source.sqlite',
     'produits_cible' => $prefixe . '-produits-cible.sqlite',
+    'sources_source' => $prefixe . '-sources-source.sqlite',
+    'sources_cible' => $prefixe . '-sources-cible.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -90,6 +93,31 @@ $sourceProduits->exec(
              '2026-07-30T00:00:00Z')",
 );
 
+$sourceSources = SourcesMagasin::connecter($fichiers['sources_source']);
+$sourceSources->exec(
+    "INSERT INTO source
+     (reference,nom_canonique,type_source,authenticite_legacy,
+      politique_inscription,producteur,preuve_reference,cree_le,modifie_le)
+     VALUES ('SRC-IMPORT-001','Import P0','IMPORT_GOUVERNE',NULL,
+             'POL-IMPORT','AUT-GAMAD-001','EVT-IMPORT-SRC',
+             '2026-07-30T00:00:00Z','2026-07-30T00:00:00Z')",
+);
+$sourceSources->exec(
+    "INSERT INTO source_cycle
+     (source_reference,etat,date_effet,motif,acteur_reference,politique_reference,preuve_reference,correlation_id,cree_le)
+     VALUES ('SRC-IMPORT-001','PREPARATION','2026-07-30',NULL,'AUT-GAMAD-001','POL-IMPORT','EVT-IMPORT-SRC',NULL,
+             '2026-07-30T00:00:00Z')",
+);
+$sourceSources->exec(
+    "INSERT INTO source_revision
+     (source_reference,numero_revision,nom_affichage,categorie,description,
+      proprietaire_reference,produit_producteur_reference,reserve,
+      date_effet,acteur_reference,preuve_reference,correlation_id,cree_le)
+     VALUES ('SRC-IMPORT-001',1,'Import P0',NULL,NULL,
+             'AUT-GAMAD-001',NULL,NULL,
+             '2026-07-30','AUT-GAMAD-001','EVT-IMPORT-SRC',NULL,'2026-07-30T00:00:00Z')",
+);
+
 $cibleAcces = AccesMagasin::connecter($fichiers['acces_cible']);
 $sourceAccesPasskey = AccesMagasin::connecter($fichiers['acces_source_passkey']);
 $ctrPasskey = new Ctr16($sourceAccesPasskey);
@@ -105,6 +133,7 @@ $referencePasskey = $ctrPasskey->inscrirePasskey(
 $cibleAccesPasskey = AccesMagasin::connecter($fichiers['acces_cible_passkey']);
 $cibleIdentites = IdentiteMagasin::connecter($fichiers['identites_cible']);
 $cibleProduits = ProduitsMagasin::connecter($fichiers['produits_cible']);
+$cibleSources = SourcesMagasin::connecter($fichiers['sources_cible']);
 $importateur = new ImportateurSqlite();
 
 $echecs = 0;
@@ -155,6 +184,17 @@ $verifier(
             "SELECT etat FROM produit_cycle WHERE produit_reference = 'PRD-IMPORT-001'",
         )->fetchColumn() === 'PREPARATION',
     'le registre des produits est importé avec son cycle de vie',
+);
+
+$sources = $importateur->importerSources($fichiers['sources_source'], $cibleSources);
+$verifier(
+    $sources['source'] === 1
+        && $sources['source_cycle'] === 1
+        && $sources['source_revision'] === 1
+        && (string) $cibleSources->query(
+            "SELECT etat FROM source_cycle WHERE source_reference = 'SRC-IMPORT-001'",
+        )->fetchColumn() === 'PREPARATION',
+    'le registre des sources est importé avec son cycle et sa révision',
 );
 
 $secondImportRefuse = false;

@@ -8,7 +8,7 @@
 # configuration curl qui porte le mot de passe, le trousseau GPG jetable — et
 # chacun posant son propre trap, deux d'entre eux ne seraient jamais effacés.
 #
-# L'archive en clair est le pire des trois : elle contient les quatre bases.
+# L'archive en clair est le pire des trois : elle contient les six bases.
 # D'où ce registre : un seul trap, autant de chemins qu'on veut.
 
 set -Eeuo pipefail
