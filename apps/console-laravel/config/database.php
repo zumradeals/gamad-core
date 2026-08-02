@@ -163,6 +163,22 @@ return [
             'foreign_key_constraints' => true,
         ],
 
+        'gamad_contracts' => [
+            'driver' => env('GAMAD_CONTRACTS_DRIVER', 'sqlite'),
+            'url' => env('CONTRACT_REGISTRY_URL'),
+            'host' => env('GAMAD_CONTRACTS_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_CONTRACTS_PORT', '5432'),
+            'database' => env('CONTRACT_REGISTRY_PATH', database_path('gamad-contracts.sqlite')),
+            'username' => env('GAMAD_CONTRACTS_USERNAME'),
+            'password' => env('GAMAD_CONTRACTS_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_CONTRACTS_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
