@@ -1,0 +1,655 @@
+{
+    "format": 1,
+    "note": "Inventaire initial des contrats réellement exploités, établi par audit du code (route:list, openapi/core-v1.yaml, classes CTR-*) pour CAP-CORE-009. Aucune opération inventée ; chaque entrée est reliée à du code ou une route réelle.",
+    "contrats": [
+        {
+            "reference": "CTR-01",
+            "nom": "Identity Registry",
+            "type_contrat": "INTERCAPACITE",
+            "finalite_reference": "résolution d'identité pour les capacités et produits consommateurs",
+            "producteur_capacite_reference": "CAP-CORE-001",
+            "producteur_produit_reference": null,
+            "source_reference": "core/registre-identites/src/Ctr01.php — CAP-CORE-001",
+            "description": "Résolution d'une identité, dérivée du corpus ou inscrite au registre persistant, sans aucune donnée de profil ou de réputation.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-001"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "resoudreIdentite",
+                    "type_operation": "INTERROGER",
+                    "methode_http": null,
+                    "chemin_http": null,
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": false,
+                    "ordre": 1
+                }
+            ],
+            "schemas": [
+                {
+                    "operation_reference": "resoudreIdentite",
+                    "sens": "SORTIE",
+                    "format": "JSON_SCHEMA",
+                    "contenu": "{\"proprietes\":{\"reference\":{\"type\":\"string\",\"requis\":true},\"type\":{\"type\":\"string\",\"requis\":true},\"regime\":{\"type\":\"string\",\"requis\":true}}}"
+                }
+            ],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-02",
+            "nom": "Authorities & Mandates",
+            "type_contrat": "INTERCAPACITE",
+            "finalite_reference": "résolution datée des fonctions, titulaires et mandats",
+            "producteur_capacite_reference": "CAP-CORE-003",
+            "producteur_produit_reference": null,
+            "source_reference": "core/registre-autorites/src/Ctr02.php — CAP-CORE-003",
+            "description": "Résolution d'un mandat à une date donnée, avec ses délégations actives.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-003"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "resoudreMandat",
+                    "type_operation": "INTERROGER",
+                    "methode_http": null,
+                    "chemin_http": null,
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": false,
+                    "ordre": 1
+                }
+            ],
+            "schemas": [
+                {
+                    "operation_reference": "resoudreMandat",
+                    "sens": "SORTIE",
+                    "format": "JSON_SCHEMA",
+                    "contenu": "{\"proprietes\":{\"fonction\":{\"type\":\"string\",\"requis\":true},\"titulaire\":{\"type\":\"string\",\"requis\":false}}}"
+                }
+            ],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-03",
+            "nom": "Authorization",
+            "type_contrat": "INTERCAPACITE",
+            "finalite_reference": "décision d'autorisation pour une action commune",
+            "producteur_capacite_reference": "CAP-CORE-004",
+            "producteur_produit_reference": null,
+            "source_reference": "core/registre-autorisation/src/Ctr03.php — CAP-CORE-004",
+            "description": "Décide si un sujet peut accomplir une action, en lisant les versions actives du registre des politiques (CAP-CORE-007). Refus par défaut.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-004"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-007"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-009"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "autoriser",
+                    "type_operation": "VERIFIER",
+                    "methode_http": null,
+                    "chemin_http": null,
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": true,
+                    "ordre": 1
+                }
+            ],
+            "schemas": [
+                {
+                    "operation_reference": "autoriser",
+                    "sens": "SORTIE",
+                    "format": "JSON_SCHEMA",
+                    "contenu": "{\"proprietes\":{\"decision\":{\"type\":\"string\",\"requis\":true,\"enum\":[\"PERMIS\",\"REFUSÉ\"]},\"motif\":{\"type\":\"string\",\"requis\":true}}}"
+                }
+            ],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-04",
+            "nom": "Rules / Policies",
+            "type_contrat": "INTERCAPACITE",
+            "finalite_reference": "exposition des règles actives à CTR-03 pour une action donnée",
+            "producteur_capacite_reference": "CAP-CORE-007",
+            "producteur_produit_reference": null,
+            "source_reference": "core/registre-politiques/src/RegistrePolitiques.php — CAP-CORE-007",
+            "description": "Règles actives, toutes politiques confondues, pour une action exacte — la même lecture que celle qui fonde la décision de CTR-03.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-007"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-004"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "resoudreReglesActives",
+                    "type_operation": "INTERROGER",
+                    "methode_http": null,
+                    "chemin_http": null,
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": false,
+                    "ordre": 1
+                }
+            ],
+            "schemas": [
+                {
+                    "operation_reference": "resoudreReglesActives",
+                    "sens": "SORTIE",
+                    "format": "JSON_SCHEMA",
+                    "contenu": "{\"proprietes\":{\"effet\":{\"type\":\"string\",\"requis\":true,\"enum\":[\"PERMET\",\"REFUSE\"]},\"action_reference\":{\"type\":\"string\",\"requis\":true}}}"
+                }
+            ],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-15",
+            "nom": "Sources",
+            "type_contrat": "INTERCAPACITE",
+            "finalite_reference": "résolution de la provenance technique déclarée pour une source",
+            "producteur_capacite_reference": "CAP-CORE-006",
+            "producteur_produit_reference": null,
+            "source_reference": "core/registre-sources/src/Ctr15.php — CAP-CORE-006",
+            "description": "Résolution d'une source, de ses vérifications et de sa lignée, découplée du registre des normes.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-006"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "resoudreSource",
+                    "type_operation": "INTERROGER",
+                    "methode_http": null,
+                    "chemin_http": null,
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": false,
+                    "ordre": 1
+                }
+            ],
+            "schemas": [
+                {
+                    "operation_reference": "resoudreSource",
+                    "sens": "SORTIE",
+                    "format": "JSON_SCHEMA",
+                    "contenu": "{\"proprietes\":{\"reference\":{\"type\":\"string\",\"requis\":true},\"cycle\":{\"type\":\"string\",\"requis\":true}}}"
+                }
+            ],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-16",
+            "nom": "Authentication & Access",
+            "type_contrat": "INTERCAPACITE",
+            "finalite_reference": "établissement et vérification des sessions et moyens d’accès communs",
+            "producteur_capacite_reference": "CAP-CORE-005",
+            "producteur_produit_reference": null,
+            "source_reference": "core/registre-acces/src/Ctr16.php — CAP-CORE-005",
+            "description": "Sessions, passkeys, codes de secours et révocation, sans jamais exposer de secret déchiffré.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-005"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "etablirSession",
+                    "type_operation": "COMMANDER",
+                    "methode_http": null,
+                    "chemin_http": null,
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": false,
+                    "audit_obligatoire": true,
+                    "ordre": 1
+                }
+            ],
+            "schemas": [
+                {
+                    "operation_reference": "etablirSession",
+                    "sens": "ENTREE",
+                    "format": "JSON_SCHEMA",
+                    "contenu": "{\"proprietes\":{\"entite\":{\"type\":\"string\",\"requis\":true},\"secret\":{\"type\":\"string\",\"requis\":true}}}"
+                }
+            ],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-GAMAD-FEDERATION",
+            "nom": "Fédération GamaDrive",
+            "type_contrat": "HTTP_API",
+            "finalite_reference": "ouverture, vérification et révocation d'un accès fédéré pour un produit satellite",
+            "producteur_capacite_reference": "CAP-CORE-022",
+            "producteur_produit_reference": null,
+            "source_reference": "apps/console-laravel/app/Http/Controllers/Api/V1/FederationController.php — CAP-CORE-022",
+            "description": "Parcours pilote GamaDrive : ouverture, vérification et révocation d’un jeton fédéré borné.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-022"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "PRODUIT",
+                    "partie_reference": "PRD-GAMAD-002"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "ouvrirAccesFedere",
+                    "type_operation": "COMMANDER",
+                    "methode_http": "POST",
+                    "chemin_http": "/produits/{produit}/ouverture",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": false,
+                    "audit_obligatoire": true,
+                    "ordre": 1
+                },
+                {
+                    "reference_operation": "verifierJetonFedere",
+                    "type_operation": "VERIFIER",
+                    "methode_http": "POST",
+                    "chemin_http": "/produits/{produit}/verification",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": true,
+                    "ordre": 2
+                },
+                {
+                    "reference_operation": "revoquerAccesFedere",
+                    "type_operation": "REVOQUER",
+                    "methode_http": "POST",
+                    "chemin_http": "/produits/{produit}/revocation",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": true,
+                    "ordre": 3
+                }
+            ],
+            "schemas": [
+                {
+                    "operation_reference": "ouvrirAccesFedere",
+                    "sens": "SORTIE",
+                    "format": "JSON_SCHEMA",
+                    "contenu": "{\"proprietes\":{\"jeton\":{\"type\":\"string\",\"requis\":true},\"expire_le\":{\"type\":\"string\",\"requis\":true}}}"
+                }
+            ],
+            "erreurs": [
+                {
+                    "code": "AUTHENTIFICATION_REQUISE",
+                    "statut_http": 401,
+                    "retentable": true,
+                    "detail_exposable": true,
+                    "description": "session absente, invalide, expirée ou révoquée",
+                    "operation_reference": null
+                }
+            ]
+        },
+        {
+            "reference": "CTR-GAMAD-IDENTITES",
+            "nom": "API Identités",
+            "type_contrat": "HTTP_API",
+            "finalite_reference": "lecture et inscription d'identités par un produit fédéré",
+            "producteur_capacite_reference": "CAP-CORE-001",
+            "producteur_produit_reference": null,
+            "source_reference": "apps/console-laravel/app/Http/Controllers/Api/V1/IdentiteController.php — CAP-CORE-001",
+            "description": "Projection HTTP sous session de CTR-01.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-001"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "PRODUIT",
+                    "partie_reference": "PRD-GAMAD-002"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "listerIdentites",
+                    "type_operation": "INTERROGER",
+                    "methode_http": "GET",
+                    "chemin_http": "/identites",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": false,
+                    "ordre": 1
+                },
+                {
+                    "reference_operation": "inscrireIdentite",
+                    "type_operation": "COMMANDER",
+                    "methode_http": "POST",
+                    "chemin_http": "/identites",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": false,
+                    "audit_obligatoire": true,
+                    "ordre": 2
+                },
+                {
+                    "reference_operation": "lireIdentite",
+                    "type_operation": "INTERROGER",
+                    "methode_http": "GET",
+                    "chemin_http": "/identites/{reference}",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": false,
+                    "ordre": 3
+                }
+            ],
+            "schemas": [],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-GAMAD-PRODUITS",
+            "nom": "API Produits",
+            "type_contrat": "HTTP_API",
+            "finalite_reference": "cycle de vie des produits fédérés",
+            "producteur_capacite_reference": "CAP-CORE-011",
+            "producteur_produit_reference": null,
+            "source_reference": "apps/console-laravel/app/Http/Controllers/Api/V1/ProduitController.php — CAP-CORE-011",
+            "description": "Projection HTTP sous session du registre des produits.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-011"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "PRODUIT",
+                    "partie_reference": "PRD-GAMAD-002"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "listerProduits",
+                    "type_operation": "INTERROGER",
+                    "methode_http": "GET",
+                    "chemin_http": "/produits",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": false,
+                    "ordre": 1
+                },
+                {
+                    "reference_operation": "inscrireProduit",
+                    "type_operation": "COMMANDER",
+                    "methode_http": "POST",
+                    "chemin_http": "/produits",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": false,
+                    "audit_obligatoire": true,
+                    "ordre": 2
+                },
+                {
+                    "reference_operation": "activerProduit",
+                    "type_operation": "COMMANDER",
+                    "methode_http": "POST",
+                    "chemin_http": "/produits/{reference}/activation",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": true,
+                    "ordre": 3
+                }
+            ],
+            "schemas": [],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-GAMAD-SOURCES",
+            "nom": "API Sources",
+            "type_contrat": "HTTP_API",
+            "finalite_reference": "cycle de vie des sources fédérées",
+            "producteur_capacite_reference": "CAP-CORE-006",
+            "producteur_produit_reference": null,
+            "source_reference": "apps/console-laravel/app/Http/Controllers/Api/V1/SourceController.php — CAP-CORE-006",
+            "description": "Projection HTTP sous session du registre des sources.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-006"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "PRODUIT",
+                    "partie_reference": "PRD-GAMAD-002"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "listerSources",
+                    "type_operation": "INTERROGER",
+                    "methode_http": "GET",
+                    "chemin_http": "/sources",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": false,
+                    "ordre": 1
+                },
+                {
+                    "reference_operation": "inscrireSource",
+                    "type_operation": "COMMANDER",
+                    "methode_http": "POST",
+                    "chemin_http": "/sources",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": false,
+                    "audit_obligatoire": true,
+                    "ordre": 2
+                }
+            ],
+            "schemas": [],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-GAMAD-POLITIQUES",
+            "nom": "API Politiques",
+            "type_contrat": "HTTP_API",
+            "finalite_reference": "lecture et versionnement des politiques techniques",
+            "producteur_capacite_reference": "CAP-CORE-007",
+            "producteur_produit_reference": null,
+            "source_reference": "apps/console-laravel/app/Http/Controllers/Api/V1/PolitiqueController.php — CAP-CORE-007",
+            "description": "Projection HTTP sous session du registre des politiques.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-007"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "PRODUIT",
+                    "partie_reference": "PRD-GAMAD-002"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "listerPolitiques",
+                    "type_operation": "INTERROGER",
+                    "methode_http": "GET",
+                    "chemin_http": "/politiques",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": false,
+                    "ordre": 1
+                },
+                {
+                    "reference_operation": "inscrirePolitique",
+                    "type_operation": "COMMANDER",
+                    "methode_http": "POST",
+                    "chemin_http": "/politiques",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": false,
+                    "audit_obligatoire": true,
+                    "ordre": 2
+                }
+            ],
+            "schemas": [],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-GAMAD-SESSIONS",
+            "nom": "API Sessions",
+            "type_contrat": "HTTP_API",
+            "finalite_reference": "ouverture et fermeture d'une session sous mot de passe ou passkey",
+            "producteur_capacite_reference": "CAP-CORE-005",
+            "producteur_produit_reference": null,
+            "source_reference": "apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php — CAP-CORE-005",
+            "description": "Projection HTTP sous session de CTR-16.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-005"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "PRODUIT",
+                    "partie_reference": "PRD-GAMAD-002"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "ouvrirSession",
+                    "type_operation": "COMMANDER",
+                    "methode_http": "POST",
+                    "chemin_http": "/sessions",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": false,
+                    "audit_obligatoire": true,
+                    "ordre": 1
+                },
+                {
+                    "reference_operation": "fermerSession",
+                    "type_operation": "REVOQUER",
+                    "methode_http": "DELETE",
+                    "chemin_http": "/sessions/current",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": true,
+                    "ordre": 2
+                }
+            ],
+            "schemas": [],
+            "erreurs": []
+        },
+        {
+            "reference": "CTR-GAMAD-AUTORISATION",
+            "nom": "API Autorisation",
+            "type_contrat": "HTTP_API",
+            "finalite_reference": "exposition d'une décision d'autorisation à un opérateur sous session",
+            "producteur_capacite_reference": "CAP-CORE-004",
+            "producteur_produit_reference": null,
+            "source_reference": "apps/console-laravel/app/Http/Controllers/Api/V1/AutorisationController.php — CAP-CORE-004",
+            "description": "Projection HTTP sous session de CTR-03.",
+            "version": "1.0.0",
+            "compatibilite_annoncee": "COMPATIBLE",
+            "parties": [
+                {
+                    "role": "PRODUCTEUR",
+                    "partie_type": "CAPACITE",
+                    "partie_reference": "CAP-CORE-004"
+                },
+                {
+                    "role": "CONSOMMATEUR",
+                    "partie_type": "PRODUIT",
+                    "partie_reference": "PRD-GAMAD-002"
+                }
+            ],
+            "operations": [
+                {
+                    "reference_operation": "prendreDecisionAutorisation",
+                    "type_operation": "VERIFIER",
+                    "methode_http": "POST",
+                    "chemin_http": "/autorisation/decisions",
+                    "action_autorisation": null,
+                    "duree_secondes": null,
+                    "idempotente": true,
+                    "audit_obligatoire": true,
+                    "ordre": 1
+                }
+            ],
+            "schemas": [],
+            "erreurs": []
+        }
+    ]
+}
