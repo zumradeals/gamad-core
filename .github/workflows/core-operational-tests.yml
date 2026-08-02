@@ -119,6 +119,12 @@ jobs:
       - name: Éprouver la console des produits
         run: php apps/console-laravel/tests/Integration/produits_console_p1.php
 
+      - name: Éprouver le registre des sources
+        run: php apps/console-laravel/tests/Integration/sources_v1_p1.php
+
+      - name: Éprouver la console des sources
+        run: php apps/console-laravel/tests/Integration/sources_console_p1.php
+
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php
 
