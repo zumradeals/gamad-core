@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 /**
- * Épreuve de l'écran d'administration du registre des produits (CAP-CORE-011).
+ * Épreuve de l'écran d'administration du registre des sources (CAP-CORE-006).
  *
- * La console doit permettre d'inscrire, activer, suspendre et retirer un
- * produit sans ouvrir de chemin parallèle au cas d'usage gouverné de l'API.
+ * La console doit permettre d'inscrire, activer, suspendre et retirer une
+ * source sans ouvrir de chemin parallèle au cas d'usage gouverné de l'API.
  *
  * Exécution depuis la racine du dépôt :
- *   php apps/console-laravel/tests/Integration/produits_console_p1.php
+ *   php apps/console-laravel/tests/Integration/sources_console_p1.php
  */
 
-use App\Application\Produits\AccesProduits;
-use App\Http\Controllers\ProduitConsoleController;
+use App\Application\Sources\AccesSources;
+use App\Http\Controllers\SourceConsoleController;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
@@ -29,7 +29,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\ViewErrorBag;
 
 $application = dirname(__DIR__, 2);
-$temp = sys_get_temp_dir().'/gamad-produits-console-'.getmypid();
+$temp = sys_get_temp_dir().'/gamad-sources-console-'.getmypid();
 $fichiers = [
     'index' => $temp.'-index.sqlite',
     'acces' => $temp.'-acces.sqlite',
@@ -50,7 +50,7 @@ register_shutdown_function(static function () use ($fichiers): void {
 $environnement = [
     'APP_ENV' => 'testing',
     'APP_DEBUG' => 'false',
-    'APP_KEY' => 'base64:'.base64_encode(str_repeat('p', 32)),
+    'APP_KEY' => 'base64:'.base64_encode(str_repeat('s', 32)),
     'APP_URL' => 'https://console.test',
     'APP_CONFIG_CACHE' => $temp.'-config.php',
     'APP_EVENTS_CACHE' => $temp.'-events.php',
@@ -90,18 +90,18 @@ JournalMagasin::connecter();
 ProduitsMagasin::connecter();
 
 $ctr01 = new Ctr01($index, $registreIdentites);
-$identiteProduit = (string) $ctr01->inscrireIdentite([
+$identiteTiers = (string) $ctr01->inscrireIdentite([
     'canal' => 'AUTORITE',
     'type' => 'produit',
-    'libelle' => 'Console P1 Produit',
+    'libelle' => 'Console P1 Source Tiers',
     'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION,
     'politique' => 'POL-CONSOLE-P1',
-    'source' => 'épreuve console CAP-CORE-011',
-    'preuve' => 'EVT-CONSOLE-P1-PRD-001',
+    'source' => 'épreuve console CAP-CORE-006',
+    'preuve' => 'EVT-CONSOLE-P1-SRC-001',
 ])['reference'];
 
 $ctr16 = new Ctr16($magasinAcces);
-$secretAutorite = 'Secret-Console-Produits-1!';
+$secretAutorite = 'Secret-Console-Sources-1!';
 $ctr16->inscrireAuthentificateur(PolitiqueInscription::AUTORITE_INSCRIPTION, $secretAutorite);
 $sessionAutorite = (string) $ctr16->etablirSession(
     PolitiqueInscription::AUTORITE_INSCRIPTION,
@@ -139,106 +139,108 @@ $verifier = static function (bool $ok, string $libelle) use (&$echecs): void {
     }
 };
 
-$controleur = $app->make(ProduitConsoleController::class);
-$acces = $app->make(AccesProduits::class);
-$REF = 'PRD-CONSOLE-P1-001';
+$controleur = $app->make(SourceConsoleController::class);
+$acces = $app->make(AccesSources::class);
+$REF = 'SRC-CONSOLE-P1-001';
 
-echo "INTÉGRATION — CONSOLE DES PRODUITS P1 (CAP-CORE-011)\n\n";
+echo "INTÉGRATION — CONSOLE DES SOURCES P1 (CAP-CORE-006)\n\n";
 
 // 1 — la liste se rend, vide, sans erreur de vue.
-$listeVide = $controleur->index($requete('/produits'))->render();
+$listeVide = $controleur->index($requete('/registre-sources'))->render();
 $verifier(
-    str_contains($listeVide, 'Inscrire un produit') && ! str_contains($listeVide, '<pre>'),
-    'la liste des produits se rend sans erreur avant toute inscription',
+    str_contains($listeVide, 'Inscrire une source') && ! str_contains($listeVide, '<pre>'),
+    'la liste des sources se rend sans erreur avant toute inscription',
 );
 
 // 2 — le formulaire d'inscription se rend et porte la politique résolue.
-$formulaire = $controleur->create($requete('/produits/nouveau'))->render();
+$formulaire = $controleur->create($requete('/registre-sources/nouvelle'))->render();
 $verifier(
-    str_contains($formulaire, 'Nouveau produit') && str_contains($formulaire, 'POL-PRODUITS-V1'),
+    str_contains($formulaire, 'Nouvelle source') && str_contains($formulaire, 'POL-SOURCES-V1'),
     'le formulaire d’inscription affiche la politique technique résolue',
 );
 
 // 3 — inscription depuis la console : même cas d'usage gouverné que l'API.
-$reponseStore = $controleur->store($requete('/produits', 'POST', [
+$reponseStore = $controleur->store($requete('/registre-sources', 'POST', [
     'reference' => $REF,
-    'identite_reference' => $identiteProduit,
-    'nom_canonique' => 'Console P1 Produit',
-    'nom_affichage' => 'Console P1 Produit',
-    'type_produit' => 'APPLICATION_INTERNE',
+    'nom_canonique' => 'Console P1 Source',
+    'nom_affichage' => 'Console P1 Source',
+    'type_source' => 'SERVICE_CORE',
     'proprietaire_reference' => PolitiqueInscription::AUTORITE_INSCRIPTION,
 ]), $acces);
 $verifier(
-    str_ends_with($reponseStore->getTargetUrl(), "/produits/{$REF}") && session('succes') !== null,
+    str_ends_with($reponseStore->getTargetUrl(), "/registre-sources/{$REF}") && session('succes') !== null,
     'l’inscription depuis la console redirige vers la fiche avec confirmation',
 );
 
 // 4 — la fiche affiche l'état PREPARATION et les actions de cycle.
-$fichePreparation = $controleur->show($requete("/produits/{$REF}"), $REF)->render();
+$fichePreparation = $controleur->show($requete("/registre-sources/{$REF}"), $REF)->render();
 $verifier(
     str_contains($fichePreparation, 'PREPARATION') && str_contains($fichePreparation, 'Activer'),
     'la fiche en PREPARATION propose l’activation',
 );
 
-// 5 — déclaration d'un environnement de production HTTPS.
-$controleur->declarerEnvironnement($requete("/produits/{$REF}/environnements", 'POST', [
-    'environnement' => 'PRODUCTION',
-    'api_base_url' => 'https://console-p1.example/api',
-    'audience_federation' => $REF,
-]), $acces, $REF);
-
-// 6 — activation depuis la console.
-$controleur->activer($requete("/produits/{$REF}/activation", 'POST'), $acces, $REF);
-$ficheActive = $controleur->show($requete("/produits/{$REF}"), $REF)->render();
+// 5 — activation depuis la console.
+$controleur->activer($requete("/registre-sources/{$REF}/activation", 'POST'), $acces, $REF);
+$ficheActive = $controleur->show($requete("/registre-sources/{$REF}"), $REF)->render();
 $verifier(
-    str_contains($ficheActive, 'ACTIF') && str_contains($ficheActive, 'console-p1.example'),
-    'l’activation et l’environnement déclaré apparaissent sur la fiche',
+    str_contains($ficheActive, 'ACTIVE'),
+    'l’activation apparaît sur la fiche',
+);
+
+// 6 — une finalité se déclare depuis la console et apparaît sur la fiche.
+$controleur->declarerFinalite($requete("/registre-sources/{$REF}/finalites", 'POST', [
+    'finalite_reference' => 'FIN-CONSOLE-P1',
+    'date_debut' => '2026-01-01',
+]), $acces, $REF);
+$ficheAvecFinalite = $controleur->show($requete("/registre-sources/{$REF}"), $REF)->render();
+$verifier(
+    str_contains($ficheAvecFinalite, 'FIN-CONSOLE-P1'),
+    'la finalité déclarée apparaît sur la fiche',
 );
 
 // 7 — un tiers non autorité ne voit pas les actions de gouvernance.
-$ficheTiers = $controleur->show($requete("/produits/{$REF}", acteur: $identiteProduit), $REF)->render();
+$ficheTiers = $controleur->show($requete("/registre-sources/{$REF}", acteur: $identiteTiers), $REF)->render();
 $verifier(
-    ! str_contains($ficheTiers, 'name="federation_autorisee"'),
+    ! str_contains($ficheTiers, 'Enregistrer (nouvelle révision)'),
     'un acteur non autorité ne voit pas les formulaires de gouvernance',
 );
 
 // 8 — suspension : immédiatement visible sur la fiche, historique conservé.
-$controleur->suspendre($requete("/produits/{$REF}/suspension", 'POST'), $acces, $REF);
-$ficheSuspendue = $controleur->show($requete("/produits/{$REF}"), $REF)->render();
+$controleur->suspendre($requete("/registre-sources/{$REF}/suspension", 'POST'), $acces, $REF);
+$ficheSuspendue = $controleur->show($requete("/registre-sources/{$REF}"), $REF)->render();
 $verifier(
-    str_contains($ficheSuspendue, 'SUSPENDU') && str_contains($ficheSuspendue, 'PREPARATION'),
+    str_contains($ficheSuspendue, 'SUSPENDUE') && str_contains($ficheSuspendue, 'PREPARATION'),
     'la suspension apparaît sur la fiche et l’historique reste lisible',
 );
 
 // 9 — retrait : irréversible, la fiche reste consultable.
-$controleur->activer($requete("/produits/{$REF}/activation", 'POST'), $acces, $REF);
-$controleur->retirer($requete("/produits/{$REF}/retrait", 'POST'), $acces, $REF);
-$ficheRetiree = $controleur->show($requete("/produits/{$REF}"), $REF)->render();
+$controleur->activer($requete("/registre-sources/{$REF}/activation", 'POST'), $acces, $REF);
+$controleur->retirer($requete("/registre-sources/{$REF}/retrait", 'POST'), $acces, $REF);
+$ficheRetiree = $controleur->show($requete("/registre-sources/{$REF}"), $REF)->render();
 $reponseReinscription = $acces->inscrire([
     'reference' => $REF,
-    'identite_reference' => $identiteProduit,
     'nom_canonique' => 'Doublon',
     'nom_affichage' => 'Doublon',
-    'type_produit' => 'APPLICATION_INTERNE',
+    'type_source' => 'SERVICE_CORE',
     'proprietaire_reference' => PolitiqueInscription::AUTORITE_INSCRIPTION,
 ], PolitiqueInscription::AUTORITE_INSCRIPTION);
 $verifier(
-    str_contains($ficheRetiree, 'RETIRE')
+    str_contains($ficheRetiree, 'RETIREE')
         && $reponseReinscription['statut'] === 409,
     'le retrait est irréversible ; la référence retirée reste consultable et jamais réutilisable',
 );
 
 // 10 — la liste distingue les états visibles à l'autorité.
-$listeFinale = $controleur->index($requete('/produits'))->render();
+$listeFinale = $controleur->index($requete('/registre-sources'))->render();
 $verifier(
-    str_contains($listeFinale, 'RETIRE') && str_contains($listeFinale, 'Console P1 Produit'),
-    'la liste reflète l’état réel du registre, y compris un produit retiré',
+    str_contains($listeFinale, 'RETIREE') && str_contains($listeFinale, 'Console P1 Source'),
+    'la liste reflète l’état réel du registre, y compris une source retirée',
 );
 
 echo "\n";
 if ($echecs === 0) {
-    echo "Console des produits P1 : ÉTABLIE.\n";
+    echo "Console des sources P1 : ÉTABLIE.\n";
     exit(0);
 }
-echo "Console des produits P1 : NON ÉTABLIE ({$echecs} écart(s)).\n";
+echo "Console des sources P1 : NON ÉTABLIE ({$echecs} écart(s)).\n";
 exit(1);
