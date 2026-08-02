@@ -9,6 +9,7 @@ use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAutorisation\Ctr03;
 use Gamad\RegistreAutorites\Ctr02;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ final class AutorisationController
 
         try {
             $index = Db::connect();
-            $decision = (new Ctr03($index))->autoriser(
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
                 $acteur,
                 $donnees['action'],
                 $donnees['ressource'] ?? null,

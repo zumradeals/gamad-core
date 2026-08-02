@@ -13,6 +13,7 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Ctr04;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -77,7 +78,7 @@ final class Ctr04Controller
             $identites,
         ));
         $mandat = (new Ctr02($pdo))->resoudreMandat(null, $acteur, gmdate('Y-m-d'));
-        $decisionInscription = (new Ctr03($pdo))->autoriser(
+        $decisionInscription = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
             $acteur,
             'inscrire une identité',
             'personne',

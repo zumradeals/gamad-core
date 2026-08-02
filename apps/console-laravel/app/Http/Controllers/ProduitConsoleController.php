@@ -11,6 +11,7 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreProduits\PolitiqueProduits;
 use Gamad\RegistreProduits\RegistreProduits;
@@ -74,7 +75,7 @@ final class ProduitConsoleController
     public function create(Request $request): View
     {
         $acteur = (string) $request->attributes->get('gamad_entite');
-        $decision = (new Ctr03(Db::connect()))->autoriser($acteur, PolitiqueProduits::ACTION_INSCRIRE, null);
+        $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser($acteur, PolitiqueProduits::ACTION_INSCRIRE, null);
 
         return view('produits.create', [
             'acteur' => $acteur,

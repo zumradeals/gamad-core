@@ -9,7 +9,7 @@ use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreAutorisation\Ctr03;
-use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 
 /**
  * Moyens d'accès personnels (CAP-CORE-005).
@@ -249,7 +249,7 @@ final class MoyensAcces
         }
 
         try {
-            $decision = (new Ctr03(Db::connect()))->autoriser($acteur, $action, $entite);
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser($acteur, $action, $entite);
             $preuve = (new Journal(JournalMagasin::connecter()))->enregistrer([
                 'categorie' => 'SECURITE',
                 'type' => 'DECISION_MOYEN_ACCES',
