@@ -49,5 +49,6 @@ Une session de codage traite une seule capacité, ouvre une seule PR et s'arrêt
 
 - `CAP-CORE-010/` — Vocabulaire canonique.
 - `CAP-CORE-002/` — Registre des organisations.
+- `CAP-CORE-012/` — Registre des realms et périmètres.
 
 Les notes suivantes seront ajoutées directement dans ce dossier, dans l'ordre ci-dessus.
