@@ -9,13 +9,14 @@ use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Illuminate\Console\Command;
 
 final class MigrerFondationCommand extends Command
 {
     protected $signature = 'core:fondation:migrer {--force : autorise l’exécution en production}';
 
-    protected $description = 'Applique les migrations additives des magasins accès, identités et journal.';
+    protected $description = 'Applique les migrations additives des magasins accès, identités, produits et journal.';
 
     public function handle(): int
     {
@@ -31,6 +32,7 @@ final class MigrerFondationCommand extends Command
                 'MAGASIN_URL',
                 'IDENTITY_REGISTRY_URL',
                 'JOURNAL_OPERATIONNEL_URL',
+                'PRODUCT_REGISTRY_URL',
             ] as $variable) {
                 if (trim((string) $this->environnement($variable)) === '') {
                     $this->error("{$variable} est obligatoire en production.");
@@ -49,6 +51,7 @@ final class MigrerFondationCommand extends Command
                 'index reconstructible' => Db::connect(),
                 'accès/authentification/fédération' => $acces,
                 'identités persistantes' => IdentiteMagasin::connecter(),
+                'produits persistants' => ProduitsMagasin::connecter(),
                 'journal opérationnel' => JournalMagasin::connecter(),
             ];
         } catch (\Throwable $e) {
@@ -90,6 +93,7 @@ final class MigrerFondationCommand extends Command
             'MAGASIN_URL' => 'database.connections.gamad_access.url',
             'IDENTITY_REGISTRY_URL' => 'database.connections.gamad_identity.url',
             'JOURNAL_OPERATIONNEL_URL' => 'database.connections.gamad_journal.url',
+            'PRODUCT_REGISTRY_URL' => 'database.connections.gamad_products.url',
             default => null,
         };
 

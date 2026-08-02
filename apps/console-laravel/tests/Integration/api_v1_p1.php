@@ -17,6 +17,7 @@ use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
@@ -27,6 +28,7 @@ $fichiers = [
     'acces' => $temp . '-acces.sqlite',
     'identites' => $temp . '-identites.sqlite',
     'journal' => $temp . '-journal.sqlite',
+    'produits' => $temp . '-produits.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -57,6 +59,8 @@ $environnement = [
     'IDENTITY_REGISTRY_PATH' => $fichiers['identites'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
+    'PRODUCT_REGISTRY_URL' => '',
+    'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -75,6 +79,7 @@ $acces = AccesMagasin::connecter();
 SchemaFederation::migrer($acces);
 (new Ctr16($acces))->inscrireAuthentificateur('AUT-GAMAD-001', $secret);
 IdentiteMagasin::connecter();
+ProduitsMagasin::connecter();
 
 $app = require $application . '/bootstrap/app.php';
 $kernel = $app->make(Kernel::class);
@@ -207,13 +212,13 @@ $verifier(
 $ready = $requete('GET', '/api/v1/health/ready');
 $readyOk = $ready['statut'] === 200
     && ($ready['corps']['pret'] ?? false) === true
-    && count($ready['corps']['cibles'] ?? []) === 4;
+    && count($ready['corps']['cibles'] ?? []) === 5;
 if (!$readyOk) {
     fwrite(STDERR, json_encode($ready, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
 }
 $verifier(
     $readyOk,
-    'la readiness vérifie les quatre magasins et leurs migrations',
+    'la readiness vérifie les cinq magasins et leurs migrations',
 );
 
 echo "\n";

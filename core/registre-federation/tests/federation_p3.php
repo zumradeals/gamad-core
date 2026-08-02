@@ -24,6 +24,9 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreProduits\PolitiqueProduits;
+use Gamad\RegistreProduits\RegistreProduits;
 
 require __DIR__ . '/../../registre-normes/bootstrap.php';
 require __DIR__ . '/../../registre-identites/src/PolitiqueInscription.php';
@@ -33,6 +36,10 @@ require __DIR__ . '/../../registre-identites/src/Ctr01.php';
 require __DIR__ . '/../../registre-acces/src/Magasin.php';
 require __DIR__ . '/../../registre-acces/src/Ctr16.php';
 require __DIR__ . '/../../registre-autorisation/src/Ctr03.php';
+require __DIR__ . '/../../registre-produits/src/PolitiqueProduits.php';
+require __DIR__ . '/../../registre-produits/src/SchemaProduits.php';
+require __DIR__ . '/../../registre-produits/src/Magasin.php';
+require __DIR__ . '/../../registre-produits/src/RegistreProduits.php';
 require __DIR__ . '/../src/PolitiqueFederation.php';
 require __DIR__ . '/../src/SchemaFederation.php';
 require __DIR__ . '/../src/Federation.php';
@@ -42,6 +49,7 @@ $fichiers = [
     'index' => $prefixe . '-index.sqlite',
     'identites' => $prefixe . '-identites.sqlite',
     'acces' => $prefixe . '-acces.sqlite',
+    'produits' => $prefixe . '-produits.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -59,9 +67,32 @@ BaselineOperationnelle::standard()->reconstruire($index);
 
 $registre = IdentiteMagasin::connecter($fichiers['identites']);
 $magasin = AccesMagasin::connecter($fichiers['acces']);
+$magasinProduits = ProduitsMagasin::connecter($fichiers['produits']);
 $ctr01 = new Ctr01($index, $registre);
-$federation = new Federation($index, $registre, $magasin);
+$produits = new RegistreProduits($index, $registre, $magasinProduits, $ctr01);
+$federation = new Federation($index, $registre, $magasin, $magasinProduits, $ctr01, $produits);
 $ctr16 = new Ctr16($magasin);
+
+// CAP-CORE-011 en écriture gouvernée : le pilote GamaDrive est inscrit puis
+// activé avec sa fédération explicitement autorisée, reproduisant l'état
+// RECONNU déjà porté par la baseline documentaire. Wasplex reste en
+// PREPARATION, non fédérable, comme le bootstrap de production le fait.
+$dossierProduit = static fn (array $extra = []): array => $extra + [
+    'politique' => PolitiqueProduits::POLITIQUE,
+    'source' => PolitiqueProduits::SOURCE,
+    'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION,
+    'preuve' => 'EVT-P3-PRD-' . strtoupper(bin2hex(random_bytes(4))),
+];
+foreach (['PRD-GAMAD-002' => 'GamaDrive', 'PRD-GAMAD-003' => 'Wasplex'] as $ref => $libelle) {
+    $produits->inscrireProduit($dossierProduit([
+        'reference' => $ref, 'identite_reference' => $ref,
+        'nom_canonique' => $libelle, 'nom_affichage' => $libelle,
+        'type_produit' => $ref === 'PRD-GAMAD-002' ? 'SATELLITE' : 'PARTENAIRE',
+        'proprietaire_reference' => PolitiqueInscription::AUTORITE_INSCRIPTION,
+    ]));
+}
+$produits->modifierProduit('PRD-GAMAD-002', $dossierProduit(['federation_autorisee' => true]));
+$produits->activerProduit('PRD-GAMAD-002', $dossierProduit());
 
 $echecs = 0;
 echo "GARDE — FÉDÉRATION DES SATELLITES (CAP-CORE-022)\n\n";
@@ -121,7 +152,7 @@ $session = $ouvrirSession($porteur);
 $catalogue = $federation->catalogueProduits();
 $parReference = array_column($catalogue, null, 'reference');
 $verifier(
-    count($catalogue) === 4
+    count($catalogue) === 2
         && ($parReference[$DRIVE]['federable'] ?? null) === true
         && ($parReference[$WASPLEX]['federable'] ?? null) === false,
     'le catalogue des produits distingue les satellites fédérables',

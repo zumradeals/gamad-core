@@ -16,7 +16,7 @@
         "sources": 26,
         "fonctions": 24,
         "entites": 7,
-        "regles": 23,
+        "regles": 31,
         "mandats": 1,
         "indetermines": 95
     },
@@ -1961,6 +1961,13 @@
                     "libelle": "Politique technique des moyens d’accès personnels",
                     "source": "core/registre-acces — CAP-CORE-005",
                     "adoption_reference": null
+                },
+                {
+                    "reference": "POL-PRODUITS-V1",
+                    "version": "1.0",
+                    "libelle": "Politique technique du registre des produits",
+                    "source": "core/registre-produits — CAP-CORE-011",
+                    "adoption_reference": null
                 }
             ]
         },
@@ -2227,6 +2234,70 @@
                     "action": "retirer-un-moyen-d-accès-de-son-identité",
                     "sujet_type": null,
                     "motif": "Une identité authentifiée retire l'un de ses moyens d'accès, jamais le dernier."
+                },
+                {
+                    "id": 24,
+                    "politique_reference": "POL-PRODUITS-V1",
+                    "effet": "PERMET",
+                    "action": "lire-un-produit-non-actif-du-registre",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "L'autorité d'inscription lit tout produit du registre, actif ou non. Un propriétaire lit sa propre fiche par une borne posée dans le code, pas par cette règle."
+                },
+                {
+                    "id": 25,
+                    "politique_reference": "POL-PRODUITS-V1",
+                    "effet": "PERMET",
+                    "action": "inscrire-un-produit-dans-le-registre",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription crée une fiche produit, en PREPARATION, jamais activée automatiquement."
+                },
+                {
+                    "id": 26,
+                    "politique_reference": "POL-PRODUITS-V1",
+                    "effet": "PERMET",
+                    "action": "modifier-les-métadonnées-d-un-produit-inscrit",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription modifie les métadonnées non immuables d'un produit ; la référence et l'identité canonique ne changent jamais."
+                },
+                {
+                    "id": 27,
+                    "politique_reference": "POL-PRODUITS-V1",
+                    "effet": "PERMET",
+                    "action": "activer-un-produit-inscrit",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription active un produit. Un produit ne s'active jamais lui-même, quelle que soit la décision rendue ici."
+                },
+                {
+                    "id": 28,
+                    "politique_reference": "POL-PRODUITS-V1",
+                    "effet": "PERMET",
+                    "action": "suspendre-un-produit-actif",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription suspend un produit actif. La suspension ferme immédiatement sa fédérabilité."
+                },
+                {
+                    "id": 29,
+                    "politique_reference": "POL-PRODUITS-V1",
+                    "effet": "PERMET",
+                    "action": "retirer-un-produit-du-registre",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription retire un produit. Le retrait est en ajout seul et ne réutilise jamais la référence."
+                },
+                {
+                    "id": 30,
+                    "politique_reference": "POL-PRODUITS-V1",
+                    "effet": "PERMET",
+                    "action": "déclarer-un-environnement-de-produit",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription déclare un environnement. Une URL de production doit être HTTPS ; aucun secret n'y figure."
+                },
+                {
+                    "id": 31,
+                    "politique_reference": "POL-PRODUITS-V1",
+                    "effet": "PERMET",
+                    "action": "fermer-un-environnement-de-produit",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription ferme un environnement. La fermeture est datée et ne supprime rien."
                 }
             ]
         },

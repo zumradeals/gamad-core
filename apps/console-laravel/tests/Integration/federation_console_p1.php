@@ -23,6 +23,9 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreProduits\PolitiqueProduits;
+use Gamad\RegistreProduits\RegistreProduits;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\ViewErrorBag;
@@ -34,6 +37,7 @@ $fichiers = [
     'acces' => $temp.'-acces.sqlite',
     'identites' => $temp.'-identites.sqlite',
     'journal' => $temp.'-journal.sqlite',
+    'produits' => $temp.'-produits.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -65,6 +69,8 @@ $environnement = [
     'IDENTITY_REGISTRY_PATH' => $fichiers['identites'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
+    'PRODUCT_REGISTRY_URL' => '',
+    'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -85,6 +91,27 @@ $registre = IdentiteMagasin::connecter();
 JournalMagasin::connecter();
 
 $ctr01 = new Ctr01($index, $registre);
+
+// CAP-CORE-011 en écriture gouvernée : GamaDrive est inscrit puis activé avec
+// sa fédération explicitement autorisée. Wasplex reste en PREPARATION.
+$registreProduits = new RegistreProduits($index, $registre, ProduitsMagasin::connecter(), $ctr01);
+$dossierProduit = static fn (array $extra = []): array => $extra + [
+    'politique' => PolitiqueProduits::POLITIQUE,
+    'source' => PolitiqueProduits::SOURCE,
+    'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION,
+    'preuve' => 'EVT-CONSOLE-P1-PRD-' . strtoupper(bin2hex(random_bytes(4))),
+];
+foreach (['PRD-GAMAD-002' => 'GAMAD Drive', 'PRD-GAMAD-003' => 'Wasplex'] as $ref => $libelle) {
+    $registreProduits->inscrireProduit($dossierProduit([
+        'reference' => $ref, 'identite_reference' => $ref,
+        'nom_canonique' => $libelle, 'nom_affichage' => $libelle,
+        'type_produit' => $ref === 'PRD-GAMAD-002' ? 'SATELLITE' : 'PARTENAIRE',
+        'proprietaire_reference' => PolitiqueInscription::AUTORITE_INSCRIPTION,
+    ]));
+}
+$registreProduits->modifierProduit('PRD-GAMAD-002', $dossierProduit(['federation_autorisee' => true]));
+$registreProduits->activerProduit('PRD-GAMAD-002', $dossierProduit());
+
 $porteur = (string) $ctr01->inscrireIdentite([
     'canal' => 'AUTORITE',
     'type' => 'personne',

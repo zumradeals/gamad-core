@@ -14,6 +14,7 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -212,6 +213,7 @@ final class SatelliteConsoleController
             $index,
             $registre,
             AccesMagasin::connecter(),
+            ProduitsMagasin::connecter(),
             new Ctr01($index, $registre),
         );
     }

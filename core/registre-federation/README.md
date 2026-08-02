@@ -19,7 +19,11 @@ identité authentifiée (CAP-CORE-005)
 Il ne crée aucun compte métier, ne connaît ni plan, ni quota, ni abonnement, ni
 contenu. Il n’écrit aucune règle d’autorisation : la politique technique
 `POL-FEDERATION-SATELLITES-V1` est portée par l’index et évaluée par
-CAP-CORE-004.
+CAP-CORE-004. Il ne possède plus le catalogue des produits : `Federation::catalogueProduits()`
+lit le registre persistant et gouverné de CAP-CORE-011
+(`core/registre-produits`), pas un marqueur de texte libre dans l’index. Un
+produit est fédérable seulement s’il existe dans ce registre, si son cycle
+courant est `ACTIF`, et si sa fédération y est explicitement autorisée.
 
 ## Les quatre bornes d’un jeton
 
@@ -51,6 +55,9 @@ php core/registre-federation/tests/federation_p3.php
 php apps/console-laravel/tests/Integration/federation_v1_p1.php
 php apps/console-laravel/tests/Integration/federation_console_p1.php
 ```
+
+Voir aussi `core/registre-produits/README.md` (CAP-CORE-011), dont ce module
+dépend désormais pour son catalogue.
 
 ## Administration
 

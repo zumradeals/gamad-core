@@ -4,32 +4,42 @@ Ce catalogue est la carte de travail du Core. Les états sont établis par
 inspection du code, des tests et de la CI ; ils ne sont jamais déduits d’un
 document.
 
+Le catalogue n’utilise désormais que deux statuts : `GO` et `NO GO`. `GO`
+signifie que le comportement nécessaire à la production est codé, éprouvé et
+raccordé à l’exploitation — pas seulement documenté. `NO GO` couvre tout le
+reste, y compris ce qui était auparavant nuancé en `ABSENT`, `DÉMONSTRATIF`,
+`PARTIEL`, `IMPLÉMENTÉ`, `EXPLOITÉ`, `CONTRADICTOIRE` ou `À VÉRIFIER`. Cette
+simplification délibérée réduit l’information disponible dans ce tableau ;
+elle ne réduit rien du code lui-même. La colonne « Code livré » reste la
+source la plus fine pour qui veut savoir ce qui existe réellement derrière un
+`NO GO`.
+
 | Référence | Capacité | Finalité | Code livré | État réel |
 |---|---|---|---|---|
-| CAP-CORE-001 | Identity Registry | Reconnaître les identités canoniques et leurs relations minimales | `core/registre-identites`, console et API v1 | `IMPLÉMENTÉ` — garde et intégrations vertes |
-| CAP-CORE-002 | Organizations Registry | Gérer les organisations et leur structure commune | aucun | `ABSENT` — l’ancien module ne lisait qu’un texte |
-| CAP-CORE-003 | Authorities & Mandates | Résoudre les fonctions, titulaires, mandats et délégations | `core/registre-autorites` | `IMPLÉMENTÉ` — résolution datée éprouvée |
-| CAP-CORE-004 | Authorization | Décider si une action commune est permise ou refusée | `core/registre-autorisation` | `IMPLÉMENTÉ` — refus par défaut éprouvé |
-| CAP-CORE-005 | Authentication & Access | Authentifier, ouvrir et révoquer les sessions | `core/registre-acces`, passkeys, écran Mon accès | `IMPLÉMENTÉ` — sessions, révocation, WebAuthn, codes de secours à usage unique et garde du dernier moyen d’accès, tous éprouvés |
-| CAP-CORE-006 | Sources Registry | Identifier les sources techniques reconnues | `core/registre-sources` | `PARTIEL` — lecture de l’index seulement |
-| CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | `core/registre-normes` | `PARTIEL` — lecture et diagnostic ; aucune écriture gouvernée |
-| CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | aucun ; traces dans le journal opérationnel | `ABSENT` |
-| CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | aucun ; contrats portés par le code et `openapi/core-v1.yaml` | `ABSENT` |
-| CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | aucun | `ABSENT` |
-| CAP-CORE-011 | Products Registry | Référencer les satellites, services et points d’entrée | données techniques dans l’index, catalogue servi par `core/registre-federation` | `PARTIEL` — quatre produits en données, lecture et distinction du fédérable ; aucune écriture gouvernée |
-| CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | aucun | `ABSENT` |
-| CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | `core/journal-operationnel` | `IMPLÉMENTÉ` — chaîne append-only vérifiée, trigger PostgreSQL |
-| CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-operationnel` en écriture seule | `PARTIEL` — aucune publication vers les satellites |
-| CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | empreinte de baseline, chaîne du journal | `PARTIEL` — pas de service d’empreintes général |
-| CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | aucun ; secrets hors dépôt | `ABSENT` |
-| CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `ABSENT` |
-| CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `ABSENT` |
-| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation`, écran Continuité | `EXPLOITÉ` — copie chiffrée hors machine sur destination réelle, TLS épinglé, et exercice de restauration complet exécuté depuis cette copie le 1er août 2026 |
-| CAP-CORE-020 | Directory & Atlas | Produire un annuaire opérationnel des capacités et produits | aucun | `ABSENT` — l’ancien module dérivait d’un corpus supprimé |
-| CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | aucun | `ABSENT` |
-| CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | `core/registre-federation`, API v1 `/produits*` | `IMPLÉMENTÉ` — parcours pilote GamaDrive éprouvé ; aucun satellite réel raccordé |
+| CAP-CORE-001 | Identity Registry | Reconnaître les identités canoniques et leurs relations minimales | `core/registre-identites`, console et API v1 | `GO` — garde et intégrations vertes |
+| CAP-CORE-002 | Organizations Registry | Gérer les organisations et leur structure commune | aucun | `NO GO` — l’ancien module ne lisait qu’un texte |
+| CAP-CORE-003 | Authorities & Mandates | Résoudre les fonctions, titulaires, mandats et délégations | `core/registre-autorites` | `GO` — résolution datée éprouvée |
+| CAP-CORE-004 | Authorization | Décider si une action commune est permise ou refusée | `core/registre-autorisation` | `GO` — refus par défaut éprouvé |
+| CAP-CORE-005 | Authentication & Access | Authentifier, ouvrir et révoquer les sessions | `core/registre-acces`, passkeys, écran Mon accès | `GO` — sessions, révocation, WebAuthn, codes de secours à usage unique et garde du dernier moyen d’accès, tous éprouvés |
+| CAP-CORE-006 | Sources Registry | Identifier les sources techniques reconnues | `core/registre-sources` | `NO GO` — lecture de l’index seulement |
+| CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | `core/registre-normes` | `NO GO` — lecture et diagnostic ; aucune écriture gouvernée |
+| CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | aucun ; traces dans le journal opérationnel | `NO GO` |
+| CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | aucun ; contrats portés par le code et `openapi/core-v1.yaml` | `NO GO` |
+| CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | aucun | `NO GO` |
+| CAP-CORE-011 | Products Registry | Référencer, gouverner et faire vivre le cycle des produits du Core | `core/registre-produits`, bootstrap idempotent, API v1 `/produits*`, écran Produits, `CAP-CORE-022` raccordé au registre | `GO` — registre persistant gouverné ; CI complète (11 contrôles GitHub, PR #58) verte sur `claude/cap-core-011-products-registry-go` le 2 août 2026 |
+| CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | aucun | `NO GO` |
+| CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | `core/journal-operationnel` | `GO` — chaîne append-only vérifiée, trigger PostgreSQL |
+| CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-operationnel` en écriture seule | `NO GO` — aucune publication vers les satellites |
+| CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | empreinte de baseline, chaîne du journal | `NO GO` — pas de service d’empreintes général |
+| CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | aucun ; secrets hors dépôt | `NO GO` |
+| CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `NO GO` |
+| CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `NO GO` |
+| CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation`, écran Continuité | `GO` — copie chiffrée hors machine sur destination réelle, TLS épinglé, et exercice de restauration complet exécuté depuis cette copie le 1er août 2026 |
+| CAP-CORE-020 | Directory & Atlas | Produire un annuaire opérationnel des capacités et produits | aucun | `NO GO` — l’ancien module dérivait d’un corpus supprimé |
+| CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | aucun | `NO GO` |
+| CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | `core/registre-federation`, API v1 `/produits*` | `GO` — parcours pilote GamaDrive éprouvé ; aucun satellite réel raccordé |
 
-Un état `ABSENT` est une information utile : il nomme un chantier ouvert plutôt
+Un état `NO GO` est une information utile : il nomme un chantier ouvert plutôt
 qu’il ne dissimule un manque derrière un module qui ne rendait aucun service.
 
 ## Regroupement fonctionnel
@@ -84,11 +94,12 @@ Pour chaque capacité :
 
 Le chemin critique est livré. La première tranche de CAP-CORE-022 l’est aussi :
 le Core sait ouvrir une identité sur GamaDrive, borner le jeton, le révoquer et
-le prouver. Les chantiers ouverts, par ordre d’utilité :
+le prouver. CAP-CORE-011 est livré à son tour : le catalogue fédéré que
+CAP-CORE-022 sert n’est plus dérivé d’un marqueur de texte, il vient d’un
+registre persistant et gouverné. Les chantiers ouverts, par ordre d’utilité :
 
 ```text
 intégration réelle de GamaDrive V2 sur CAP-CORE-022
-→ CAP-CORE-011 registre des produits, en écriture gouvernée
 → CAP-CORE-002 organisations
 → CAP-CORE-014 publication d’événements vers les satellites
 → CAP-CORE-021 Matching
@@ -102,8 +113,9 @@ magasin d’accès ne contient toujours qu’un seul authentificateur, constaté
 1er août 2026 par l’exercice de restauration.
 
 Cette proposition reste une proposition : elle se confirme produit par produit.
-Tant qu’aucun satellite ne consomme la fédération, elle est `IMPLÉMENTÉE`, pas
-`EXPLOITÉE`.
+Tant qu’aucun satellite ne consomme la fédération, CAP-CORE-022 reste `GO` au
+sens technique de ce catalogue, mais n’est pas encore éprouvée en exploitation
+réelle.
 
 La continuité est passée devant le reste, et elle est faite. Le 1er août 2026,
 l’inspection du serveur montrait huit lots de sauvegarde, tous sur le disque
@@ -111,4 +123,4 @@ qu’ils protégeaient, et aucune copie ailleurs. Le même jour, une copie chiff
 est partie vers une destination distincte, en a été récupérée, et a été
 rechargée sur quatre bases isolées — sept identités dérivées, un
 authentificateur, vingt-deux événements relus. C’est cette exécution, et non le
-code qui la permet, qui fait passer CAP-CORE-019 à `EXPLOITÉ`.
+code qui la permet, qui fait passer CAP-CORE-019 à `GO`.

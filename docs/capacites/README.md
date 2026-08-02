@@ -34,15 +34,15 @@ Prochain chantier :
 
 ## Statuts
 
-- `ABSENT`
-- `DÉMONSTRATIF`
-- `PARTIEL`
-- `IMPLÉMENTÉ`
-- `EXPLOITÉ`
-- `CONTRADICTOIRE`
-- `À VÉRIFIER`
+- `GO`
+- `NO GO`
 
-Un statut doit être fondé sur l’inspection du code et des tests. Il ne doit jamais être déduit d’un document.
+`GO` signifie que le comportement nécessaire à la production est codé,
+éprouvé et raccordé à l’exploitation. `NO GO` couvre tout le reste, y compris
+les anciens statuts nuancés (`ABSENT`, `DÉMONSTRATIF`, `PARTIEL`,
+`IMPLÉMENTÉ`, `EXPLOITÉ`, `CONTRADICTOIRE`, `À VÉRIFIER`), retirés du
+vocabulaire de ce catalogue. Un statut doit être fondé sur l’inspection du
+code, des tests et de la CI. Il ne doit jamais être déduit d’un document.
 
 ## Catalogue initial
 
@@ -53,4 +53,5 @@ Les fiches individuelles sont ajoutées ou complétées au début du chantier te
 Fiches disponibles :
 
 - [`CAP-CORE-001-identity-registry.md`](CAP-CORE-001-identity-registry.md)
+- [`CAP-CORE-011-products-registry.md`](CAP-CORE-011-products-registry.md)
 - [`CAP-CORE-022-satellite-federation.md`](CAP-CORE-022-satellite-federation.md)

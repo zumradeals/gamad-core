@@ -17,9 +17,14 @@ use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
+use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
+use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreProduits\PolitiqueProduits;
+use Gamad\RegistreProduits\RegistreProduits;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
@@ -30,6 +35,7 @@ $fichiers = [
     'acces' => $temp . '-acces.sqlite',
     'identites' => $temp . '-identites.sqlite',
     'journal' => $temp . '-journal.sqlite',
+    'produits' => $temp . '-produits.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -60,6 +66,8 @@ $environnement = [
     'IDENTITY_REGISTRY_PATH' => $fichiers['identites'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
+    'PRODUCT_REGISTRY_URL' => '',
+    'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -72,9 +80,32 @@ require $application . '/vendor/autoload.php';
 $DRIVE = 'PRD-GAMAD-002';
 $WASPLEX = 'PRD-GAMAD-003';
 
-BaselineOperationnelle::standard()->reconstruire(Db::connect());
-IdentiteMagasin::connecter();
+$index = Db::connect();
+BaselineOperationnelle::standard()->reconstruire($index);
+$registreIdentites = IdentiteMagasin::connecter();
 $ctr16 = new Ctr16(AccesMagasin::connecter());
+
+// CAP-CORE-011 en écriture gouvernée : GamaDrive est inscrit puis activé avec
+// sa fédération explicitement autorisée, reproduisant l'état RECONNU déjà
+// porté par la baseline documentaire. Wasplex reste en PREPARATION.
+$ctr01 = new Ctr01($index, $registreIdentites);
+$registreProduits = new RegistreProduits($index, $registreIdentites, ProduitsMagasin::connecter(), $ctr01);
+$dossierProduit = static fn (array $extra = []): array => $extra + [
+    'politique' => PolitiqueProduits::POLITIQUE,
+    'source' => PolitiqueProduits::SOURCE,
+    'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION,
+    'preuve' => 'EVT-V1-P1-PRD-' . strtoupper(bin2hex(random_bytes(4))),
+];
+foreach (['PRD-GAMAD-002' => 'GamaDrive', 'PRD-GAMAD-003' => 'Wasplex'] as $ref => $libelle) {
+    $registreProduits->inscrireProduit($dossierProduit([
+        'reference' => $ref, 'identite_reference' => $ref,
+        'nom_canonique' => $libelle, 'nom_affichage' => $libelle,
+        'type_produit' => $ref === 'PRD-GAMAD-002' ? 'SATELLITE' : 'PARTENAIRE',
+        'proprietaire_reference' => PolitiqueInscription::AUTORITE_INSCRIPTION,
+    ]));
+}
+$registreProduits->modifierProduit('PRD-GAMAD-002', $dossierProduit(['federation_autorisee' => true]));
+$registreProduits->activerProduit('PRD-GAMAD-002', $dossierProduit());
 $secrets = [
     'AUT-GAMAD-001' => 'Secret-Federation-Autorite-1!',
     $DRIVE => 'Secret-Federation-GamaDrive-1!',
@@ -166,7 +197,7 @@ $catalogue = $requete('GET', '/api/v1/produits', null, $sessionAutorite);
 $produits = array_column($catalogue['corps']['produits'] ?? [], null, 'reference');
 $verifier(
     $catalogue['statut'] === 200
-        && count($produits) === 4
+        && count($produits) === 2
         && ($produits[$DRIVE]['federable'] ?? null) === true
         && ($produits[$WASPLEX]['federable'] ?? null) === false,
     'le catalogue des satellites distingue le produit reconnu du partenaire externe',

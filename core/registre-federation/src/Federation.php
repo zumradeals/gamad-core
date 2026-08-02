@@ -6,6 +6,7 @@ namespace Gamad\RegistreFederation;
 
 use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\PolitiqueInscription;
+use Gamad\RegistreProduits\RegistreProduits;
 
 /**
  * Fédération des satellites (CAP-CORE-022).
@@ -32,19 +33,24 @@ final class Federation
     public const CAPACITE = 'CAP-CORE-022';
 
     private Ctr01 $identites;
+    private RegistreProduits $produits;
 
     /**
-     * @param \PDO $index          index technique reconstructible (entités, états) ;
-     * @param \PDO $registre       registre persistant des identités et des liens ;
-     * @param \PDO $magasinAcces   magasin d'exploitation portant sessions et jetons.
+     * @param \PDO $index           index technique reconstructible (entités, états) ;
+     * @param \PDO $registre        registre persistant des identités et des liens ;
+     * @param \PDO $magasinAcces    magasin d'exploitation portant sessions et jetons ;
+     * @param \PDO $magasinProduits registre persistant des produits (CAP-CORE-011).
      */
     public function __construct(
         private \PDO $index,
         private \PDO $registre,
         private \PDO $magasinAcces,
+        private \PDO $magasinProduits,
         ?Ctr01 $identites = null,
+        ?RegistreProduits $produits = null,
     ) {
         $this->identites = $identites ?? new Ctr01($index, $registre);
+        $this->produits = $produits ?? new RegistreProduits($index, $registre, $magasinProduits, $this->identites);
         SchemaFederation::migrer($magasinAcces);
     }
 
@@ -52,11 +58,13 @@ final class Federation
     // Lectures
 
     /**
-     * Catalogue des produits connus du Core (CAP-CORE-011 en lecture).
+     * Catalogue des produits connus du Core, lu depuis le registre persistant
+     * CAP-CORE-011 — plus depuis un marqueur de texte libre dans l'index.
      *
-     * `federable` ne juge pas le produit : il constate qu'un état dérivé le
-     * reconnaît. Un partenaire externe non entériné reste listé, et reste
-     * fermé.
+     * `federable` constate trois faits du registre : le produit existe, son
+     * cycle courant est `ACTIF`, et sa fédération est explicitement autorisée
+     * (`federation_autorisee`). Un partenaire externe non entériné reste
+     * listé, et reste fermé.
      *
      * @return list<array<string,mixed>>
      */
@@ -65,13 +73,12 @@ final class Federation
         return array_values(array_map(
             static fn (array $produit): array => [
                 'reference' => $produit['reference'],
-                'libelle' => $produit['libelle'],
+                'libelle' => $produit['nom_affichage'],
                 'etat' => $produit['etat'],
-                'federable' => is_string($produit['etat'])
-                    && str_contains($produit['etat'], PolitiqueFederation::MARQUEUR_RECONNU),
-                'regime' => $produit['regime'],
+                'federable' => $produit['etat'] === 'ACTIF' && $produit['federation_autorisee'] === true,
+                'regime' => 'INSCRIT_AU_REGISTRE_PRODUITS',
             ],
-            $this->identites->resoudreInventaire('produit'),
+            $this->produits->listerProduits(),
         ));
     }
 
@@ -525,6 +532,33 @@ final class Federation
              WHERE session_empreinte = ? AND revoque_le IS NULL AND consomme_le IS NULL'
         );
         $st->execute([date('c'), $motif, $sessionEmpreinte]);
+
+        return $st->rowCount();
+    }
+
+    /**
+     * Ferme tous les jetons fédérés encore ouverts d'un produit.
+     *
+     * CAP-CORE-011 appelle ceci lorsqu'un produit est suspendu ou retiré : la
+     * fermeture de la fédérabilité au registre ne referme pas, à elle seule,
+     * les jetons déjà émis — `verifierJeton()` les refuserait à leur prochaine
+     * présentation, mais un accès encore actif ne doit pas attendre cette
+     * prochaine présentation pour être fermé.
+     */
+    public static function revoquerJetonsDuProduit(
+        \PDO $magasinAcces,
+        string $produit,
+        string $motif,
+    ): int {
+        if (!SchemaFederation::presente($magasinAcces)) {
+            return 0;
+        }
+
+        $st = $magasinAcces->prepare(
+            'UPDATE jeton_federe SET revoque_le = ?, motif_revocation = ?
+             WHERE produit_reference = ? AND revoque_le IS NULL AND consomme_le IS NULL'
+        );
+        $st->execute([date('c'), $motif, $produit]);
 
         return $st->rowCount();
     }

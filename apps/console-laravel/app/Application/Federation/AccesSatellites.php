@@ -13,6 +13,7 @@ use Gamad\RegistreFederation\Federation;
 use Gamad\RegistreFederation\PolitiqueFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 
 /**
  * Cas d'usage de la fédération des satellites (CAP-CORE-022).
@@ -604,6 +605,7 @@ final class AccesSatellites
             Db::connect(),
             IdentiteMagasin::connecter(),
             AccesMagasin::connecter(),
+            ProduitsMagasin::connecter(),
         );
     }
 

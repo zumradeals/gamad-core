@@ -91,10 +91,4 @@ final class PolitiqueFederation
 
     /** Relation créée lorsque le provisionnement n'en précise aucune. */
     public const RELATION_PAR_DEFAUT = 'UTILISATEUR';
-
-    /**
-     * Marqueur d'un produit reconnu dans l'état dérivé de l'index. Un partenaire
-     * externe non entériné n'est pas fédérable.
-     */
-    public const MARQUEUR_RECONNU = 'RECONNU';
 }
