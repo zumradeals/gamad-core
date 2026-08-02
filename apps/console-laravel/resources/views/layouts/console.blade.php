@@ -95,6 +95,14 @@
                 </span>
                 Politiques
             </a>
+            <a class="nav__link"
+               href="{{ route('console.contrats.index') }}"
+               @if(request()->routeIs('console.contrats.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M8 4h8l4 4v12H4V4z"/><path d="M8 4v4H4"/><path d="M9 13h6M9 17h6"/></svg>
+                </span>
+                Contrats
+            </a>
 
             <span class="nav__label">Protéger</span>
             <a class="nav__link"
