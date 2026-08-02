@@ -40,6 +40,8 @@ jobs:
             garde: core/registre-sources/tests/sources_p3.php
           - capacite: CAP-CORE-007 (normes)
             garde: core/registre-normes/tests/temporel_p3.php
+          - capacite: CAP-CORE-011 (produits)
+            garde: core/registre-produits/tests/produits_p3.php
           - capacite: CAP-CORE-022 (fédération)
             garde: core/registre-federation/tests/federation_p3.php
 
@@ -110,6 +112,12 @@ jobs:
 
       - name: Éprouver la console des satellites
         run: php apps/console-laravel/tests/Integration/federation_console_p1.php
+
+      - name: Éprouver le registre des produits
+        run: php apps/console-laravel/tests/Integration/produits_v1_p1.php
+
+      - name: Éprouver la console des produits
+        run: php apps/console-laravel/tests/Integration/produits_console_p1.php
 
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php
