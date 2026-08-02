@@ -11,6 +11,7 @@ use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
 use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\PasskeyController;
+use App\Http\Controllers\ProduitConsoleController;
 use App\Http\Controllers\SatelliteConsoleController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +54,37 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/satellites/{produit}/identifiants/retrait', [SatelliteConsoleController::class, 'retirer'])
         ->middleware('throttle:10,1')
         ->name('console.satellites.retirer');
+
+    // CAP-CORE-011 — registre des produits. Toute écriture passe par
+    // `AccesProduits`, le même cas d'usage gouverné que l'API v1.
+    Route::get('/produits', [ProduitConsoleController::class, 'index'])
+        ->name('console.produits.index');
+    Route::get('/produits/nouveau', [ProduitConsoleController::class, 'create'])
+        ->name('console.produits.create');
+    Route::post('/produits', [ProduitConsoleController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('console.produits.store');
+    Route::get('/produits/{reference}', [ProduitConsoleController::class, 'show'])
+        ->name('console.produits.show');
+    Route::post('/produits/{reference}/modification', [ProduitConsoleController::class, 'modifier'])
+        ->middleware('throttle:20,1')
+        ->name('console.produits.modifier');
+    Route::post('/produits/{reference}/activation', [ProduitConsoleController::class, 'activer'])
+        ->middleware('throttle:20,1')
+        ->name('console.produits.activer');
+    Route::post('/produits/{reference}/suspension', [ProduitConsoleController::class, 'suspendre'])
+        ->middleware('throttle:20,1')
+        ->name('console.produits.suspendre');
+    Route::post('/produits/{reference}/retrait', [ProduitConsoleController::class, 'retirer'])
+        ->middleware('throttle:20,1')
+        ->name('console.produits.retirer');
+    Route::post('/produits/{reference}/environnements', [ProduitConsoleController::class, 'declarerEnvironnement'])
+        ->middleware('throttle:20,1')
+        ->name('console.produits.environnements.declarer');
+    Route::post(
+        '/produits/{reference}/environnements/{id}/fermeture',
+        [ProduitConsoleController::class, 'fermerEnvironnement'],
+    )->whereNumber('id')->middleware('throttle:20,1')->name('console.produits.environnements.fermer');
 
     // CAP-CORE-005 — moyens d'accès personnels. Le sujet vient de la session ;
     // on ne gère jamais l'accès d'autrui.
