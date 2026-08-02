@@ -57,6 +57,7 @@ $connexions = [
     'PRODUCT_REGISTRY_URL' => 'postgresql://exemple@127.0.0.1:1/produits_inexistants',
     'SOURCE_REGISTRY_URL' => 'postgresql://exemple@127.0.0.1:1/sources_inexistantes',
     'POLICY_REGISTRY_URL' => 'postgresql://exemple@127.0.0.1:1/politiques_inexistantes',
+    'CONTRACT_REGISTRY_URL' => 'postgresql://exemple@127.0.0.1:1/contrats_inexistants',
 ];
 
 $executer = static function (array $environnement, string $commande) use ($application): string {
@@ -92,6 +93,7 @@ $vides = [
     'PRODUCT_REGISTRY_URL' => '',
     'SOURCE_REGISTRY_URL' => '',
     'POLICY_REGISTRY_URL' => '',
+    'CONTRACT_REGISTRY_URL' => '',
 ];
 
 // 1 — connexions vides jusque dans le cache : la garde bloque. C'est son rôle,
