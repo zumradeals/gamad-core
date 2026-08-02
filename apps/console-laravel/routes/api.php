@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\FederationController;
 use App\Http\Controllers\Api\V1\FondationController;
 use App\Http\Controllers\Api\V1\IdentiteController;
 use App\Http\Controllers\Api\V1\PasskeySessionController;
+use App\Http\Controllers\Api\V1\ProduitController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
@@ -42,6 +43,28 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
             ->middleware('throttle:60,1');
         Route::post('/produits/{produit}/revocation', [FederationController::class, 'revoquer'])
             ->middleware('throttle:20,1');
+
+        // CAP-CORE-011 — registre des produits. `{reference}` est la fiche
+        // opérationnelle gouvernée, distincte de l'audience fédérée ci-dessus
+        // même si les deux partagent la même valeur pour un satellite donné.
+        Route::post('/produits', [ProduitController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('/produits/{reference}', [ProduitController::class, 'show']);
+        Route::patch('/produits/{reference}', [ProduitController::class, 'update'])
+            ->middleware('throttle:20,1');
+        Route::post('/produits/{reference}/activation', [ProduitController::class, 'activer'])
+            ->middleware('throttle:20,1');
+        Route::post('/produits/{reference}/suspension', [ProduitController::class, 'suspendre'])
+            ->middleware('throttle:20,1');
+        Route::post('/produits/{reference}/retrait', [ProduitController::class, 'retirer'])
+            ->middleware('throttle:20,1');
+        Route::get('/produits/{reference}/environnements', [ProduitController::class, 'environnements']);
+        Route::post('/produits/{reference}/environnements', [ProduitController::class, 'declarerEnvironnement'])
+            ->middleware('throttle:20,1');
+        Route::post(
+            '/produits/{reference}/environnements/{id}/fermeture',
+            [ProduitController::class, 'fermerEnvironnement'],
+        )->whereNumber('id')->middleware('throttle:20,1');
 
         Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat']);
         Route::post('/autorisation/decisions', [AutorisationController::class, 'store'])

@@ -15,6 +15,7 @@ tags:
   - name: Identités
   - name: Autorisation
   - name: Fédération
+  - name: Produits
 paths:
   /health/live:
     get:
@@ -427,6 +428,314 @@ paths:
           description: CAP-CORE-004 refuse la révocation.
         "422":
           description: Aucun accès actif à révoquer.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits/{reference}:
+    get:
+      tags: [Produits]
+      operationId: resoudreProduit
+      summary: Fiche opérationnelle d'un produit (CAP-CORE-011).
+      description: >-
+        Un produit ACTIF est visible de toute session. Un produit non actif
+        n'est visible qu'à son propriétaire ou à l'autorité d'inscription ;
+        les autres appelants reçoivent 404, sans distinguer l'inexistence du
+        refus.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Fiche du produit et ses environnements.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+    patch:
+      tags: [Produits]
+      operationId: modifierProduit
+      summary: Modifie les métadonnées non immuables d'un produit.
+      description: >-
+        La référence et l'identité canonique associée ne se modifient jamais.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom_canonique:
+                  type: string
+                  maxLength: 255
+                nom_affichage:
+                  type: string
+                  maxLength: 255
+                type_produit:
+                  type: string
+                  enum: [PORTAIL, SATELLITE, SERVICE_CORE, PARTENAIRE, APPLICATION_INTERNE]
+                proprietaire_reference:
+                  type: string
+                  maxLength: 64
+                federation_autorisee:
+                  type: boolean
+      responses:
+        "200":
+          description: Métadonnées mises à jour.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la modification.
+        "404":
+          description: Produit inconnu.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits:
+    post:
+      tags: [Produits]
+      operationId: inscrireProduit
+      summary: Inscrit un produit dans le registre, en PREPARATION.
+      description: >-
+        Aucune activation n'est automatique. L'identité canonique doit déjà
+        exister au Registre des identités, de type `produit`, et ne peut être
+        attachée qu'à un seul produit.
+      security:
+        - bearerSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                [reference, identite_reference, nom_canonique, nom_affichage, type_produit, proprietaire_reference]
+              properties:
+                reference:
+                  type: string
+                  maxLength: 64
+                identite_reference:
+                  type: string
+                  maxLength: 64
+                nom_canonique:
+                  type: string
+                  maxLength: 255
+                nom_affichage:
+                  type: string
+                  maxLength: 255
+                type_produit:
+                  type: string
+                  enum: [PORTAIL, SATELLITE, SERVICE_CORE, PARTENAIRE, APPLICATION_INTERNE]
+                proprietaire_reference:
+                  type: string
+                  maxLength: 64
+      responses:
+        "201":
+          description: Produit inscrit en PREPARATION.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'inscription.
+        "409":
+          description: Référence déjà utilisée ou identité déjà liée à un autre produit.
+        "422":
+          description: Dossier invalide, identité inconnue ou de type incorrect.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits/{reference}/activation:
+    post:
+      tags: [Produits]
+      operationId: activerProduit
+      summary: Active un produit inscrit (idempotente).
+      description: >-
+        Un produit ne s'active jamais lui-même. Recevable depuis PREPARATION
+        ou SUSPENDU seulement ; RETIRE est terminal.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif:
+                  type: string
+                  maxLength: 500
+      responses:
+        "200":
+          description: "Produit ACTIF (déjà actif : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'activation.
+        "404":
+          description: Produit inconnu.
+        "422":
+          description: Auto-activation ou état incompatible.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits/{reference}/suspension:
+    post:
+      tags: [Produits]
+      operationId: suspendreProduit
+      summary: Suspend un produit actif ; ferme sa fédérabilité et ses jetons ouverts.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif:
+                  type: string
+                  maxLength: 500
+      responses:
+        "200":
+          description: "Produit SUSPENDU (déjà suspendu : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la suspension.
+        "404":
+          description: Produit inconnu.
+        "422":
+          description: Seul un produit ACTIF se suspend.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits/{reference}/retrait:
+    post:
+      tags: [Produits]
+      operationId: retirerProduit
+      summary: Retire un produit du registre, en ajout seul et irréversible.
+      description: >-
+        Ne supprime rien ; la référence n'est jamais réutilisable.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif:
+                  type: string
+                  maxLength: 500
+      responses:
+        "200":
+          description: "Produit RETIRE (déjà retiré : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse le retrait.
+        "404":
+          description: Produit inconnu.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits/{reference}/environnements:
+    get:
+      tags: [Produits]
+      operationId: resoudreEnvironnements
+      summary: Environnements déclarés d'un produit, actifs et fermés.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Liste des environnements.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Produit inconnu ou non visible.
+    post:
+      tags: [Produits]
+      operationId: declarerEnvironnement
+      summary: Déclare ou remplace un environnement du produit.
+      description: >-
+        Une URL de production doit être HTTPS. Une nouvelle URL clôt
+        l'ancienne version active du même environnement plutôt que de la
+        réécrire. Une audience de fédération n'appartient jamais à deux
+        produits actifs.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [environnement, api_base_url, audience_federation]
+              properties:
+                environnement:
+                  type: string
+                  enum: [DEVELOPPEMENT, RECETTE, PRODUCTION]
+                api_base_url:
+                  type: string
+                  maxLength: 2048
+                health_url:
+                  type: string
+                  maxLength: 2048
+                audience_federation:
+                  type: string
+                  maxLength: 64
+                date_debut:
+                  type: string
+                  format: date
+      responses:
+        "201":
+          description: Environnement déclaré.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la déclaration.
+        "404":
+          description: Produit inconnu.
+        "422":
+          description: URL invalide ou audience déjà utilisée par un autre produit actif.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /produits/{reference}/environnements/{id}/fermeture:
+    post:
+      tags: [Produits]
+      operationId: fermerEnvironnement
+      summary: Ferme un environnement (idempotente) ; ne le supprime pas.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date_fin:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: "Environnement fermé (déjà fermé : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la fermeture.
+        "404":
+          description: Produit ou environnement inconnu.
         "503":
           description: Une dépendance requise est indisponible.
 components:
