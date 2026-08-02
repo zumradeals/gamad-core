@@ -160,11 +160,15 @@ l'API v1.
   `postgresql_p0.php` — cinq magasins PostgreSQL réels, sauvegarde et
   restauration, rejoués en local pendant ce chantier.
 
-**État réel :** `NO GO` au moment de ce commit — le code, les gardes locales
-(SQLite) et l'exercice PostgreSQL réel (sauvegarde/restauration) sont tous
-verts en local, mais la CI GitHub complète n'a pas encore été observée verte
-sur cette branche. Le catalogue passe cette capacité à `GO` dans un commit
-distinct, une fois la CI confirmée.
+**État réel :** `GO` — le code, les gardes (SQLite) et l'exercice PostgreSQL
+réel (sauvegarde/restauration) sont verts, et la CI GitHub complète (11
+contrôles : gardes de capacité CAP-CORE-001/003/004/005/006/007/011/022,
+socle-console-API, PostgreSQL réel, syntaxe PHP) a été observée verte sur
+`claude/cap-core-011-products-registry-go` (PR #58) le 2 août 2026, après
+correction d'un test (`console_ux_p1.php`) qui ne raccordait pas encore
+`PRODUCT_REGISTRY_PATH` et passait localement par accident sur un fichier
+SQLite de repli laissé par une exécution précédente — la CI, sur un clone
+propre, l'a détecté correctement.
 
 **Manques non bloquants :**
 

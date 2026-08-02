@@ -26,7 +26,7 @@ source la plus fine pour qui veut savoir ce qui existe réellement derrière un
 | CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | aucun ; traces dans le journal opérationnel | `NO GO` |
 | CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | aucun ; contrats portés par le code et `openapi/core-v1.yaml` | `NO GO` |
 | CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | aucun | `NO GO` |
-| CAP-CORE-011 | Products Registry | Référencer, gouverner et faire vivre le cycle des produits du Core | `core/registre-produits`, bootstrap idempotent, API v1 `/produits*`, écran Produits, `CAP-CORE-022` raccordé au registre | `NO GO` — registre persistant gouverné, garde et intégrations vertes en local, sauvegarde et restauration PostgreSQL réelles éprouvées en local ; passe à `GO` une fois la CI complète vérifiée sur la branche |
+| CAP-CORE-011 | Products Registry | Référencer, gouverner et faire vivre le cycle des produits du Core | `core/registre-produits`, bootstrap idempotent, API v1 `/produits*`, écran Produits, `CAP-CORE-022` raccordé au registre | `GO` — registre persistant gouverné ; CI complète (11 contrôles GitHub, PR #58) verte sur `claude/cap-core-011-products-registry-go` le 2 août 2026 |
 | CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | aucun | `NO GO` |
 | CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | `core/journal-operationnel` | `GO` — chaîne append-only vérifiée, trigger PostgreSQL |
 | CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-operationnel` en écriture seule | `NO GO` — aucune publication vers les satellites |
