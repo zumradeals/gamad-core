@@ -38,6 +38,7 @@ declare -A connexions=(
     [produits]="$(connexion "${GAMAD_PRODUCTS_PGSERVICE:-}" "${GAMAD_PRODUCTS_PGDATABASE:-}")"
     [sources]="$(connexion "${GAMAD_SOURCES_PGSERVICE:-}" "${GAMAD_SOURCES_PGDATABASE:-}")"
     [politiques]="$(connexion "${GAMAD_POLICIES_PGSERVICE:-}" "${GAMAD_POLICIES_PGDATABASE:-}")"
+    [contrats]="$(connexion "${GAMAD_CONTRACTS_PGSERVICE:-}" "${GAMAD_CONTRACTS_PGDATABASE:-}")"
     [journal]="$(connexion "${GAMAD_JOURNAL_PGSERVICE:-}" "${GAMAD_JOURNAL_PGDATABASE:-}")"
 )
 
@@ -45,7 +46,7 @@ horodatage="$(date -u +%Y%m%dT%H%M%SZ)"
 lot="${GAMAD_BACKUP_DIR%/}/${horodatage}"
 mkdir -p "$lot"
 
-for cible in index acces identites produits sources politiques journal; do
+for cible in index acces identites produits sources politiques contrats journal; do
     destination="${lot}/${cible}.dump"
     pg_dump \
         --dbname="${connexions[$cible]}" \
@@ -58,7 +59,7 @@ done
 
 (
     cd "$lot"
-    sha256sum index.dump acces.dump identites.dump produits.dump sources.dump politiques.dump journal.dump > SHA256SUMS
+    sha256sum index.dump acces.dump identites.dump produits.dump sources.dump politiques.dump contrats.dump journal.dump > SHA256SUMS
 )
 
 echo "Sauvegarde créée : $lot"

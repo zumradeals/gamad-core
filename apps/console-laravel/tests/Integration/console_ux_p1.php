@@ -19,6 +19,7 @@ use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreContrats\Magasin as ContratsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
@@ -35,6 +36,7 @@ $fichiers = [
     'produits' => $temp.'-produits.sqlite',
     'sources' => $temp.'-sources.sqlite',
     'politiques' => $temp.'-politiques.sqlite',
+    'contrats' => $temp.'-contrats.sqlite',
     'journal' => $temp.'-journal.sqlite',
     'config' => $temp.'-config.php',
     'events' => $temp.'-events.php',
@@ -76,6 +78,8 @@ $environnement = [
     'SOURCE_REGISTRY_PATH' => $fichiers['sources'],
     'POLICY_REGISTRY_URL' => '',
     'POLICY_REGISTRY_PATH' => $fichiers['politiques'],
+    'CONTRACT_REGISTRY_URL' => '',
+    'CONTRACT_REGISTRY_PATH' => $fichiers['contrats'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
 ];
@@ -94,6 +98,7 @@ IdentiteMagasin::connecter();
 ProduitsMagasin::connecter();
 SourcesMagasin::connecter();
 PolitiquesMagasin::connecter();
+ContratsMagasin::connecter();
 JournalMagasin::connecter();
 
 $app = require $application.'/bootstrap/app.php';

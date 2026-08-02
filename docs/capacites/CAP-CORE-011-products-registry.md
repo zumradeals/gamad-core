@@ -43,8 +43,8 @@ contenus, ses secrets en clair. Le Core n'en connaît rien.
 
 **Ce que ce module ne possède pas :** les identités et leurs relations
 (CAP-CORE-001), les jetons fédérés et sessions locales (CAP-CORE-022), les
-politiques d'autorisation (CAP-CORE-004), les contrats intercapacités complets
-(CAP-CORE-009, à venir), les références de secrets et clés (CAP-CORE-016, à
+politiques d'autorisation (CAP-CORE-004), les contrats intercapacités
+(CAP-CORE-009), les références de secrets et clés (CAP-CORE-016, à
 venir).
 
 **Données possédées :**

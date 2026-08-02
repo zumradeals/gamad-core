@@ -16,6 +16,7 @@ tags:
   - name: Autorisation
   - name: Fédération
   - name: Produits
+  - name: Contrats
 paths:
   /health/live:
     get:
@@ -1604,6 +1605,586 @@ paths:
           description: Politique inconnue.
         "422":
           description: Aucune version active à retirer.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats:
+    get:
+      tags: [Contrats]
+      operationId: listerContrats
+      summary: Liste les contrats visibles de la session (CAP-CORE-009).
+      security:
+        - bearerSession: []
+      responses:
+        "200":
+          description: Liste des contrats visibles.
+        "401":
+          description: Session invalide.
+    post:
+      tags: [Contrats]
+      operationId: inscrireContrat
+      summary: Inscrit un contrat dans le registre, sans version.
+      security:
+        - bearerSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference, nom, type_contrat, finalite_reference, proprietaire_reference, source_reference]
+              properties:
+                reference: { type: string, maxLength: 64 }
+                nom: { type: string, maxLength: 255 }
+                type_contrat: { type: string, enum: [COMMANDE, REQUETE, EVENEMENT, SIGNAL, ATTESTATION, REFERENCE_TEMPORAIRE, HTTP_API, INTERCAPACITE] }
+                finalite_reference: { type: string, maxLength: 500 }
+                producteur_capacite_reference: { type: string, maxLength: 64 }
+                producteur_produit_reference: { type: string, maxLength: 64 }
+                proprietaire_reference: { type: string, maxLength: 64 }
+                source_reference: { type: string, maxLength: 500 }
+                description: { type: string, maxLength: 2000 }
+      responses:
+        "201":
+          description: Contrat inscrit.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'inscription.
+        "409":
+          description: Référence déjà utilisée.
+        "422":
+          description: Dossier invalide, type inconnu ou producteur principal ambigu.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}:
+    get:
+      tags: [Contrats]
+      operationId: resoudreContrat
+      summary: Fiche d'un contrat, ses versions et son historique (CAP-CORE-009).
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Fiche du contrat, versions et historique de cycle.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+  /contrats/{reference}/versions:
+    get:
+      tags: [Contrats]
+      operationId: listerVersionsContrat
+      summary: Liste les versions d'un contrat.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Liste des versions.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+    post:
+      tags: [Contrats]
+      operationId: creerVersionContrat
+      summary: Crée une nouvelle version en BROUILLON.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: string, maxLength: 32, description: "Format X.Y.Z" }
+                compatibilite_annoncee: { type: string, enum: [COMPATIBLE, COMPATIBLE_AVEC_ADAPTATION, RUPTURE] }
+                description: { type: string, maxLength: 2000 }
+                date_effet_prevue: { type: string, format: date }
+      responses:
+        "201":
+          description: Version créée en BROUILLON.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la création.
+        "404":
+          description: Contrat inconnu.
+        "409":
+          description: Version déjà utilisée.
+        "422":
+          description: Version invalide.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}:
+    get:
+      tags: [Contrats]
+      operationId: resoudreVersionContrat
+      summary: Détail d'une version, avec parties, opérations, schémas, erreurs et obligations.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200":
+          description: Détail complet de la version.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence ou version inconnue.
+  /contrats/{reference}/historique:
+    get:
+      tags: [Contrats]
+      operationId: resoudreHistoriqueContrat
+      summary: Historique de cycle, toutes versions confondues.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Historique de cycle.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+  /contrats/{reference}/compatibilite:
+    get:
+      tags: [Contrats]
+      operationId: resoudreCompatibiliteContrat
+      summary: Analyses de compatibilité enregistrées pour une version exacte.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - name: version
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Analyses de compatibilité.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: Paramètre `version` absent.
+  /contrats/{reference}/conformite:
+    get:
+      tags: [Contrats]
+      operationId: resoudreConformiteContrat
+      summary: Conformités enregistrées pour une version exacte.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - name: version
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Conformités enregistrées.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: Paramètre `version` absent.
+  /contrats/{reference}/consommateurs:
+    get:
+      tags: [Contrats]
+      operationId: resoudreConsommateursContrat
+      summary: Consommateurs déclarés (version active par défaut, ou `?version=`).
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - name: version
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Consommateurs déclarés.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+  /contrats/{reference}/versions/{version}/parties:
+    post:
+      tags: [Contrats]
+      operationId: declarerPartieContrat
+      summary: Déclare une partie (producteur, consommateur, opérateur, vérificateur) sur une version BROUILLON.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role, partie_type, partie_reference]
+              properties:
+                role: { type: string, enum: [PRODUCTEUR, CONSOMMATEUR, OPERATEUR, VERIFICATEUR] }
+                partie_type: { type: string, enum: [CAPACITE, PRODUIT] }
+                partie_reference: { type: string, maxLength: 64 }
+      responses:
+        "201":
+          description: Partie déclarée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la déclaration.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: Version immuable ou dossier invalide.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/operations:
+    post:
+      tags: [Contrats]
+      operationId: declarerOperationContrat
+      summary: Déclare une opération sur une version BROUILLON.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference_operation, type_operation]
+              properties:
+                reference_operation: { type: string, maxLength: 128 }
+                type_operation: { type: string, enum: [COMMANDER, INTERROGER, PUBLIER, CONSOMMER, VERIFIER, REVOQUER] }
+                methode_http: { type: string, enum: [GET, POST, PUT, PATCH, DELETE] }
+                chemin_http: { type: string, maxLength: 256 }
+                action_autorisation: { type: string, maxLength: 256 }
+                duree_secondes: { type: integer, minimum: 0 }
+                idempotente: { type: boolean }
+                audit_obligatoire: { type: boolean }
+                ordre: { type: integer, minimum: 1 }
+      responses:
+        "201":
+          description: Opération déclarée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la déclaration.
+        "404":
+          description: Référence ou version inconnue.
+        "409":
+          description: Opération déjà déclarée.
+        "422":
+          description: Version immuable ou dossier invalide.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/schemas:
+    post:
+      tags: [Contrats]
+      operationId: declarerSchemaContrat
+      summary: Déclare un schéma d'entrée, de sortie, d'événement ou d'erreur.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sens, format]
+              properties:
+                operation_reference: { type: string, maxLength: 128 }
+                sens: { type: string, enum: [ENTREE, SORTIE, EVENEMENT, ERREUR] }
+                format: { type: string, enum: [JSON_SCHEMA, OPENAPI_SCHEMA, TEXTE_STRUCTURE, AUCUN_CORPS] }
+                contenu: { type: string, maxLength: 20000 }
+      responses:
+        "201":
+          description: Schéma déclaré.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la déclaration.
+        "404":
+          description: Référence, version ou opération inconnue.
+        "422":
+          description: Version immuable, schéma invalide ou secret détecté.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/erreurs:
+    post:
+      tags: [Contrats]
+      operationId: declarerErreurContrat
+      summary: Déclare une erreur stable sur une version BROUILLON.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, description]
+              properties:
+                operation_reference: { type: string, maxLength: 128 }
+                code: { type: string, maxLength: 128 }
+                statut_http: { type: integer, minimum: 100, maximum: 599 }
+                retentable: { type: boolean }
+                detail_exposable: { type: boolean }
+                description: { type: string, maxLength: 1000 }
+      responses:
+        "201":
+          description: Erreur déclarée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la déclaration.
+        "404":
+          description: Référence ou version inconnue.
+        "409":
+          description: Code déjà déclaré.
+        "422":
+          description: Version immuable ou dossier invalide.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/soumission:
+    post:
+      tags: [Contrats]
+      operationId: soumettreVersionContrat
+      summary: Soumet la version, fige son contenu et calcule son empreinte.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200":
+          description: Version soumise, en EN_VALIDATION.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la soumission.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: État incompatible, contenu vide ou producteur/consommateur absent.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/analyse:
+    post:
+      tags: [Contrats]
+      operationId: analyserCompatibiliteContrat
+      summary: Analyse la compatibilité contre la version active courante, s'il en existe une.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "201":
+          description: Analyse enregistrée (COMPATIBLE, ADAPTATION_REQUISE, RUPTURE ou INDETERMINE).
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'analyse.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: Contenu non soumis.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/activation:
+    post:
+      tags: [Contrats]
+      operationId: activerVersionContrat
+      summary: Active la version ; exige analyse et conformité enregistrées, et un plan de migration si RUPTURE.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif: { type: string, maxLength: 500 }
+                plan_migration: { type: string, maxLength: 2000 }
+                date_limite_migration: { type: string, format: date }
+      responses:
+        "200":
+          description: Version active ; l'ancienne version active, s'il y en avait une, devient REMPLACEE.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'activation.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: Analyse ou conformité manquante, ou plan de migration requis pour une rupture.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/depreciation:
+    post:
+      tags: [Contrats]
+      operationId: deprecierVersionContrat
+      summary: Déprécie une version active.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200":
+          description: Version dépréciée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la dépréciation.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: État incompatible.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/suspension:
+    post:
+      tags: [Contrats]
+      operationId: suspendreVersionContrat
+      summary: Suspend une version active ou dépréciée ; opposable immédiatement.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200":
+          description: Version suspendue.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la suspension.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: État incompatible.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/retrait:
+    post:
+      tags: [Contrats]
+      operationId: retirerVersionContrat
+      summary: Retire une version ; ne supprime rien, la référence n'est jamais réutilisable.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200":
+          description: Version retirée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse le retrait.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: État incompatible.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /contrats/{reference}/versions/{version}/conformite:
+    post:
+      tags: [Contrats]
+      operationId: enregistrerConformiteContrat
+      summary: Enregistre une conformité (CONFORME, NON_CONFORME ou INCOMPLET) pour une version exacte.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resultat, artefact_reference]
+              properties:
+                resultat: { type: string, enum: [CONFORME, NON_CONFORME, INCOMPLET] }
+                partie_reference: { type: string, maxLength: 64 }
+                artefact_reference: { type: string, maxLength: 256 }
+                resume: { type: string, maxLength: 2000 }
+      responses:
+        "201":
+          description: Conformité enregistrée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'enregistrement.
+        "404":
+          description: Référence ou version inconnue.
+        "422":
+          description: Résultat, artefact ou état invalide.
         "503":
           description: Une dépendance requise est indisponible.
 components:

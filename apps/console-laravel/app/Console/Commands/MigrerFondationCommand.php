@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
+use Gamad\RegistreContrats\Magasin as ContratsMagasin;
 use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
@@ -18,7 +19,7 @@ final class MigrerFondationCommand extends Command
 {
     protected $signature = 'core:fondation:migrer {--force : autorise l’exécution en production}';
 
-    protected $description = 'Applique les migrations additives des magasins accès, identités, produits, sources, politiques et journal.';
+    protected $description = 'Applique les migrations additives des magasins accès, identités, produits, sources, politiques, contrats et journal.';
 
     public function handle(): int
     {
@@ -37,6 +38,7 @@ final class MigrerFondationCommand extends Command
                 'PRODUCT_REGISTRY_URL',
                 'SOURCE_REGISTRY_URL',
                 'POLICY_REGISTRY_URL',
+                'CONTRACT_REGISTRY_URL',
             ] as $variable) {
                 if (trim((string) $this->environnement($variable)) === '') {
                     $this->error("{$variable} est obligatoire en production.");
@@ -58,6 +60,7 @@ final class MigrerFondationCommand extends Command
                 'produits persistants' => ProduitsMagasin::connecter(),
                 'sources persistantes' => SourcesMagasin::connecter(),
                 'politiques persistantes' => PolitiquesMagasin::connecter(),
+                'contrats persistants' => ContratsMagasin::connecter(),
                 'journal opérationnel' => JournalMagasin::connecter(),
             ];
         } catch (\Throwable $e) {
@@ -102,6 +105,7 @@ final class MigrerFondationCommand extends Command
             'PRODUCT_REGISTRY_URL' => 'database.connections.gamad_products.url',
             'SOURCE_REGISTRY_URL' => 'database.connections.gamad_sources.url',
             'POLICY_REGISTRY_URL' => 'database.connections.gamad_policies.url',
+            'CONTRACT_REGISTRY_URL' => 'database.connections.gamad_contracts.url',
             default => null,
         };
 

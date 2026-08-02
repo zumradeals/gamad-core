@@ -28,7 +28,7 @@ trap nettoyer EXIT
     --wait \
     start >/dev/null
 
-for base in gamad_index gamad_access gamad_identity gamad_products gamad_sources gamad_policies gamad_journal; do
+for base in gamad_index gamad_access gamad_identity gamad_products gamad_sources gamad_policies gamad_contracts gamad_journal; do
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
 done
 
@@ -56,6 +56,7 @@ environnement=(
     "PRODUCT_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_products"
     "SOURCE_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_sources"
     "POLICY_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_policies"
+    "CONTRACT_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_contracts"
     "JOURNAL_OPERATIONNEL_URL=postgresql://postgres@127.0.0.1:${port}/gamad_journal"
 )
 
@@ -67,7 +68,7 @@ environnement=(
 
 env "${environnement[@]}" php "$application/tests/Integration/postgresql_p0.php"
 
-for base in drill_index drill_access drill_identity drill_products drill_sources drill_policies drill_journal; do
+for base in drill_index drill_access drill_identity drill_products drill_sources drill_policies drill_contracts drill_journal; do
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
 done
 
@@ -81,6 +82,7 @@ export GAMAD_IDENTITY_PGDATABASE=gamad_identity
 export GAMAD_PRODUCTS_PGDATABASE=gamad_products
 export GAMAD_SOURCES_PGDATABASE=gamad_sources
 export GAMAD_POLICIES_PGDATABASE=gamad_policies
+export GAMAD_CONTRACTS_PGDATABASE=gamad_contracts
 export GAMAD_JOURNAL_PGDATABASE=gamad_journal
 
 "$racine/ops/core-foundation/backup.sh"
@@ -93,6 +95,7 @@ export GAMAD_RESTORE_IDENTITY_PGDATABASE=drill_identity
 export GAMAD_RESTORE_PRODUCTS_PGDATABASE=drill_products
 export GAMAD_RESTORE_SOURCES_PGDATABASE=drill_sources
 export GAMAD_RESTORE_POLICIES_PGDATABASE=drill_policies
+export GAMAD_RESTORE_CONTRACTS_PGDATABASE=drill_contracts
 export GAMAD_RESTORE_JOURNAL_PGDATABASE=drill_journal
 export GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases
 

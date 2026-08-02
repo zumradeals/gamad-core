@@ -46,7 +46,7 @@ défaut) même si une politique est mal écrite ailleurs.
 métier complètes produites par la source, les profils des personnes, les
 fichiers, les transactions, les documents justificatifs en clair, les
 secrets, les politiques de décision (CAP-CORE-004), les contrats
-intercapacités complets (CAP-CORE-009, à venir), le vocabulaire canonique
+intercapacités (CAP-CORE-009), le vocabulaire canonique
 des finalités (CAP-CORE-010, à venir — les références de finalité restent en
 texte explicite, documenté par le consommateur, tant que CAP-CORE-010 reste
 `NO GO`).
@@ -223,8 +223,9 @@ local. Voir le rapport de chantier de la PR pour la confirmation CI GitHub.
 - `CAP-CORE-021` (Matching) ne consomme pas encore les sources autorisées —
   `verifierUtilisable()` existe et est testée, mais aucun appelant ne
   l'invoque encore pour une décision de Matching réelle ;
-- aucun contrat CAP-CORE-009 formel entre producteurs et consommateurs de
-  sources : la relation reste portée par le code et cette fiche.
+- `CTR-15` est repris dans le registre des contrats (CAP-CORE-009) comme
+  contrat interne prioritaire, mais les autres échanges de ce module n'y sont
+  pas encore individuellement décrits.
 
 **Prochain chantier :** ne pas commencer avant que CAP-CORE-006 soit
 confirmée `GO` par la CI ; ensuite, selon la priorité déjà proposée par le

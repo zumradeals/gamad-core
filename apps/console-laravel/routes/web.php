@@ -11,6 +11,7 @@ use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
 use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\PasskeyController;
+use App\Http\Controllers\ContratConsoleController;
 use App\Http\Controllers\PolitiqueConsoleController;
 use App\Http\Controllers\ProduitConsoleController;
 use App\Http\Controllers\SatelliteConsoleController;
@@ -163,6 +164,57 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/politiques/{reference}/retrait', [PolitiqueConsoleController::class, 'retirer'])
         ->middleware('throttle:20,1')
         ->name('console.politiques.retirer');
+
+    // CAP-CORE-009 — registre des contrats. Toute écriture passe par
+    // `AccesContrats`, le même cas d'usage gouverné que l'API v1.
+    Route::get('/contrats', [ContratConsoleController::class, 'index'])
+        ->name('console.contrats.index');
+    Route::get('/contrats/nouveau', [ContratConsoleController::class, 'create'])
+        ->name('console.contrats.create');
+    Route::post('/contrats', [ContratConsoleController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('console.contrats.store');
+    Route::get('/contrats/{reference}', [ContratConsoleController::class, 'show'])
+        ->name('console.contrats.show');
+    Route::post('/contrats/{reference}/versions', [ContratConsoleController::class, 'creerVersion'])
+        ->middleware('throttle:20,1')
+        ->name('console.contrats.versions.creer');
+    Route::get('/contrats/{reference}/versions/{version}', [ContratConsoleController::class, 'versionShow'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')
+        ->name('console.contrats.version');
+    Route::post('/contrats/{reference}/versions/{version}/parties', [ContratConsoleController::class, 'declarerPartie'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.parties.declarer');
+    Route::post('/contrats/{reference}/versions/{version}/operations', [ContratConsoleController::class, 'declarerOperation'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.operations.declarer');
+    Route::post('/contrats/{reference}/versions/{version}/schemas', [ContratConsoleController::class, 'declarerSchema'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.schemas.declarer');
+    Route::post('/contrats/{reference}/versions/{version}/erreurs', [ContratConsoleController::class, 'declarerErreur'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.erreurs.declarer');
+    Route::post('/contrats/{reference}/versions/{version}/soumission', [ContratConsoleController::class, 'soumettre'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.soumettre');
+    Route::post('/contrats/{reference}/versions/{version}/analyse', [ContratConsoleController::class, 'analyser'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.analyser');
+    Route::post('/contrats/{reference}/versions/{version}/conformite', [ContratConsoleController::class, 'enregistrerConformite'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.conformite');
+    Route::post('/contrats/{reference}/versions/{version}/activation', [ContratConsoleController::class, 'activer'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.activer');
+    Route::post('/contrats/{reference}/versions/{version}/depreciation', [ContratConsoleController::class, 'deprecier'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.deprecier');
+    Route::post('/contrats/{reference}/versions/{version}/suspension', [ContratConsoleController::class, 'suspendre'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.suspendre');
+    Route::post('/contrats/{reference}/versions/{version}/retrait', [ContratConsoleController::class, 'retirer'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.contrats.versions.retirer');
 
     // CAP-CORE-005 — moyens d'accès personnels. Le sujet vient de la session ;
     // on ne gère jamais l'accès d'autrui.

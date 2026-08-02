@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AutorisationController;
+use App\Http\Controllers\Api\V1\ContratController;
 use App\Http\Controllers\Api\V1\FederationController;
 use App\Http\Controllers\Api\V1\FondationController;
 use App\Http\Controllers\Api\V1\IdentiteController;
@@ -125,6 +126,44 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
             ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
         Route::post('/politiques/{reference}/retrait', [PolitiqueController::class, 'retirer'])
             ->middleware('throttle:20,1');
+
+        // CAP-CORE-009 — registre des contrats. `{version}` suit toujours
+        // X.Y.Z. `compatibilite` et `conformite` exigent `?version=`.
+        Route::get('/contrats', [ContratController::class, 'index']);
+        Route::post('/contrats', [ContratController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('/contrats/{reference}', [ContratController::class, 'show']);
+        Route::get('/contrats/{reference}/versions', [ContratController::class, 'versions']);
+        Route::get('/contrats/{reference}/historique', [ContratController::class, 'historique']);
+        Route::get('/contrats/{reference}/compatibilite', [ContratController::class, 'compatibilite']);
+        Route::get('/contrats/{reference}/conformite', [ContratController::class, 'conformite']);
+        Route::get('/contrats/{reference}/consommateurs', [ContratController::class, 'consommateurs']);
+        Route::post('/contrats/{reference}/versions', [ContratController::class, 'creerVersion'])
+            ->middleware('throttle:20,1');
+        Route::get('/contrats/{reference}/versions/{version}', [ContratController::class, 'version'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+');
+        Route::post('/contrats/{reference}/versions/{version}/parties', [ContratController::class, 'declarerPartie'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/operations', [ContratController::class, 'declarerOperation'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/schemas', [ContratController::class, 'declarerSchema'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/erreurs', [ContratController::class, 'declarerErreur'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/soumission', [ContratController::class, 'soumettre'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/analyse', [ContratController::class, 'analyser'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/activation', [ContratController::class, 'activer'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/depreciation', [ContratController::class, 'deprecier'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/suspension', [ContratController::class, 'suspendre'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/retrait', [ContratController::class, 'retirer'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/contrats/{reference}/versions/{version}/conformite', [ContratController::class, 'enregistrerConformite'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
 
         Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat']);
         Route::post('/autorisation/decisions', [AutorisationController::class, 'store'])

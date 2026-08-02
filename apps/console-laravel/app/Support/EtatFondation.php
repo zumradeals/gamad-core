@@ -6,6 +6,7 @@ namespace App\Support;
 
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
+use Gamad\RegistreContrats\Magasin as ContratsMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
@@ -75,6 +76,16 @@ final class EtatFondation
                 [
                     'migration_registre_politiques', 'politique', 'politique_version',
                     'regle_politique', 'politique_version_cycle', 'politique_simulation',
+                ],
+                $production,
+            ),
+            'contrats' => $this->inspecterCible(
+                'CONTRACT_REGISTRY_URL',
+                fn (): \PDO => ContratsMagasin::ouvrir(),
+                [
+                    'migration_registre_contrats', 'contrat', 'contrat_version', 'contrat_version_cycle',
+                    'contrat_partie', 'contrat_operation', 'contrat_schema', 'contrat_erreur',
+                    'contrat_obligation', 'contrat_compatibilite', 'contrat_conformite', 'contrat_projection',
                 ],
                 $production,
             ),
@@ -197,6 +208,7 @@ final class EtatFondation
             'PRODUCT_REGISTRY_URL' => 'database.connections.gamad_products.url',
             'SOURCE_REGISTRY_URL' => 'database.connections.gamad_sources.url',
             'POLICY_REGISTRY_URL' => 'database.connections.gamad_policies.url',
+            'CONTRACT_REGISTRY_URL' => 'database.connections.gamad_contracts.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);

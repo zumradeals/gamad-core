@@ -24,7 +24,7 @@ source la plus fine pour qui veut savoir ce qui existe réellement derrière un
 | CAP-CORE-006 | Sources Registry | Référencer, gouverner et faire vivre le cycle des sources du Core | `core/registre-sources`, bootstrap idempotent, API v1 `/sources*`, écran Sources, `CTR-15` découplé du registre des normes | `GO` — registre persistant gouverné ; garde SQLite (38 épreuves) et exercice PostgreSQL réel verts en local le 2 août 2026 |
 | CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | `core/registre-politiques`, bootstrap idempotent (huit politiques/quarante-deux règles reprises fidèlement), `CTR-03` rebranché exclusivement sur ce magasin, correspondance exacte après normalisation, API v1 `/politiques*`, écran Politiques | `GO` — registre persistant gouverné, cycle de vie complet, simulation obligatoire avant activation, remplacement atomique d'une version active ; garde et intégrations HTTP/console vertes en local le 2 août 2026 |
 | CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | aucun ; traces dans le journal opérationnel | `NO GO` |
-| CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | aucun ; contrats portés par le code et `openapi/core-v1.yaml` | `NO GO` |
+| CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | `core/registre-contrats`, bootstrap idempotent (treize contrats déjà exploités, six internes et sept HTTP externes), analyse de compatibilité structurelle, API v1 `/contrats*`, écran Contrats | `GO` — registre persistant gouverné ; garde SQLite (51 épreuves), 25 intégrations HTTP/console et exercice PostgreSQL réel (huit magasins) verts en local le 2 août 2026 |
 | CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | aucun | `NO GO` |
 | CAP-CORE-011 | Products Registry | Référencer, gouverner et faire vivre le cycle des produits du Core | `core/registre-produits`, bootstrap idempotent, API v1 `/produits*`, écran Produits, `CAP-CORE-022` raccordé au registre | `GO` — registre persistant gouverné ; CI complète (11 contrôles GitHub, PR #58) verte sur `claude/cap-core-011-products-registry-go` le 2 août 2026 |
 | CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | aucun | `NO GO` |
@@ -108,14 +108,28 @@ versionné, avec simulation obligatoire avant toute activation et
 remplacement atomique d’une version active ; les huit politiques déjà
 exploitées (`POL-SOURCES-V1`, `POL-PRODUITS-V1`,
 `POL-FEDERATION-SATELLITES-V1` comprises) y ont été reprises fidèlement, et
-`politique`/`regle` ont quitté l’index reconstructible. Les chantiers
+`politique`/`regle` ont quitté l’index reconstructible. CAP-CORE-009 est
+livré à son tour : les échanges du Core ne sont plus dispersés entre les
+classes `CTR-*`, les contrôleurs, les routes et `openapi/core-v1.yaml` sans
+registre commun, mais un registre persistant et gouverné, avec parties,
+opérations, schémas, erreurs et obligations par version, une analyse de
+compatibilité structurelle qui détecte réellement une rupture (opération
+supprimée, champ obligatoire ajouté, méthode ou chemin modifiés, consommateur
+retiré…), une conformité et un plan de migration obligatoires avant toute
+activation d’une rupture ; treize contrats déjà exploités (les six contrats
+internes prioritaires `CTR-01`/`CTR-02`/`CTR-03`/`CTR-04`/`CTR-15`/`CTR-16`
+et sept contrats HTTP externes, fédération GamaDrive comprise) y ont été
+repris fidèlement, chacun relié à du code ou une route réels. Les chantiers
 ouverts, par ordre d’utilité :
 
 ```text
 intégration réelle de GamaDrive V2 sur CAP-CORE-022
+→ CAP-CORE-010 vocabulaire canonique, consommateur naturel des références
+  aujourd’hui en texte libre (source_reference, finalite_reference)
 → CAP-CORE-002 organisations
 → CAP-CORE-014 publication d’événements vers les satellites
-→ CAP-CORE-021 Matching, désormais consommateur naturel de CAP-CORE-006
+→ CAP-CORE-021 Matching, désormais consommateur naturel de CAP-CORE-006 et
+  CAP-CORE-009
 ```
 
 Le second chemin d’accès est livré : codes de secours à usage unique,

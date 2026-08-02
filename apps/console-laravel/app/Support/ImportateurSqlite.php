@@ -58,6 +58,21 @@ final class ImportateurSqlite
         'politique_simulation',
     ];
 
+    /** @var list<string> */
+    private const TABLES_CONTRATS = [
+        'contrat',
+        'contrat_version',
+        'contrat_version_cycle',
+        'contrat_partie',
+        'contrat_operation',
+        'contrat_schema',
+        'contrat_erreur',
+        'contrat_obligation',
+        'contrat_compatibilite',
+        'contrat_conformite',
+        'contrat_projection',
+    ];
+
     /** @return array<string,int> */
     public function importerAcces(string $source, \PDO $cible): array
     {
@@ -89,6 +104,12 @@ final class ImportateurSqlite
     public function importerPolitiques(string $source, \PDO $cible): array
     {
         return $this->importer($source, $cible, self::TABLES_POLITIQUES);
+    }
+
+    /** @return array<string,int> */
+    public function importerContrats(string $source, \PDO $cible): array
+    {
+        return $this->importer($source, $cible, self::TABLES_CONTRATS);
     }
 
     /**
