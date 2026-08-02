@@ -11,6 +11,7 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Gamad\RegistreSources\PolitiqueSources;
@@ -77,7 +78,7 @@ final class SourceConsoleController
     public function create(Request $request): View
     {
         $acteur = (string) $request->attributes->get('gamad_entite');
-        $decision = (new Ctr03(Db::connect()))->autoriser($acteur, PolitiqueSources::ACTION_INSCRIRE, null);
+        $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser($acteur, PolitiqueSources::ACTION_INSCRIRE, null);
 
         return view('sources.create', [
             'acteur' => $acteur,

@@ -11,6 +11,7 @@ use Gamad\RegistreAutorites\Ctr02;
 use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 
 /**
  * Cas d'usage partagé par l'API et la console web.
@@ -27,7 +28,7 @@ final class InscrireIdentite
     {
         try {
             $index = Db::connect();
-            $decision = (new Ctr03($index))->autoriser(
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
                 $acteur,
                 'inscrire une identité',
                 (string) $donnees['type'],

@@ -7,9 +7,11 @@ namespace Gamad\RegistreAutorisation;
 /**
  * Contrat CTR-03 — Moteur d'autorisation commun (CAP-CORE-004).
  *
- * Le moteur ÉVALUE ; il ne décide pas des règles. Celles-ci sont dérivées du
- * corpus — Articles 48 et 49 du Registre des autorités — et jamais écrites
- * ici (INV-29). Changer une règle exige un acte, non un correctif.
+ * Le moteur ÉVALUE ; il ne décide pas des règles. Celles-ci vivent dans le
+ * registre persistant et gouverné de CAP-CORE-007 (`core/registre-politiques`)
+ * — plus jamais dans l'index documentaire reconstructible. Changer une règle
+ * exige une version soumise, simulée et activée, non un correctif direct
+ * (INV-29 continue de s'appliquer : aucune règle n'est écrite ici).
  *
  * Deux invariants gouvernent toute décision :
  *
@@ -21,6 +23,10 @@ namespace Gamad\RegistreAutorisation;
  * Il transforme un franchissement silencieux en franchissement constatable ;
  * c'est moins qu'un verrou, et c'est tout ce qu'un Core peut offrir tant que
  * la séparation des fonctions n'est pas réelle.
+ *
+ * Seules les versions dont l'état courant est `ACTIVE` sont considérées : une
+ * version en `BROUILLON`, `EN_VALIDATION`, `SUSPENDUE`, `REMPLACEE` ou
+ * `RETIREE` ne permet jamais rien.
  */
 final class Ctr03
 {
@@ -48,9 +54,19 @@ final class Ctr03
         $demandee = $this->normaliser($action);
 
         $st = $this->pdo->query(
-            'SELECT r.effet, r.action, r.motif, r.sujet_type, p.reference AS politique, p.version, p.source
-             FROM regle r JOIN politique p ON p.reference = r.politique_reference
-             ORDER BY r.id'
+            "SELECT rp.effet, rp.action_reference AS action, rp.motif, rp.sujet_reference AS sujet_type,
+                    pv.politique_reference AS politique, pv.version, p.source_reference AS source
+             FROM regle_politique rp
+             JOIN politique_version pv ON pv.id = rp.politique_version_id
+             JOIN politique p ON p.reference = pv.politique_reference
+             JOIN politique_version_cycle pvc ON pvc.politique_version_id = pv.id
+             WHERE pvc.etat = 'ACTIVE'
+               AND pvc.id = (
+                   SELECT id FROM politique_version_cycle
+                   WHERE politique_version_id = pv.id
+                   ORDER BY date_effet DESC, id DESC LIMIT 1
+               )
+             ORDER BY rp.id"
         );
 
         $permission = null;
@@ -59,7 +75,7 @@ final class Ctr03
             if ($r['sujet_type'] !== null && $r['sujet_type'] !== $sujet) {
                 continue;
             }
-            if (!$this->correspond($demandee, (string) $r['action'])) {
+            if (!$this->correspond($demandee, $this->normaliser((string) $r['action']))) {
                 continue;
             }
 
@@ -100,7 +116,7 @@ final class Ctr03
             'sujet'     => $sujet,
             'action'    => $action,
             'ressource' => $ressource,
-            'motif'     => 'aucune politique adoptée ne permet cette action ; '
+            'motif'     => 'aucune version active de politique ne permet cette action ; '
                 . "l'absence de règle n'est jamais une permission (INV-27)",
             'politique' => null,
             'version'   => null,
@@ -110,6 +126,11 @@ final class Ctr03
 
     /**
      * Évalue sans effet ni trace. Identique à `autoriser`, marquée simulation.
+     *
+     * Distincte de `RegistrePolitiques::simulerVersion()`, qui simule une
+     * version candidate encore `EN_VALIDATION` avant activation. Celle-ci
+     * évalue toujours les versions déjà `ACTIVE` — c'est un aperçu de la
+     * décision réelle, pas un jeu de non-régression.
      *
      * @return array<string,mixed>
      */
@@ -126,9 +147,20 @@ final class Ctr03
     public function resoudreInterdits(?string $sujet = null): array
     {
         $st = $this->pdo->query(
-            "SELECT r.action, r.motif, r.sujet_type, p.reference AS politique, p.source
-             FROM regle r JOIN politique p ON p.reference = r.politique_reference
-             WHERE r.effet = 'REFUSE' ORDER BY r.id"
+            "SELECT rp.action_reference AS action, rp.motif, rp.sujet_reference AS sujet_type,
+                    pv.politique_reference AS politique, p.source_reference AS source
+             FROM regle_politique rp
+             JOIN politique_version pv ON pv.id = rp.politique_version_id
+             JOIN politique p ON p.reference = pv.politique_reference
+             JOIN politique_version_cycle pvc ON pvc.politique_version_id = pv.id
+             WHERE rp.effet = 'REFUSE'
+               AND pvc.etat = 'ACTIVE'
+               AND pvc.id = (
+                   SELECT id FROM politique_version_cycle
+                   WHERE politique_version_id = pv.id
+                   ORDER BY date_effet DESC, id DESC LIMIT 1
+               )
+             ORDER BY rp.id"
         );
 
         $lignes = [];
@@ -149,19 +181,15 @@ final class Ctr03
     }
 
     /**
-     * Une demande correspond à une règle si leurs formes normalisées sont
-     * égales, ou si l'une contient l'autre. Le rapprochement demeure lexical :
-     * le moteur n'interprète pas le sens des énoncés, il les rapproche.
+     * Une demande correspond à une règle si, et seulement si, leurs formes
+     * normalisées sont strictement égales. Le rapprochement par sous-chaîne
+     * a été retiré : il n'était exercé par aucun appelant réel du dépôt (voir
+     * le chantier CAP-CORE-007), et une correspondance approchée n'a plus sa
+     * place dans un moteur qui décide d'une permission.
      */
     private function correspond(string $demandee, string $reglee): bool
     {
-        if ($demandee === '' || $reglee === '') {
-            return false;
-        }
-
-        return $demandee === $reglee
-            || str_contains($reglee, $demandee)
-            || str_contains($demandee, $reglee);
+        return $demandee !== '' && $demandee === $reglee;
     }
 
     private function normaliser(string $action): string

@@ -12,6 +12,7 @@ use Gamad\RegistreIdentites\Magasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -72,7 +73,7 @@ final class IdentiteConsoleController
     {
         $acteur = (string) $request->attributes->get('gamad_entite');
         $index = Db::connect();
-        $decision = (new Ctr03($index))->autoriser($acteur, 'inscrire une identité', 'personne');
+        $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser($acteur, 'inscrire une identité', 'personne');
         $mandat = (new Ctr02($index))->resoudreMandat(null, $acteur, gmdate('Y-m-d'));
         $mandatActif = is_array($mandat)
             && str_starts_with((string) ($mandat['etat'] ?? ''), 'ACTIF');

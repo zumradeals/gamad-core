@@ -13,6 +13,7 @@ use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreProduits\PolitiqueProduits;
 use Gamad\RegistreProduits\RegistreProduits;
@@ -226,7 +227,7 @@ final class AccesProduits
     ): array {
         try {
             $registre = $this->registre();
-            $decision = (new Ctr03(Db::connect()))->autoriser($acteur, $action, $ressource);
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser($acteur, $action, $ressource);
             $journal = $this->journal();
             $preuve = $journal->enregistrer([
                 'categorie' => 'PRODUITS',

@@ -7,7 +7,7 @@ namespace App\Application\Continuite;
 use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAutorisation\Ctr03;
-use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 
 /**
  * Pilotage de la continuité depuis la console (CAP-CORE-019).
@@ -285,7 +285,7 @@ final class Continuite
         ?string $correlation,
     ): array {
         try {
-            $decision = (new Ctr03(Db::connect()))->autoriser($acteur, $action, $ressource);
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser($acteur, $action, $ressource);
             $preuve = (new Journal(JournalMagasin::connecter()))->enregistrer([
                 'categorie' => 'CONTINUITE',
                 'type' => 'DECISION_CONTINUITE',

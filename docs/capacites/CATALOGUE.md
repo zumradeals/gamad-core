@@ -22,7 +22,7 @@ source la plus fine pour qui veut savoir ce qui existe réellement derrière un
 | CAP-CORE-004 | Authorization | Décider si une action commune est permise ou refusée | `core/registre-autorisation` | `GO` — refus par défaut éprouvé |
 | CAP-CORE-005 | Authentication & Access | Authentifier, ouvrir et révoquer les sessions | `core/registre-acces`, passkeys, écran Mon accès | `GO` — sessions, révocation, WebAuthn, codes de secours à usage unique et garde du dernier moyen d’accès, tous éprouvés |
 | CAP-CORE-006 | Sources Registry | Référencer, gouverner et faire vivre le cycle des sources du Core | `core/registre-sources`, bootstrap idempotent, API v1 `/sources*`, écran Sources, `CTR-15` découplé du registre des normes | `GO` — registre persistant gouverné ; garde SQLite (38 épreuves) et exercice PostgreSQL réel verts en local le 2 août 2026 |
-| CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | `core/registre-normes` | `NO GO` — lecture et diagnostic ; aucune écriture gouvernée ; dépend désormais de CAP-CORE-006 pour la résolution des sources |
+| CAP-CORE-007 | Rules / Policies Registry | Gérer les politiques techniques versionnées | `core/registre-politiques`, bootstrap idempotent (huit politiques/quarante-deux règles reprises fidèlement), `CTR-03` rebranché exclusivement sur ce magasin, correspondance exacte après normalisation, API v1 `/politiques*`, écran Politiques | `GO` — registre persistant gouverné, cycle de vie complet, simulation obligatoire avant activation, remplacement atomique d'une version active ; garde et intégrations HTTP/console vertes en local le 2 août 2026 |
 | CAP-CORE-008 | Decisions Registry | Tracer les décisions opérationnelles utiles | aucun ; traces dans le journal opérationnel | `NO GO` |
 | CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | aucun ; contrats portés par le code et `openapi/core-v1.yaml` | `NO GO` |
 | CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | aucun | `NO GO` |
@@ -101,7 +101,15 @@ provenance des informations n’est plus une ligne de lecture seule dépendant
 du registre des normes, mais une fiche persistante et gouvernée, avec cycle
 de vie, révisions, vérifications expirables, finalités bornées et lignée
 acyclique — et la dépendance entre CAP-CORE-007 et CAP-CORE-006 est enfin
-dans le bon sens. Les chantiers ouverts, par ordre d’utilité :
+dans le bon sens. CAP-CORE-007 est livré à son tour : les politiques et
+règles que `CTR-03` évalue ne sont plus des lignes de l’index documentaire
+modifiées en éditant un fichier, mais un registre persistant et gouverné,
+versionné, avec simulation obligatoire avant toute activation et
+remplacement atomique d’une version active ; les huit politiques déjà
+exploitées (`POL-SOURCES-V1`, `POL-PRODUITS-V1`,
+`POL-FEDERATION-SATELLITES-V1` comprises) y ont été reprises fidèlement, et
+`politique`/`regle` ont quitté l’index reconstructible. Les chantiers
+ouverts, par ordre d’utilité :
 
 ```text
 intégration réelle de GamaDrive V2 sur CAP-CORE-022

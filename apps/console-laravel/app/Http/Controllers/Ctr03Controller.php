@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use Gamad\RegistreAutorisation\Ctr03;
-use Gamad\RegistreNormes\BaselineOperationnelle;
-use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,24 +13,18 @@ use Illuminate\Http\Request;
  * Livraison HTTP du contrat CTR-03 — autorisation (CAP-CORE-004).
  *
  * Le moteur dit ce qui est permis ; il n'empêche rien physiquement (M-29).
- * Aucune route d'écriture : une politique se change par acte, non par requête.
+ * Aucune route d'écriture : une politique se change par une version soumise,
+ * simulée et activée (CAP-CORE-007), non par cette requête.
+ *
+ * Le magasin des politiques est un registre persistant, jamais reconstruit
+ * silencieusement : un magasin vide est un problème de readiness réel, pas un
+ * état transitoire à combler ici.
  */
 final class Ctr03Controller
 {
     private function ctr03(): Ctr03
     {
-        $pdo = Db::connect();
-        $vide = true;
-        try {
-            $vide = ((int) $pdo->query('SELECT count(*) FROM regle')->fetchColumn()) === 0;
-        } catch (\Throwable) {
-            $vide = true;
-        }
-        if ($vide) {
-            BaselineOperationnelle::standard()->reconstruire($pdo);
-        }
-
-        return new Ctr03($pdo);
+        return new Ctr03(PolitiquesMagasin::connecter());
     }
 
     public function autoriser(Request $request): JsonResponse

@@ -31,6 +31,7 @@ $fichiers = [
     'journal' => $temp . '-journal.sqlite',
     'produits' => $temp . '-produits.sqlite',
     'sources' => $temp . '-sources.sqlite',
+    'politiques' => $temp . '-politiques.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -65,6 +66,8 @@ $environnement = [
     'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
     'SOURCE_REGISTRY_URL' => '',
     'SOURCE_REGISTRY_PATH' => $fichiers['sources'],
+    'POLICY_REGISTRY_URL' => '',
+    'POLICY_REGISTRY_PATH' => $fichiers['politiques'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -83,6 +86,7 @@ $secretAutorite = 'Secret-Sources-Autorite-1!';
 $ctr16->inscrireAuthentificateur('AUT-GAMAD-001', $secretAutorite);
 
 $app = require $application . '/bootstrap/app.php';
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
 $kernel = $app->make(Kernel::class);
 
 $echecs = 0;

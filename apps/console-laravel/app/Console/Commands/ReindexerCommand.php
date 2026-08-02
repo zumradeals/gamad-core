@@ -44,16 +44,14 @@ final class ReindexerCommand extends Command
         }
 
         $this->info(sprintf(
-            'Index reconstruit : %d normes, %d versions, %d politiques, %d règles, '
-            .'%d identités, %d fonctions et %d mandat(s).',
+            'Index reconstruit : %d normes, %d versions, %d identités, %d fonctions et %d mandat(s).',
             $resultat['normes'],
             $resultat['versions'],
-            (int) $pdo->query('SELECT count(*) FROM politique')->fetchColumn(),
-            $resultat['regles'],
             $resultat['entites'],
             $resultat['fonctions'],
             $resultat['mandats'],
         ));
+        $this->line('Politiques et règles ne vivent plus ici : voir `core:politiques:bootstrap` (CAP-CORE-007).');
         $this->line(sprintf(
             'Compatibilité héritée conservée : %d adoptions, %d statuts et %d états de capacité.',
             $resultat['adoptions'],

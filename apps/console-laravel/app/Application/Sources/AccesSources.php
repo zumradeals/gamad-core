@@ -11,6 +11,7 @@ use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Gamad\RegistreSources\PolitiqueSources;
@@ -263,7 +264,7 @@ final class AccesSources
     ): array {
         try {
             $registre = $this->registre();
-            $decision = (new Ctr03(Db::connect()))->autoriser($acteur, $action, $ressource);
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser($acteur, $action, $ressource);
             $journal = $this->journal();
             $preuve = $journal->enregistrer([
                 'categorie' => 'SOURCES',

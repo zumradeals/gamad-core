@@ -28,6 +28,7 @@ $temp = sys_get_temp_dir().'/gamad-continuite-'.getmypid();
 $fichiers = [
     'index' => $temp.'-index.sqlite',
     'journal' => $temp.'-journal.sqlite',
+    'politiques' => $temp.'-politiques.sqlite',
 ];
 $partage = $temp.'-partage';
 foreach ($fichiers as $fichier) {
@@ -58,6 +59,8 @@ $environnement = [
     'SQLITE_PATH' => $fichiers['index'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
+    'POLICY_REGISTRY_URL' => '',
+    'POLICY_REGISTRY_PATH' => $fichiers['politiques'],
     'GAMAD_CONTINUITE_DIR' => $partage,
 ];
 foreach ($environnement as $cle => $valeur) {
@@ -72,6 +75,7 @@ BaselineOperationnelle::standard()->reconstruire(Db::connect());
 JournalMagasin::connecter();
 
 $app = require $application.'/bootstrap/app.php';
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
 $app->make(Kernel::class)->bootstrap();
 $sessionLaravel = $app->make('session')->driver();
 $sessionLaravel->start();

@@ -96,11 +96,12 @@ la corrélation et la date. Aucun secret n'y figure.
 (décision), CAP-CORE-013 (preuve), CAP-CORE-022 (consommateur du catalogue et
 de la fermeture de jetons à la suspension/au retrait).
 
-**Autorisations :** `POL-PRODUITS-V1`, portée provisoirement par la source
-technique versionnée `core/registre-normes/resources/index-baseline-v1.json`
-et évaluée par CAP-CORE-004, tant que CAP-CORE-007 reste `NO GO`. Toutes les
-commandes gouvernées sont réservées à `AUT-GAMAD-001` par la politique ; le
-code oppose en outre ses propres bornes, notamment le refus d'auto-activation
+**Autorisations :** `POL-PRODUITS-V1`, reprise fidèlement (chantier
+CAP-CORE-007) depuis la source technique versionnée dans le registre
+persistant et gouverné `core/registre-politiques`, activée, et évaluée par
+CAP-CORE-004 depuis ce même magasin. Toutes les commandes gouvernées sont
+réservées à `AUT-GAMAD-001` par la politique ; le code oppose en outre ses
+propres bornes, notamment le refus d'auto-activation
 (`producteur === reference`).
 
 **Comportement en panne :** une décision, une preuve ou un registre
@@ -182,9 +183,9 @@ propre, l'a détecté correctement.
   connaît pas d'URL d'API GamaDrive réelle, et ce chantier n'en invente
   aucune ;
 - pas de suspension automatique liée à une expiration d'environnement ;
-- la politique `POL-PRODUITS-V1` reste portée par la source technique
-  versionnée, comme `POL-FEDERATION-SATELLITES-V1` ; elle migrera vers
-  CAP-CORE-007 quand celui-ci sera `GO`.
+- la politique `POL-PRODUITS-V1` vit désormais dans le registre persistant et
+  gouverné de CAP-CORE-007 (chantier clos), comme
+  `POL-FEDERATION-SATELLITES-V1`.
 
 **Prochain chantier :** ne pas commencer avant que CAP-CORE-011 soit
 confirmée `GO` par la CI ; ensuite, CAP-CORE-002 (organisations).

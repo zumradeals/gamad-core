@@ -147,6 +147,22 @@ return [
             'foreign_key_constraints' => true,
         ],
 
+        'gamad_policies' => [
+            'driver' => env('GAMAD_POLICIES_DRIVER', 'sqlite'),
+            'url' => env('POLICY_REGISTRY_URL'),
+            'host' => env('GAMAD_POLICIES_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_POLICIES_PORT', '5432'),
+            'database' => env('POLICY_REGISTRY_PATH', database_path('gamad-policies.sqlite')),
+            'username' => env('GAMAD_POLICIES_USERNAME'),
+            'password' => env('GAMAD_POLICIES_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_POLICIES_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

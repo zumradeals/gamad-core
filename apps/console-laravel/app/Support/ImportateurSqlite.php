@@ -49,6 +49,15 @@ final class ImportateurSqlite
         'source_lignee',
     ];
 
+    /** @var list<string> */
+    private const TABLES_POLITIQUES = [
+        'politique',
+        'politique_version',
+        'regle_politique',
+        'politique_version_cycle',
+        'politique_simulation',
+    ];
+
     /** @return array<string,int> */
     public function importerAcces(string $source, \PDO $cible): array
     {
@@ -74,6 +83,12 @@ final class ImportateurSqlite
     public function importerSources(string $source, \PDO $cible): array
     {
         return $this->importer($source, $cible, self::TABLES_SOURCES);
+    }
+
+    /** @return array<string,int> */
+    public function importerPolitiques(string $source, \PDO $cible): array
+    {
+        return $this->importer($source, $cible, self::TABLES_POLITIQUES);
     }
 
     /**

@@ -35,6 +35,7 @@ declare -A connexions=(
     [identites]="$(connexion "${GAMAD_RESTORE_IDENTITY_PGSERVICE:-}" "${GAMAD_RESTORE_IDENTITY_PGDATABASE:-}")"
     [produits]="$(connexion "${GAMAD_RESTORE_PRODUCTS_PGSERVICE:-}" "${GAMAD_RESTORE_PRODUCTS_PGDATABASE:-}")"
     [sources]="$(connexion "${GAMAD_RESTORE_SOURCES_PGSERVICE:-}" "${GAMAD_RESTORE_SOURCES_PGDATABASE:-}")"
+    [politiques]="$(connexion "${GAMAD_RESTORE_POLICIES_PGSERVICE:-}" "${GAMAD_RESTORE_POLICIES_PGDATABASE:-}")"
     [journal]="$(connexion "${GAMAD_RESTORE_JOURNAL_PGSERVICE:-}" "${GAMAD_RESTORE_JOURNAL_PGDATABASE:-}")"
 )
 
@@ -51,15 +52,17 @@ declare -a production=(
     "${GAMAD_IDENTITY_PGDATABASE:-}"
     "${GAMAD_PRODUCTS_PGDATABASE:-}"
     "${GAMAD_SOURCES_PGDATABASE:-}"
+    "${GAMAD_POLICIES_PGDATABASE:-}"
     "${GAMAD_JOURNAL_PGDATABASE:-}"
     "${GAMAD_INDEX_PGSERVICE:-}"
     "${GAMAD_ACCESS_PGSERVICE:-}"
     "${GAMAD_IDENTITY_PGSERVICE:-}"
     "${GAMAD_PRODUCTS_PGSERVICE:-}"
     "${GAMAD_SOURCES_PGSERVICE:-}"
+    "${GAMAD_POLICIES_PGSERVICE:-}"
     "${GAMAD_JOURNAL_PGSERVICE:-}"
 )
-for cible in index acces identites produits sources journal; do
+for cible in index acces identites produits sources politiques journal; do
     for interdite in "${production[@]}"; do
         [[ -z "$interdite" ]] && continue
         if [[ "${connexions[$cible]}" == *"=${interdite}" ]]; then
@@ -75,7 +78,7 @@ done
     sha256sum --check SHA256SUMS
 )
 
-for cible in index acces identites produits sources journal; do
+for cible in index acces identites produits sources politiques journal; do
     pg_restore \
         --dbname="${connexions[$cible]}" \
         --clean \
@@ -97,7 +100,9 @@ psql "${connexions[produits]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS produits_persistants FROM produit'
 psql "${connexions[sources]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS sources_persistantes FROM source'
+psql "${connexions[politiques]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS politiques_persistantes FROM politique'
 psql "${connexions[journal]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS evenements FROM evenement_operationnel'
 
-echo "Exercice de restauration terminé sur les six cibles isolées."
+echo "Exercice de restauration terminé sur les sept cibles isolées."

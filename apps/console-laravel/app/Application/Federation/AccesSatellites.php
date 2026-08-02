@@ -13,6 +13,7 @@ use Gamad\RegistreFederation\Federation;
 use Gamad\RegistreFederation\PolitiqueFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 
 /**
@@ -41,7 +42,7 @@ final class AccesSatellites
     ): array {
         try {
             $federation = $this->federation();
-            $decision = (new Ctr03(Db::connect()))->autoriser(
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
                 $acteur,
                 PolitiqueFederation::ACTION_OUVERTURE,
                 $produit,
@@ -223,7 +224,7 @@ final class AccesSatellites
     ): array {
         try {
             $federation = $this->federation();
-            $decision = (new Ctr03(Db::connect()))->autoriser(
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
                 $acteur,
                 PolitiqueFederation::ACTION_REVOCATION,
                 $produit,
@@ -315,7 +316,7 @@ final class AccesSatellites
     ): array {
         try {
             $federation = $this->federation();
-            $decision = (new Ctr03(Db::connect()))->autoriser(
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
                 $acteur,
                 PolitiqueFederation::ACTION_IDENTIFIANT,
                 $produit,
@@ -447,7 +448,7 @@ final class AccesSatellites
         ?string $correlation = null,
     ): array {
         try {
-            $decision = (new Ctr03(Db::connect()))->autoriser(
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
                 $acteur,
                 PolitiqueFederation::ACTION_RETRAIT_IDENTIFIANT,
                 $produit,

@@ -39,6 +39,7 @@ $fichiers = [
     'journal' => $temp.'-journal.sqlite',
     'produits' => $temp.'-produits.sqlite',
     'sources' => $temp.'-sources.sqlite',
+    'politiques' => $temp.'-politiques.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -74,6 +75,8 @@ $environnement = [
     'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
     'SOURCE_REGISTRY_URL' => '',
     'SOURCE_REGISTRY_PATH' => $fichiers['sources'],
+    'POLICY_REGISTRY_URL' => '',
+    'POLICY_REGISTRY_PATH' => $fichiers['politiques'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -134,6 +137,7 @@ $sessionAutorite = (string) $ctr16->etablirSession(
 )['session'];
 
 $app = require $application.'/bootstrap/app.php';
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
 $app->make(Kernel::class)->bootstrap();
 $sessionLaravel = $app->make('session')->driver();
 $sessionLaravel->start();

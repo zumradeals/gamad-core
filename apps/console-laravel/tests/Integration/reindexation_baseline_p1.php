@@ -51,7 +51,6 @@ $verifier(
         'sources' => 26,
         'fonctions' => 24,
         'entites' => 7,
-        'regles' => 42,
         'mandats' => 1,
         'indetermines' => 95,
     ],
@@ -59,9 +58,14 @@ $verifier(
 );
 
 $verifier(
-    (int) $pdo->query("SELECT count(*) FROM entite WHERE reference = 'AUT-GAMAD-001'")->fetchColumn() === 1
-        && (int) $pdo->query("SELECT count(*) FROM politique WHERE reference = 'POL-INSCRIPTION-IDENTITES-V1'")->fetchColumn() === 1,
-    'les ancrages nécessaires à l’identité et à l’autorisation sont présents',
+    (int) $pdo->query("SELECT count(*) FROM entite WHERE reference = 'AUT-GAMAD-001'")->fetchColumn() === 1,
+    'l’ancrage nécessaire à l’identité est présent',
+);
+$verifier(
+    !in_array('politique', array_map(static fn (array $t): string => (string) $t['name'], $pdo->query(
+        "SELECT name FROM sqlite_master WHERE type = 'table'"
+    )->fetchAll()), true),
+    'l’index ne porte plus la table politique : CAP-CORE-007 en est désormais l’unique source',
 );
 
 $second = $baseline->reconstruire($pdo);

@@ -11,6 +11,7 @@ use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
 use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\PasskeyController;
+use App\Http\Controllers\PolitiqueConsoleController;
 use App\Http\Controllers\ProduitConsoleController;
 use App\Http\Controllers\SatelliteConsoleController;
 use App\Http\Controllers\SourceConsoleController;
@@ -125,6 +126,43 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/registre-sources/{reference}/lignee', [SourceConsoleController::class, 'declarerLignee'])
         ->middleware('throttle:20,1')
         ->name('console.sources.lignee.declarer');
+
+    // CAP-CORE-007 — registre des politiques. CTR-03 (CAP-CORE-004) lit ce
+    // magasin pour décider. Toute écriture passe par `AccesPolitiques`, le
+    // même cas d'usage gouverné que l'API v1.
+    Route::get('/politiques', [PolitiqueConsoleController::class, 'index'])
+        ->name('console.politiques.index');
+    Route::get('/politiques/nouvelle', [PolitiqueConsoleController::class, 'create'])
+        ->name('console.politiques.create');
+    Route::post('/politiques', [PolitiqueConsoleController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('console.politiques.store');
+    Route::get('/politiques/{reference}', [PolitiqueConsoleController::class, 'show'])
+        ->name('console.politiques.show');
+    Route::post('/politiques/{reference}/versions', [PolitiqueConsoleController::class, 'creerVersion'])
+        ->middleware('throttle:20,1')
+        ->name('console.politiques.versions.creer');
+    Route::get('/politiques/{reference}/versions/{version}', [PolitiqueConsoleController::class, 'versionShow'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')
+        ->name('console.politiques.version');
+    Route::post('/politiques/{reference}/versions/{version}/regles', [PolitiqueConsoleController::class, 'ajouterRegle'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.politiques.versions.regles.ajouter');
+    Route::post('/politiques/{reference}/versions/{version}/soumission', [PolitiqueConsoleController::class, 'soumettre'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.politiques.versions.soumettre');
+    Route::post('/politiques/{reference}/versions/{version}/simulation', [PolitiqueConsoleController::class, 'simuler'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.politiques.versions.simuler');
+    Route::post('/politiques/{reference}/versions/{version}/activation', [PolitiqueConsoleController::class, 'activer'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.politiques.versions.activer');
+    Route::post('/politiques/{reference}/versions/{version}/suspension', [PolitiqueConsoleController::class, 'suspendre'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.politiques.versions.suspendre');
+    Route::post('/politiques/{reference}/retrait', [PolitiqueConsoleController::class, 'retirer'])
+        ->middleware('throttle:20,1')
+        ->name('console.politiques.retirer');
 
     // CAP-CORE-005 — moyens d'accès personnels. Le sujet vient de la session ;
     // on ne gère jamais l'accès d'autrui.

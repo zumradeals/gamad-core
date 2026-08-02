@@ -15,6 +15,9 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
+use Gamad\RegistrePolitiques\PolitiqueAdministration;
+use Gamad\RegistrePolitiques\RegistrePolitiques;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreProduits\PolitiqueProduits;
 use Gamad\RegistreProduits\RegistreProduits;
@@ -25,6 +28,10 @@ require __DIR__ . '/../../registre-identites/src/SchemaInscription.php';
 require __DIR__ . '/../../registre-identites/src/Magasin.php';
 require __DIR__ . '/../../registre-identites/src/Ctr01.php';
 require __DIR__ . '/../../registre-autorisation/src/Ctr03.php';
+require __DIR__ . '/../../registre-politiques/src/PolitiqueAdministration.php';
+require __DIR__ . '/../../registre-politiques/src/SchemaPolitiques.php';
+require __DIR__ . '/../../registre-politiques/src/Magasin.php';
+require __DIR__ . '/../../registre-politiques/src/RegistrePolitiques.php';
 require __DIR__ . '/../src/PolitiqueProduits.php';
 require __DIR__ . '/../src/SchemaProduits.php';
 require __DIR__ . '/../src/Magasin.php';
@@ -35,6 +42,7 @@ $fichiers = [
     'index' => $prefixe . '-index.sqlite',
     'identites' => $prefixe . '-identites.sqlite',
     'produits' => $prefixe . '-produits.sqlite',
+    'politiques' => $prefixe . '-politiques.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -54,6 +62,50 @@ $registreIdentites = IdentiteMagasin::connecter($fichiers['identites']);
 $magasinProduits = ProduitsMagasin::connecter($fichiers['produits']);
 $ctr01 = new Ctr01($index, $registreIdentites);
 $registre = new RegistreProduits($index, $registreIdentites, $magasinProduits, $ctr01);
+
+// CAP-CORE-004 lit désormais le registre persistant des politiques
+// (CAP-CORE-007), plus jamais l'index. Reprise fidèle de POL-PRODUITS-V1
+// depuis la photographie figée du bootstrap — même mécanisme que
+// `core:politiques:bootstrap` — pour que CTR-03 dispose d'une version ACTIVE
+// réelle à évaluer plus bas.
+$magasinPolitiques = PolitiquesMagasin::connecter($fichiers['politiques']);
+$registrePolitiques = new RegistrePolitiques($index, $registreIdentites, $magasinPolitiques, $ctr01);
+(static function () use ($registrePolitiques): void {
+    $g = static fn (): array => [
+        'politique' => PolitiqueAdministration::POLITIQUE, 'producteur' => 'AUT-GAMAD-001',
+        'source' => 'garde CAP-CORE-011', 'preuve' => 'P-' . bin2hex(random_bytes(4)),
+    ];
+    $bootstrap = json_decode(
+        file_get_contents(__DIR__ . '/../../registre-politiques/resources/bootstrap-politiques-v1.json'),
+        true,
+    );
+    $p = null;
+    foreach ($bootstrap['politiques'] as $ligne) {
+        if ($ligne['reference'] === 'POL-PRODUITS-V1') {
+            $p = $ligne;
+            break;
+        }
+    }
+    $version = $p['version'];
+    $sourceRef = $p['source'] . (!empty($p['adoption_reference']) ? ' (' . $p['adoption_reference'] . ')' : '');
+    $registrePolitiques->inscrirePolitique(array_merge($g(), [
+        'reference' => $p['reference'], 'libelle' => $p['libelle'],
+        'proprietaire_reference' => 'AUT-GAMAD-001', 'source_reference' => $sourceRef,
+    ]));
+    $registrePolitiques->creerVersion($p['reference'], array_merge($g(), ['version' => $version]));
+    $regles = $p['regles'];
+    $cas = [];
+    foreach ($regles as $r) {
+        $registrePolitiques->ajouterRegle($p['reference'], $version, array_merge($g(), [
+            'effet' => $r['effet'], 'action_reference' => $r['action'],
+            'sujet_reference' => $r['sujet_type'], 'motif' => $r['motif'],
+        ]));
+        $cas[] = ['sujet' => $r['sujet_type'] ?? 'AUT-GAMAD-001', 'action' => $r['action'], 'attendu' => $r['effet'] === 'PERMET' ? 'PERMIS' : 'REFUSE'];
+    }
+    $registrePolitiques->soumettreVersion($p['reference'], $version, $g());
+    $registrePolitiques->simulerVersion($p['reference'], $version, array_merge($g(), ['jeu_reference' => 'GARDE', 'cas' => $cas]));
+    $registrePolitiques->activerVersion($p['reference'], $version, $g());
+})();
 
 $echecs = 0;
 echo "GARDE — REGISTRE DES PRODUITS (CAP-CORE-011)\n\n";
@@ -191,7 +243,7 @@ $verifier(
 );
 
 // 2 — refus par défaut : CAP-CORE-004 refuse toute action hors politique.
-$ctr03 = new Ctr03($index);
+$ctr03 = new Ctr03($magasinPolitiques);
 $permise = $ctr03->simuler(PolitiqueProduits::AUTORITE, PolitiqueProduits::ACTION_ACTIVER, $refPilote);
 $inconnue = $ctr03->simuler(PolitiqueProduits::AUTORITE, 'activer un produit sans aucune politique adoptée', $refPilote);
 $verifier(

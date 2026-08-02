@@ -31,6 +31,7 @@ $fichiers = [
     'index' => $temp.'-index.sqlite',
     'acces' => $temp.'-acces.sqlite',
     'journal' => $temp.'-journal.sqlite',
+    'politiques' => $temp.'-politiques.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -60,6 +61,8 @@ $environnement = [
     'MAGASIN_PATH' => $fichiers['acces'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
+    'POLICY_REGISTRY_URL' => '',
+    'POLICY_REGISTRY_PATH' => $fichiers['politiques'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -78,6 +81,7 @@ $ctr16 = new Ctr16($magasin);
 $ctr16->inscrireAuthentificateur($AUTORITE, 'Mot-de-passe-autorite-1!');
 
 $app = require $application.'/bootstrap/app.php';
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
 $app->make(Kernel::class)->bootstrap();
 $sessionLaravel = $app->make('session')->driver();
 $sessionLaravel->start();

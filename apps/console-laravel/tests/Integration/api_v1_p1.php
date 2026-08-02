@@ -17,6 +17,7 @@ use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Illuminate\Contracts\Http\Kernel;
@@ -31,6 +32,7 @@ $fichiers = [
     'journal' => $temp . '-journal.sqlite',
     'produits' => $temp . '-produits.sqlite',
     'sources' => $temp . '-sources.sqlite',
+    'politiques' => $temp . '-politiques.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -65,6 +67,8 @@ $environnement = [
     'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
     'SOURCE_REGISTRY_URL' => '',
     'SOURCE_REGISTRY_PATH' => $fichiers['sources'],
+    'POLICY_REGISTRY_URL' => '',
+    'POLICY_REGISTRY_PATH' => $fichiers['politiques'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -85,8 +89,10 @@ SchemaFederation::migrer($acces);
 IdentiteMagasin::connecter();
 ProduitsMagasin::connecter();
 SourcesMagasin::connecter();
+PolitiquesMagasin::connecter();
 
 $app = require $application . '/bootstrap/app.php';
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
 $kernel = $app->make(Kernel::class);
 
 $echecs = 0;
@@ -217,13 +223,13 @@ $verifier(
 $ready = $requete('GET', '/api/v1/health/ready');
 $readyOk = $ready['statut'] === 200
     && ($ready['corps']['pret'] ?? false) === true
-    && count($ready['corps']['cibles'] ?? []) === 6;
+    && count($ready['corps']['cibles'] ?? []) === 7;
 if (!$readyOk) {
     fwrite(STDERR, json_encode($ready, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
 }
 $verifier(
     $readyOk,
-    'la readiness vérifie les six magasins et leurs migrations',
+    'la readiness vérifie les sept magasins et leurs migrations',
 );
 
 echo "\n";

@@ -1231,6 +1231,381 @@ paths:
           description: Source inconnue.
         "503":
           description: Une dépendance requise est indisponible.
+  /politiques:
+    get:
+      tags: [Politiques]
+      operationId: listerPolitiques
+      summary: Liste les politiques visibles de la session (CAP-CORE-007).
+      security:
+        - bearerSession: []
+      responses:
+        "200":
+          description: Liste des politiques visibles.
+        "401":
+          description: Session invalide.
+    post:
+      tags: [Politiques]
+      operationId: inscrirePolitique
+      summary: Inscrit une politique dans le registre, sans version.
+      security:
+        - bearerSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference, libelle, proprietaire_reference, source_reference]
+              properties:
+                reference: { type: string, maxLength: 64 }
+                libelle: { type: string, maxLength: 255 }
+                domaine: { type: string, maxLength: 128 }
+                proprietaire_reference: { type: string, maxLength: 64 }
+                source_reference: { type: string, maxLength: 500 }
+                description: { type: string, maxLength: 2000 }
+      responses:
+        "201":
+          description: Politique inscrite.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'inscription.
+        "409":
+          description: Référence déjà utilisée.
+        "422":
+          description: Dossier invalide ou propriétaire inconnu.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /politiques/{reference}:
+    get:
+      tags: [Politiques]
+      operationId: resoudrePolitique
+      summary: Fiche d'une politique, ses versions et son historique (CAP-CORE-007).
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Fiche de la politique, versions et historique de cycle.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+  /politiques/{reference}/versions:
+    get:
+      tags: [Politiques]
+      operationId: listerVersionsPolitique
+      summary: Liste les versions d'une politique.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Liste des versions.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+    post:
+      tags: [Politiques]
+      operationId: creerVersionPolitique
+      summary: Crée une nouvelle version en BROUILLON.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: string, maxLength: 32, description: "Format X.Y.Z" }
+                description: { type: string, maxLength: 2000 }
+                date_effet_prevue: { type: string, format: date }
+      responses:
+        "201":
+          description: Version créée en BROUILLON.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la création.
+        "404":
+          description: Politique inconnue.
+        "409":
+          description: Version déjà utilisée.
+        "422":
+          description: Format de version invalide.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /politiques/{reference}/historique:
+    get:
+      tags: [Politiques]
+      operationId: resoudreHistoriquePolitique
+      summary: Historique complet du cycle de toutes les versions d'une politique.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Historique daté des transitions de cycle.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+  /politiques/{reference}/versions/{version}:
+    get:
+      tags: [Politiques]
+      operationId: resoudreVersionPolitique
+      summary: Fiche d'une version précise, avec ses règles.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200":
+          description: Version et ses règles.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Politique ou version inconnue.
+  /politiques/{reference}/versions/{version}/regles:
+    post:
+      tags: [Politiques]
+      operationId: ajouterRegleVersion
+      summary: Ajoute une règle à une version en BROUILLON.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [effet, action_reference, motif]
+              properties:
+                effet: { type: string, enum: [PERMET, REFUSE] }
+                action_reference: { type: string, maxLength: 256 }
+                sujet_reference: { type: string, maxLength: 64 }
+                ressource_reference: { type: string, maxLength: 256 }
+                motif: { type: string, maxLength: 2000 }
+                ordre: { type: integer, minimum: 1 }
+      responses:
+        "201":
+          description: Règle ajoutée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'ajout.
+        "404":
+          description: Politique ou version inconnue.
+        "409":
+          description: Ordre déjà utilisé.
+        "422":
+          description: "Version immuable (hors BROUILLON) ou dossier invalide."
+        "503":
+          description: Une dépendance requise est indisponible.
+  /politiques/{reference}/versions/{version}/regles/{id}:
+    patch:
+      tags: [Politiques]
+      operationId: modifierRegleVersion
+      summary: Modifie une règle d'une version encore en BROUILLON.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Règle modifiée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la modification.
+        "404":
+          description: Règle inconnue.
+        "422":
+          description: Version immuable.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /politiques/{reference}/versions/{version}/soumission:
+    post:
+      tags: [Politiques]
+      operationId: soumettreVersionPolitique
+      summary: Soumet une version BROUILLON à validation ; elle devient immuable.
+      description: >-
+        Calcule l'empreinte de contenu de la version au moment de la
+        soumission. Idempotente si déjà EN_VALIDATION.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200":
+          description: Version EN_VALIDATION.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la soumission.
+        "404":
+          description: Politique ou version inconnue.
+        "422":
+          description: "État incompatible, ou aucune règle."
+        "503":
+          description: Une dépendance requise est indisponible.
+  /politiques/{reference}/versions/{version}/simulation:
+    post:
+      tags: [Politiques]
+      operationId: simulerVersionPolitique
+      summary: Simule une version EN_VALIDATION sur un jeu de cas explicite, sans effet de bord.
+      description: >-
+        N'évalue jamais les versions actives : seules les règles de la
+        version exacte simulée. Une activation exige au moins une simulation
+        REUSSIE de cette version.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jeu_reference, cas]
+              properties:
+                jeu_reference: { type: string, maxLength: 128 }
+                cas:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [sujet, action, attendu]
+                    properties:
+                      sujet: { type: string, maxLength: 64 }
+                      action: { type: string, maxLength: 256 }
+                      ressource: { type: string, maxLength: 256 }
+                      attendu: { type: string, enum: [PERMIS, REFUSE] }
+      responses:
+        "201":
+          description: Simulation enregistrée (résultat REUSSIE, ECHEC ou INCOMPLETE).
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la simulation.
+        "404":
+          description: Politique ou version inconnue.
+        "422":
+          description: Seule une version EN_VALIDATION se simule.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /politiques/{reference}/versions/{version}/activation:
+    post:
+      tags: [Politiques]
+      operationId: activerVersionPolitique
+      summary: Active une version EN_VALIDATION (idempotente).
+      description: >-
+        Exige au moins une simulation REUSSIE de cette version exacte.
+        Remplace atomiquement l'ancienne version active, s'il en existe une.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200":
+          description: "Version activée (déjà active : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'activation.
+        "404":
+          description: Politique ou version inconnue.
+        "422":
+          description: "État incompatible, ou simulation manquante."
+        "503":
+          description: Une dépendance requise est indisponible.
+  /politiques/{reference}/versions/{version}/suspension:
+    post:
+      tags: [Politiques]
+      operationId: suspendreVersionPolitique
+      summary: Suspend une version ACTIVE (idempotente) ; ferme immédiatement ce qu'elle permettait.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200":
+          description: "Version suspendue (déjà suspendue : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la suspension.
+        "404":
+          description: Politique ou version inconnue.
+        "422":
+          description: État incompatible.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /politiques/{reference}/retrait:
+    post:
+      tags: [Politiques]
+      operationId: retirerPolitique
+      summary: Retire la version active d'une politique ; ne supprime rien.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Politique retirée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse le retrait.
+        "404":
+          description: Politique inconnue.
+        "422":
+          description: Aucune version active à retirer.
+        "503":
+          description: Une dépendance requise est indisponible.
 components:
   securitySchemes:
     bearerSession:
