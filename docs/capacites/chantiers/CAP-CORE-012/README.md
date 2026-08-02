@@ -17,4 +17,4 @@ CAP-CORE-010 — GO et fusionnée
 CAP-CORE-002 — GO et fusionnée
 ```
 
-Claude Code doit lire les cinq parties avant de commencer, traiter uniquement `CAP-CORE-012`, ouvrir une PR dédiée et s’arrêter lorsque cette PR est verte et prête à fusionner.
+Claude Code doit lire les cinq parties avant de commencer, traiter uniquement `CAP-CORE-012`, ouvrir une PR dédiée et s'arrêter lorsque cette PR est verte et prête à fusionner.
