@@ -35,6 +35,7 @@
             "Gamad\\RegistreAcces\\": "../../core/registre-acces/src/",
             "Gamad\\RegistreAutorisation\\": "../../core/registre-autorisation/src/",
             "Gamad\\RegistreFederation\\": "../../core/registre-federation/src/",
+            "Gamad\\RegistreProduits\\": "../../core/registre-produits/src/",
             "Gamad\\JournalOperationnel\\": "../../core/journal-operationnel/src/"
         }
     },

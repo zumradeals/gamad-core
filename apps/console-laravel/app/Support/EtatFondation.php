@@ -8,6 +8,7 @@ use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 
 /**
  * Readiness sans migration implicite et sans restitution de secrets.
@@ -49,6 +50,12 @@ final class EtatFondation
                 'IDENTITY_REGISTRY_URL',
                 fn (): \PDO => IdentiteMagasin::ouvrir(),
                 ['migration_registre_identites', 'identite_inscrite', 'evenement_cycle_identite'],
+                $production,
+            ),
+            'produits' => $this->inspecterCible(
+                'PRODUCT_REGISTRY_URL',
+                fn (): \PDO => ProduitsMagasin::ouvrir(),
+                ['migration_registre_produits', 'produit', 'produit_cycle', 'produit_environnement'],
                 $production,
             ),
             'journal' => $this->inspecterCible(
@@ -167,6 +174,7 @@ final class EtatFondation
             'MAGASIN_URL' => 'database.connections.gamad_access.url',
             'IDENTITY_REGISTRY_URL' => 'database.connections.gamad_identity.url',
             'JOURNAL_OPERATIONNEL_URL' => 'database.connections.gamad_journal.url',
+            'PRODUCT_REGISTRY_URL' => 'database.connections.gamad_products.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);
