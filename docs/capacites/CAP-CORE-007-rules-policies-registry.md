@@ -51,7 +51,7 @@ chaque règle lue) ; le rapprochement par sous-chaîne a été retiré.
 
 **Ce qui reste dans les satellites et les autres capacités :** les règles
 métier détaillées et les moteurs de tarification des satellites, les
-contrats intercapacités complets (CAP-CORE-009, à venir), le vocabulaire
+contrats intercapacités (CAP-CORE-009), le vocabulaire
 canonique (CAP-CORE-010, à venir). Ce registre ne porte que les politiques
 techniques communes déjà exploitées par le Core.
 
@@ -236,8 +236,9 @@ de la PR pour la confirmation CI GitHub.
 
 **Manques non bloquants :**
 
-- aucun contrat CAP-CORE-009 formel entre producteurs et consommateurs de
-  politiques : la relation reste portée par le code et cette fiche ;
+- `CTR-04` est repris dans le registre des contrats (CAP-CORE-009) comme
+  contrat interne prioritaire, mais les autres échanges de ce module n'y sont
+  pas encore individuellement décrits ;
 - `PolitiqueAdministration::ACTION_LIRE` et `ACTION_VERSION_REMPLACER` sont
   déclarées dans le vocabulaire fermé mais ne sont soumises à CTR-03 par
   aucun appelant réel : les lectures ne passent pas par une décision, et le
