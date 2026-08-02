@@ -54,5 +54,6 @@ Une session de codage traite une seule capacité, ouvre une seule PR et s’arr�
 - `CAP-CORE-016/` — Registre de gouvernance des secrets et clés, fournisseurs externes, usages, rotations, compromissions et récupération.
 - `CAP-CORE-015/` — Preuves d’intégrité, empreintes, signatures, manifestes, attestations, checkpoints et vérifications.
 - `CAP-CORE-008/` — Dossiers de décision, autorités compétentes, instruction, quorum, adoption, effets, exécution, annulation et remplacement.
+- `CAP-CORE-017/` — Registre des risques, évaluations, traitements, exceptions temporaires, mesures compensatoires, décisions, expirations et résolutions exactes.
 
 Les notes suivantes seront ajoutées directement dans ce dossier, dans l’ordre ci-dessus.
