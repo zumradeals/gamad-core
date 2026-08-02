@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\FederationController;
 use App\Http\Controllers\Api\V1\FondationController;
 use App\Http\Controllers\Api\V1\IdentiteController;
 use App\Http\Controllers\Api\V1\PasskeySessionController;
+use App\Http\Controllers\Api\V1\PolitiqueController;
 use App\Http\Controllers\Api\V1\ProduitController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Api\V1\SourceController;
@@ -95,6 +96,34 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         Route::post('/sources/{reference}/verifications', [SourceController::class, 'enregistrerVerification'])
             ->middleware('throttle:20,1');
         Route::post('/sources/{reference}/lignee', [SourceController::class, 'declarerLignee'])
+            ->middleware('throttle:20,1');
+
+        // CAP-CORE-007 — registre des politiques. CTR-03 (CAP-CORE-004) lit ce
+        // magasin pour décider ; il ne lit plus jamais politique/regle depuis
+        // l'index. `{version}` suit toujours X.Y.Z.
+        Route::get('/politiques', [PolitiqueController::class, 'index']);
+        Route::post('/politiques', [PolitiqueController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('/politiques/{reference}', [PolitiqueController::class, 'show']);
+        Route::get('/politiques/{reference}/versions', [PolitiqueController::class, 'versions']);
+        Route::get('/politiques/{reference}/historique', [PolitiqueController::class, 'historique']);
+        Route::post('/politiques/{reference}/versions', [PolitiqueController::class, 'creerVersion'])
+            ->middleware('throttle:20,1');
+        Route::get('/politiques/{reference}/versions/{version}', [PolitiqueController::class, 'version'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+');
+        Route::post('/politiques/{reference}/versions/{version}/regles', [PolitiqueController::class, 'ajouterRegle'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::patch('/politiques/{reference}/versions/{version}/regles/{id}', [PolitiqueController::class, 'modifierRegle'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->whereNumber('id')->middleware('throttle:20,1');
+        Route::post('/politiques/{reference}/versions/{version}/soumission', [PolitiqueController::class, 'soumettre'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/politiques/{reference}/versions/{version}/simulation', [PolitiqueController::class, 'simuler'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/politiques/{reference}/versions/{version}/activation', [PolitiqueController::class, 'activer'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/politiques/{reference}/versions/{version}/suspension', [PolitiqueController::class, 'suspendre'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/politiques/{reference}/retrait', [PolitiqueController::class, 'retirer'])
             ->middleware('throttle:20,1');
 
         Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat']);

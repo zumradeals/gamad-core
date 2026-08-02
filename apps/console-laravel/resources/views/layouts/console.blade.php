@@ -87,6 +87,14 @@
                 </span>
                 Sources
             </a>
+            <a class="nav__link"
+               href="{{ route('console.politiques.index') }}"
+               @if(request()->routeIs('console.politiques.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M9 4h9v16H9"/><path d="M9 4H5v16h4"/><path d="M13 9h3M13 13h3"/></svg>
+                </span>
+                Politiques
+            </a>
 
             <span class="nav__label">Protéger</span>
             <a class="nav__link"
