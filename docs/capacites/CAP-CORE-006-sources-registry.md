@@ -126,12 +126,13 @@ consommateur, `GO` requis avant ce chantier), CAP-CORE-013 (preuve).
 CAP-CORE-007 dépend désormais de CAP-CORE-006 pour la résolution des
 sources, jamais l'inverse.
 
-**Autorisations :** `POL-SOURCES-V1`, portée provisoirement par la source
-technique versionnée `core/registre-normes/resources/index-baseline-v1.json`
-et évaluée par CAP-CORE-004, tant que CAP-CORE-007 reste `NO GO`. Les onze
-règles associées réservent chaque action gouvernée à `AUT-GAMAD-001` ; le
-code oppose en outre ses propres bornes, notamment le refus d'auto-attestation
-et la détection de cycle de lignée.
+**Autorisations :** `POL-SOURCES-V1`, reprise fidèlement (chantier
+CAP-CORE-007) depuis la source technique versionnée dans le registre
+persistant et gouverné `core/registre-politiques`, activée, et évaluée par
+CAP-CORE-004 depuis ce même magasin. Les onze règles associées réservent
+chaque action gouvernée à `AUT-GAMAD-001` ; le code oppose en outre ses
+propres bornes, notamment le refus d'auto-attestation et la détection de
+cycle de lignée.
 
 **Comportement en panne :** une décision, une preuve ou un registre
 indisponible ferme l'opération (`503`) sans écriture partielle. Une commande

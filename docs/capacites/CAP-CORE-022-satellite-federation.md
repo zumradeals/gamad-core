@@ -67,11 +67,13 @@ seulement sa référence.
 
 **Dépendances :** CAP-CORE-001 (identités et liens produits), CAP-CORE-004
 (décision), CAP-CORE-005 (session Core et magasin d’accès), CAP-CORE-013
-(preuve), CAP-CORE-007 (politique technique portée par l’index).
+(preuve), CAP-CORE-007 (registre persistant et gouverné des politiques
+techniques).
 
-**Autorisations :** `POL-FEDERATION-SATELLITES-V1`, portée par la source
-versionnée `core/registre-normes/resources/index-baseline-v1.json` et évaluée
-par CAP-CORE-004. Le module n’écrit aucune règle. Au-delà de la décision, le
+**Autorisations :** `POL-FEDERATION-SATELLITES-V1`, reprise fidèlement
+(chantier CAP-CORE-007) dans le registre persistant et gouverné
+`core/registre-politiques`, activée, et évaluée par CAP-CORE-004 depuis ce
+même magasin. Le module n’écrit aucune règle. Au-delà de la décision, le
 code oppose ses propres bornes : on ouvre pour soi-même ou par l’autorité
 d’inscription ; on ne vérifie un jeton que si l’on est le satellite
 destinataire ; on ne révoque qu’en tant que porteur, satellite concerné ou
