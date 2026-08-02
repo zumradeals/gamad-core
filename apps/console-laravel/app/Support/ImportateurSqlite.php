@@ -32,6 +32,13 @@ final class ImportateurSqlite
         'rapprochement_identite',
     ];
 
+    /** @var list<string> */
+    private const TABLES_PRODUITS = [
+        'produit',
+        'produit_cycle',
+        'produit_environnement',
+    ];
+
     /** @return array<string,int> */
     public function importerAcces(string $source, \PDO $cible): array
     {
@@ -45,6 +52,12 @@ final class ImportateurSqlite
     public function importerIdentites(string $source, \PDO $cible): array
     {
         return $this->importer($source, $cible, self::TABLES_IDENTITES);
+    }
+
+    /** @return array<string,int> */
+    public function importerProduits(string $source, \PDO $cible): array
+    {
+        return $this->importer($source, $cible, self::TABLES_PRODUITS);
     }
 
     /**

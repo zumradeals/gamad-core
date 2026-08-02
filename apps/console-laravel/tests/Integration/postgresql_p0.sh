@@ -28,7 +28,7 @@ trap nettoyer EXIT
     --wait \
     start >/dev/null
 
-for base in gamad_index gamad_access gamad_identity gamad_journal; do
+for base in gamad_index gamad_access gamad_identity gamad_products gamad_journal; do
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
 done
 
@@ -53,6 +53,7 @@ environnement=(
     "DATABASE_URL=postgresql://postgres@127.0.0.1:${port}/gamad_index"
     "MAGASIN_URL=postgresql://postgres@127.0.0.1:${port}/gamad_access"
     "IDENTITY_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_identity"
+    "PRODUCT_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_products"
     "JOURNAL_OPERATIONNEL_URL=postgresql://postgres@127.0.0.1:${port}/gamad_journal"
 )
 
@@ -64,7 +65,7 @@ environnement=(
 
 env "${environnement[@]}" php "$application/tests/Integration/postgresql_p0.php"
 
-for base in drill_index drill_access drill_identity drill_journal; do
+for base in drill_index drill_access drill_identity drill_products drill_journal; do
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
 done
 
@@ -75,6 +76,7 @@ export GAMAD_BACKUP_DIR="$temp/backups"
 export GAMAD_INDEX_PGDATABASE=gamad_index
 export GAMAD_ACCESS_PGDATABASE=gamad_access
 export GAMAD_IDENTITY_PGDATABASE=gamad_identity
+export GAMAD_PRODUCTS_PGDATABASE=gamad_products
 export GAMAD_JOURNAL_PGDATABASE=gamad_journal
 
 "$racine/ops/core-foundation/backup.sh"
@@ -84,6 +86,7 @@ export GAMAD_RESTORE_SOURCE="$lot"
 export GAMAD_RESTORE_INDEX_PGDATABASE=drill_index
 export GAMAD_RESTORE_ACCESS_PGDATABASE=drill_access
 export GAMAD_RESTORE_IDENTITY_PGDATABASE=drill_identity
+export GAMAD_RESTORE_PRODUCTS_PGDATABASE=drill_products
 export GAMAD_RESTORE_JOURNAL_PGDATABASE=drill_journal
 export GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases
 
