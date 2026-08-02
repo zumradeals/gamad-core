@@ -13,7 +13,13 @@ reconstructible à volonté.
   une baseline altérée est refusée sans détruire l'index existant.
 - **`resoudreNorme`** — résout une norme et son statut, y compris à une date
   passée (reconstruction temporelle).
-- **`resoudreSource`** — délègue à `CTR-15`, titulaire du contrat des sources.
+- **`resoudreSource`** — délègue à `CTR-15` (`core/registre-sources`),
+  titulaire du contrat des sources et de son magasin persistant propre
+  (CAP-CORE-006). La dépendance va de ce module vers `CTR-15`, jamais
+  l'inverse : `CTR-15` ne lit aucune table de cet index. Ce module ajoute
+  seulement, ici, une projection de compatibilité historique (`rang`,
+  `statut`, `adoption_reference`, `versionnee`) pour les appelants existants,
+  quand la source est aussi connue comme norme versionnée dans la baseline.
 - **`resoudreCapacite`** — résout l'état d'une capacité, dimension par
   dimension, à une date donnée.
 - **`diagnostiquerIndex`** — diagnostic opérationnel : intégrité de la baseline

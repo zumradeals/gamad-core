@@ -53,5 +53,6 @@ Les fiches individuelles sont ajoutées ou complétées au début du chantier te
 Fiches disponibles :
 
 - [`CAP-CORE-001-identity-registry.md`](CAP-CORE-001-identity-registry.md)
+- [`CAP-CORE-006-sources-registry.md`](CAP-CORE-006-sources-registry.md)
 - [`CAP-CORE-011-products-registry.md`](CAP-CORE-011-products-registry.md)
 - [`CAP-CORE-022-satellite-federation.md`](CAP-CORE-022-satellite-federation.md)
