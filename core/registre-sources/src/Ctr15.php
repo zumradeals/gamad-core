@@ -5,162 +5,189 @@ declare(strict_types=1);
 namespace Gamad\RegistreSources;
 
 /**
- * Les trois opérations de lecture du contrat CTR-15 — Registre des sources
- * (CAP-CORE-006, conception adoptée par ADOPTION-0032, Titre III, Article 12).
+ * Contrat de lecture canonique du registre des sources (CAP-CORE-006).
  *
- * Lecture seulement : le service interroge l'index technique et ne lit aucun
- * fichier.
+ * CTR-15 lit exclusivement le magasin persistant de CAP-CORE-006 — jamais les
+ * tables `norme`, `version_norme`, `statut`, `adoption` ou `relation_evolution`
+ * du registre des normes. La dépendance correcte va de CAP-CORE-007 vers
+ * CAP-CORE-006, jamais l'inverse (fiche CAP-CORE-006, §7) : le registre des
+ * normes peut enrichir une projection historique à partir de ce que CTR-15
+ * rend, CTR-15 ne le lui doit jamais.
  *
- * Ce service porte trois invariants propres à la capacité :
+ * Lecture seulement : aucune écriture n'est exposée ici. Les commandes
+ * gouvernées vivent dans {@see RegistreSources}, appelées depuis la couche
+ * applicative après décision de CAP-CORE-004.
  *
- *   INV-7  identité canonique — une source se désigne par sa référence, jamais
- *          par un chemin de fichier ; renommer un fichier ne renomme pas la
- *          source.
- *   INV-8  rang fondé, jamais inventé — tant qu'aucune autorité ne l'a
- *          qualifié, la valeur rendue est INDETERMINE : le service déclare son
- *          ignorance plutôt que de présumer un rang.
- *   INV-11 non-effacement de la provenance — la lignée est tenue en ajout
- *          seul ; aucune relation n'est jamais supprimée.
- *
- * Ce service est le titulaire du contrat CTR-15. CTR-04 (CAP-CORE-007) lui
- * délègue la résolution des sources : le registre des normes dépend des
- * sources, et non l'inverse.
+ * Une référence inconnue rend toujours `null`, jamais un rapprochement
+ * approché (INV-7). La lignée distingue « source inconnue » (`null`) de
+ * « source connue sans lignée » (deux listes vides) (INV-11).
  */
 final class Ctr15
 {
     /** La capacité que ce module sert. */
     public const CAPACITE = 'CAP-CORE-006';
 
-    public function __construct(private \PDO $pdo)
+    public function __construct(private ?\PDO $magasin = null)
     {
+        $this->magasin ??= Magasin::ouvrir();
     }
 
     /**
-     * Résout une source reconnue : son identité, sa catégorie, son niveau
-     * d'authenticité et — si elle est aussi connue comme norme versionnée —
-     * son rang, son statut et l'acte qui l'a adoptée.
-     *
+     * La fiche courante d'une source : identité, état, révision courante.
      * Sans date : l'état courant. Avec une date : l'état à cette date.
-     *
-     * Une source inconnue rend `null` : le service n'invente aucune source
-     * (INV-7). Une source connue mais non versionnée rend `versionnee = false`
-     * — l'absence est déclarée, jamais comblée par une valeur par défaut.
      *
      * @return array<string,mixed>|null
      */
     public function resoudreSource(string $reference, ?string $date = null): ?array
     {
-        $st = $this->pdo->prepare(
-            'SELECT reference, titre, categorie, authenticite, reserve FROM source WHERE reference = ?'
-        );
+        $st = $this->magasin->prepare('SELECT * FROM source WHERE reference = ?');
         $st->execute([$reference]);
-        $source = $st->fetch();
-        if ($source === false) {
+        $s = $st->fetch();
+        if ($s === false) {
             return null;
         }
 
-        $version = $this->versionEtStatut($reference, $date);
+        $cycle = $this->dernierCycle($reference, $date);
+        $revision = $this->derniereRevision($reference, $date);
 
         return [
-            'reference'          => $source['reference'],
-            'titre'              => $source['titre'],
-            'categorie'          => $source['categorie'],
-            'authenticite'       => $source['authenticite'],
-            'reserve'            => $source['reserve'],
-            'rang'               => $version['rang'] ?? 'INDETERMINE',
-            'statut'             => $version['statut'] ?? null,
-            'adoption_reference' => $version['adoption_reference'] ?? null,
-            'versionnee'         => $version !== null,
+            'reference' => $s['reference'],
+            'nom_canonique' => $s['nom_canonique'],
+            'type_source' => $s['type_source'],
+            'authenticite_legacy' => $s['authenticite_legacy'],
+            'nom_affichage' => $revision['nom_affichage'] ?? $s['nom_canonique'],
+            'categorie' => $revision['categorie'] ?? null,
+            'description' => $revision['description'] ?? null,
+            'proprietaire_reference' => $revision['proprietaire_reference'] ?? null,
+            'produit_producteur_reference' => $revision['produit_producteur_reference'] ?? null,
+            'reserve' => $revision['reserve'] ?? null,
+            'numero_revision' => $revision !== null ? (int) $revision['numero_revision'] : null,
+            'etat' => $cycle['etat'] ?? 'PREPARATION',
+            'depuis' => $cycle['date_effet'] ?? null,
+            'cree_le' => $s['cree_le'],
+            'modifie_le' => $s['modifie_le'],
+            'regime' => 'REGISTRE_PERSISTANT',
         ];
     }
 
     /**
-     * Restitue la lignée d'une source : ce dont elle procède et ce qui l'a
-     * dépassée.
+     * La vérification opérationnelle courante d'une source, ou `null` si
+     * aucune n'a jamais été enregistrée.
      *
-     * `amont` — les normes que celle-ci amende, remplace ou abroge : sa
-     * provenance. `aval` — celles qui l'ont amendée, remplacée ou abrogée : sa
-     * supersession.
+     * @return array<string,mixed>|null
+     */
+    public function resoudreVerificationCourante(string $reference, ?string $date = null): ?array
+    {
+        $sql = 'SELECT * FROM source_verification WHERE source_reference = ?';
+        $args = [$reference];
+        if ($date !== null) {
+            $sql .= ' AND verifie_le <= ?';
+            $args[] = $date;
+        }
+        $sql .= ' ORDER BY verifie_le DESC, id DESC LIMIT 1';
+        $st = $this->magasin->prepare($sql);
+        $st->execute($args);
+        $v = $st->fetch();
+
+        return $v === false ? null : [
+            'source_reference' => $v['source_reference'],
+            'niveau' => $v['niveau'],
+            'resultat' => $v['resultat'],
+            'verifie_par_reference' => $v['verifie_par_reference'],
+            'verifie_le' => $v['verifie_le'],
+            'expire_le' => $v['expire_le'],
+        ];
+    }
+
+    /**
+     * Les finalités actives déclarées pour une source.
      *
-     * Une source inconnue rend `null` ; une source connue sans lignée rend deux
-     * listes vides. La distinction est délibérée : « je ne connais pas cette
-     * source » et « cette source n'a pas de lignée » sont deux réponses
+     * @return list<array<string,mixed>>
+     */
+    public function resoudreFinalites(string $reference): array
+    {
+        $st = $this->magasin->prepare(
+            'SELECT * FROM source_finalite WHERE source_reference = ? AND actif = 1 ORDER BY date_debut, id'
+        );
+        $st->execute([$reference]);
+
+        return array_map(static fn (array $f): array => [
+            'finalite_reference' => $f['finalite_reference'],
+            'produit_consommateur_reference' => $f['produit_consommateur_reference'],
+            'date_debut' => $f['date_debut'],
+            'date_fin' => $f['date_fin'],
+        ], $st->fetchAll());
+    }
+
+    /**
+     * Restitue la lignée d'une source : ses parentes (amont, ce dont elle
+     * dérive) et ses dérivées (aval, ce qui procède d'elle).
+     *
+     * Une source inconnue rend `null` ; une source connue sans lignée rend
+     * deux listes vides. La distinction est délibérée : « je ne connais pas
+     * cette source » et « cette source n'a pas de lignée » sont deux réponses
      * différentes, et les confondre masquerait une ignorance derrière un fait.
      *
      * @return array{reference:string,amont:list<array<string,mixed>>,aval:list<array<string,mixed>>}|null
      */
     public function resoudreLignee(string $reference): ?array
     {
-        $st = $this->pdo->prepare('SELECT reference FROM source WHERE reference = ?');
-        $st->execute([$reference]);
-        if ($st->fetch() === false) {
+        $existe = $this->magasin->prepare('SELECT 1 FROM source WHERE reference = ?');
+        $existe->execute([$reference]);
+        if ($existe->fetchColumn() === false) {
             return null;
         }
 
-        $amont = $this->pdo->prepare(
-            'SELECT norme_cible AS reference, type, adoption_reference FROM relation_evolution
-             WHERE norme_source = ? ORDER BY id'
+        $amont = $this->magasin->prepare(
+            'SELECT source_parente_reference AS reference, type_relation, date_effet
+             FROM source_lignee WHERE source_reference = ? ORDER BY id'
         );
         $amont->execute([$reference]);
 
-        $aval = $this->pdo->prepare(
-            'SELECT norme_source AS reference, type, adoption_reference FROM relation_evolution
-             WHERE norme_cible = ? ORDER BY id'
+        $aval = $this->magasin->prepare(
+            'SELECT source_reference AS reference, type_relation, date_effet
+             FROM source_lignee WHERE source_parente_reference = ? ORDER BY id'
         );
         $aval->execute([$reference]);
 
         return [
             'reference' => $reference,
-            'amont'     => $amont->fetchAll(\PDO::FETCH_ASSOC),
-            'aval'      => $aval->fetchAll(\PDO::FETCH_ASSOC),
+            'amont' => array_values($amont->fetchAll()),
+            'aval' => array_values($aval->fetchAll()),
         ];
     }
 
-    /**
-     * Relève la version courante d'une source qui est aussi une norme
-     * versionnée, et le statut en vigueur à la date demandée.
-     *
-     * Requête propre au registre des sources, et non un appel à CTR-04 : la
-     * dépendance va des normes vers les sources. L'inverse ferait dépendre la
-     * racine de ce qu'elle fonde.
-     *
-     * @return array<string,mixed>|null
-     */
-    private function versionEtStatut(string $reference, ?string $date): ?array
+    /** @return array<string,mixed>|null */
+    private function dernierCycle(string $reference, ?string $date): ?array
     {
-        $sv = $this->pdo->prepare(
-            'SELECT v.id, v.version, n.rang_code
-             FROM version_norme v JOIN norme n ON n.reference = v.norme_reference
-             WHERE v.norme_reference = ? ORDER BY v.version DESC LIMIT 1'
-        );
-        $sv->execute([$reference]);
-        $version = $sv->fetch();
-        if ($version === false) {
-            return null;
-        }
-
+        $sql = 'SELECT * FROM source_cycle WHERE source_reference = ?';
+        $args = [$reference];
         if ($date !== null) {
-            $ss = $this->pdo->prepare(
-                'SELECT valeur, date_effet, adoption_reference FROM statut
-                 WHERE version_norme_id = ? AND date_effet <= ?
-                 ORDER BY date_effet DESC, id DESC LIMIT 1'
-            );
-            $ss->execute([$version['id'], $date]);
-        } else {
-            $ss = $this->pdo->prepare(
-                'SELECT valeur, date_effet, adoption_reference FROM statut
-                 WHERE version_norme_id = ? ORDER BY date_effet DESC, id DESC LIMIT 1'
-            );
-            $ss->execute([$version['id']]);
+            $sql .= ' AND date_effet <= ?';
+            $args[] = $date;
         }
-        $statut = $ss->fetch() ?: null;
+        $sql .= ' ORDER BY date_effet DESC, id DESC LIMIT 1';
+        $st = $this->magasin->prepare($sql);
+        $st->execute($args);
+        $c = $st->fetch();
 
-        return [
-            'version'            => $version['version'],
-            'rang'               => $version['rang_code'],
-            'statut'             => $statut['valeur'] ?? null,
-            'date_effet'         => $statut['date_effet'] ?? null,
-            'adoption_reference' => $statut['adoption_reference'] ?? null,
-        ];
+        return $c === false ? null : $c;
+    }
+
+    /** @return array<string,mixed>|null */
+    private function derniereRevision(string $reference, ?string $date): ?array
+    {
+        $sql = 'SELECT * FROM source_revision WHERE source_reference = ?';
+        $args = [$reference];
+        if ($date !== null) {
+            $sql .= ' AND date_effet <= ?';
+            $args[] = $date;
+        }
+        $sql .= ' ORDER BY date_effet DESC, numero_revision DESC LIMIT 1';
+        $st = $this->magasin->prepare($sql);
+        $st->execute($args);
+        $r = $st->fetch();
+
+        return $r === false ? null : $r;
     }
 }

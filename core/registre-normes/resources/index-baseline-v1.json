@@ -16,7 +16,7 @@
         "sources": 26,
         "fonctions": 24,
         "entites": 7,
-        "regles": 31,
+        "regles": 42,
         "mandats": 1,
         "indetermines": 95
     },
@@ -1968,6 +1968,13 @@
                     "libelle": "Politique technique du registre des produits",
                     "source": "core/registre-produits — CAP-CORE-011",
                     "adoption_reference": null
+                },
+                {
+                    "reference": "POL-SOURCES-V1",
+                    "version": "1.0",
+                    "libelle": "Politique technique du registre des sources",
+                    "source": "core/registre-sources — CAP-CORE-006",
+                    "adoption_reference": null
                 }
             ]
         },
@@ -2298,6 +2305,94 @@
                     "action": "fermer-un-environnement-de-produit",
                     "sujet_type": "AUT-GAMAD-001",
                     "motif": "Seule l'autorité d'inscription ferme un environnement. La fermeture est datée et ne supprime rien."
+                },
+                {
+                    "id": 32,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "lire-une-source-non-active-du-registre",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "L'autorité d'inscription lit toute source du registre, active ou non. Un propriétaire lit sa propre fiche par une borne posée dans le code, pas par cette règle."
+                },
+                {
+                    "id": 33,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "inscrire-une-source-dans-le-registre",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription crée une fiche source, en PREPARATION, jamais activée automatiquement."
+                },
+                {
+                    "id": 34,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "modifier-les-métadonnées-d-une-source-inscrite",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription modifie les métadonnées révisables d'une source ; la référence, le nom canonique et le type ne changent jamais."
+                },
+                {
+                    "id": 35,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "activer-une-source-inscrite",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription active une source."
+                },
+                {
+                    "id": 36,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "suspendre-une-source-active",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription suspend une source active. La suspension ferme immédiatement tout nouvel usage."
+                },
+                {
+                    "id": 37,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "retirer-une-source-du-registre",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription retire une source. Le retrait est en ajout seul et ne réutilise jamais la référence."
+                },
+                {
+                    "id": 38,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "déclarer-une-finalité-de-source",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription déclare une finalité, bornée par consommateur et par période. Aucune finalité n'est jamais implicite."
+                },
+                {
+                    "id": 39,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "fermer-une-finalité-de-source",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription ferme une finalité. La fermeture est datée et ne supprime rien."
+                },
+                {
+                    "id": 40,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "enregistrer-une-vérification-de-source",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription enregistre une vérification. Une source ne s'auto-atteste jamais."
+                },
+                {
+                    "id": 41,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "déclarer-une-lignée-de-source",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription déclare une relation de lignée. Un cycle de lignée est toujours refusé."
+                },
+                {
+                    "id": 42,
+                    "politique_reference": "POL-SOURCES-V1",
+                    "effet": "PERMET",
+                    "action": "vérifier-l-utilisabilité-d-une-source",
+                    "sujet_type": "AUT-GAMAD-001",
+                    "motif": "Seule l'autorité d'inscription interroge l'utilisabilité d'une source pour un consommateur et une finalité donnés."
                 }
             ]
         },
