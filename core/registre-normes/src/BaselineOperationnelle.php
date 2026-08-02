@@ -15,7 +15,7 @@ final class BaselineOperationnelle
 {
     private const FORMAT = 'gamad-core-index-baseline';
     private const VERSION = 1;
-    private const EMPREINTE_SHA256 = '99856f9e1230523e1115b8d347c4eeb2c03498c01230bd3040a6c45452d936fd';
+    private const EMPREINTE_SHA256 = '43780843d43cd56ba0dbbad8bc3e9701debe8d43754070ff0da92c9eb7d38716';
 
     /**
      * Ordre d'insertion respectant les dépendances relationnelles du schéma.
@@ -30,8 +30,6 @@ final class BaselineOperationnelle
         'version_norme',
         'statut',
         'etat_capacite',
-        'politique',
-        'regle',
         'entite',
         'etat_entite',
         'denomination',
@@ -73,7 +71,7 @@ final class BaselineOperationnelle
 
     /**
      * @return array{adoptions:int,normes:int,versions:int,statuts:int,etats:int,
-     *               rangs:int,sources:int,fonctions:int,entites:int,regles:int,
+     *               rangs:int,sources:int,fonctions:int,entites:int,
      *               mandats:int,indetermines:int}
      */
     public function reconstruire(\PDO $pdo): array
@@ -307,7 +305,7 @@ final class BaselineOperationnelle
 
     /**
      * @return array{adoptions:int,normes:int,versions:int,statuts:int,etats:int,
-     *               rangs:int,sources:int,fonctions:int,entites:int,regles:int,
+     *               rangs:int,sources:int,fonctions:int,entites:int,
      *               mandats:int,indetermines:int}
      */
     private function compteurs(\PDO $pdo): array
@@ -324,7 +322,6 @@ final class BaselineOperationnelle
             'sources' => $this->nombre($pdo, 'source'),
             'fonctions' => $this->nombre($pdo, 'fonction'),
             'entites' => $this->nombre($pdo, 'entite'),
-            'regles' => $this->nombre($pdo, 'regle'),
             'mandats' => $this->nombre($pdo, 'mandat'),
             'indetermines' => (int) $pdo->query(
                 "SELECT count(*) FROM norme WHERE rang_code = 'INDETERMINE'"

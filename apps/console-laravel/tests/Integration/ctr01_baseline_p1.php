@@ -140,9 +140,8 @@ $verifier(
 
 $pdo = Db::connect();
 $entites = (int) $pdo->query('SELECT count(*) FROM entite')->fetchColumn();
-$regles = (int) $pdo->query('SELECT count(*) FROM regle')->fetchColumn();
 $verifier(
-    $entites === 7 && $regles === 42,
+    $entites === 7,
     'la baseline restaure les ancrages techniques attendus',
 );
 

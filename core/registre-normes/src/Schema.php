@@ -26,7 +26,7 @@ final class Schema
         foreach ([
             'relation_evolution', 'etat_capacite', 'statut', 'version_norme',
             'delegation', 'etat_mandat', 'mandat', 'etat_fonction', 'fonction', 'titulaire',
-            'denomination', 'etat_entite', 'entite', 'regle', 'politique',
+            'denomination', 'etat_entite', 'entite',
             'adoption', 'norme', 'source', 'rang_normatif',
         ] as $t) {
             $pdo->exec("DROP TABLE IF EXISTS {$t}");
@@ -113,37 +113,11 @@ final class Schema
             )
         SQL);
 
-        // CAP-CORE-004 — politiques d'autorisation. Les politiques sont des
-        // DONNÉES de l'index, jamais du code du moteur : changer une règle est
-        // un changement de données tracé, non un correctif enfoui.
-        //
-        // `adoption_reference` est nullable depuis la sortie de l'ancien corpus :
-        // une politique technique procède désormais d'une source versionnée du
-        // dépôt. Exiger une adoption obligerait à en fabriquer une, ce qui
-        // reviendrait à inventer une preuve.
-        $pdo->exec(<<<SQL
-            CREATE TABLE politique (
-                reference          TEXT PRIMARY KEY,
-                version            TEXT NOT NULL,
-                libelle            TEXT NOT NULL,
-                source             TEXT NOT NULL,
-                adoption_reference TEXT REFERENCES adoption(reference)
-            )
-        SQL);
-
-        // `sujet_type` NULL = la règle vaut pour TOUT sujet, titulaire du
-        // mandat compris. Un moteur qui exempterait l'autorité de ses
-        // propres bornes ne serait pas un moteur d'autorisation.
-        $pdo->exec(<<<SQL
-            CREATE TABLE regle (
-                id                  {$id},
-                politique_reference TEXT NOT NULL REFERENCES politique(reference),
-                effet               TEXT NOT NULL CHECK (effet IN ('PERMET','REFUSE')),
-                action              TEXT NOT NULL,
-                sujet_type          TEXT,
-                motif               TEXT NOT NULL
-            )
-        SQL);
+        // CAP-CORE-004 — politiques d'autorisation. Depuis CAP-CORE-007, les
+        // politiques et leurs règles vivent dans le magasin persistant et
+        // gouverné de `core/registre-politiques` — plus jamais dans cet index
+        // reconstructible. `CTR-03` ne lit plus les tables `politique`/`regle` ;
+        // elles ne sont donc plus créées ici.
 
         // CAP-CORE-001 — identités.
         // AUCUNE colonne de profil, de dossier métier, de réputation ni de
