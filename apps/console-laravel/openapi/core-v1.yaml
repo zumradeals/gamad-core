@@ -738,6 +738,499 @@ paths:
           description: Produit ou environnement inconnu.
         "503":
           description: Une dépendance requise est indisponible.
+  /sources:
+    get:
+      tags: [Sources]
+      operationId: listerSources
+      summary: Liste les sources visibles de la session (CAP-CORE-006).
+      description: >-
+        Une source ACTIVE est visible de toute session. Une source non active
+        n'est visible qu'à son propriétaire ou à l'autorité d'inscription.
+      security:
+        - bearerSession: []
+      parameters:
+        - in: query
+          name: etat
+          schema:
+            type: string
+            enum: [PREPARATION, ACTIVE, SUSPENDUE, RETIREE]
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [PRODUIT_GAMAD, SERVICE_CORE, ORGANISATION, INSTITUTION, PARTENAIRE, SYSTEME_EXTERNE, IMPORT_GOUVERNE, CANAL_DECLARATIF]
+      responses:
+        "200":
+          description: Liste des sources visibles.
+        "401":
+          description: Session invalide.
+    post:
+      tags: [Sources]
+      operationId: inscrireSource
+      summary: Inscrit une source dans le registre, en PREPARATION.
+      description: >-
+        Aucune activation n'est automatique. Le propriétaire doit être une
+        identité connue de CAP-CORE-001 ; le produit producteur, s'il est
+        fourni, doit être un produit ACTIF connu de CAP-CORE-011.
+      security:
+        - bearerSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference, nom_canonique, nom_affichage, type_source, proprietaire_reference]
+              properties:
+                reference:
+                  type: string
+                  maxLength: 64
+                nom_canonique:
+                  type: string
+                  maxLength: 255
+                nom_affichage:
+                  type: string
+                  maxLength: 255
+                type_source:
+                  type: string
+                  enum: [PRODUIT_GAMAD, SERVICE_CORE, ORGANISATION, INSTITUTION, PARTENAIRE, SYSTEME_EXTERNE, IMPORT_GOUVERNE, CANAL_DECLARATIF]
+                proprietaire_reference:
+                  type: string
+                  maxLength: 64
+                categorie:
+                  type: string
+                  maxLength: 500
+                description:
+                  type: string
+                  maxLength: 2000
+                produit_producteur_reference:
+                  type: string
+                  maxLength: 64
+                reserve:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "201":
+          description: Source inscrite en PREPARATION.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'inscription.
+        "409":
+          description: Référence déjà utilisée.
+        "422":
+          description: Dossier invalide, propriétaire ou produit producteur inconnu.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /sources/{reference}:
+    get:
+      tags: [Sources]
+      operationId: resoudreSource
+      summary: Fiche opérationnelle d'une source, sa vérification, ses finalités et sa lignée (CAP-CORE-006).
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Fiche de la source, vérification courante, finalités actives et lignée.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+    patch:
+      tags: [Sources]
+      operationId: modifierSource
+      summary: Modifie les métadonnées révisables d'une source.
+      description: >-
+        La référence, le nom canonique et le type ne se modifient jamais.
+        Chaque modification crée une nouvelle révision, en ajout seul.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom_affichage:
+                  type: string
+                  maxLength: 255
+                categorie:
+                  type: string
+                  maxLength: 500
+                description:
+                  type: string
+                  maxLength: 2000
+                proprietaire_reference:
+                  type: string
+                  maxLength: 64
+                produit_producteur_reference:
+                  type: string
+                  maxLength: 64
+                reserve:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "200":
+          description: Métadonnées mises à jour (nouvelle révision).
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la modification.
+        "404":
+          description: Source inconnue.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /sources/{reference}/lignee:
+    get:
+      tags: [Sources]
+      operationId: resoudreLigneeSource
+      summary: Lignée amont et aval d'une source.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Relations de lignée amont (parentes) et aval (dérivées).
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+    post:
+      tags: [Sources]
+      operationId: declarerLigneeSource
+      summary: Déclare une relation de lignée vers une source parente.
+      description: >-
+        Toute relation qui fermerait un cycle est refusée avant écriture.
+        L'ajout d'une relation ne supprime jamais une relation antérieure.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source_parente_reference, type_relation]
+              properties:
+                source_parente_reference:
+                  type: string
+                  maxLength: 64
+                type_relation:
+                  type: string
+                  enum: [DERIVEE_DE, AGREGE, REMPLACE, CORRIGE]
+      responses:
+        "201":
+          description: Relation de lignée déclarée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la déclaration.
+        "404":
+          description: Source ou source parente inconnue.
+        "422":
+          description: Relation invalide ou cycle de lignée détecté.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /sources/{reference}/finalites:
+    get:
+      tags: [Sources]
+      operationId: resoudreFinalitesSource
+      summary: Finalités actives déclarées pour une source.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Liste des finalités actives.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+    post:
+      tags: [Sources]
+      operationId: declarerFinaliteSource
+      summary: Déclare une finalité d'usage, bornée par consommateur et par période.
+      description: >-
+        La source doit être ACTIVE. Le produit consommateur, s'il est fourni,
+        doit être un produit ACTIF connu de CAP-CORE-011. Aucune finalité
+        n'est jamais implicite.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [finalite_reference]
+              properties:
+                finalite_reference:
+                  type: string
+                  maxLength: 128
+                produit_consommateur_reference:
+                  type: string
+                  maxLength: 64
+                date_debut:
+                  type: string
+                  format: date
+                date_fin:
+                  type: string
+                  format: date
+                restriction:
+                  type: string
+                  maxLength: 1000
+      responses:
+        "201":
+          description: Finalité déclarée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la déclaration.
+        "404":
+          description: Source ou produit consommateur inconnu.
+        "409":
+          description: Conflit de dates avec une finalité déjà active.
+        "422":
+          description: Dossier invalide ou source non active.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /sources/{reference}/finalites/{id}/fermeture:
+    post:
+      tags: [Sources]
+      operationId: fermerFinaliteSource
+      summary: Ferme une finalité (idempotente) ; ne la supprime pas.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date_fin:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: "Finalité fermée (déjà fermée : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la fermeture.
+        "404":
+          description: Source ou finalité inconnue.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /sources/{reference}/verification:
+    get:
+      tags: [Sources]
+      operationId: resoudreVerificationSource
+      summary: Vérification opérationnelle courante d'une source.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      responses:
+        "200":
+          description: Niveau, résultat et échéance de la vérification courante, si elle existe.
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+  /sources/{reference}/verifications:
+    post:
+      tags: [Sources]
+      operationId: enregistrerVerificationSource
+      summary: Enregistre une vérification, en ajout seul.
+      description: >-
+        Une source ne s'auto-atteste jamais : pour le niveau `ATTESTEE`, le
+        vérificateur doit être distinct du producteur de la source.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [niveau, resultat, verifie_par_reference]
+              properties:
+                niveau:
+                  type: string
+                  enum: [NON_VERIFIEE, DECLAREE, CONTROLEE, ATTESTEE]
+                resultat:
+                  type: string
+                  enum: [VALIDE, INVALIDE, EXPIREE]
+                verifie_par_reference:
+                  type: string
+                  maxLength: 64
+                verifie_le:
+                  type: string
+                  format: date
+                expire_le:
+                  type: string
+                  format: date
+                motif:
+                  type: string
+                  maxLength: 1000
+      responses:
+        "201":
+          description: Vérification enregistrée.
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'enregistrement.
+        "404":
+          description: Source inconnue.
+        "422":
+          description: Dossier invalide ou auto-attestation refusée.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /sources/{reference}/utilisabilite:
+    post:
+      tags: [Sources]
+      operationId: verifierUtilisabiliteSource
+      summary: Vérifie si une source est utilisable pour un consommateur et une finalité donnés.
+      description: >-
+        Renvoie une réponse explicable, énumérant chaque motif de refus. Ne
+        constitue pas à elle seule une autorisation : la couche applicative
+        doit encore demander une décision à CAP-CORE-004 pour l'opération
+        qu'elle prépare.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [finalite]
+              properties:
+                consommateur:
+                  type: string
+                  maxLength: 64
+                finalite:
+                  type: string
+                  maxLength: 128
+      responses:
+        "200":
+          description: Résultat explicable (utilisable ou liste de motifs de refus).
+        "401":
+          description: Session invalide.
+        "404":
+          description: Référence inconnue ou non visible.
+  /sources/{reference}/activation:
+    post:
+      tags: [Sources]
+      operationId: activerSource
+      summary: Active une source inscrite (idempotente).
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif:
+                  type: string
+                  maxLength: 500
+      responses:
+        "200":
+          description: "Source activée (déjà active : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse l'activation.
+        "404":
+          description: Source inconnue.
+        "422":
+          description: État incompatible avec une activation.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /sources/{reference}/suspension:
+    post:
+      tags: [Sources]
+      operationId: suspendreSource
+      summary: Suspend une source active (idempotente) ; ferme immédiatement tout nouvel usage.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif:
+                  type: string
+                  maxLength: 500
+      responses:
+        "200":
+          description: "Source suspendue (déjà suspendue : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse la suspension.
+        "404":
+          description: Source inconnue.
+        "422":
+          description: État incompatible avec une suspension.
+        "503":
+          description: Une dépendance requise est indisponible.
+  /sources/{reference}/retrait:
+    post:
+      tags: [Sources]
+      operationId: retirerSource
+      summary: Retire une source (idempotente, irréversible) ; ne supprime rien.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif:
+                  type: string
+                  maxLength: 500
+      responses:
+        "200":
+          description: "Source retirée (déjà retirée : réponse idempotente)."
+        "401":
+          description: Session invalide.
+        "403":
+          description: CAP-CORE-004 refuse le retrait.
+        "404":
+          description: Source inconnue.
+        "503":
+          description: Une dépendance requise est indisponible.
 components:
   securitySchemes:
     bearerSession:

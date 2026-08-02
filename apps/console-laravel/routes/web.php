@@ -13,6 +13,7 @@ use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\PasskeyController;
 use App\Http\Controllers\ProduitConsoleController;
 use App\Http\Controllers\SatelliteConsoleController;
+use App\Http\Controllers\SourceConsoleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -85,6 +86,45 @@ Route::middleware('gamad.session')->group(function (): void {
         '/produits/{reference}/environnements/{id}/fermeture',
         [ProduitConsoleController::class, 'fermerEnvironnement'],
     )->whereNumber('id')->middleware('throttle:20,1')->name('console.produits.environnements.fermer');
+
+    // CAP-CORE-006 — registre des sources. Vit sous `/registre-sources` : le
+    // chemin `/sources/{reference}` reste la route JSON historique de CTR-04
+    // ci-dessus, préservée pour compatibilité. Toute écriture passe par
+    // `AccesSources`, le même cas d'usage gouverné que l'API v1.
+    Route::get('/registre-sources', [SourceConsoleController::class, 'index'])
+        ->name('console.sources.index');
+    Route::get('/registre-sources/nouvelle', [SourceConsoleController::class, 'create'])
+        ->name('console.sources.create');
+    Route::post('/registre-sources', [SourceConsoleController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('console.sources.store');
+    Route::get('/registre-sources/{reference}', [SourceConsoleController::class, 'show'])
+        ->name('console.sources.show');
+    Route::post('/registre-sources/{reference}/modification', [SourceConsoleController::class, 'modifier'])
+        ->middleware('throttle:20,1')
+        ->name('console.sources.modifier');
+    Route::post('/registre-sources/{reference}/activation', [SourceConsoleController::class, 'activer'])
+        ->middleware('throttle:20,1')
+        ->name('console.sources.activer');
+    Route::post('/registre-sources/{reference}/suspension', [SourceConsoleController::class, 'suspendre'])
+        ->middleware('throttle:20,1')
+        ->name('console.sources.suspendre');
+    Route::post('/registre-sources/{reference}/retrait', [SourceConsoleController::class, 'retirer'])
+        ->middleware('throttle:20,1')
+        ->name('console.sources.retirer');
+    Route::post('/registre-sources/{reference}/finalites', [SourceConsoleController::class, 'declarerFinalite'])
+        ->middleware('throttle:20,1')
+        ->name('console.sources.finalites.declarer');
+    Route::post(
+        '/registre-sources/{reference}/finalites/{id}/fermeture',
+        [SourceConsoleController::class, 'fermerFinalite'],
+    )->whereNumber('id')->middleware('throttle:20,1')->name('console.sources.finalites.fermer');
+    Route::post('/registre-sources/{reference}/verifications', [SourceConsoleController::class, 'enregistrerVerification'])
+        ->middleware('throttle:20,1')
+        ->name('console.sources.verifications.enregistrer');
+    Route::post('/registre-sources/{reference}/lignee', [SourceConsoleController::class, 'declarerLignee'])
+        ->middleware('throttle:20,1')
+        ->name('console.sources.lignee.declarer');
 
     // CAP-CORE-005 — moyens d'accès personnels. Le sujet vient de la session ;
     // on ne gère jamais l'accès d'autrui.

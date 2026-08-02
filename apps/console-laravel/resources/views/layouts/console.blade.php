@@ -79,6 +79,14 @@
                 </span>
                 Produits
             </a>
+            <a class="nav__link"
+               href="{{ route('console.sources.index') }}"
+               @if(request()->routeIs('console.sources.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v8l6 3"/></svg>
+                </span>
+                Sources
+            </a>
 
             <span class="nav__label">Protéger</span>
             <a class="nav__link"
