@@ -8,6 +8,7 @@ use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 
@@ -38,7 +39,7 @@ final class EtatFondation
             'index' => $this->inspecterCible(
                 'DATABASE_URL',
                 fn (): \PDO => Db::connect(),
-                ['entite', 'mandat', 'politique', 'regle'],
+                ['entite', 'mandat'],
                 $production,
             ),
             'acces' => $this->inspecterCible(
@@ -65,6 +66,15 @@ final class EtatFondation
                 [
                     'migration_registre_sources', 'source', 'source_cycle', 'source_revision',
                     'source_verification', 'source_finalite', 'source_lignee',
+                ],
+                $production,
+            ),
+            'politiques' => $this->inspecterCible(
+                'POLICY_REGISTRY_URL',
+                fn (): \PDO => PolitiquesMagasin::ouvrir(),
+                [
+                    'migration_registre_politiques', 'politique', 'politique_version',
+                    'regle_politique', 'politique_version_cycle', 'politique_simulation',
                 ],
                 $production,
             ),
@@ -186,6 +196,7 @@ final class EtatFondation
             'JOURNAL_OPERATIONNEL_URL' => 'database.connections.gamad_journal.url',
             'PRODUCT_REGISTRY_URL' => 'database.connections.gamad_products.url',
             'SOURCE_REGISTRY_URL' => 'database.connections.gamad_sources.url',
+            'POLICY_REGISTRY_URL' => 'database.connections.gamad_policies.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);
