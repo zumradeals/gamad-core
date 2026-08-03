@@ -38,13 +38,6 @@ verifier-paquet-matching
 consulter-diagnostics-matching
 consulter-rapport-qualite-matching
 consulter-rapport-equite-matching
-ger er-signaux-matching
-ger er-jeux-evaluation-matching
-```
-
-Corriger les espaces des deux dernières références lors de l’inscription canonique :
-
-```text
 gerer-signaux-matching
 gerer-jeux-evaluation-matching
 ```
