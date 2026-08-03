@@ -1,9 +1,9 @@
 name: Materialize CAP-CORE-002
-# Second push: le workflow existe désormais dans le parent de la branche.
 on:
-  push:
+  pull_request:
     branches:
-      - codex/cap-core-002-organizations-registry-go
+      - main
+    types: [opened, synchronize, reopened]
     paths:
       - cap002-files.tar.gz
       - .github/workflows/materialize-cap002.yml
@@ -11,6 +11,7 @@ permissions:
   contents: write
 jobs:
   materialize:
+    if: github.head_ref == 'codex/cap-core-002-organizations-registry-go'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
