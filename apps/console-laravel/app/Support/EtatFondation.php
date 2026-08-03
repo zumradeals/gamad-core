@@ -12,6 +12,7 @@ use Gamad\RegistreNormes\Db;
 use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreRealms\Magasin as RealmsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Gamad\RegistreVocabulaire\Magasin as VocabulaireMagasin;
 
@@ -109,6 +110,17 @@ final class EtatFondation
                     'organisation_identifiant_externe', 'organisation_unite', 'organisation_unite_cycle',
                     'organisation_relation', 'organisation_affiliation', 'organisation_affiliation_cycle',
                     'organisation_fonction_interne', 'organisation_mandat_projection',
+                ],
+                $production,
+            ),
+            'realms' => $this->inspecterCible(
+                'REALM_REGISTRY_URL',
+                fn (): \PDO => RealmsMagasin::ouvrir(),
+                [
+                    'migration_registre_realms', 'realm', 'realm_revision', 'realm_cycle',
+                    'realm_relation', 'realm_perimetre', 'realm_identifiant_externe',
+                    'realm_organisation', 'realm_produit', 'realm_contrat',
+                    'realm_franchissement', 'realm_verification',
                 ],
                 $production,
             ),
@@ -234,6 +246,7 @@ final class EtatFondation
             'CONTRACT_REGISTRY_URL' => 'database.connections.gamad_contracts.url',
             'VOCABULARY_REGISTRY_URL' => 'database.connections.gamad_vocabulary.url',
             'ORGANIZATION_REGISTRY_URL' => 'database.connections.gamad_organizations.url',
+            'REALM_REGISTRY_URL' => 'database.connections.gamad_realms.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);

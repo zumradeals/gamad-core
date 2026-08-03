@@ -9,7 +9,7 @@ La cible unique est le serveur actuel :
 Nginx HTTPS
 → /var/www/gamad-core/apps/console-laravel/public/index.php
 → PHP 8.3 FPM
-→ neuf bases PostgreSQL locales dédiées
+→ onze bases PostgreSQL locales dédiées
 ```
 
 L'ancien `nixpacks.toml`, qui décrivait un déploiement Railway abandonné, est
@@ -17,7 +17,7 @@ retiré du dépôt afin qu'il ne puisse plus être pris pour une cible active.
 
 ## Topologie minimale
 
-Neuf bases PostgreSQL physiquement distinctes sont attendues :
+Onze bases PostgreSQL physiquement distinctes sont attendues :
 
 | Cible | Variable applicative | Contenu |
 |---|---|---|
@@ -29,6 +29,8 @@ Neuf bases PostgreSQL physiquement distinctes sont attendues :
 | politiques | `POLICY_REGISTRY_URL` | registre des politiques (CAP-CORE-007) |
 | contrats | `CONTRACT_REGISTRY_URL` | registre des contrats (CAP-CORE-009) |
 | vocabulaire | `VOCABULARY_REGISTRY_URL` | registre du vocabulaire canonique (CAP-CORE-010) |
+| organisations | `ORGANIZATION_REGISTRY_URL` | registre des organisations (CAP-CORE-002) |
+| realms | `REALM_REGISTRY_URL` | registre des realms (CAP-CORE-012) |
 | journal | `JOURNAL_OPERATIONNEL_URL` | événements d'exploitation et audit |
 
 Laravel stocke aussi ses sessions web dans la cible `gamad_access` avec :
@@ -43,8 +45,9 @@ SESSION_SECURE_COOKIE=true
 
 En production, définir `GAMAD_INDEX_DRIVER`, `GAMAD_ACCESS_DRIVER`,
 `GAMAD_IDENTITY_DRIVER`, `GAMAD_PRODUCTS_DRIVER`, `GAMAD_SOURCES_DRIVER`,
-`GAMAD_POLICIES_DRIVER`, `GAMAD_CONTRACTS_DRIVER`, `GAMAD_VOCABULARY_DRIVER`
-et `GAMAD_JOURNAL_DRIVER` à `pgsql`. La readiness refuse SQLite en production.
+`GAMAD_POLICIES_DRIVER`, `GAMAD_CONTRACTS_DRIVER`, `GAMAD_VOCABULARY_DRIVER`,
+`GAMAD_ORGANIZATIONS_DRIVER`, `GAMAD_REALMS_DRIVER` et `GAMAD_JOURNAL_DRIVER`
+à `pgsql`. La readiness refuse SQLite en production.
 
 Pour les essais SQLite locaux uniquement, les répertoires `var/` des modules
 doivent appartenir à l'utilisateur PHP-FPM. En production PostgreSQL, aucun
@@ -118,7 +121,7 @@ déploiement reste une action explicite sur ce serveur.
 
 ## Sauvegarde sans secret en ligne de commande
 
-Installer neuf services dans `pg_service.conf`, avec mots de passe dans un
+Installer onze services dans `pg_service.conf`, avec mots de passe dans un
 fichier `.pgpass` protégé, puis exporter uniquement leurs noms :
 
 ```text
@@ -130,6 +133,8 @@ GAMAD_SOURCES_PGSERVICE=gamad_sources
 GAMAD_POLICIES_PGSERVICE=gamad_policies
 GAMAD_CONTRACTS_PGSERVICE=gamad_contracts
 GAMAD_VOCABULARY_PGSERVICE=gamad_vocabulary
+GAMAD_ORGANIZATIONS_PGSERVICE=gamad_organizations
+GAMAD_REALMS_PGSERVICE=gamad_realms
 GAMAD_JOURNAL_PGSERVICE=gamad_journal
 GAMAD_BACKUP_DIR=/var/backups/gamad-core/daily
 PGSERVICEFILE=/etc/gamad-core/pg_service.conf
@@ -148,6 +153,8 @@ GAMAD_SOURCES_PGDATABASE=registre_sources
 GAMAD_POLICIES_PGDATABASE=registre_politiques
 GAMAD_CONTRACTS_PGDATABASE=registre_contrats
 GAMAD_VOCABULARY_PGDATABASE=registre_vocabulaire
+GAMAD_ORGANIZATIONS_PGDATABASE=registre_organisations
+GAMAD_REALMS_PGDATABASE=registre_realms
 GAMAD_JOURNAL_PGDATABASE=journal_operationnel
 ```
 
@@ -157,7 +164,7 @@ Exécuter :
 ops/core-foundation/backup.sh
 ```
 
-Chaque lot contient neuf archives au format custom et un manifeste
+Chaque lot contient onze archives au format custom et un manifeste
 `SHA256SUMS`.
 
 ## Import initial des magasins SQLite
@@ -173,6 +180,7 @@ php artisan core:fondation:importer-sqlite \
   --politiques=/chemin/existant/registre-politiques.sqlite \
   --contrats=/chemin/existant/registre-contrats.sqlite \
   --vocabulaire=/chemin/existant/registre-vocabulaire.sqlite \
+  --realms=/chemin/existant/registre-realms.sqlite \
   --force
 ```
 
@@ -182,8 +190,8 @@ la transaction. Il ne supprime ni ne renomme les fichiers SQLite sources.
 
 ## Exercice de restauration
 
-Ne jamais viser les bases de production. Préparer neuf bases isolées et
-neuf services `pg_service.conf` distincts, puis définir :
+Ne jamais viser les bases de production. Préparer onze bases isolées et
+onze services `pg_service.conf` distincts, puis définir :
 
 ```text
 GAMAD_RESTORE_SOURCE=/srv/backups/gamad-core/AAAAMMJJTHHMMSSZ
@@ -195,6 +203,8 @@ GAMAD_RESTORE_SOURCES_PGSERVICE=drill_sources
 GAMAD_RESTORE_POLICIES_PGSERVICE=drill_policies
 GAMAD_RESTORE_CONTRACTS_PGSERVICE=drill_contracts
 GAMAD_RESTORE_VOCABULARY_PGSERVICE=drill_vocabulary
+GAMAD_RESTORE_ORGANIZATIONS_PGSERVICE=drill_organizations
+GAMAD_RESTORE_REALMS_PGSERVICE=drill_realms
 GAMAD_RESTORE_JOURNAL_PGSERVICE=drill_journal
 GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases
 ```
@@ -206,8 +216,8 @@ Lancer `ops/core-foundation/restore-drill.sh`. Le script vérifie les empreintes
 restaure en transaction et exécute une lecture minimale de chaque base. Le
 résultat et la durée doivent ensuite être inscrits au registre opérationnel.
 
-La CI exécute ce cycle complet sur dix-huit bases PostgreSQL temporaires (neuf
-sources et neuf cibles isolées) via
+La CI exécute ce cycle complet sur vingt-deux bases PostgreSQL temporaires
+(onze sources et onze cibles isolées) via
 `apps/console-laravel/tests/Integration/postgresql_p0.sh`.
 
 ## Copie hors machine

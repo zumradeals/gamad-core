@@ -10,6 +10,7 @@ use Gamad\RegistreContrats\Magasin as ContratsMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreRealms\Magasin as RealmsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Gamad\RegistreVocabulaire\Magasin as VocabulaireMagasin;
 use Illuminate\Console\Command;
@@ -24,6 +25,7 @@ final class ImporterSqliteCommand extends Command
         {--politiques= : chemin absolu du registre SQLite des politiques}
         {--contrats= : chemin absolu du registre SQLite des contrats}
         {--vocabulaire= : chemin absolu du registre SQLite du vocabulaire}
+        {--realms= : chemin absolu du registre SQLite des realms}
         {--force : confirme l’import vers les cibles configurées}';
 
     protected $description = 'Importe les magasins SQLite dans des cibles PostgreSQL vides.';
@@ -38,7 +40,7 @@ final class ImporterSqliteCommand extends Command
         foreach ([
             'MAGASIN_URL', 'IDENTITY_REGISTRY_URL', 'PRODUCT_REGISTRY_URL',
             'SOURCE_REGISTRY_URL', 'POLICY_REGISTRY_URL', 'CONTRACT_REGISTRY_URL',
-            'VOCABULARY_REGISTRY_URL',
+            'VOCABULARY_REGISTRY_URL', 'REALM_REGISTRY_URL',
         ] as $variable) {
             if (trim((string) getenv($variable)) === '') {
                 $this->error("{$variable} doit désigner la cible PostgreSQL.");
@@ -54,10 +56,11 @@ final class ImporterSqliteCommand extends Command
         $politiques = (string) ($this->option('politiques') ?: getenv('POLICY_REGISTRY_PATH'));
         $contrats = (string) ($this->option('contrats') ?: getenv('CONTRACT_REGISTRY_PATH'));
         $vocabulaire = (string) ($this->option('vocabulaire') ?: getenv('VOCABULARY_REGISTRY_PATH'));
+        $realms = (string) ($this->option('realms') ?: getenv('REALM_REGISTRY_PATH'));
         if (!$this->absolu($acces) || !$this->absolu($identites) || !$this->absolu($produits)
             || !$this->absolu($sources) || !$this->absolu($politiques) || !$this->absolu($contrats)
-            || !$this->absolu($vocabulaire)) {
-            $this->error('Les sept chemins SQLite sources doivent être absolus.');
+            || !$this->absolu($vocabulaire) || !$this->absolu($realms)) {
+            $this->error('Les huit chemins SQLite sources doivent être absolus.');
 
             return self::FAILURE;
         }
@@ -70,7 +73,8 @@ final class ImporterSqliteCommand extends Command
             $ciblePolitiques = PolitiquesMagasin::connecter();
             $cibleContrats = ContratsMagasin::connecter();
             $cibleVocabulaire = VocabulaireMagasin::connecter();
-            foreach ([$cibleAcces, $cibleIdentites, $cibleProduits, $cibleSources, $ciblePolitiques, $cibleContrats, $cibleVocabulaire] as $pdo) {
+            $cibleRealms = RealmsMagasin::connecter();
+            foreach ([$cibleAcces, $cibleIdentites, $cibleProduits, $cibleSources, $ciblePolitiques, $cibleContrats, $cibleVocabulaire, $cibleRealms] as $pdo) {
                 if ($pdo->getAttribute(\PDO::ATTR_DRIVER_NAME) !== 'pgsql') {
                     throw new \RuntimeException('Une cible configurée n’utilise pas PostgreSQL.');
                 }
@@ -84,6 +88,7 @@ final class ImporterSqliteCommand extends Command
                 'politiques' => $importateur->importerPolitiques($politiques, $ciblePolitiques),
                 'contrats' => $importateur->importerContrats($contrats, $cibleContrats),
                 'vocabulaire' => $importateur->importerVocabulaire($vocabulaire, $cibleVocabulaire),
+                'realms' => $importateur->importerRealms($realms, $cibleRealms),
             ];
         } catch (\Throwable $e) {
             $this->error('Import interrompu : ' . $e->getMessage());

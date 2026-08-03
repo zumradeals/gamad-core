@@ -74,6 +74,22 @@ final class ImportateurSqlite
     ];
 
     /** @var list<string> */
+    private const TABLES_REALMS = [
+        'compteur_reference_realm',
+        'realm',
+        'realm_revision',
+        'realm_cycle',
+        'realm_relation',
+        'realm_perimetre',
+        'realm_identifiant_externe',
+        'realm_organisation',
+        'realm_produit',
+        'realm_contrat',
+        'realm_franchissement',
+        'realm_verification',
+    ];
+
+    /** @var list<string> */
     private const TABLES_VOCABULAIRE = [
         'vocabulaire',
         'vocabulaire_version',
@@ -132,6 +148,12 @@ final class ImportateurSqlite
     public function importerVocabulaire(string $source, \PDO $cible): array
     {
         return $this->importer($source, $cible, self::TABLES_VOCABULAIRE);
+    }
+
+    /** @return array<string,int> */
+    public function importerRealms(string $source, \PDO $cible): array
+    {
+        return $this->importer($source, $cible, self::TABLES_REALMS);
     }
 
     /**

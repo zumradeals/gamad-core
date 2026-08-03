@@ -13,6 +13,7 @@ use Gamad\RegistreNormes\Db;
 use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreRealms\Magasin as RealmsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Gamad\RegistreVocabulaire\Magasin as VocabulaireMagasin;
 use Illuminate\Console\Command;
@@ -43,6 +44,7 @@ final class MigrerFondationCommand extends Command
                 'CONTRACT_REGISTRY_URL',
                 'VOCABULARY_REGISTRY_URL',
                 'ORGANIZATION_REGISTRY_URL',
+                'REALM_REGISTRY_URL',
             ] as $variable) {
                 if (trim((string) $this->environnement($variable)) === '') {
                     $this->error("{$variable} est obligatoire en production.");
@@ -67,6 +69,7 @@ final class MigrerFondationCommand extends Command
                 'contrats persistants' => ContratsMagasin::connecter(),
                 'vocabulaire persistant' => VocabulaireMagasin::connecter(),
                 'organisations persistantes' => OrganisationsMagasin::connecter(),
+                'realms persistants' => RealmsMagasin::connecter(),
                 'journal opérationnel' => JournalMagasin::connecter(),
             ];
         } catch (\Throwable $e) {
@@ -114,6 +117,7 @@ final class MigrerFondationCommand extends Command
             'CONTRACT_REGISTRY_URL' => 'database.connections.gamad_contracts.url',
             'VOCABULARY_REGISTRY_URL' => 'database.connections.gamad_vocabulary.url',
             'ORGANIZATION_REGISTRY_URL' => 'database.connections.gamad_organizations.url',
+            'REALM_REGISTRY_URL' => 'database.connections.gamad_realms.url',
             default => null,
         };
 
