@@ -21,6 +21,7 @@ use Gamad\RegistreNormes\Db;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
+use Gamad\RegistreVocabulaire\Magasin as VocabulaireMagasin;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
@@ -35,6 +36,7 @@ $fichiers = [
     'sources' => $temp . '-sources.sqlite',
     'politiques' => $temp . '-politiques.sqlite',
     'contrats' => $temp . '-contrats.sqlite',
+    'vocabulaire' => $temp . '-vocabulaire.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -73,6 +75,8 @@ $environnement = [
     'POLICY_REGISTRY_PATH' => $fichiers['politiques'],
     'CONTRACT_REGISTRY_URL' => '',
     'CONTRACT_REGISTRY_PATH' => $fichiers['contrats'],
+    'VOCABULARY_REGISTRY_URL' => '',
+    'VOCABULARY_REGISTRY_PATH' => $fichiers['vocabulaire'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -95,6 +99,7 @@ ProduitsMagasin::connecter();
 SourcesMagasin::connecter();
 PolitiquesMagasin::connecter();
 ContratsMagasin::connecter();
+VocabulaireMagasin::connecter();
 
 $app = require $application . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
@@ -228,13 +233,13 @@ $verifier(
 $ready = $requete('GET', '/api/v1/health/ready');
 $readyOk = $ready['statut'] === 200
     && ($ready['corps']['pret'] ?? false) === true
-    && count($ready['corps']['cibles'] ?? []) === 8;
+    && count($ready['corps']['cibles'] ?? []) === 9;
 if (!$readyOk) {
     fwrite(STDERR, json_encode($ready, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
 }
 $verifier(
     $readyOk,
-    'la readiness vérifie les huit magasins et leurs migrations',
+    'la readiness vérifie les neuf magasins et leurs migrations',
 );
 
 echo "\n";

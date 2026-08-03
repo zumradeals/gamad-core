@@ -46,6 +46,8 @@ jobs:
             garde: core/registre-contrats/tests/contrats_p3.php
           - capacite: CAP-CORE-011 (produits)
             garde: core/registre-produits/tests/produits_p3.php
+          - capacite: CAP-CORE-010 (vocabulaire)
+            garde: core/registre-vocabulaire/tests/vocabulaire_p3.php
           - capacite: CAP-CORE-022 (fédération)
             garde: core/registre-federation/tests/federation_p3.php
 
@@ -143,6 +145,15 @@ jobs:
 
       - name: Éprouver la cohérence OpenAPI des contrats
         run: php apps/console-laravel/tests/Integration/openapi_contracts_p1.php
+
+      - name: Éprouver le registre du vocabulaire canonique
+        run: php apps/console-laravel/tests/Integration/vocabulaire_v1_p1.php
+
+      - name: Éprouver la console du vocabulaire canonique
+        run: php apps/console-laravel/tests/Integration/vocabulaire_console_p1.php
+
+      - name: Éprouver la cohérence OpenAPI du vocabulaire
+        run: php apps/console-laravel/tests/Integration/vocabulaire_drift_p1.php
 
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php

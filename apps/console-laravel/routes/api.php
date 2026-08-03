@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\PolitiqueController;
 use App\Http\Controllers\Api\V1\ProduitController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Api\V1\SourceController;
+use App\Http\Controllers\Api\V1\VocabulaireController;
 use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
 use Illuminate\Support\Facades\Route;
@@ -164,6 +165,58 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
             ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
         Route::post('/contrats/{reference}/versions/{version}/conformite', [ContratController::class, 'enregistrerConformite'])
             ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+
+        // CAP-CORE-010 — registre du vocabulaire canonique. `{version}` suit
+        // toujours X.Y.Z. `compatibilite` et `conformite` exigent `?version=`.
+        Route::get('/vocabulaires', [VocabulaireController::class, 'index']);
+        Route::post('/vocabulaires', [VocabulaireController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('/vocabulaires/{reference}', [VocabulaireController::class, 'show']);
+        Route::get('/vocabulaires/{reference}/versions', [VocabulaireController::class, 'versions']);
+        Route::get('/vocabulaires/{reference}/version-active', [VocabulaireController::class, 'versionActive']);
+        Route::get('/vocabulaires/{reference}/termes', [VocabulaireController::class, 'termes']);
+        Route::get('/vocabulaires/{reference}/compatibilite', [VocabulaireController::class, 'compatibilite']);
+        Route::get('/vocabulaires/{reference}/conformite', [VocabulaireController::class, 'conformite']);
+        Route::post('/vocabulaires/{reference}/versions', [VocabulaireController::class, 'creerVersion'])
+            ->middleware('throttle:20,1');
+        Route::get('/vocabulaires/{reference}/versions/{version}', [VocabulaireController::class, 'version'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+');
+        Route::post('/vocabulaires/{reference}/versions/{version}/termes', [VocabulaireController::class, 'ajouterTerme'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/vocabulaires/{reference}/versions/{version}/soumission', [VocabulaireController::class, 'soumettre'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/vocabulaires/{reference}/versions/{version}/analyse', [VocabulaireController::class, 'analyser'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/vocabulaires/{reference}/versions/{version}/activation', [VocabulaireController::class, 'activer'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/vocabulaires/{reference}/versions/{version}/projections', [VocabulaireController::class, 'projections'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/vocabulaires/{reference}/versions/{version}/conformite', [VocabulaireController::class, 'enregistrerConformite'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/vocabulaires/{reference}/versions/{version}/depreciation', [VocabulaireController::class, 'deprecierVersion'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+        Route::post('/vocabulaires/{reference}/versions/{version}/retrait', [VocabulaireController::class, 'retirerVersion'])
+            ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1');
+
+        Route::get('/termes/{reference}', [VocabulaireController::class, 'termeShow']);
+        Route::get('/termes/{reference}/usages', [VocabulaireController::class, 'termeUsages']);
+        Route::get('/termes/{reference}/mappings', [VocabulaireController::class, 'termeMappings']);
+        Route::post('/termes/{reference}/evolution', [VocabulaireController::class, 'evoluerTerme'])
+            ->middleware('throttle:20,1');
+        Route::post('/termes/{reference}/libelles', [VocabulaireController::class, 'ajouterLibelle'])
+            ->middleware('throttle:20,1');
+        Route::post('/termes/{reference}/alias', [VocabulaireController::class, 'ajouterAlias'])
+            ->middleware('throttle:20,1');
+        Route::post('/termes/{reference}/relations', [VocabulaireController::class, 'declarerRelation'])
+            ->middleware('throttle:20,1');
+        Route::post('/termes/{reference}/mappings', [VocabulaireController::class, 'declarerMappingExterne'])
+            ->middleware('throttle:20,1');
+        Route::post('/termes/{reference}/usages', [VocabulaireController::class, 'declarerUsage'])
+            ->middleware('throttle:20,1');
+        Route::post('/termes/{reference}/depreciation', [VocabulaireController::class, 'deprecierTerme'])
+            ->middleware('throttle:20,1');
+        Route::post('/termes/{reference}/retrait', [VocabulaireController::class, 'retirerTerme'])
+            ->middleware('throttle:20,1');
 
         Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat']);
         Route::post('/autorisation/decisions', [AutorisationController::class, 'store'])

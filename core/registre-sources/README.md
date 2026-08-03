@@ -34,8 +34,8 @@ c'est désormais CAP-CORE-007 qui dépend de CAP-CORE-006, jamais l'inverse.
 Les données métier complètes produites par la source, les profils des
 personnes, les fichiers, les documents justificatifs en clair, les secrets,
 les politiques de décision (CAP-CORE-004), le vocabulaire canonique des
-finalités (CAP-CORE-010, à venir) ou les contrats intercapacités complets
-(CAP-CORE-009, à venir).
+finalités (CAP-CORE-010, `GO`, mais dont ce module ne consomme pas encore
+les codes) ou les contrats intercapacités complets (CAP-CORE-009, `GO`).
 
 ## Ce module ne décide rien lui-même
 
@@ -84,9 +84,12 @@ rejouer ne crée aucun doublon.
 ## Limite assumée
 
 Les références de finalité restent du texte libre documenté par le
-consommateur, faute de vocabulaire canonique partagé (CAP-CORE-010, `NO GO`).
-C'est un manque documenté, pas un oubli : voir
-`docs/capacites/CAP-CORE-006-sources-registry.md`.
+consommateur. CAP-CORE-010 (vocabulaire canonique) est désormais `GO` et
+porte `VOC-GAMAD-IDENTITE-FINALITE` parmi ses vocabulaires bootstrapés, mais
+ce module n'a pas encore été migré pour valider `finalite_reference` contre
+ce registre plutôt que d'accepter du texte libre. C'est un manque documenté,
+pas un oubli : voir `docs/capacites/CAP-CORE-006-sources-registry.md` et
+`docs/capacites/CAP-CORE-010-canonical-vocabulary.md`.
 
 ## Tests
 

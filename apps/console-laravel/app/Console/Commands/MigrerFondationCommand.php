@@ -13,13 +13,14 @@ use Gamad\RegistreNormes\Db;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
+use Gamad\RegistreVocabulaire\Magasin as VocabulaireMagasin;
 use Illuminate\Console\Command;
 
 final class MigrerFondationCommand extends Command
 {
     protected $signature = 'core:fondation:migrer {--force : autorise l’exécution en production}';
 
-    protected $description = 'Applique les migrations additives des magasins accès, identités, produits, sources, politiques, contrats et journal.';
+    protected $description = 'Applique les migrations additives des magasins accès, identités, produits, sources, politiques, contrats, vocabulaire et journal.';
 
     public function handle(): int
     {
@@ -39,6 +40,7 @@ final class MigrerFondationCommand extends Command
                 'SOURCE_REGISTRY_URL',
                 'POLICY_REGISTRY_URL',
                 'CONTRACT_REGISTRY_URL',
+                'VOCABULARY_REGISTRY_URL',
             ] as $variable) {
                 if (trim((string) $this->environnement($variable)) === '') {
                     $this->error("{$variable} est obligatoire en production.");
@@ -61,6 +63,7 @@ final class MigrerFondationCommand extends Command
                 'sources persistantes' => SourcesMagasin::connecter(),
                 'politiques persistantes' => PolitiquesMagasin::connecter(),
                 'contrats persistants' => ContratsMagasin::connecter(),
+                'vocabulaire persistant' => VocabulaireMagasin::connecter(),
                 'journal opérationnel' => JournalMagasin::connecter(),
             ];
         } catch (\Throwable $e) {
@@ -106,6 +109,7 @@ final class MigrerFondationCommand extends Command
             'SOURCE_REGISTRY_URL' => 'database.connections.gamad_sources.url',
             'POLICY_REGISTRY_URL' => 'database.connections.gamad_policies.url',
             'CONTRACT_REGISTRY_URL' => 'database.connections.gamad_contracts.url',
+            'VOCABULARY_REGISTRY_URL' => 'database.connections.gamad_vocabulary.url',
             default => null,
         };
 

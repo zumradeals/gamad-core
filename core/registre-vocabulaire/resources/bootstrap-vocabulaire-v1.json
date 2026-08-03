@@ -1,0 +1,1062 @@
+{
+    "format": 1,
+    "note": "Inventaire initial des vocabulaires réellement exploités, établi par audit du code (constantes PHP déjà appliquées par contrainte CHECK SQL ou vérification PHP) pour CAP-CORE-010. Aucun terme inventé ; chaque vocabulaire est relié à une constante PHP réelle d'une capacité déjà GO.",
+    "vocabulaires": [
+        {
+            "reference": "VOC-GAMAD-IDENTITE-TYPE",
+            "namespace": "gamad.identite.type",
+            "nom": "Types d’identité",
+            "domaine": "identites",
+            "portee": "CORE",
+            "source_reference": "core/registre-identites/src/PolitiqueInscription.php::CANAUX (types) — CAP-CORE-001",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-TYPE-PERSONNE",
+                    "code": "PERSONNE",
+                    "definition": "une personne physique",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-TYPE-ORGANISATION",
+                    "code": "ORGANISATION",
+                    "definition": "une organisation reconnue par le Core",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-TYPE-PRODUIT",
+                    "code": "PRODUIT",
+                    "definition": "un produit du Core, en tant qu’identité technique",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-TYPE-REALM",
+                    "code": "REALM",
+                    "definition": "un périmètre technique ou institutionnel",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-TYPE-AGENT",
+                    "code": "AGENT",
+                    "definition": "un agent technique agissant pour le compte d’un tiers",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-TYPE-SERVICE",
+                    "code": "SERVICE",
+                    "definition": "un service technique interne au Core",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-IDENTITE-ASSURANCE",
+            "namespace": "gamad.identite.assurance",
+            "nom": "Niveaux d’assurance d’identité",
+            "domaine": "identites",
+            "portee": "CORE",
+            "source_reference": "core/registre-identites/src/PolitiqueInscription.php::ASSURANCE — CAP-CORE-001",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-ASSURANCE-A0",
+                    "code": "A0",
+                    "definition": "existence déclarée, sans vérification",
+                    "type_semantique": "NIVEAU"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-ASSURANCE-A1",
+                    "code": "A1",
+                    "definition": "assurance reconnue par un produit ou une organisation",
+                    "type_semantique": "NIVEAU"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-ASSURANCE-A2",
+                    "code": "A2",
+                    "definition": "assurance suffisante pour une action engageante",
+                    "type_semantique": "NIVEAU"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-ASSURANCE-A3",
+                    "code": "A3",
+                    "definition": "assurance maximale, exigée pour la représentation",
+                    "type_semantique": "NIVEAU"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-IDENTITE-CANAL",
+            "namespace": "gamad.identite.canal",
+            "nom": "Canaux d’inscription d’identité",
+            "domaine": "identites",
+            "portee": "CORE",
+            "source_reference": "core/registre-identites/src/PolitiqueInscription.php::CANAUX — CAP-CORE-001",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CANAL-AUTO_INSCRIPTION",
+                    "code": "AUTO_INSCRIPTION",
+                    "definition": "une personne s’inscrit elle-même, assurance A0",
+                    "type_semantique": "CATEGORIE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CANAL-PRODUIT_RECONNU",
+                    "code": "PRODUIT_RECONNU",
+                    "definition": "un produit reconnu inscrit un tiers, assurance A1",
+                    "type_semantique": "CATEGORIE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CANAL-ORGANISATION_RECONNUE",
+                    "code": "ORGANISATION_RECONNUE",
+                    "definition": "une organisation reconnue inscrit un tiers, assurance A1",
+                    "type_semantique": "CATEGORIE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CANAL-AUTORITE",
+                    "code": "AUTORITE",
+                    "definition": "l’autorité d’inscription inscrit tout type, assurance A3",
+                    "type_semantique": "CATEGORIE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CANAL-CREATION_TECHNIQUE",
+                    "code": "CREATION_TECHNIQUE",
+                    "definition": "création technique réservée à l’autorité, assurance A3",
+                    "type_semantique": "CATEGORIE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-IDENTITE-FINALITE",
+            "namespace": "gamad.identite.finalite",
+            "nom": "Finalités d’usage d’une identité",
+            "domaine": "identites",
+            "portee": "CORE",
+            "source_reference": "core/registre-identites/src/PolitiqueInscription.php::FINALITES — CAP-CORE-001",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-FINALITE-EXISTENCE",
+                    "code": "EXISTENCE",
+                    "definition": "constater l’existence de l’identité, niveau minimal A0",
+                    "type_semantique": "FINALITE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-FINALITE-USAGE_PRODUIT",
+                    "code": "USAGE_PRODUIT",
+                    "definition": "utiliser un produit, niveau minimal A1",
+                    "type_semantique": "FINALITE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-FINALITE-ACTION_ENGAGEANTE",
+                    "code": "ACTION_ENGAGEANTE",
+                    "definition": "accomplir une action engageante, niveau minimal A2",
+                    "type_semantique": "FINALITE"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-FINALITE-REPRESENTATION",
+                    "code": "REPRESENTATION",
+                    "definition": "représenter un tiers, niveau minimal A3 et mandat vérifié",
+                    "type_semantique": "FINALITE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-RELATION-PRODUIT",
+            "namespace": "gamad.identite.relation-produit",
+            "nom": "Relations à un produit",
+            "domaine": "identites",
+            "portee": "CORE",
+            "source_reference": "core/registre-identites/src/PolitiqueInscription.php::RELATIONS_PRODUIT — CAP-CORE-001",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-RELATION-PRODUIT-UTILISATEUR",
+                    "code": "UTILISATEUR",
+                    "definition": "utilise le produit",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-PRODUIT-CLIENT",
+                    "code": "CLIENT",
+                    "definition": "client du produit",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-PRODUIT-ANNONCEUR",
+                    "code": "ANNONCEUR",
+                    "definition": "annonceur sur le produit",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-PRODUIT-ADMINISTRATEUR",
+                    "code": "ADMINISTRATEUR",
+                    "definition": "administre le produit",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-PRODUIT-OPERATEUR",
+                    "code": "OPERATEUR",
+                    "definition": "opère le produit",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-PRODUIT-RESPONSABLE_PRODUIT",
+                    "code": "RESPONSABLE_PRODUIT",
+                    "definition": "responsable désigné du produit",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-PRODUIT-PROPRIETAIRE_INSTITUTIONNEL",
+                    "code": "PROPRIETAIRE_INSTITUTIONNEL",
+                    "definition": "propriétaire institutionnel du produit",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-PRODUIT-PARTENAIRE",
+                    "code": "PARTENAIRE",
+                    "definition": "partenaire du produit",
+                    "type_semantique": "RELATION"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-RELATION-ORGANISATION",
+            "namespace": "gamad.identite.relation-organisation",
+            "nom": "Relations à une organisation",
+            "domaine": "identites",
+            "portee": "CORE",
+            "source_reference": "core/registre-identites/src/PolitiqueInscription.php::RELATIONS_ORGANISATION — CAP-CORE-001",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-RELATION-ORGANISATION-MEMBRE",
+                    "code": "MEMBRE",
+                    "definition": "membre de l’organisation",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-ORGANISATION-EMPLOYE",
+                    "code": "EMPLOYE",
+                    "definition": "employé de l’organisation",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-ORGANISATION-DIRIGEANT",
+                    "code": "DIRIGEANT",
+                    "definition": "dirigeant de l’organisation, relation à mandat",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-ORGANISATION-REPRESENTANT",
+                    "code": "REPRESENTANT",
+                    "definition": "représentant de l’organisation, relation à mandat",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-ORGANISATION-BENEFICIAIRE",
+                    "code": "BENEFICIAIRE",
+                    "definition": "bénéficiaire de l’organisation",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-ORGANISATION-CLIENT",
+                    "code": "CLIENT",
+                    "definition": "client de l’organisation",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-ORGANISATION-FOURNISSEUR",
+                    "code": "FOURNISSEUR",
+                    "definition": "fournisseur de l’organisation",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-ORGANISATION-PARTENAIRE",
+                    "code": "PARTENAIRE",
+                    "definition": "partenaire de l’organisation",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-RELATION-ORGANISATION-CONTACT_AUTORISE",
+                    "code": "CONTACT_AUTORISE",
+                    "definition": "contact autorisé de l’organisation",
+                    "type_semantique": "RELATION"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-IDENTITE-CLASSIFICATION",
+            "namespace": "gamad.identite.classification",
+            "nom": "Classifications d’identité",
+            "domaine": "identites",
+            "portee": "CORE",
+            "source_reference": "core/registre-identites/src/PolitiqueInscription.php::CLASSIFICATIONS — CAP-CORE-001",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CLASSIFICATION-PUBLIC_ECOSYSTEME",
+                    "code": "PUBLIC_ECOSYSTEME",
+                    "definition": "visible dans tout l’écosystème",
+                    "type_semantique": "CLASSIFICATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CLASSIFICATION-INTERNE",
+                    "code": "INTERNE",
+                    "definition": "interne au Core",
+                    "type_semantique": "CLASSIFICATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CLASSIFICATION-CONFIDENTIEL",
+                    "code": "CONFIDENTIEL",
+                    "definition": "confidentiel",
+                    "type_semantique": "CLASSIFICATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CLASSIFICATION-RESTREINT",
+                    "code": "RESTREINT",
+                    "definition": "accès restreint",
+                    "type_semantique": "CLASSIFICATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-CLASSIFICATION-SECRET_CORE",
+                    "code": "SECRET_CORE",
+                    "definition": "secret réservé au Core",
+                    "type_semantique": "CLASSIFICATION"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-IDENTITE-ETAT",
+            "namespace": "gamad.identite.etat",
+            "nom": "États d’une identité persistante",
+            "domaine": "identites",
+            "portee": "CORE",
+            "source_reference": "core/registre-identites/src/PolitiqueInscription.php::ETATS_IDENTITE — CAP-CORE-001",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-ETAT-PROVISOIRE",
+                    "code": "PROVISOIRE",
+                    "definition": "identité provisoire, plafonnée en assurance",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-ETAT-ACTIVE",
+                    "code": "ACTIVE",
+                    "definition": "identité active",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-ETAT-SUSPENDUE",
+                    "code": "SUSPENDUE",
+                    "definition": "identité suspendue",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-ETAT-CLOTUREE",
+                    "code": "CLOTUREE",
+                    "definition": "identité close",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-ETAT-DISSOUTE",
+                    "code": "DISSOUTE",
+                    "definition": "identité dissoute",
+                    "type_semantique": "ETAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-IDENTITE-EVENEMENT",
+            "namespace": "gamad.identite.evenement",
+            "nom": "Événements de cycle de vie d’identité",
+            "domaine": "identites",
+            "portee": "CORE",
+            "source_reference": "core/registre-identites/src/PolitiqueInscription.php::EVENEMENTS — CAP-CORE-001",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-CREATION",
+                    "code": "CREATION",
+                    "definition": "création de l’identité",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-VERIFICATION",
+                    "code": "VERIFICATION",
+                    "definition": "vérification de l’identité",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-SUSPENSION",
+                    "code": "SUSPENSION",
+                    "definition": "suspension de l’identité",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-REACTIVATION",
+                    "code": "REACTIVATION",
+                    "definition": "réactivation de l’identité",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-FUSION",
+                    "code": "FUSION",
+                    "definition": "fusion de deux identités",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-SCISSION",
+                    "code": "SCISSION",
+                    "definition": "scission d’une identité",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-CLOTURE",
+                    "code": "CLOTURE",
+                    "definition": "clôture de l’identité",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-DISSOLUTION",
+                    "code": "DISSOLUTION",
+                    "definition": "dissolution de l’identité",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-CORRECTION",
+                    "code": "CORRECTION",
+                    "definition": "correction de l’identité",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-CONVERSION_PROVISOIRE",
+                    "code": "CONVERSION_PROVISOIRE",
+                    "definition": "conversion d’une identité provisoire",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-RATTACHEMENT_PRODUIT",
+                    "code": "RATTACHEMENT_PRODUIT",
+                    "definition": "rattachement à un produit",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-RETRAIT_PRODUIT",
+                    "code": "RETRAIT_PRODUIT",
+                    "definition": "retrait d’un produit",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-RATTACHEMENT_ORGANISATION",
+                    "code": "RATTACHEMENT_ORGANISATION",
+                    "definition": "rattachement à une organisation",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-IDENTITE-EVENEMENT-RETRAIT_ORGANISATION",
+                    "code": "RETRAIT_ORGANISATION",
+                    "definition": "retrait d’une organisation",
+                    "type_semantique": "ACTION"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-PRODUIT-TYPE",
+            "namespace": "gamad.produit.type",
+            "nom": "Types de produit",
+            "domaine": "produits",
+            "portee": "CORE",
+            "source_reference": "core/registre-produits/src/PolitiqueProduits.php::TYPES_PRODUIT — CAP-CORE-011",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-PRODUIT-TYPE-PORTAIL",
+                    "code": "PORTAIL",
+                    "definition": "portail GAMAD",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-PRODUIT-TYPE-SATELLITE",
+                    "code": "SATELLITE",
+                    "definition": "produit satellite fédéré",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-PRODUIT-TYPE-SERVICE_CORE",
+                    "code": "SERVICE_CORE",
+                    "definition": "service interne du Core",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-PRODUIT-TYPE-PARTENAIRE",
+                    "code": "PARTENAIRE",
+                    "definition": "produit d’un partenaire",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-PRODUIT-TYPE-APPLICATION_INTERNE",
+                    "code": "APPLICATION_INTERNE",
+                    "definition": "application interne au Core",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-PRODUIT-ETAT",
+            "namespace": "gamad.produit.etat",
+            "nom": "États d’un produit",
+            "domaine": "produits",
+            "portee": "CORE",
+            "source_reference": "core/registre-produits/src/PolitiqueProduits.php::ETATS_CYCLE — CAP-CORE-011",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-PRODUIT-ETAT-PREPARATION",
+                    "code": "PREPARATION",
+                    "definition": "produit inscrit, pas encore actif",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-PRODUIT-ETAT-ACTIF",
+                    "code": "ACTIF",
+                    "definition": "produit autorisé à rendre ses fonctions prévues",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-PRODUIT-ETAT-SUSPENDU",
+                    "code": "SUSPENDU",
+                    "definition": "produit suspendu",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-PRODUIT-ETAT-RETIRE",
+                    "code": "RETIRE",
+                    "definition": "produit retiré, définitif",
+                    "type_semantique": "ETAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-ENVIRONNEMENT",
+            "namespace": "gamad.produit.environnement",
+            "nom": "Environnements de produit",
+            "domaine": "produits",
+            "portee": "CORE",
+            "source_reference": "core/registre-produits/src/PolitiqueProduits.php::ENVIRONNEMENTS — CAP-CORE-011",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ENVIRONNEMENT-DEVELOPPEMENT",
+                    "code": "DEVELOPPEMENT",
+                    "definition": "environnement de développement",
+                    "type_semantique": "ENVIRONNEMENT"
+                },
+                {
+                    "reference": "TERM-GAMAD-ENVIRONNEMENT-RECETTE",
+                    "code": "RECETTE",
+                    "definition": "environnement de recette",
+                    "type_semantique": "ENVIRONNEMENT"
+                },
+                {
+                    "reference": "TERM-GAMAD-ENVIRONNEMENT-PRODUCTION",
+                    "code": "PRODUCTION",
+                    "definition": "environnement de production",
+                    "type_semantique": "ENVIRONNEMENT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-SOURCE-TYPE",
+            "namespace": "gamad.source.type",
+            "nom": "Types de source",
+            "domaine": "sources",
+            "portee": "CORE",
+            "source_reference": "core/registre-sources/src/PolitiqueSources.php::TYPES_SOURCE — CAP-CORE-006",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-SOURCE-TYPE-PRODUIT_GAMAD",
+                    "code": "PRODUIT_GAMAD",
+                    "definition": "source portée par un produit GAMAD",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-TYPE-SERVICE_CORE",
+                    "code": "SERVICE_CORE",
+                    "definition": "source portée par un service du Core",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-TYPE-ORGANISATION",
+                    "code": "ORGANISATION",
+                    "definition": "source portée par une organisation",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-TYPE-INSTITUTION",
+                    "code": "INSTITUTION",
+                    "definition": "source portée par une institution",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-TYPE-PARTENAIRE",
+                    "code": "PARTENAIRE",
+                    "definition": "source portée par un partenaire",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-TYPE-SYSTEME_EXTERNE",
+                    "code": "SYSTEME_EXTERNE",
+                    "definition": "source portée par un système externe",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-TYPE-IMPORT_GOUVERNE",
+                    "code": "IMPORT_GOUVERNE",
+                    "definition": "source issue d’un import gouverné",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-TYPE-CANAL_DECLARATIF",
+                    "code": "CANAL_DECLARATIF",
+                    "definition": "source déclarative",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-SOURCE-ETAT",
+            "namespace": "gamad.source.etat",
+            "nom": "États d’une source",
+            "domaine": "sources",
+            "portee": "CORE",
+            "source_reference": "core/registre-sources/src/PolitiqueSources.php::ETATS_CYCLE — CAP-CORE-006",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-SOURCE-ETAT-PREPARATION",
+                    "code": "PREPARATION",
+                    "definition": "source inscrite, pas encore active",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-ETAT-ACTIVE",
+                    "code": "ACTIVE",
+                    "definition": "source active",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-ETAT-SUSPENDUE",
+                    "code": "SUSPENDUE",
+                    "definition": "source suspendue",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-ETAT-RETIREE",
+                    "code": "RETIREE",
+                    "definition": "source retirée, définitif",
+                    "type_semantique": "ETAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-SOURCE-VERIFICATION-NIVEAU",
+            "namespace": "gamad.source.verification-niveau",
+            "nom": "Niveaux de vérification d’une source",
+            "domaine": "sources",
+            "portee": "CORE",
+            "source_reference": "core/registre-sources/src/PolitiqueSources.php::NIVEAUX_VERIFICATION — CAP-CORE-006",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-SOURCE-VERIFICATION-NIVEAU-NON_VERIFIEE",
+                    "code": "NON_VERIFIEE",
+                    "definition": "aucune vérification effectuée",
+                    "type_semantique": "NIVEAU"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-VERIFICATION-NIVEAU-DECLAREE",
+                    "code": "DECLAREE",
+                    "definition": "vérification déclarée, non contrôlée",
+                    "type_semantique": "NIVEAU"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-VERIFICATION-NIVEAU-CONTROLEE",
+                    "code": "CONTROLEE",
+                    "definition": "vérification contrôlée",
+                    "type_semantique": "NIVEAU"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-VERIFICATION-NIVEAU-ATTESTEE",
+                    "code": "ATTESTEE",
+                    "definition": "vérification attestée",
+                    "type_semantique": "NIVEAU"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-SOURCE-VERIFICATION-RESULTAT",
+            "namespace": "gamad.source.verification-resultat",
+            "nom": "Résultats de vérification d’une source",
+            "domaine": "sources",
+            "portee": "CORE",
+            "source_reference": "core/registre-sources/src/PolitiqueSources.php::RESULTATS_VERIFICATION — CAP-CORE-006",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-SOURCE-VERIFICATION-RESULTAT-VALIDE",
+                    "code": "VALIDE",
+                    "definition": "vérification valide",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-VERIFICATION-RESULTAT-INVALIDE",
+                    "code": "INVALIDE",
+                    "definition": "vérification invalide",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-VERIFICATION-RESULTAT-EXPIREE",
+                    "code": "EXPIREE",
+                    "definition": "vérification expirée",
+                    "type_semantique": "RESULTAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-SOURCE-LIGNEE",
+            "namespace": "gamad.source.lignee",
+            "nom": "Types de lignée entre sources",
+            "domaine": "sources",
+            "portee": "CORE",
+            "source_reference": "core/registre-sources/src/PolitiqueSources.php::TYPES_LIGNEE — CAP-CORE-006",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-SOURCE-LIGNEE-DERIVEE_DE",
+                    "code": "DERIVEE_DE",
+                    "definition": "dérivée d’une autre source",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-LIGNEE-AGREGE",
+                    "code": "AGREGE",
+                    "definition": "agrège plusieurs sources",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-LIGNEE-REMPLACE",
+                    "code": "REMPLACE",
+                    "definition": "remplace une autre source",
+                    "type_semantique": "RELATION"
+                },
+                {
+                    "reference": "TERM-GAMAD-SOURCE-LIGNEE-CORRIGE",
+                    "code": "CORRIGE",
+                    "definition": "corrige une autre source",
+                    "type_semantique": "RELATION"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-POLITIQUE-EFFET",
+            "namespace": "gamad.politique.effet",
+            "nom": "Effets d’une règle de politique",
+            "domaine": "politiques",
+            "portee": "CORE",
+            "source_reference": "core/registre-politiques/src/PolitiqueAdministration.php::EFFETS — CAP-CORE-007",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-POLITIQUE-EFFET-PERMET",
+                    "code": "PERMET",
+                    "definition": "la règle permet l’action",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-POLITIQUE-EFFET-REFUSE",
+                    "code": "REFUSE",
+                    "definition": "la règle refuse l’action, l’emporte toujours",
+                    "type_semantique": "RESULTAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-POLITIQUE-ETAT",
+            "namespace": "gamad.politique.etat",
+            "nom": "États d’une version de politique",
+            "domaine": "politiques",
+            "portee": "CORE",
+            "source_reference": "core/registre-politiques/src/PolitiqueAdministration.php::ETATS_CYCLE — CAP-CORE-007",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-POLITIQUE-ETAT-BROUILLON",
+                    "code": "BROUILLON",
+                    "definition": "version en préparation, modifiable",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-POLITIQUE-ETAT-EN_VALIDATION",
+                    "code": "EN_VALIDATION",
+                    "definition": "version soumise, immuable, en attente d’activation",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-POLITIQUE-ETAT-ACTIVE",
+                    "code": "ACTIVE",
+                    "definition": "version active",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-POLITIQUE-ETAT-SUSPENDUE",
+                    "code": "SUSPENDUE",
+                    "definition": "version suspendue",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-POLITIQUE-ETAT-REMPLACEE",
+                    "code": "REMPLACEE",
+                    "definition": "version remplacée par une version plus récente",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-POLITIQUE-ETAT-RETIREE",
+                    "code": "RETIREE",
+                    "definition": "version retirée, définitif",
+                    "type_semantique": "ETAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-CONTRAT-TYPE",
+            "namespace": "gamad.contrat.type",
+            "nom": "Types de contrat",
+            "domaine": "contrats",
+            "portee": "CORE",
+            "source_reference": "core/registre-contrats/src/PolitiqueContrats.php::TYPES_CONTRAT — CAP-CORE-009",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-COMMANDE",
+                    "code": "COMMANDE",
+                    "definition": "demande produisant un changement d’état",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-REQUETE",
+                    "code": "REQUETE",
+                    "definition": "lecture sans changement métier",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-EVENEMENT",
+                    "code": "EVENEMENT",
+                    "definition": "fait publié après un changement",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-SIGNAL",
+                    "code": "SIGNAL",
+                    "definition": "information normalisée et bornée",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-ATTESTATION",
+                    "code": "ATTESTATION",
+                    "definition": "réponse limitée portant un fait vérifié",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-REFERENCE_TEMPORAIRE",
+                    "code": "REFERENCE_TEMPORAIRE",
+                    "definition": "référence opaque et expirante",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-HTTP_API",
+                    "code": "HTTP_API",
+                    "definition": "projection HTTP d’une commande ou requête",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-INTERCAPACITE",
+                    "code": "INTERCAPACITE",
+                    "definition": "contrat stable entre deux capacités du Core",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-CONTRAT-ETAT",
+            "namespace": "gamad.contrat.etat",
+            "nom": "États d’une version de contrat",
+            "domaine": "contrats",
+            "portee": "CORE",
+            "source_reference": "core/registre-contrats/src/PolitiqueContrats.php::ETATS_CYCLE — CAP-CORE-009",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ETAT-BROUILLON",
+                    "code": "BROUILLON",
+                    "definition": "version en préparation, modifiable",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ETAT-EN_VALIDATION",
+                    "code": "EN_VALIDATION",
+                    "definition": "version soumise, immuable",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ETAT-ACTIVE",
+                    "code": "ACTIVE",
+                    "definition": "version active",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ETAT-DEPRECIEE",
+                    "code": "DEPRECIEE",
+                    "definition": "version active mais annoncée en remplacement",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ETAT-SUSPENDUE",
+                    "code": "SUSPENDUE",
+                    "definition": "version suspendue",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ETAT-REMPLACEE",
+                    "code": "REMPLACEE",
+                    "definition": "version remplacée par une version plus récente",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ETAT-RETIREE",
+                    "code": "RETIREE",
+                    "definition": "version retirée, définitif",
+                    "type_semantique": "ETAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-CONTRAT-COMPATIBILITE",
+            "namespace": "gamad.contrat.compatibilite",
+            "nom": "Résultats d’analyse de compatibilité de contrat",
+            "domaine": "contrats",
+            "portee": "CORE",
+            "source_reference": "core/registre-contrats/src/PolitiqueContrats.php::RESULTATS_COMPATIBILITE — CAP-CORE-009",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-COMPATIBILITE-COMPATIBLE",
+                    "code": "COMPATIBLE",
+                    "definition": "aucune rupture détectée",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-COMPATIBILITE-ADAPTATION_REQUISE",
+                    "code": "ADAPTATION_REQUISE",
+                    "definition": "compatible mais opérationnellement bloquant",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-COMPATIBILITE-RUPTURE",
+                    "code": "RUPTURE",
+                    "definition": "rupture détectée, plan de migration obligatoire",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-COMPATIBILITE-INDETERMINE",
+                    "code": "INDETERMINE",
+                    "definition": "analyse non concluante",
+                    "type_semantique": "RESULTAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-CONTRAT-ROLE-PARTIE",
+            "namespace": "gamad.contrat.role-partie",
+            "nom": "Rôles d’une partie prenante de contrat",
+            "domaine": "contrats",
+            "portee": "CORE",
+            "source_reference": "core/registre-contrats/src/PolitiqueContrats.php::ROLES_PARTIE — CAP-CORE-009",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ROLE-PARTIE-PRODUCTEUR",
+                    "code": "PRODUCTEUR",
+                    "definition": "produit le contrat",
+                    "type_semantique": "ROLE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ROLE-PARTIE-CONSOMMATEUR",
+                    "code": "CONSOMMATEUR",
+                    "definition": "consomme le contrat",
+                    "type_semantique": "ROLE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ROLE-PARTIE-OPERATEUR",
+                    "code": "OPERATEUR",
+                    "definition": "opère le contrat",
+                    "type_semantique": "ROLE"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-ROLE-PARTIE-VERIFICATEUR",
+                    "code": "VERIFICATEUR",
+                    "definition": "vérifie le contrat",
+                    "type_semantique": "ROLE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-CONTRAT-TYPE-OPERATION",
+            "namespace": "gamad.contrat.type-operation",
+            "nom": "Types d’opération de contrat",
+            "domaine": "contrats",
+            "portee": "CORE",
+            "source_reference": "core/registre-contrats/src/PolitiqueContrats.php::TYPES_OPERATION — CAP-CORE-009",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-OPERATION-COMMANDER",
+                    "code": "COMMANDER",
+                    "definition": "déclenche un changement d’état",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-OPERATION-INTERROGER",
+                    "code": "INTERROGER",
+                    "definition": "lecture sans effet de bord",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-OPERATION-PUBLIER",
+                    "code": "PUBLIER",
+                    "definition": "publie un événement",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-OPERATION-CONSOMMER",
+                    "code": "CONSOMMER",
+                    "definition": "consomme un événement",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-OPERATION-VERIFIER",
+                    "code": "VERIFIER",
+                    "definition": "vérifie un fait",
+                    "type_semantique": "ACTION"
+                },
+                {
+                    "reference": "TERM-GAMAD-CONTRAT-TYPE-OPERATION-REVOQUER",
+                    "code": "REVOQUER",
+                    "definition": "révoque un droit ou un accès",
+                    "type_semantique": "ACTION"
+                }
+            ]
+        }
+    ]
+}

@@ -103,6 +103,14 @@
                 </span>
                 Contrats
             </a>
+            <a class="nav__link"
+               href="{{ route('console.vocabulaires.index') }}"
+               @if(request()->routeIs('console.vocabulaires.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4z"/><path d="M6 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2"/><path d="M9 9h7M9 13h7"/></svg>
+                </span>
+                Vocabulaire
+            </a>
 
             <span class="nav__label">Protéger</span>
             <a class="nav__link"

@@ -12,6 +12,7 @@ use Gamad\RegistreNormes\Db;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
+use Gamad\RegistreVocabulaire\Magasin as VocabulaireMagasin;
 
 /**
  * Readiness sans migration implicite et sans restitution de secrets.
@@ -86,6 +87,16 @@ final class EtatFondation
                     'migration_registre_contrats', 'contrat', 'contrat_version', 'contrat_version_cycle',
                     'contrat_partie', 'contrat_operation', 'contrat_schema', 'contrat_erreur',
                     'contrat_obligation', 'contrat_compatibilite', 'contrat_conformite', 'contrat_projection',
+                ],
+                $production,
+            ),
+            'vocabulaire' => $this->inspecterCible(
+                'VOCABULARY_REGISTRY_URL',
+                fn (): \PDO => VocabulaireMagasin::ouvrir(),
+                [
+                    'migration_registre_vocabulaire', 'vocabulaire', 'vocabulaire_version', 'vocabulaire_version_cycle',
+                    'terme', 'terme_libelle', 'terme_alias', 'terme_relation', 'terme_mapping_externe', 'terme_usage',
+                    'vocabulaire_compatibilite', 'vocabulaire_conformite', 'vocabulaire_projection',
                 ],
                 $production,
             ),
@@ -209,6 +220,7 @@ final class EtatFondation
             'SOURCE_REGISTRY_URL' => 'database.connections.gamad_sources.url',
             'POLICY_REGISTRY_URL' => 'database.connections.gamad_policies.url',
             'CONTRACT_REGISTRY_URL' => 'database.connections.gamad_contracts.url',
+            'VOCABULARY_REGISTRY_URL' => 'database.connections.gamad_vocabulary.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);
