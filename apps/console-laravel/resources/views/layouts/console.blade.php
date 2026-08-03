@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#f8d40a">
     <title>@yield('title', 'Console') — GAMAD Core</title>
     <link rel="stylesheet" href="{{ asset('css/gamad-core.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/console-dirigeant.css') }}">
 </head>
 <body>
 @php
@@ -24,7 +25,7 @@
                  height="56">
             <span>
                 <span class="brand__name">GAMAD Core</span>
-                <span class="brand__tagline">Formation · Travail · Adoration</span>
+                <span class="brand__tagline">Poste de commandement</span>
             </span>
         </a>
         <div class="brand-rule" aria-hidden="true"></div>
@@ -39,30 +40,24 @@
                 </span>
                 Vue d’ensemble
             </a>
+
+            <span class="nav__label">Organisation de GAMAD</span>
             <a class="nav__link"
                href="{{ route('console.identites.index') }}"
                @if(request()->routeIs('console.identites.*')) aria-current="page" @endif>
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.4-4 2.2-6 5.5-6s5.1 2 5.5 6"/><path d="M16 8.5h4.5M18.25 6.25v4.5"/></svg>
                 </span>
-                Identités
+                Personnes et identités
             </a>
-
-            <span class="nav__label">Gouverner</span>
-            <span class="nav__link nav__link--muted" aria-disabled="true">
+            <a class="nav__link"
+               href="{{ route('console.produits.index') }}"
+               @if(request()->routeIs('console.produits.*')) aria-current="page" @endif>
                 <span class="nav__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M5 4.5h14v15H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>
                 </span>
-                Décisions et règles
-                <span class="nav__soon">Bientôt</span>
-            </span>
-            <span class="nav__link nav__link--muted" aria-disabled="true">
-                <span class="nav__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 20c.5-4.5 2.8-7 7-7s6.5 2.5 7 7"/><path d="M18.5 4.5 20 6l-3 3"/></svg>
-                </span>
-                Autorités et accès
-                <span class="nav__soon">Bientôt</span>
-            </span>
+                Produits et services
+            </a>
             <a class="nav__link"
                href="{{ route('console.satellites.index') }}"
                @if(request()->routeIs('console.satellites.*')) aria-current="page" @endif>
@@ -71,21 +66,29 @@
                 </span>
                 Satellites
             </a>
-            <a class="nav__link"
-               href="{{ route('console.produits.index') }}"
-               @if(request()->routeIs('console.produits.*')) aria-current="page" @endif>
+
+            <span class="nav__label">Règles de fonctionnement</span>
+            <span class="nav__link nav__link--muted" aria-disabled="true">
                 <span class="nav__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>
+                    <svg viewBox="0 0 24 24"><path d="M5 4.5h14v15H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
                 </span>
-                Produits
-            </a>
+                Décisions importantes
+                <span class="nav__soon">Bientôt</span>
+            </span>
+            <span class="nav__link nav__link--muted" aria-disabled="true">
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 20c.5-4.5 2.8-7 7-7s6.5 2.5 7 7"/><path d="M18.5 4.5 20 6l-3 3"/></svg>
+                </span>
+                Responsables et mandats
+                <span class="nav__soon">Bientôt</span>
+            </span>
             <a class="nav__link"
                href="{{ route('console.sources.index') }}"
                @if(request()->routeIs('console.sources.*')) aria-current="page" @endif>
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v8l6 3"/></svg>
                 </span>
-                Sources
+                Sources reconnues
             </a>
             <a class="nav__link"
                href="{{ route('console.politiques.index') }}"
@@ -93,7 +96,7 @@
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M9 4h9v16H9"/><path d="M9 4H5v16h4"/><path d="M13 9h3M13 13h3"/></svg>
                 </span>
-                Politiques
+                Règles et autorisations
             </a>
             <a class="nav__link"
                href="{{ route('console.contrats.index') }}"
@@ -101,7 +104,7 @@
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M8 4h8l4 4v12H4V4z"/><path d="M8 4v4H4"/><path d="M9 13h6M9 17h6"/></svg>
                 </span>
-                Contrats
+                Accords et contrats
             </a>
             <a class="nav__link"
                href="{{ route('console.vocabulaires.index') }}"
@@ -109,25 +112,25 @@
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4z"/><path d="M6 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2"/><path d="M9 9h7M9 13h7"/></svg>
                 </span>
-                Vocabulaire
+                Mots officiels
             </a>
 
-            <span class="nav__label">Protéger</span>
-            <a class="nav__link"
-               href="{{ route('console.continuite.index') }}"
-               @if(request()->routeIs('console.continuite.*')) aria-current="page" @endif>
-                <span class="nav__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z"/><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
-                </span>
-                Continuité
-            </a>
+            <span class="nav__label">Sécurité et continuité</span>
             <a class="nav__link"
                href="{{ route('console.acces.index') }}"
                @if(request()->routeIs('console.acces.*')) aria-current="page" @endif>
                 <span class="nav__icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 2.8 7.8 7.5 9.5 4.7-1.7 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2 2 4-5"/></svg>
                 </span>
-                Mon accès
+                Accès et connexions
+            </a>
+            <a class="nav__link"
+               href="{{ route('console.continuite.index') }}"
+               @if(request()->routeIs('console.continuite.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z"/><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+                </span>
+                Sauvegardes et continuité
             </a>
             <span class="nav__link nav__link--muted" aria-disabled="true">
                 <span class="nav__icon" aria-hidden="true">
