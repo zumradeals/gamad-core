@@ -23,6 +23,7 @@ use Gamad\RegistreContrats\Magasin as ContratsMagasin;
 use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreRealms\Magasin as RealmsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Gamad\RegistreVocabulaire\Magasin as VocabulaireMagasin;
 use Illuminate\Contracts\Http\Kernel;
@@ -41,6 +42,7 @@ $fichiers = [
     'contrats' => $temp.'-contrats.sqlite',
     'vocabulaire' => $temp.'-vocabulaire.sqlite',
     'organisations' => $temp.'-organisations.sqlite',
+    'realms' => $temp.'-realms.sqlite',
     'journal' => $temp.'-journal.sqlite',
     'config' => $temp.'-config.php',
     'events' => $temp.'-events.php',
@@ -88,6 +90,8 @@ $environnement = [
     'VOCABULARY_REGISTRY_PATH' => $fichiers['vocabulaire'],
     'ORGANIZATION_REGISTRY_URL' => '',
     'ORGANIZATION_REGISTRY_PATH' => $fichiers['organisations'],
+    'REALM_REGISTRY_URL' => '',
+    'REALM_REGISTRY_PATH' => $fichiers['realms'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
 ];
@@ -109,6 +113,7 @@ PolitiquesMagasin::connecter();
 ContratsMagasin::connecter();
 VocabulaireMagasin::connecter();
 OrganisationsMagasin::connecter();
+RealmsMagasin::connecter();
 JournalMagasin::connecter();
 
 $app = require $application.'/bootstrap/app.php';

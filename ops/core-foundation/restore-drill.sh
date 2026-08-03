@@ -39,6 +39,7 @@ declare -A connexions=(
     [contrats]="$(connexion "${GAMAD_RESTORE_CONTRACTS_PGSERVICE:-}" "${GAMAD_RESTORE_CONTRACTS_PGDATABASE:-}")"
     [vocabulaire]="$(connexion "${GAMAD_RESTORE_VOCABULARY_PGSERVICE:-}" "${GAMAD_RESTORE_VOCABULARY_PGDATABASE:-}")"
     [organisations]="$(connexion "${GAMAD_RESTORE_ORGANIZATIONS_PGSERVICE:-}" "${GAMAD_RESTORE_ORGANIZATIONS_PGDATABASE:-}")"
+    [realms]="$(connexion "${GAMAD_RESTORE_REALMS_PGSERVICE:-}" "${GAMAD_RESTORE_REALMS_PGDATABASE:-}")"
     [journal]="$(connexion "${GAMAD_RESTORE_JOURNAL_PGSERVICE:-}" "${GAMAD_RESTORE_JOURNAL_PGDATABASE:-}")"
 )
 
@@ -59,6 +60,7 @@ declare -a production=(
     "${GAMAD_CONTRACTS_PGDATABASE:-}"
     "${GAMAD_VOCABULARY_PGDATABASE:-}"
     "${GAMAD_ORGANIZATIONS_PGDATABASE:-}"
+    "${GAMAD_REALMS_PGDATABASE:-}"
     "${GAMAD_JOURNAL_PGDATABASE:-}"
     "${GAMAD_INDEX_PGSERVICE:-}"
     "${GAMAD_ACCESS_PGSERVICE:-}"
@@ -69,9 +71,10 @@ declare -a production=(
     "${GAMAD_CONTRACTS_PGSERVICE:-}"
     "${GAMAD_VOCABULARY_PGSERVICE:-}"
     "${GAMAD_ORGANIZATIONS_PGSERVICE:-}"
+    "${GAMAD_REALMS_PGSERVICE:-}"
     "${GAMAD_JOURNAL_PGSERVICE:-}"
 )
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations journal; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal; do
     for interdite in "${production[@]}"; do
         [[ -z "$interdite" ]] && continue
         if [[ "${connexions[$cible]}" == *"=${interdite}" ]]; then
@@ -87,7 +90,7 @@ done
     sha256sum --check SHA256SUMS
 )
 
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations journal; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal; do
     pg_restore \
         --dbname="${connexions[$cible]}" \
         --clean \
@@ -117,7 +120,9 @@ psql "${connexions[vocabulaire]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS termes_persistants FROM terme'
 psql "${connexions[organisations]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS organisations_persistantes FROM organisation'
+psql "${connexions[realms]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS realms_persistants FROM realm'
 psql "${connexions[journal]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS evenements FROM evenement_operationnel'
 
-echo "Exercice de restauration terminé sur les dix cibles isolées."
+echo "Exercice de restauration terminé sur les onze cibles isolées."

@@ -53,7 +53,7 @@ projection et sans conformité `CONFORME`.
 `Magasin::connecter()` ouvre `VOCABULARY_REGISTRY_URL` (PostgreSQL,
 obligatoire en production) ou `VOCABULARY_REGISTRY_PATH` (SQLite, local et
 CI). Aucun repli silencieux vers SQLite en production. `MAGASIN_URL`,
-`IDENTITY_REGISTRY_URL` et les autres variables des huit autres magasins
+`IDENTITY_REGISTRY_URL` et les autres variables des dix autres magasins
 appartiennent à d'autres registres et ne sont jamais consultées ici.
 `php artisan core:fondation:migrer` applique la migration ; la readiness
 (`/api/v1/health/ready`) la vérifie.

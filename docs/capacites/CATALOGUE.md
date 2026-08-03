@@ -27,7 +27,7 @@ source la plus fine pour qui veut savoir ce qui existe réellement derrière un
 | CAP-CORE-009 | Contracts Registry | Décrire et versionner les contrats intercapacités | `core/registre-contrats`, bootstrap idempotent (treize contrats déjà exploités, six internes et sept HTTP externes), analyse de compatibilité structurelle, API v1 `/contrats*`, écran Contrats | `GO` — registre persistant gouverné ; garde SQLite (51 épreuves), 25 intégrations HTTP/console et exercice PostgreSQL réel (huit magasins) verts en local le 2 août 2026 |
 | CAP-CORE-010 | Canonical Vocabulary | Partager des termes et codes stables entre produits | `core/registre-vocabulaire`, bootstrap idempotent (vingt-quatre vocabulaires, cent trente-deux termes repris fidèlement depuis les constantes réelles de CAP-CORE-001/006/007/011), analyse de compatibilité structurelle, projections dérivées, API v1 `/vocabulaires*` et `/termes*`, écran Vocabulaires | `GO` — registre persistant gouverné ; garde SQLite (80 épreuves), 3 intégrations HTTP/console/dérive et exercice PostgreSQL réel (neuf magasins) verts en local le 3 août 2026 |
 | CAP-CORE-011 | Products Registry | Référencer, gouverner et faire vivre le cycle des produits du Core | `core/registre-produits`, bootstrap idempotent, API v1 `/produits*`, écran Produits, `CAP-CORE-022` raccordé au registre | `GO` — registre persistant gouverné ; CI complète (11 contrôles GitHub, PR #58) verte sur `claude/cap-core-011-products-registry-go` le 2 août 2026 |
-| CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | aucun | `NO GO` |
+| CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | `core/registre-realms`, bootstrap idempotent (vocabulaire, politique et contrat auto-établis), API v1 `/realms*`, écran Realms, `EvaluateurPortee` déterministe | `GO` — registre persistant gouverné et testé (87 épreuves SQLite/HTTP/console/contrats, exercice PostgreSQL réel local le 3 août 2026 sur onze magasins) ; CI GitHub à confirmer sur `claude/cap-core-012-realms-registry-go` — voir `docs/capacites/CAP-CORE-012-realms-registry.md` |
 | CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | `core/journal-operationnel` | `GO` — chaîne append-only vérifiée, trigger PostgreSQL |
 | CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-operationnel` en écriture seule | `NO GO` — aucune publication vers les satellites |
 | CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | empreinte de baseline, chaîne du journal | `NO GO` — pas de service d’empreintes général |
@@ -130,15 +130,23 @@ changement compatible ; vingt-quatre vocabulaires déjà exploités (cent
 trente-deux termes, chacun relié à la constante PHP réelle d’une capacité
 `GO`) y ont été repris fidèlement. Ce chantier décrit le vocabulaire ; il ne
 migre pas encore les capacités consommatrices vers une lecture depuis ce
-registre. Les chantiers ouverts, par ordre d’utilité :
+registre. CAP-CORE-002 est livrée à son tour : les organisations possèdent
+désormais une fiche persistante, un cycle de vie, une structure hiérarchique
+acyclique, des relations interorganisationnelles et des affiliations dont la
+représentation opposable dépend d’un mandat réellement vérifié par
+CAP-CORE-003. CAP-CORE-012 est livrée à son tour : les realms possèdent une
+fiche persistante, une hiérarchie acyclique `PARENT_DE`, des périmètres
+canoniques, des rattachements gouvernés d’organisations (CAP-CORE-002), de
+produits (CAP-CORE-011) et de contrats (CAP-CORE-009), des franchissements
+explicites à refus par défaut et prioritaire, et un moteur déterministe de
+contrôle de portée qui ne constitue jamais une autorisation — `CAP-CORE-004`
+reste seul décideur. Les chantiers ouverts, par ordre d’utilité :
 
 ```text
 intégration réelle de GamaDrive V2 sur CAP-CORE-022
-→ CAP-CORE-002 organisations
-→ CAP-CORE-012 realms
 → CAP-CORE-014 publication d’événements vers les satellites
 → CAP-CORE-021 Matching, désormais consommateur naturel de CAP-CORE-006,
-  CAP-CORE-009 et CAP-CORE-010
+  CAP-CORE-009, CAP-CORE-010 et CAP-CORE-012
 ```
 
 Le second chemin d’accès est livré : codes de secours à usage unique,

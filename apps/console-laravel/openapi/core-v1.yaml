@@ -2188,6 +2188,612 @@ paths:
           description: Résultat, artefact ou état invalide.
         "503":
           description: Une dépendance requise est indisponible.
+  /realms:
+    get:
+      tags: [Realms]
+      operationId: listerRealms
+      summary: Liste les realms visibles de la session (CAP-CORE-012).
+      security: [{bearerSession: []}]
+      responses:
+        "200": { description: Liste des realms visibles. }
+        "401": { description: Session invalide. }
+    post:
+      tags: [Realms]
+      operationId: inscrireRealm
+      summary: Inscrit un realm dans le registre, en PREPARATION.
+      security: [{bearerSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identite_reference, code_canonique, type_realm_reference, nom_affichage, classification_reference]
+              properties:
+                identite_reference: { type: string, maxLength: 64 }
+                code_canonique: { type: string, maxLength: 128 }
+                type_realm_reference: { type: string, enum: [TERRITORIAL, INSTITUTIONNEL, PROGRAMME, MARCHE, PRODUIT, TECHNIQUE, COOPERATION] }
+                nom_affichage: { type: string, maxLength: 500 }
+                description: { type: string, maxLength: 2000 }
+                organisation_responsable_reference: { type: string, maxLength: 64 }
+                classification_reference: { type: string, maxLength: 64 }
+      responses:
+        "201": { description: Realm inscrit. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'inscription. }
+        "409": { description: Identité déjà liée ou code déjà utilisé. }
+        "422": { description: Dossier invalide ou identité de mauvais type. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /realms/{reference}:
+    get:
+      tags: [Realms]
+      operationId: resoudreRealm
+      summary: Fiche d'un realm et sa dernière révision (CAP-CORE-012).
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Fiche du realm. }
+        "401": { description: Session invalide. }
+        "404": { description: Référence inconnue ou non visible. }
+    patch:
+      tags: [Realms]
+      operationId: modifierRealm
+      summary: Modifie les métadonnées d'un realm, en nouvelle révision.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom_affichage: { type: string, maxLength: 500 }
+                description: { type: string, maxLength: 2000 }
+                organisation_responsable_reference: { type: string, maxLength: 64 }
+                classification_reference: { type: string, maxLength: 64 }
+      responses:
+        "200": { description: Realm modifié, nouvelle révision créée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la modification. }
+        "404": { description: Realm inconnu. }
+  /realms/{reference}/activation:
+    post:
+      tags: [Realms]
+      operationId: activerRealm
+      summary: Active un realm en PREPARATION ou SUSPENDU.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Realm activé (ou déjà actif, idempotent). }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'activation. }
+        "404": { description: Realm inconnu. }
+        "409": { description: Transition impossible depuis l'état courant. }
+  /realms/{reference}/suspension:
+    post:
+      tags: [Realms]
+      operationId: suspendreRealm
+      summary: Suspend un realm actif ; ferme les nouveaux rattachements et franchissements.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif_reference: { type: string, maxLength: 64 }
+                motif_detail: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Realm suspendu (ou déjà suspendu, idempotent). }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la suspension. }
+        "404": { description: Realm inconnu. }
+        "409": { description: Transition impossible depuis l'état courant. }
+  /realms/{reference}/fermeture:
+    post:
+      tags: [Realms]
+      operationId: fermerRealm
+      summary: Ferme un realm ; l'historique reste consultable, un successeur peut être déclaré.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif_reference: { type: string, maxLength: 64 }
+                motif_detail: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Realm fermé (ou déjà fermé, idempotent). }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la fermeture. }
+        "404": { description: Realm inconnu. }
+        "409": { description: Transition impossible depuis l'état courant. }
+  /realms/{reference}/retrait:
+    post:
+      tags: [Realms]
+      operationId: retirerRealm
+      summary: Retire irréversiblement un realm ; sa référence n'est jamais réutilisée.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motif_reference]
+              properties:
+                motif_reference: { type: string, maxLength: 64 }
+                motif_detail: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Realm retiré (ou déjà retiré, idempotent). }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le retrait. }
+        "404": { description: Realm inconnu. }
+        "422": { description: Motif absent. }
+  /realms/{reference}/historique:
+    get:
+      tags: [Realms]
+      operationId: resoudreHistoriqueRealm
+      summary: Historique du cycle de vie d'un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Historique du cycle. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+  /realms/{reference}/relations:
+    get:
+      tags: [Realms]
+      operationId: resoudreRelationsRealm
+      summary: Relations déclarées d'un realm (hiérarchiques et autres).
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Relations actives du realm. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+    post:
+      tags: [Realms]
+      operationId: declarerRelationRealm
+      summary: Déclare une relation PARENT_DE, CHEVAUCHE, EQUIVALENT_OPERATIONNEL, SUCCEDE_A ou COOPERE_AVEC.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [realm_cible_reference, type_relation_reference]
+              properties:
+                realm_cible_reference: { type: string, maxLength: 64 }
+                type_relation_reference: { type: string, enum: [PARENT_DE, INCLUS_DANS, CHEVAUCHE, EQUIVALENT_OPERATIONNEL, SUCCEDE_A, COOPERE_AVEC] }
+                date_debut: { type: string, format: date }
+      responses:
+        "201": { description: Relation déclarée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la déclaration. }
+        "404": { description: Realm source ou cible inconnu. }
+        "409": { description: Cycle hiérarchique détecté ou auto-relation. }
+  /realms/{reference}/relations/{relation}/fermeture:
+    post:
+      tags: [Realms]
+      operationId: fermerRelationRealm
+      summary: Ferme une relation entre realms, datée.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: relation
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Relation fermée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la fermeture. }
+        "404": { description: Relation inconnue. }
+  /realms/{reference}/parents:
+    get:
+      tags: [Realms]
+      operationId: resoudreParentsRealm
+      summary: Realms parents directs (PARENT_DE) d'un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Parents directs. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+  /realms/{reference}/enfants:
+    get:
+      tags: [Realms]
+      operationId: resoudreEnfantsRealm
+      summary: Realms enfants directs (PARENT_DE) d'un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Enfants directs. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+  /realms/{reference}/perimetres:
+    get:
+      tags: [Realms]
+      operationId: resoudrePerimetresRealm
+      summary: Périmètres déclarés d'un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Périmètres actifs. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+    post:
+      tags: [Realms]
+      operationId: declarerPerimetreRealm
+      summary: Déclare une dimension de périmètre canonique.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dimension_reference, valeur_reference]
+              properties:
+                dimension_reference: { type: string, enum: [PAYS, REGION, VILLE, JURIDICTION, MARCHE, DOMAINE_ACTIVITE, PROGRAMME, ENVIRONNEMENT, INSTITUTION, CLASSIFICATION_DONNEES] }
+                valeur_reference: { type: string, maxLength: 255 }
+                valeur_externe: { type: string, maxLength: 255 }
+                systeme_externe_reference: { type: string, maxLength: 128 }
+                date_debut: { type: string, format: date }
+      responses:
+        "201": { description: Périmètre déclaré. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la déclaration. }
+        "404": { description: Realm inconnu. }
+        "422": { description: Dimension hors liste close. }
+  /realms/{reference}/perimetres/{perimetre}/fermeture:
+    post:
+      tags: [Realms]
+      operationId: fermerPerimetreRealm
+      summary: Ferme un périmètre déclaré, daté.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: perimetre
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Périmètre fermé. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la fermeture. }
+        "404": { description: Périmètre inconnu. }
+  /realms/{reference}/identifiants-externes:
+    get:
+      tags: [Realms]
+      operationId: resoudreIdentifiantsExternesRealm
+      summary: Identifiants externes actifs d'un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Identifiants externes actifs. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+    post:
+      tags: [Realms]
+      operationId: declarerIdentifiantExterneRealm
+      summary: Déclare un identifiant externe (code pays, référence institutionnelle...).
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [systeme_reference, valeur]
+              properties:
+                systeme_reference: { type: string, maxLength: 128 }
+                valeur: { type: string, maxLength: 255 }
+                date_debut: { type: string, format: date }
+      responses:
+        "201": { description: Identifiant externe déclaré. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la déclaration. }
+        "404": { description: Realm inconnu. }
+        "409": { description: Couple système/valeur déjà actif. }
+  /realms/{reference}/organisations:
+    get:
+      tags: [Realms]
+      operationId: resoudreOrganisationsRealm
+      summary: Organisations rattachées à un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Organisations rattachées actives. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+    post:
+      tags: [Realms]
+      operationId: rattacherOrganisationRealm
+      summary: Rattache une organisation active (CAP-CORE-002) à un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [organisation_reference, role_reference, classification_reference]
+              properties:
+                organisation_reference: { type: string, maxLength: 64 }
+                role_reference: { type: string, enum: [RESPONSABLE, OPERATEUR, PARTICIPANT, REGULATEUR, BENEFICIAIRE, OBSERVATEUR] }
+                classification_reference: { type: string, maxLength: 64 }
+                date_debut: { type: string, format: date }
+      responses:
+        "201": { description: Organisation rattachée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le rattachement. }
+        "404": { description: Realm ou organisation inconnu. }
+        "422": { description: Rôle hors liste close, organisation inactive ou mandat insuffisant. }
+        "503": { description: CAP-CORE-002 indisponible. }
+  /realms/{reference}/organisations/{rattachement}/fermeture:
+    post:
+      tags: [Realms]
+      operationId: detacherOrganisationRealm
+      summary: Détache une organisation rattachée à un realm, datée.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: rattachement
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Organisation détachée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le détachement. }
+        "404": { description: Rattachement inconnu. }
+  /realms/{reference}/produits:
+    get:
+      tags: [Realms]
+      operationId: resoudreProduitsRealm
+      summary: Produits rattachés à un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Produits rattachés actifs. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+    post:
+      tags: [Realms]
+      operationId: rattacherProduitRealm
+      summary: Rattache un produit actif (CAP-CORE-011) à un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [produit_reference, role_reference]
+              properties:
+                produit_reference: { type: string, maxLength: 64 }
+                role_reference: { type: string, enum: [OPERE_DANS, FOURNIT_SERVICE, CONSOMME_SERVICE, ADMINISTRE, OBSERVE] }
+                environnement_reference: { type: string, maxLength: 64 }
+                date_debut: { type: string, format: date }
+      responses:
+        "201": { description: Produit rattaché. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le rattachement. }
+        "404": { description: Realm ou produit inconnu. }
+        "422": { description: Rôle hors liste close, produit inactif ou environnement inconnu. }
+        "503": { description: CAP-CORE-011 indisponible. }
+  /realms/{reference}/produits/{rattachement}/fermeture:
+    post:
+      tags: [Realms]
+      operationId: detacherProduitRealm
+      summary: Détache un produit rattaché à un realm, daté.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: rattachement
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Produit détaché. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le détachement. }
+        "404": { description: Rattachement inconnu. }
+  /realms/{reference}/contrats:
+    get:
+      tags: [Realms]
+      operationId: resoudreContratsRealm
+      summary: Contrats rattachés à un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Contrats rattachés actifs. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+    post:
+      tags: [Realms]
+      operationId: rattacherContratRealm
+      summary: Rattache un contrat actif ou déprécié (CAP-CORE-009) à un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contrat_reference, role_reference]
+              properties:
+                contrat_reference: { type: string, maxLength: 64 }
+                version_reference: { type: string, maxLength: 32 }
+                role_reference: { type: string, enum: [GOUVERNE, SUPPORTE, AUDITE] }
+                date_debut: { type: string, format: date }
+      responses:
+        "201": { description: Contrat rattaché. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le rattachement. }
+        "404": { description: Realm ou contrat inconnu. }
+        "422": { description: Rôle hors liste close ou contrat inactif. }
+        "503": { description: CAP-CORE-009 indisponible. }
+  /realms/{reference}/contrats/{rattachement}/fermeture:
+    post:
+      tags: [Realms]
+      operationId: detacherContratRealm
+      summary: Détache un contrat rattaché à un realm, daté.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: rattachement
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Contrat détaché. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le détachement. }
+        "404": { description: Rattachement inconnu. }
+  /realms/{reference}/franchissements:
+    get:
+      tags: [Realms]
+      operationId: resoudreFranchissementsRealm
+      summary: Franchissements déclarés d'un realm (source ou cible).
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Franchissements actifs. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+    post:
+      tags: [Realms]
+      operationId: declarerFranchissementRealm
+      summary: Déclare un franchissement explicite PERMET ou REFUSE entre deux realms.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [realm_cible_reference, objet_reference, type_objet_reference, effet_reference, finalite_reference]
+              properties:
+                realm_cible_reference: { type: string, maxLength: 64 }
+                objet_reference: { type: string, maxLength: 255 }
+                type_objet_reference: { type: string, maxLength: 64 }
+                effet_reference: { type: string, enum: [PERMET, REFUSE] }
+                finalite_reference: { type: string, maxLength: 255 }
+                contrat_reference: { type: string, maxLength: 64 }
+                date_debut: { type: string, format: date }
+      responses:
+        "201": { description: Franchissement déclaré. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la déclaration. }
+        "404": { description: Realm source ou cible inconnu. }
+        "422": { description: Wildcard interdit, effet inconnu ou contrat inactif. }
+  /realms/{reference}/franchissements/{franchissement}/fermeture:
+    post:
+      tags: [Realms]
+      operationId: fermerFranchissementRealm
+      summary: Ferme un franchissement déclaré, daté.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: franchissement
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Franchissement fermé. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la fermeture. }
+        "404": { description: Franchissement inconnu. }
+  /realms/{reference}/verification:
+    get:
+      tags: [Realms]
+      operationId: resoudreVerificationRealm
+      summary: Dernière vérification enregistrée d'un realm.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      responses:
+        "200": { description: Vérification courante, ou absente. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
+  /realms/{reference}/verifications:
+    post:
+      tags: [Realms]
+      operationId: enregistrerVerificationRealm
+      summary: Enregistre une vérification de realm, en ajout seul.
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type_verification_reference, resultat_reference, verifie_par_reference]
+              properties:
+                type_verification_reference: { type: string, enum: [CONFORMITE_JURIDIQUE, CONFORMITE_TECHNIQUE, REVUE_AUTORITE] }
+                resultat_reference: { type: string, enum: [CONFORME, NON_CONFORME, A_REVOIR] }
+                verifie_par_reference: { type: string, maxLength: 64 }
+                verifie_le: { type: string, format: date }
+                expire_le: { type: string, format: date }
+                motif: { type: string, maxLength: 500 }
+      responses:
+        "201": { description: Vérification enregistrée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'enregistrement. }
+        "404": { description: Realm inconnu. }
+        "422": { description: Auto-attestation interdite ou vocabulaire hors liste close. }
+  /realms/{reference}/portee:
+    post:
+      tags: [Realms]
+      operationId: verifierPorteeRealm
+      summary: Contrôle de portée déterministe ; ne constitue jamais une autorisation (CAP-CORE-012, CAP-CORE-004 décide).
+      security: [{bearerSession: []}]
+      parameters: [{ $ref: "#/components/parameters/Reference" }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organisation: { type: string, maxLength: 64 }
+                produit: { type: string, maxLength: 64 }
+                contrat: { type: string, maxLength: 64 }
+                operation: { type: string, maxLength: 255 }
+                finalite: { type: string, maxLength: 255 }
+                realm_source: { type: string, maxLength: 64 }
+                realm_cible: { type: string, maxLength: 64 }
+                date: { type: string, format: date }
+      responses:
+        "200": { description: Résultat explicable du contrôle de portée. }
+        "401": { description: Session invalide. }
+        "404": { description: Realm inconnu ou non visible. }
   /vocabulaires:
     get:
       tags: [Vocabulaire]

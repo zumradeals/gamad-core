@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PasskeySessionController;
 use App\Http\Controllers\Api\V1\PolitiqueController;
 use App\Http\Controllers\Api\V1\ProduitController;
+use App\Http\Controllers\Api\V1\RealmController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Api\V1\SourceController;
 use App\Http\Controllers\Api\V1\VocabulaireController;
@@ -270,5 +271,74 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
             '/organisations/{reference}/affiliations/{affiliation}/fermeture',
             [OrganisationController::class, 'fermerAffiliation'],
         )->middleware('throttle:20,1');
+
+        // CAP-CORE-012 — registre des realms.
+        Route::get('/realms', [RealmController::class, 'index']);
+        Route::post('/realms', [RealmController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('/realms/{reference}', [RealmController::class, 'show']);
+        Route::patch('/realms/{reference}', [RealmController::class, 'update'])
+            ->middleware('throttle:20,1');
+        Route::get('/realms/{reference}/historique', [RealmController::class, 'historique']);
+        Route::get('/realms/{reference}/relations', [RealmController::class, 'relations']);
+        Route::get('/realms/{reference}/parents', [RealmController::class, 'parents']);
+        Route::get('/realms/{reference}/enfants', [RealmController::class, 'enfants']);
+        Route::get('/realms/{reference}/perimetres', [RealmController::class, 'perimetres']);
+        Route::get('/realms/{reference}/identifiants-externes', [RealmController::class, 'identifiantsExternes']);
+        Route::get('/realms/{reference}/organisations', [RealmController::class, 'organisations']);
+        Route::get('/realms/{reference}/produits', [RealmController::class, 'produits']);
+        Route::get('/realms/{reference}/contrats', [RealmController::class, 'contrats']);
+        Route::get('/realms/{reference}/franchissements', [RealmController::class, 'franchissements']);
+        Route::get('/realms/{reference}/verification', [RealmController::class, 'verification']);
+        Route::post('/realms/{reference}/portee', [RealmController::class, 'verifierPortee'])
+            ->middleware('throttle:60,1');
+        Route::post('/realms/{reference}/activation', [RealmController::class, 'activer'])
+            ->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/suspension', [RealmController::class, 'suspendre'])
+            ->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/fermeture', [RealmController::class, 'fermer'])
+            ->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/retrait', [RealmController::class, 'retirer'])
+            ->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/relations', [RealmController::class, 'declarerRelation'])
+            ->middleware('throttle:20,1');
+        Route::post(
+            '/realms/{reference}/relations/{relation}/fermeture',
+            [RealmController::class, 'fermerRelation'],
+        )->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/perimetres', [RealmController::class, 'declarerPerimetre'])
+            ->middleware('throttle:20,1');
+        Route::post(
+            '/realms/{reference}/perimetres/{perimetre}/fermeture',
+            [RealmController::class, 'fermerPerimetre'],
+        )->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/identifiants-externes', [RealmController::class, 'declarerIdentifiant'])
+            ->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/organisations', [RealmController::class, 'rattacherOrganisation'])
+            ->middleware('throttle:20,1');
+        Route::post(
+            '/realms/{reference}/organisations/{rattachement}/fermeture',
+            [RealmController::class, 'detacherOrganisation'],
+        )->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/produits', [RealmController::class, 'rattacherProduit'])
+            ->middleware('throttle:20,1');
+        Route::post(
+            '/realms/{reference}/produits/{rattachement}/fermeture',
+            [RealmController::class, 'detacherProduit'],
+        )->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/contrats', [RealmController::class, 'rattacherContrat'])
+            ->middleware('throttle:20,1');
+        Route::post(
+            '/realms/{reference}/contrats/{rattachement}/fermeture',
+            [RealmController::class, 'detacherContrat'],
+        )->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/franchissements', [RealmController::class, 'declarerFranchissement'])
+            ->middleware('throttle:20,1');
+        Route::post(
+            '/realms/{reference}/franchissements/{franchissement}/fermeture',
+            [RealmController::class, 'fermerFranchissement'],
+        )->middleware('throttle:20,1');
+        Route::post('/realms/{reference}/verifications', [RealmController::class, 'enregistrerVerification'])
+            ->middleware('throttle:20,1');
     });
 });

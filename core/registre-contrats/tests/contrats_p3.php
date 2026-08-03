@@ -645,7 +645,7 @@ $verifier($coherentPartout, '49. l’invariant « une seule version active » ti
 
 // 50 — continuité : une copie physique du magasin reste lisible et cohérente
 // (proxy du cycle sauvegarde/restauration ; l'exercice PostgreSQL réel sur
-// les huit magasins est couvert par ops/core-foundation dans la CI).
+// les onze magasins est couvert par ops/core-foundation dans la CI).
 copy($fichiers['contrats'], $fichiers['contrats_copie']);
 $magasinCopie = new \PDO('sqlite:' . $fichiers['contrats_copie']);
 $magasinCopie->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
