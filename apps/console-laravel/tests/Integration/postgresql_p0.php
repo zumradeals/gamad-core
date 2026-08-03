@@ -10,6 +10,7 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
 use Gamad\RegistreContrats\Magasin as ContratsMagasin;
+use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
@@ -39,14 +40,15 @@ $sources = SourcesMagasin::connecter();
 $politiques = PolitiquesMagasin::connecter();
 $contrats = ContratsMagasin::connecter();
 $vocabulaire = VocabulaireMagasin::connecter();
+$organisations = OrganisationsMagasin::connecter();
 $journalPdo = JournalMagasin::connecter();
 
 $verifier(
     array_unique(array_map(
         static fn (\PDO $pdo): string => (string) $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME),
-        [$index, $acces, $identites, $produits, $sources, $politiques, $contrats, $vocabulaire, $journalPdo],
+        [$index, $acces, $identites, $produits, $sources, $politiques, $contrats, $vocabulaire, $organisations, $journalPdo],
     )) === ['pgsql'],
-    'les neuf magasins utilisent réellement PostgreSQL',
+    'les dix magasins utilisent réellement PostgreSQL',
 );
 
 $ctr16 = new Ctr16($acces);
