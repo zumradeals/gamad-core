@@ -1,0 +1,34 @@
+name: Materialize CAP-CORE-002
+on:
+  push:
+    branches:
+      - codex/cap-core-002-organizations-registry-go
+    paths:
+      - cap002-files.tar.gz
+      - .github/workflows/materialize-cap002.yml
+permissions:
+  contents: write
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/cap-core-002-organizations-registry-go
+          fetch-depth: 0
+      - name: Déployer les fichiers du chantier dans la branche
+        run: |
+          tar -xzf cap002-files.tar.gz
+          python3 tools/apply-cap002.py
+          rm -rf tools cap002-files.tar.gz .github/workflows/materialize-cap002.yml
+      - name: Vérifier la syntaxe PHP livrée
+        run: |
+          find core/registre-organisations apps/console-laravel/app/Application/Organisations apps/console-laravel/app/Http/Controllers apps/console-laravel/app/Providers apps/console-laravel/app/Console/Commands -type f -name '*.php' -print0 \
+            | xargs -0 -n1 php -l
+      - name: Publier le chantier matérialisé
+        run: |
+          git config user.name "gamad-capacity-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "feat(organizations): implement CAP-CORE-002 registry"
+          git push origin HEAD:codex/cap-core-002-organizations-registry-go
