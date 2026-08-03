@@ -45,7 +45,7 @@ Claude ne commence jamais une capacité tant que la capacité précédente et to
 
 Une session de codage traite une seule capacité, ouvre une seule PR et s’arrête lorsque la PR est verte et prête à fusionner.
 
-## Notes déjà préparées
+## Notes préparées
 
 - `CAP-CORE-010/` — Vocabulaire canonique.
 - `CAP-CORE-002/` — Registre des organisations.
@@ -57,5 +57,15 @@ Une session de codage traite une seule capacité, ouvre une seule PR et s’arr�
 - `CAP-CORE-017/` — Registre des risques, évaluations, traitements, exceptions temporaires, mesures compensatoires, décisions, expirations et résolutions exactes.
 - `CAP-CORE-018/` — Signaux, triage, incidents confirmés, sévérité, équipe de réponse, confinement, éradication, rétablissement, communications, revue et clôture prouvée.
 - `CAP-CORE-020/` — Directory opérationnel, Atlas des dépendances, projections sourcées, fraîcheur, réconciliation, analyses d’impact, vues publiques bornées et instantanés signés.
+- `CAP-CORE-021/` — Moteur déterministe de qualification, appariement, classement, segmentation protégée, activation, explication, mesure et contestation.
 
-La dernière note à préparer est `CAP-CORE-021 — Matching Engine`.
+## État du programme documentaire
+
+Toutes les notes de chantier de l’ordre actuel sont désormais préparées.
+
+La prochaine étape n’est pas de coder `CAP-CORE-021` immédiatement. Elle consiste à :
+
+1. commencer uniquement `CAP-CORE-010` ;
+2. avancer dans l’ordre ;
+3. maintenir chaque capacité à `NO GO` jusqu’à preuve complète ;
+4. compléter la note concernée avec la PR et le commit de livraison après fusion.
