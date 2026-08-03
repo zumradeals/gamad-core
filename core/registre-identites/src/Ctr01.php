@@ -28,10 +28,22 @@ final class Ctr01
      * exploitation. Le repli sur `$index` maintient les anciens appelants et
      * permet de prouver que même en cohabitation Schema::create() ne supprime
      * pas les tables persistantes.
+     *
+     * `$organisations` est la connexion au magasin persistant de
+     * `CAP-CORE-002` (`Gamad\RegistreOrganisations\Magasin`). Lorsqu'elle est
+     * fournie, `resoudreLiensOrganisations()` délègue exclusivement à
+     * `organisation_affiliation` et ne lit plus jamais `relation_organisation`
+     * (fiche CAP-CORE-002 §14). Lorsqu'elle est absente — la majorité des
+     * appelants existants du dépôt, non encore migrés dans ce chantier — la
+     * lecture historique de `relation_organisation` reste inchangée : aucun
+     * appelant existant n'est cassé par ce chantier. Un appelant qui doit
+     * refléter la vérité de CAP-CORE-002 DOIT désormais construire `Ctr01`
+     * avec ce quatrième argument.
      */
     public function __construct(
         private \PDO $index,
         ?\PDO $registre = null,
+        private ?\PDO $organisations = null,
     ) {
         $this->registre = $registre ?? $index;
         SchemaInscription::migrer($this->registre);
@@ -231,6 +243,10 @@ final class Ctr01
         ?string $relationType = null,
         ?string $date = null,
     ): array {
+        if ($this->organisations !== null) {
+            return $this->resoudreLiensOrganisationsDepuisCapCore002($reference, $organisation, $relationType, $date);
+        }
+
         $sql = 'SELECT * FROM relation_organisation WHERE identite_reference = ?';
         $args = [$reference];
         if ($organisation !== null) {
@@ -625,6 +641,19 @@ final class Ctr01
         string $relationType,
         array $dossier,
     ): array {
+        if ($this->organisations !== null) {
+            // Frontière corrigée (fiche CAP-CORE-002 §14) : une fois ce Ctr01
+            // raccordé au registre des organisations, l'écriture d'une
+            // affiliation ne passe plus par l'ancienne table. Elle relève de
+            // `RegistreOrganisations::proposerAffiliation()` /
+            // `activerAffiliation()`, seules à savoir gouverner une unité, une
+            // classification et un cycle d'affiliation complets.
+            return $this->refus(
+                'DEPRECIE_CAP_CORE_002',
+                'l’écriture de relations organisationnelles depuis CAP-CORE-001 est dépréciée ; '
+                . 'utiliser RegistreOrganisations::proposerAffiliation() (CAP-CORE-002)',
+            );
+        }
         if (!$this->estType($reference, null)) {
             return $this->refus('IDENTITE_INCONNUE', "identité `{$reference}` inconnue");
         }
@@ -871,6 +900,87 @@ final class Ctr01
         )->execute([$reference, $niveau, $preuve, $source, $producteur, $jour]);
 
         return $this->resoudreAssurance($reference);
+    }
+
+    // ------------------------------------------------------------------
+    // Délégation CAP-CORE-002 (fiche §14)
+
+    /**
+     * Projection compatible de `resoudreLiensOrganisations()`, entièrement
+     * fondée sur `organisation_affiliation` / `organisation_affiliation_cycle`
+     * de CAP-CORE-002. `organisation_reference` reste, comme dans l'ancienne
+     * lecture, la référence d'IDENTITÉ (`IDN-ORG-*`) de l'organisation — pas
+     * la référence de fiche `ORG-GAMAD-*`, interne à CAP-CORE-002 — afin que
+     * les appelants existants n'aient rien à changer. `mandat_verifie` et
+     * `opposable` ne sont plus jamais dérivés d'un booléen recopié : ils
+     * restent `false` ici, faute de date d'acte à vérifier — un appelant qui a
+     * besoin d'une réponse opposable doit appeler
+     * `RegistreOrganisations::verifierRepresentation()`, seule habilitée à
+     * consulter CAP-CORE-003.
+     *
+     * @return list<array<string,mixed>>
+     */
+    private function resoudreLiensOrganisationsDepuisCapCore002(
+        string $reference,
+        ?string $organisationIdentite,
+        ?string $relationType,
+        ?string $date,
+    ): array {
+        $jour = $date ?? date('Y-m-d');
+
+        $sql = "SELECT a.*, o.identite_reference AS organisation_identite_reference
+                FROM organisation_affiliation a
+                JOIN organisation o ON o.reference = a.organisation_reference
+                WHERE a.identite_reference = ?";
+        $args = [$reference];
+        if ($organisationIdentite !== null) {
+            $sql .= ' AND o.identite_reference = ?';
+            $args[] = $organisationIdentite;
+        }
+        if ($relationType !== null) {
+            $sql .= ' AND a.type_affiliation_reference = ?';
+            $args[] = $relationType;
+        }
+        $sql .= ' ORDER BY a.date_debut, a.reference';
+
+        $st = $this->organisations->prepare($sql);
+        $st->execute($args);
+        $lignes = [];
+        foreach ($st->fetchAll() as $a) {
+            if ((string) $a['date_debut'] > $jour) {
+                continue;
+            }
+            $etat = $this->etatAffiliationCapCore002((string) $a['reference'], $jour);
+            $lignes[] = [
+                'reference' => $a['reference'],
+                'organisation_reference' => $a['organisation_identite_reference'],
+                'relation_type' => $a['type_affiliation_reference'],
+                'etat' => $etat,
+                'assurance' => $a['niveau_assurance_reference'],
+                'mandat_reference' => null,
+                'mandat_verifie' => false,
+                'opposable' => false,
+                'source' => $a['source_reference'],
+                'date_debut' => $a['date_debut'],
+                'date_fin' => $etat === 'CLOSE' || $etat === 'REJETEE' ? $jour : null,
+                'classification' => $a['classification_reference'],
+            ];
+        }
+
+        return $lignes;
+    }
+
+    private function etatAffiliationCapCore002(string $reference, string $date): string
+    {
+        $st = $this->organisations->prepare(
+            'SELECT etat_reference FROM organisation_affiliation_cycle
+             WHERE affiliation_reference = ? AND date_effet <= ?
+             ORDER BY date_effet DESC, id DESC LIMIT 1'
+        );
+        $st->execute([$reference, $date]);
+        $etat = $st->fetchColumn();
+
+        return $etat === false ? 'INCONNU' : (string) $etat;
     }
 
     // ------------------------------------------------------------------
