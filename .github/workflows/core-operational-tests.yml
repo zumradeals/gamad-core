@@ -30,6 +30,8 @@ jobs:
         include:
           - capacite: CAP-CORE-001 (identités)
             garde: core/registre-identites/tests/identite_p3.php
+          - capacite: CAP-CORE-002 (organisations)
+            garde: core/registre-organisations/tests/organisations_p3.php
           - capacite: CAP-CORE-003 (autorités et mandats)
             garde: core/registre-autorites/tests/mandat_p3.php
           - capacite: CAP-CORE-004 (autorisation)
@@ -124,6 +126,15 @@ jobs:
 
       - name: Éprouver la console des produits
         run: php apps/console-laravel/tests/Integration/produits_console_p1.php
+
+      - name: Éprouver le registre des organisations
+        run: php apps/console-laravel/tests/Integration/organisations_v1_p1.php
+
+      - name: Éprouver la console des organisations
+        run: php apps/console-laravel/tests/Integration/organisations_console_p1.php
+
+      - name: Éprouver la compatibilité CTR-01 / CAP-CORE-002
+        run: php apps/console-laravel/tests/Integration/organisations_ctr01_compat_p1.php
 
       - name: Éprouver le registre des sources
         run: php apps/console-laravel/tests/Integration/sources_v1_p1.php

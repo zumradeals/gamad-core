@@ -1,0 +1,5 @@
+{
+    "format": 1,
+    "note": "Inventaire initial des organisations pour CAP-CORE-002, établi par audit du code et de core/registre-normes/resources/index-baseline-v1.json. Aucune organisation d'aucune sorte n'existe aujourd'hui parmi les identités canoniques (aucune entité de type `organisation` dans l'index baseline, aucune donnée persistante de test conservée dans le dépôt) : cette liste est donc honnêtement vide. `core:organisations:bootstrap` reste exécutable à tout moment ; elle reprendra automatiquement toute identité de type `organisation` qui apparaîtrait plus tard dans l'index, sans qu'il soit nécessaire de modifier ce fichier pour cela — voir BootstrapOrganisationsCommand::reprendreIdentitesOrganisation().",
+    "organisations": []
+}

@@ -51,6 +51,14 @@
                 Personnes et identités
             </a>
             <a class="nav__link"
+               href="{{ route('console.organisations.index') }}"
+               @if(request()->routeIs('console.organisations.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 21V5h9v16"/><path d="M13 9h7v12"/><path d="M8 9h1M8 13h1M8 17h1M17 13h1M17 17h1"/></svg>
+                </span>
+                Organisations
+            </a>
+            <a class="nav__link"
                href="{{ route('console.produits.index') }}"
                @if(request()->routeIs('console.produits.*')) aria-current="page" @endif>
                 <span class="nav__icon" aria-hidden="true">

@@ -9,6 +9,7 @@ use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreContrats\Magasin as ContratsMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
@@ -97,6 +98,17 @@ final class EtatFondation
                     'migration_registre_vocabulaire', 'vocabulaire', 'vocabulaire_version', 'vocabulaire_version_cycle',
                     'terme', 'terme_libelle', 'terme_alias', 'terme_relation', 'terme_mapping_externe', 'terme_usage',
                     'vocabulaire_compatibilite', 'vocabulaire_conformite', 'vocabulaire_projection',
+                ],
+                $production,
+            ),
+            'organisations' => $this->inspecterCible(
+                'ORGANIZATION_REGISTRY_URL',
+                fn (): \PDO => OrganisationsMagasin::ouvrir(),
+                [
+                    'migration_registre_organisations', 'organisation', 'organisation_revision', 'organisation_cycle',
+                    'organisation_identifiant_externe', 'organisation_unite', 'organisation_unite_cycle',
+                    'organisation_relation', 'organisation_affiliation', 'organisation_affiliation_cycle',
+                    'organisation_fonction_interne', 'organisation_mandat_projection',
                 ],
                 $production,
             ),
@@ -221,6 +233,7 @@ final class EtatFondation
             'POLICY_REGISTRY_URL' => 'database.connections.gamad_policies.url',
             'CONTRACT_REGISTRY_URL' => 'database.connections.gamad_contracts.url',
             'VOCABULARY_REGISTRY_URL' => 'database.connections.gamad_vocabulary.url',
+            'ORGANIZATION_REGISTRY_URL' => 'database.connections.gamad_organizations.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);

@@ -195,6 +195,22 @@ return [
             'foreign_key_constraints' => true,
         ],
 
+        'gamad_organizations' => [
+            'driver' => env('GAMAD_ORGANIZATIONS_DRIVER', 'sqlite'),
+            'url' => env('ORGANIZATION_REGISTRY_URL'),
+            'host' => env('GAMAD_ORGANIZATIONS_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_ORGANIZATIONS_PORT', '5432'),
+            'database' => env('ORGANIZATION_REGISTRY_PATH', database_path('gamad-organizations.sqlite')),
+            'username' => env('GAMAD_ORGANIZATIONS_USERNAME'),
+            'password' => env('GAMAD_ORGANIZATIONS_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_ORGANIZATIONS_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
