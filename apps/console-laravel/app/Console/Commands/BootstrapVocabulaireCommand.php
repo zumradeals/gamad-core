@@ -40,7 +40,7 @@ final class BootstrapVocabulaireCommand extends Command
 
     private const RESSOURCE = __DIR__ . '/../../../../../core/registre-vocabulaire/resources/bootstrap-vocabulaire-v1.json';
 
-    private const EMPREINTE_SHA256 = '61b215f29866dfb3261030911dadd362279082959366eab70734ea853b0e7146';
+    private const EMPREINTE_SHA256 = 'cf57640eafe218f1ae904d5638b23a741b1f509526f0b9a4b124614fca5999d4';
 
     private const SOURCE = 'core/registre-vocabulaire/resources/bootstrap-vocabulaire-v1.json — bootstrap CAP-CORE-010';
 

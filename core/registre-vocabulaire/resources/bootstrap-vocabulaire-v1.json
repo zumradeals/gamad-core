@@ -1057,6 +1057,459 @@
                     "type_semantique": "ACTION"
                 }
             ]
+        },
+        {
+            "reference": "VOC-GAMAD-ORGANISATION-TYPE",
+            "namespace": "gamad.organisation.type",
+            "nom": "Types d'organisation",
+            "domaine": "organisations",
+            "portee": "CORE",
+            "source_reference": "core/registre-organisations/src/PolitiqueOrganisations.php::TYPES_ORGANISATION — CAP-CORE-002",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-SOCIETE",
+                    "code": "SOCIETE",
+                    "definition": "une société",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-ASSOCIATION",
+                    "code": "ASSOCIATION",
+                    "definition": "une association",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-INSTITUTION",
+                    "code": "INSTITUTION",
+                    "definition": "une institution",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-ADMINISTRATION",
+                    "code": "ADMINISTRATION",
+                    "definition": "une administration",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-FONDATION",
+                    "code": "FONDATION",
+                    "definition": "une fondation",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-COOPERATIVE",
+                    "code": "COOPERATIVE",
+                    "definition": "une coopérative",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-ONG",
+                    "code": "ONG",
+                    "definition": "une organisation non gouvernementale",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-GROUPE",
+                    "code": "GROUPE",
+                    "definition": "un groupe d'organisations",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-ETABLISSEMENT",
+                    "code": "ETABLISSEMENT",
+                    "definition": "un établissement",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-UNITE_INTERNE",
+                    "code": "UNITE_INTERNE",
+                    "definition": "une unité interne érigée en organisation",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-STRUCTURE_PARTENAIRE",
+                    "code": "STRUCTURE_PARTENAIRE",
+                    "definition": "une structure partenaire",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-TYPE-INDETERMINE",
+                    "code": "INDETERMINE",
+                    "definition": "un type non encore qualifié",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-ORGANISATION-FORME",
+            "namespace": "gamad.organisation.forme",
+            "nom": "Formes d'organisation",
+            "domaine": "organisations",
+            "portee": "CORE",
+            "source_reference": "core/registre-organisations/src/PolitiqueOrganisations.php::FORMES_ORGANISATION — CAP-CORE-002",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FORME-SARL",
+                    "code": "SARL",
+                    "definition": "société à responsabilité limitée",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FORME-SA",
+                    "code": "SA",
+                    "definition": "société anonyme",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FORME-SAS",
+                    "code": "SAS",
+                    "definition": "société par actions simplifiée",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FORME-ASSOCIATION_LOI",
+                    "code": "ASSOCIATION_LOI",
+                    "definition": "association régie par une loi associative",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FORME-ETABLISSEMENT_PUBLIC",
+                    "code": "ETABLISSEMENT_PUBLIC",
+                    "definition": "établissement public",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FORME-COOPERATIVE_FORME",
+                    "code": "COOPERATIVE_FORME",
+                    "definition": "forme juridique coopérative",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FORME-ENTREPRISE_INDIVIDUELLE",
+                    "code": "ENTREPRISE_INDIVIDUELLE",
+                    "definition": "entreprise individuelle",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FORME-INDETERMINEE",
+                    "code": "INDETERMINEE",
+                    "definition": "forme juridique non vérifiée",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-ORGANISATION-ETAT",
+            "namespace": "gamad.organisation.etat",
+            "nom": "États du cycle organisationnel",
+            "domaine": "organisations",
+            "portee": "CORE",
+            "source_reference": "core/registre-organisations/src/PolitiqueOrganisations.php::ETATS_CYCLE — CAP-CORE-002",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-ETAT-PREPARATION",
+                    "code": "PREPARATION",
+                    "definition": "fiche inscrite, pas encore active",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-ETAT-ACTIVE",
+                    "code": "ACTIVE",
+                    "definition": "organisation active",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-ETAT-SUSPENDUE",
+                    "code": "SUSPENDUE",
+                    "definition": "organisation suspendue",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-ETAT-DISSOUTE",
+                    "code": "DISSOUTE",
+                    "definition": "organisation dissoute, état terminal",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-ETAT-RETIREE",
+                    "code": "RETIREE",
+                    "definition": "organisation retirée du registre, état terminal",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-ORGANISATION-UNITE-TYPE",
+            "namespace": "gamad.organisation.unite.type",
+            "nom": "Types d'unité d'organisation",
+            "domaine": "organisations",
+            "portee": "CORE",
+            "source_reference": "core/registre-organisations/src/PolitiqueOrganisations.php::TYPES_UNITE — CAP-CORE-002",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-TYPE-SIEGE",
+                    "code": "SIEGE",
+                    "definition": "siège",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-TYPE-DIRECTION",
+                    "code": "DIRECTION",
+                    "definition": "direction",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-TYPE-DEPARTEMENT",
+                    "code": "DEPARTEMENT",
+                    "definition": "département",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-TYPE-SERVICE",
+                    "code": "SERVICE",
+                    "definition": "service",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-TYPE-AGENCE",
+                    "code": "AGENCE",
+                    "definition": "agence",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-TYPE-ETABLISSEMENT",
+                    "code": "ETABLISSEMENT",
+                    "definition": "établissement",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-TYPE-SUCCURSALE",
+                    "code": "SUCCURSALE",
+                    "definition": "succursale",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-TYPE-PROJET",
+                    "code": "PROJET",
+                    "definition": "unité projet",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-TYPE-COMITE",
+                    "code": "COMITE",
+                    "definition": "comité",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-ORGANISATION-UNITE-ETAT",
+            "namespace": "gamad.organisation.unite.etat",
+            "nom": "États d'une unité d'organisation",
+            "domaine": "organisations",
+            "portee": "CORE",
+            "source_reference": "core/registre-organisations/src/PolitiqueOrganisations.php::ETATS_UNITE — CAP-CORE-002",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-ETAT-ACTIVE",
+                    "code": "ACTIVE",
+                    "definition": "unité active",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-ETAT-SUSPENDUE",
+                    "code": "SUSPENDUE",
+                    "definition": "unité suspendue",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-UNITE-ETAT-FERMEE",
+                    "code": "FERMEE",
+                    "definition": "unité fermée",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-ORGANISATION-RELATION-TYPE",
+            "namespace": "gamad.organisation.relation.type",
+            "nom": "Types de relation interorganisationnelle",
+            "domaine": "organisations",
+            "portee": "CORE",
+            "source_reference": "core/registre-organisations/src/PolitiqueOrganisations.php::TYPES_RELATION — CAP-CORE-002",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-RELATION-TYPE-PARENTE_DE",
+                    "code": "PARENTE_DE",
+                    "definition": "parente de l'organisation cible",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-RELATION-TYPE-FILIALE_DE",
+                    "code": "FILIALE_DE",
+                    "definition": "filiale de l'organisation cible",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-RELATION-TYPE-AFFILIEE_A",
+                    "code": "AFFILIEE_A",
+                    "definition": "affiliée à l'organisation cible",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-RELATION-TYPE-MEMBRE_DE",
+                    "code": "MEMBRE_DE",
+                    "definition": "membre de l'organisation cible",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-RELATION-TYPE-PARTENAIRE_DE",
+                    "code": "PARTENAIRE_DE",
+                    "definition": "partenaire de l'organisation cible",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-RELATION-TYPE-OPERE_POUR",
+                    "code": "OPERE_POUR",
+                    "definition": "opère pour le compte de l'organisation cible",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-ORGANISATION-AFFILIATION-ETAT",
+            "namespace": "gamad.organisation.affiliation.etat",
+            "nom": "États d'une affiliation d'organisation",
+            "domaine": "organisations",
+            "portee": "CORE",
+            "source_reference": "core/registre-organisations/src/PolitiqueOrganisations.php::ETATS_AFFILIATION — CAP-CORE-002",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-AFFILIATION-ETAT-PROPOSEE",
+                    "code": "PROPOSEE",
+                    "definition": "affiliation proposée",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-AFFILIATION-ETAT-ACTIVE",
+                    "code": "ACTIVE",
+                    "definition": "affiliation active",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-AFFILIATION-ETAT-SUSPENDUE",
+                    "code": "SUSPENDUE",
+                    "definition": "affiliation suspendue",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-AFFILIATION-ETAT-CLOSE",
+                    "code": "CLOSE",
+                    "definition": "affiliation close",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-AFFILIATION-ETAT-REJETEE",
+                    "code": "REJETEE",
+                    "definition": "affiliation rejetée avant activation",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-ORGANISATION-IDENTIFIANT-TYPE",
+            "namespace": "gamad.organisation.identifiant.type",
+            "nom": "Types d'identifiant externe d'organisation",
+            "domaine": "organisations",
+            "portee": "CORE",
+            "source_reference": "core/registre-organisations/src/PolitiqueOrganisations.php::TYPES_IDENTIFIANT_EXTERNE — CAP-CORE-002",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-IDENTIFIANT-TYPE-REGISTRE_COMMERCE",
+                    "code": "REGISTRE_COMMERCE",
+                    "definition": "identifiant de registre du commerce",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-IDENTIFIANT-TYPE-NUMERO_FISCAL",
+                    "code": "NUMERO_FISCAL",
+                    "definition": "numéro fiscal",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-IDENTIFIANT-TYPE-IDENTIFIANT_SECTORIEL",
+                    "code": "IDENTIFIANT_SECTORIEL",
+                    "definition": "identifiant sectoriel",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-IDENTIFIANT-TYPE-AUTRE",
+                    "code": "AUTRE",
+                    "definition": "autre identifiant externe",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-ORGANISATION-FONCTION-TYPE",
+            "namespace": "gamad.organisation.fonction.type",
+            "nom": "Types de fonction interne d'organisation",
+            "domaine": "organisations",
+            "portee": "CORE",
+            "source_reference": "core/registre-organisations/src/PolitiqueOrganisations.php::TYPES_FONCTION — CAP-CORE-002",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FONCTION-TYPE-DIRECTION_GENERALE",
+                    "code": "DIRECTION_GENERALE",
+                    "definition": "direction générale",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FONCTION-TYPE-GERANCE",
+                    "code": "GERANCE",
+                    "definition": "gérance",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FONCTION-TYPE-PRESIDENCE",
+                    "code": "PRESIDENCE",
+                    "definition": "présidence",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FONCTION-TYPE-TRESORERIE",
+                    "code": "TRESORERIE",
+                    "definition": "trésorerie",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FONCTION-TYPE-SECRETARIAT",
+                    "code": "SECRETARIAT",
+                    "definition": "secrétariat",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FONCTION-TYPE-RESPONSABLE_UNITE",
+                    "code": "RESPONSABLE_UNITE",
+                    "definition": "responsable d'unité",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-ORGANISATION-FONCTION-TYPE-AUTRE",
+                    "code": "AUTRE",
+                    "definition": "autre fonction interne",
+                    "type_semantique": "TYPE"
+                }
+            ]
         }
     ]
 }
