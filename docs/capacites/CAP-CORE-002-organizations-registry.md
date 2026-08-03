@@ -125,7 +125,7 @@ Ces 63 épreuves ne couvrent pas littéralement chacun des soixante points numé
 
 ## 17. Limites non bloquantes et réserves
 
-- Aucun contrat `CTR-*` (CAP-CORE-009) enregistré pour ce registre (section 11).
+- **Réserve bloquante pour `GO`** : aucun contrat `CTR-*` (CAP-CORE-009) enregistré pour ce registre (section 11). C'est la seule raison pour laquelle CAP-CORE-002 reste `NO GO` dans `docs/capacites/CATALOGUE.md` malgré une CI GitHub intégralement verte (`claude/cap-core-002-organizations-registry-go`, 3 août 2026).
 - Aucune entrée OpenAPI (`openapi/core-v1.yaml`) pour les routes `/api/v1/organisations*` : `openapi_contracts_p1.php`/`vocabulaire_drift_p1.php` ne couvrent pas ce registre et ne l'exigent donc pas, mais la documentation externe du contrat HTTP reste à écrire.
 - `organisation_mandat_projection` : table créée, jamais alimentée (facultative selon la fiche §11.11).
 - Aucune donnée réelle à bootstrapper au moment de ce chantier : zéro identité de type `organisation` dans l'index baseline, donc zéro organisation et zéro relation historique migrée en exploitation réelle. Le mécanisme de reprise et de migration est codé et testé avec des données construites, pas exercé sur un jeu de données réel faute d'en exister un.
