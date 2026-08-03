@@ -179,6 +179,22 @@ return [
             'foreign_key_constraints' => true,
         ],
 
+        'gamad_vocabulary' => [
+            'driver' => env('GAMAD_VOCABULARY_DRIVER', 'sqlite'),
+            'url' => env('VOCABULARY_REGISTRY_URL'),
+            'host' => env('GAMAD_VOCABULARY_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_VOCABULARY_PORT', '5432'),
+            'database' => env('VOCABULARY_REGISTRY_PATH', database_path('gamad-vocabulary.sqlite')),
+            'username' => env('GAMAD_VOCABULARY_USERNAME'),
+            'password' => env('GAMAD_VOCABULARY_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_VOCABULARY_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

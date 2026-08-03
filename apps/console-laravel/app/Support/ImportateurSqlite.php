@@ -73,6 +73,22 @@ final class ImportateurSqlite
         'contrat_projection',
     ];
 
+    /** @var list<string> */
+    private const TABLES_VOCABULAIRE = [
+        'vocabulaire',
+        'vocabulaire_version',
+        'vocabulaire_version_cycle',
+        'terme',
+        'terme_libelle',
+        'terme_alias',
+        'terme_relation',
+        'terme_mapping_externe',
+        'terme_usage',
+        'vocabulaire_compatibilite',
+        'vocabulaire_conformite',
+        'vocabulaire_projection',
+    ];
+
     /** @return array<string,int> */
     public function importerAcces(string $source, \PDO $cible): array
     {
@@ -110,6 +126,12 @@ final class ImportateurSqlite
     public function importerContrats(string $source, \PDO $cible): array
     {
         return $this->importer($source, $cible, self::TABLES_CONTRATS);
+    }
+
+    /** @return array<string,int> */
+    public function importerVocabulaire(string $source, \PDO $cible): array
+    {
+        return $this->importer($source, $cible, self::TABLES_VOCABULAIRE);
     }
 
     /**
