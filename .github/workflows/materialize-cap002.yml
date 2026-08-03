@@ -5,7 +5,12 @@ on:
       - main
     types: [opened, synchronize, reopened]
     paths:
-      - cap002-files.tar.gz
+      - cap002-part-00
+      - cap002-part-01
+      - cap002-part-02
+      - cap002-part-03
+      - cap002-part-04
+      - cap002-part-05
       - .github/workflows/materialize-cap002.yml
 permissions:
   contents: write
@@ -18,11 +23,13 @@ jobs:
         with:
           ref: codex/cap-core-002-organizations-registry-go
           fetch-depth: 0
-      - name: Déployer les fichiers du chantier dans la branche
+      - name: Reconstruire et déployer les fichiers du chantier
         run: |
+          cat cap002-part-00 cap002-part-01 cap002-part-02 cap002-part-03 cap002-part-04 cap002-part-05 > cap002-files.tar.gz
+          echo '7fea336bdcd37b55d005e650697966a6b5388c772ab307c72216fc78b51aef3f  cap002-files.tar.gz' | sha256sum --check
           tar -xzf cap002-files.tar.gz
           python3 tools/apply-cap002.py
-          rm -rf tools cap002-files.tar.gz .github/workflows/materialize-cap002.yml
+          rm -rf tools cap002-part-* cap002-files.tar.gz .github/workflows/materialize-cap002.yml
       - name: Vérifier la syntaxe PHP livrée
         run: |
           find core/registre-organisations apps/console-laravel/app/Application/Organisations apps/console-laravel/app/Http/Controllers apps/console-laravel/app/Providers apps/console-laravel/app/Console/Commands -type f -name '*.php' -print0 \
