@@ -127,10 +127,10 @@ $verifier(
     'le tableau de bord répond sur un index initialement vide',
 );
 $verifier(
-    str_contains($corps, 'Index technique')
-        && str_contains($corps, 'SHA-256 vérifiée')
-        && str_contains($corps, 'État des capacités'),
-    'le tableau de bord présente l’état opérationnel de l’index et des capacités',
+    str_contains($corps, 'Intégrité du système')
+        && str_contains($corps, 'Empreinte de référence')
+        && str_contains($corps, 'Fonctions du Core'),
+    'le tableau de bord présente l’état opérationnel dans un langage dirigeant, avec les contrôles techniques accessibles',
 );
 $verifier(
     ! str_contains($corps, 'Actes d’adoption')
