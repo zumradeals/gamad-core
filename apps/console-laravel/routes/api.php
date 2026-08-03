@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\ContratController;
 use App\Http\Controllers\Api\V1\FederationController;
 use App\Http\Controllers\Api\V1\FondationController;
 use App\Http\Controllers\Api\V1\IdentiteController;
+use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PasskeySessionController;
 use App\Http\Controllers\Api\V1\PolitiqueController;
 use App\Http\Controllers\Api\V1\ProduitController;
@@ -221,5 +222,53 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         Route::get('/mandats/{fonction}', [Ctr02Controller::class, 'resoudreMandat']);
         Route::post('/autorisation/decisions', [AutorisationController::class, 'store'])
             ->middleware('throttle:60,1');
+
+        // CAP-CORE-002 — registre des organisations.
+        Route::get('/organisations', [OrganisationController::class, 'index']);
+        Route::post('/organisations', [OrganisationController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('/organisations/{reference}', [OrganisationController::class, 'show']);
+        Route::patch('/organisations/{reference}', [OrganisationController::class, 'update'])
+            ->middleware('throttle:20,1');
+        Route::get('/organisations/{reference}/structure', [OrganisationController::class, 'structure']);
+        Route::get('/organisations/{reference}/unites', [OrganisationController::class, 'unites']);
+        Route::get('/organisations/{reference}/relations', [OrganisationController::class, 'relations']);
+        Route::get('/organisations/{reference}/affiliations', [OrganisationController::class, 'affiliations']);
+        Route::get('/organisations/{reference}/fonctions', [OrganisationController::class, 'fonctions']);
+        Route::get('/identites/{reference}/organisations', [OrganisationController::class, 'affiliationsIdentite']);
+        Route::post('/organisations/{reference}/appartenance/verification', [OrganisationController::class, 'verifierAppartenance'])
+            ->middleware('throttle:60,1');
+        Route::post('/organisations/{reference}/representation/verification', [OrganisationController::class, 'verifierRepresentation'])
+            ->middleware('throttle:60,1');
+        Route::post('/organisations/{reference}/activation', [OrganisationController::class, 'activer'])
+            ->middleware('throttle:20,1');
+        Route::post('/organisations/{reference}/suspension', [OrganisationController::class, 'suspendre'])
+            ->middleware('throttle:20,1');
+        Route::post('/organisations/{reference}/dissolution', [OrganisationController::class, 'dissoudre'])
+            ->middleware('throttle:20,1');
+        Route::post('/organisations/{reference}/retrait', [OrganisationController::class, 'retirer'])
+            ->middleware('throttle:20,1');
+        Route::post('/organisations/{reference}/identifiants', [OrganisationController::class, 'declarerIdentifiant'])
+            ->middleware('throttle:20,1');
+        Route::post('/organisations/{reference}/unites', [OrganisationController::class, 'creerUnite'])
+            ->middleware('throttle:20,1');
+        Route::post('/organisations/{reference}/relations', [OrganisationController::class, 'declarerRelation'])
+            ->middleware('throttle:20,1');
+        Route::post('/organisations/{reference}/affiliations', [OrganisationController::class, 'proposerAffiliation'])
+            ->middleware('throttle:20,1');
+        Route::post('/organisations/{reference}/fonctions', [OrganisationController::class, 'creerFonction'])
+            ->middleware('throttle:20,1');
+        Route::post(
+            '/organisations/{reference}/affiliations/{affiliation}/activation',
+            [OrganisationController::class, 'activerAffiliation'],
+        )->middleware('throttle:20,1');
+        Route::post(
+            '/organisations/{reference}/affiliations/{affiliation}/suspension',
+            [OrganisationController::class, 'suspendreAffiliation'],
+        )->middleware('throttle:20,1');
+        Route::post(
+            '/organisations/{reference}/affiliations/{affiliation}/fermeture',
+            [OrganisationController::class, 'fermerAffiliation'],
+        )->middleware('throttle:20,1');
     });
 });
