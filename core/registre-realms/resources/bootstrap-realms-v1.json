@@ -1,0 +1,5 @@
+{
+    "format": 1,
+    "note": "Inventaire initial des realms pour CAP-CORE-012, établi par audit du code et de core/registre-normes/resources/index-baseline-v1.json. Aucune identité de type `realm` n'existe aujourd'hui parmi les identités canoniques (aucune entrée de type `realm` dans l'index baseline, aucune donnée persistante de test conservée dans le dépôt) : cette liste est donc honnêtement vide. `core:realms:bootstrap` reste exécutable à tout moment ; elle reprendra automatiquement toute identité de type `realm` qui apparaîtrait plus tard dans l'index, en PREPARATION et sans rattachement déduit, sans qu'il soit nécessaire de modifier ce fichier pour cela — voir BootstrapRealmsCommand::reprendreIdentitesRealm().",
+    "realms": []
+}
