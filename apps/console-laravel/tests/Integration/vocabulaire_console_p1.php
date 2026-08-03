@@ -102,7 +102,7 @@ $sessionAutorite = (string) $ctr16->etablirSession(
 )['session'];
 
 $app = require $application.'/bootstrap/app.php';
-// Bootstrappe `POL-VOCABULAIRE-V1` et les vingt-quatre vocabulaires déjà
+// Bootstrappe `POL-VOCABULAIRE-V1` et les trente-trois vocabulaires déjà
 // exploités. Sans `POL-VOCABULAIRE-V1`, cette console elle-même resterait
 // fermée à 403.
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
@@ -143,7 +143,7 @@ $REF = 'VOC-CONSOLE-P1-001';
 
 echo "INTÉGRATION — CONSOLE DU VOCABULAIRE P1 (CAP-CORE-010)\n\n";
 
-// 1 — la liste se rend et porte déjà les vingt-quatre vocabulaires repris, sans erreur.
+// 1 — la liste se rend et porte déjà les trente-trois vocabulaires repris, sans erreur.
 $liste = $controleur->index($requete('/vocabulaires'))->render();
 $verifier(
     str_contains($liste, 'Inscrire un vocabulaire')
