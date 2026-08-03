@@ -10,6 +10,7 @@ use App\Http\Controllers\Ctr02Controller;
 use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
 use App\Http\Controllers\IdentiteConsoleController;
+use App\Http\Controllers\OrganisationConsoleController;
 use App\Http\Controllers\PasskeyController;
 use App\Http\Controllers\ContratConsoleController;
 use App\Http\Controllers\PolitiqueConsoleController;
@@ -89,6 +90,60 @@ Route::middleware('gamad.session')->group(function (): void {
         '/produits/{reference}/environnements/{id}/fermeture',
         [ProduitConsoleController::class, 'fermerEnvironnement'],
     )->whereNumber('id')->middleware('throttle:20,1')->name('console.produits.environnements.fermer');
+
+    // CAP-CORE-002 — registre des organisations. Toute écriture passe par
+    // `AccesOrganisations`, le même cas d'usage gouverné que l'API v1.
+    Route::get('/organisations', [OrganisationConsoleController::class, 'index'])
+        ->name('console.organisations.index');
+    Route::get('/organisations/nouveau', [OrganisationConsoleController::class, 'create'])
+        ->name('console.organisations.create');
+    Route::post('/organisations', [OrganisationConsoleController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.store');
+    Route::get('/organisations/{reference}', [OrganisationConsoleController::class, 'show'])
+        ->name('console.organisations.show');
+    Route::post('/organisations/{reference}/activation', [OrganisationConsoleController::class, 'activer'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.activer');
+    Route::post('/organisations/{reference}/suspension', [OrganisationConsoleController::class, 'suspendre'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.suspendre');
+    Route::post('/organisations/{reference}/dissolution', [OrganisationConsoleController::class, 'dissoudre'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.dissoudre');
+    Route::post('/organisations/{reference}/retrait', [OrganisationConsoleController::class, 'retirer'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.retirer');
+    Route::post('/organisations/{reference}/identifiants', [OrganisationConsoleController::class, 'declarerIdentifiant'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.identifiants.declarer');
+    Route::post('/organisations/{reference}/unites', [OrganisationConsoleController::class, 'creerUnite'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.unites.creer');
+    Route::post('/organisations/{reference}/relations', [OrganisationConsoleController::class, 'declarerRelation'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.relations.declarer');
+    Route::post('/organisations/{reference}/affiliations', [OrganisationConsoleController::class, 'proposerAffiliation'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.affiliations.proposer');
+    Route::post(
+        '/organisations/{reference}/affiliations/{affiliation}/activation',
+        [OrganisationConsoleController::class, 'activerAffiliation'],
+    )->middleware('throttle:20,1')->name('console.organisations.affiliations.activer');
+    Route::post(
+        '/organisations/{reference}/affiliations/{affiliation}/suspension',
+        [OrganisationConsoleController::class, 'suspendreAffiliation'],
+    )->middleware('throttle:20,1')->name('console.organisations.affiliations.suspendre');
+    Route::post(
+        '/organisations/{reference}/affiliations/{affiliation}/fermeture',
+        [OrganisationConsoleController::class, 'fermerAffiliation'],
+    )->middleware('throttle:20,1')->name('console.organisations.affiliations.fermer');
+    Route::post('/organisations/{reference}/fonctions', [OrganisationConsoleController::class, 'creerFonction'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.fonctions.creer');
+    Route::post('/organisations/{reference}/representation/verification', [OrganisationConsoleController::class, 'verifierRepresentation'])
+        ->middleware('throttle:20,1')
+        ->name('console.organisations.representation.verifier');
 
     // CAP-CORE-006 — registre des sources. Vit sous `/registre-sources` : le
     // chemin `/sources/{reference}` reste la route JSON historique de CTR-04
