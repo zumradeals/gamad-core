@@ -52,9 +52,9 @@
         <p class="detail-hero__summary">{{ $resumeHumain }}</p>
         <div class="detail-hero__meta">
             @if($politique['version_active'])
-                <span class="status status--success">En vigueur — version {{ $politique['version_active'] }}</span>
+                <span class="status status--success" data-technical-state="Active — {{ $politique['version_active'] }}">En vigueur — version {{ $politique['version_active'] }}</span>
             @else
-                <span class="status status--warning">Aucune version en vigueur</span>
+                <span class="status status--warning" data-technical-state="Aucune version active">Aucune version en vigueur</span>
             @endif
         </div>
     </div>
@@ -105,7 +105,7 @@
 </section>
 
 @if($autorite)
-<section class="card" style="margin-top:22px">
+<section class="card" style="margin-top:22px" data-technical-action="Créer en BROUILLON">
     <div class="card__header">
         <div>
             <h2 class="card__title">Préparer une modification</h2>
