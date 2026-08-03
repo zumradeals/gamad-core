@@ -11,6 +11,7 @@ use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
 use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\OrganisationConsoleController;
+use App\Http\Controllers\RealmConsoleController;
 use App\Http\Controllers\PasskeyController;
 use App\Http\Controllers\ContratConsoleController;
 use App\Http\Controllers\PolitiqueConsoleController;
@@ -144,6 +145,57 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/organisations/{reference}/representation/verification', [OrganisationConsoleController::class, 'verifierRepresentation'])
         ->middleware('throttle:20,1')
         ->name('console.organisations.representation.verifier');
+
+    // CAP-CORE-012 — registre des realms. Toute écriture passe par
+    // `AccesRealms`, le même cas d'usage gouverné que l'API v1.
+    Route::get('/realms', [RealmConsoleController::class, 'index'])
+        ->name('console.realms.index');
+    Route::get('/realms/nouveau', [RealmConsoleController::class, 'create'])
+        ->name('console.realms.create');
+    Route::post('/realms', [RealmConsoleController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.store');
+    Route::get('/realms/{reference}', [RealmConsoleController::class, 'show'])
+        ->name('console.realms.show');
+    Route::post('/realms/{reference}/activation', [RealmConsoleController::class, 'activer'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.activer');
+    Route::post('/realms/{reference}/suspension', [RealmConsoleController::class, 'suspendre'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.suspendre');
+    Route::post('/realms/{reference}/fermeture', [RealmConsoleController::class, 'fermer'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.fermer');
+    Route::post('/realms/{reference}/retrait', [RealmConsoleController::class, 'retirer'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.retirer');
+    Route::post('/realms/{reference}/relations', [RealmConsoleController::class, 'declarerRelation'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.relations.declarer');
+    Route::post('/realms/{reference}/perimetres', [RealmConsoleController::class, 'declarerPerimetre'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.perimetres.declarer');
+    Route::post('/realms/{reference}/identifiants', [RealmConsoleController::class, 'declarerIdentifiant'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.identifiants.declarer');
+    Route::post('/realms/{reference}/organisations', [RealmConsoleController::class, 'rattacherOrganisation'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.organisations.rattacher');
+    Route::post('/realms/{reference}/produits', [RealmConsoleController::class, 'rattacherProduit'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.produits.rattacher');
+    Route::post('/realms/{reference}/contrats', [RealmConsoleController::class, 'rattacherContrat'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.contrats.rattacher');
+    Route::post('/realms/{reference}/franchissements', [RealmConsoleController::class, 'declarerFranchissement'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.franchissements.declarer');
+    Route::post('/realms/{reference}/verifications', [RealmConsoleController::class, 'enregistrerVerification'])
+        ->middleware('throttle:20,1')
+        ->name('console.realms.verifications.enregistrer');
+    Route::post('/realms/{reference}/portee', [RealmConsoleController::class, 'verifierPortee'])
+        ->middleware('throttle:60,1')
+        ->name('console.realms.portee.verifier');
 
     // CAP-CORE-006 — registre des sources. Vit sous `/registre-sources` : le
     // chemin `/sources/{reference}` reste la route JSON historique de CTR-04

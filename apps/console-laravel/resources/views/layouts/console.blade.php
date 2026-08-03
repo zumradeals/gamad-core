@@ -59,6 +59,14 @@
                 Organisations
             </a>
             <a class="nav__link"
+               href="{{ route('console.realms.index') }}"
+               @if(request()->routeIs('console.realms.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 4 5.7 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.7-4-9s1.5-6.5 4-9z"/></svg>
+                </span>
+                Realms
+            </a>
+            <a class="nav__link"
                href="{{ route('console.produits.index') }}"
                @if(request()->routeIs('console.produits.*')) aria-current="page" @endif>
                 <span class="nav__icon" aria-hidden="true">
