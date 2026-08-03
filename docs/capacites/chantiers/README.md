@@ -55,5 +55,6 @@ Une session de codage traite une seule capacité, ouvre une seule PR et s’arr�
 - `CAP-CORE-015/` — Preuves d’intégrité, empreintes, signatures, manifestes, attestations, checkpoints et vérifications.
 - `CAP-CORE-008/` — Dossiers de décision, autorités compétentes, instruction, quorum, adoption, effets, exécution, annulation et remplacement.
 - `CAP-CORE-017/` — Registre des risques, évaluations, traitements, exceptions temporaires, mesures compensatoires, décisions, expirations et résolutions exactes.
+- `CAP-CORE-018/` — Signaux, triage, incidents confirmés, sévérité, équipe de réponse, confinement, éradication, rétablissement, communications, revue et clôture prouvée.
 
 Les notes suivantes seront ajoutées directement dans ce dossier, dans l’ordre ci-dessus.
