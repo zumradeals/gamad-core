@@ -56,5 +56,6 @@ Une session de codage traite une seule capacité, ouvre une seule PR et s’arr�
 - `CAP-CORE-008/` — Dossiers de décision, autorités compétentes, instruction, quorum, adoption, effets, exécution, annulation et remplacement.
 - `CAP-CORE-017/` — Registre des risques, évaluations, traitements, exceptions temporaires, mesures compensatoires, décisions, expirations et résolutions exactes.
 - `CAP-CORE-018/` — Signaux, triage, incidents confirmés, sévérité, équipe de réponse, confinement, éradication, rétablissement, communications, revue et clôture prouvée.
+- `CAP-CORE-020/` — Directory opérationnel, Atlas des dépendances, projections sourcées, fraîcheur, réconciliation, analyses d’impact, vues publiques bornées et instantanés signés.
 
-Les notes suivantes seront ajoutées directement dans ce dossier, dans l’ordre ci-dessus.
+La dernière note à préparer est `CAP-CORE-021 — Matching Engine`.
