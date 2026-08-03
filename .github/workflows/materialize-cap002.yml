@@ -1,4 +1,5 @@
 name: Materialize CAP-CORE-002
+# Second push: le workflow existe désormais dans le parent de la branche.
 on:
   push:
     branches:
