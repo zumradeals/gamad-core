@@ -38,6 +38,7 @@
             "Gamad\\RegistreProduits\\": "../../core/registre-produits/src/",
             "Gamad\\RegistrePolitiques\\": "../../core/registre-politiques/src/",
             "Gamad\\RegistreContrats\\": "../../core/registre-contrats/src/",
+            "Gamad\\RegistreVocabulaire\\": "../../core/registre-vocabulaire/src/",
             "Gamad\\JournalOperationnel\\": "../../core/journal-operationnel/src/"
         }
     },

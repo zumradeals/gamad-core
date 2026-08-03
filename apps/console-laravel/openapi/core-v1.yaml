@@ -17,6 +17,7 @@ tags:
   - name: Fédération
   - name: Produits
   - name: Contrats
+  - name: Vocabulaire
 paths:
   /health/live:
     get:
@@ -2187,6 +2188,606 @@ paths:
           description: Résultat, artefact ou état invalide.
         "503":
           description: Une dépendance requise est indisponible.
+  /vocabulaires:
+    get:
+      tags: [Vocabulaire]
+      operationId: listerVocabulaires
+      summary: Liste les vocabulaires visibles de la session (CAP-CORE-010).
+      security: [{bearerSession: []}]
+      responses:
+        "200": { description: Liste des vocabulaires visibles. }
+        "401": { description: Session invalide. }
+    post:
+      tags: [Vocabulaire]
+      operationId: inscrireVocabulaire
+      summary: Inscrit un vocabulaire dans le registre, sans version.
+      security: [{bearerSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference, namespace, nom, domaine, portee, proprietaire_reference, source_reference]
+              properties:
+                reference: { type: string, maxLength: 64 }
+                namespace: { type: string, maxLength: 128 }
+                nom: { type: string, maxLength: 255 }
+                domaine: { type: string, maxLength: 128 }
+                portee: { type: string, enum: [CORE, ECOSYSTEME, CONTRAT, CAPACITE, PRODUIT_PARTAGE] }
+                proprietaire_reference: { type: string, maxLength: 64 }
+                source_reference: { type: string, maxLength: 500 }
+                description: { type: string, maxLength: 2000 }
+      responses:
+        "201": { description: Vocabulaire inscrit. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'inscription. }
+        "409": { description: Référence ou namespace déjà utilisé. }
+        "422": { description: Dossier invalide, portée inconnue ou propriétaire inconnu. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /vocabulaires/{reference}:
+    get:
+      tags: [Vocabulaire]
+      operationId: resoudreVocabulaire
+      summary: Fiche d'un vocabulaire, ses versions et son historique (CAP-CORE-010).
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Fiche du vocabulaire, versions et historique de cycle. }
+        "401": { description: Session invalide. }
+        "404": { description: Référence inconnue ou non visible. }
+  /vocabulaires/{reference}/versions:
+    get:
+      tags: [Vocabulaire]
+      operationId: listerVersionsVocabulaire
+      summary: Liste les versions d'un vocabulaire.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Liste des versions. }
+        "401": { description: Session invalide. }
+        "404": { description: Référence inconnue ou non visible. }
+    post:
+      tags: [Vocabulaire]
+      operationId: creerVersionVocabulaire
+      summary: Crée une nouvelle version en BROUILLON.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: string, maxLength: 32, description: "Format X.Y.Z" }
+                date_effet_prevue: { type: string, format: date }
+      responses:
+        "201": { description: Version créée en BROUILLON. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la création. }
+        "404": { description: Vocabulaire inconnu. }
+        "409": { description: Version déjà utilisée. }
+        "422": { description: Version invalide. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /vocabulaires/{reference}/versions/{version}:
+    get:
+      tags: [Vocabulaire]
+      operationId: resoudreVersionVocabulaire
+      summary: Détail d'une version, avec ses termes.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200": { description: Détail complet de la version. }
+        "401": { description: Session invalide. }
+        "404": { description: Référence ou version inconnue. }
+  /vocabulaires/{reference}/version-active:
+    get:
+      tags: [Vocabulaire]
+      operationId: resoudreVersionActiveVocabulaire
+      summary: Version active courante d'un vocabulaire, avec ses termes.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Version active. }
+        "401": { description: Session invalide. }
+        "404": { description: Référence inconnue ou aucune version active. }
+  /vocabulaires/{reference}/termes:
+    get:
+      tags: [Vocabulaire]
+      operationId: listerTermesVocabulaire
+      summary: Termes de la version active d'un vocabulaire.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Termes actifs. }
+        "401": { description: Session invalide. }
+        "404": { description: Référence inconnue ou aucune version active. }
+  /vocabulaires/{reference}/compatibilite:
+    get:
+      tags: [Vocabulaire]
+      operationId: resoudreCompatibiliteVocabulaire
+      summary: Analyses de compatibilité enregistrées pour une version exacte.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - { name: version, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Analyses de compatibilité. }
+        "401": { description: Session invalide. }
+        "404": { description: Référence ou version inconnue. }
+        "422": { description: Paramètre `version` absent. }
+  /vocabulaires/{reference}/conformite:
+    get:
+      tags: [Vocabulaire]
+      operationId: resoudreConformiteVocabulaire
+      summary: Conformités enregistrées pour une version exacte.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - { name: version, in: query, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Conformités enregistrées. }
+        "401": { description: Session invalide. }
+        "404": { description: Référence ou version inconnue. }
+        "422": { description: Paramètre `version` absent. }
+  /vocabulaires/{reference}/versions/{version}/termes:
+    post:
+      tags: [Vocabulaire]
+      operationId: ajouterTermeVocabulaire
+      summary: Ajoute un terme canonique à une version BROUILLON.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference, code, definition, type_semantique]
+              properties:
+                reference: { type: string, maxLength: 128 }
+                code: { type: string, maxLength: 64 }
+                definition: { type: string, maxLength: 2000 }
+                type_semantique: { type: string, enum: [TYPE, ETAT, ACTION, FINALITE, RELATION, NIVEAU, RESULTAT, ROLE, CATEGORIE, ERREUR, ENVIRONNEMENT, CLASSIFICATION] }
+                ordre_affichage: { type: integer }
+                remplace_par_reference: { type: string, maxLength: 128 }
+      responses:
+        "201": { description: Terme ajouté. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'ajout. }
+        "404": { description: Référence ou version inconnue. }
+        "409": { description: Référence de terme déjà utilisée. }
+        "422": { description: Version immuable, code invalide ou déjà utilisé avec un autre sens. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /vocabulaires/{reference}/versions/{version}/soumission:
+    post:
+      tags: [Vocabulaire]
+      operationId: soumettreVersionVocabulaire
+      summary: Soumet la version, fige son contenu et calcule son empreinte.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "200": { description: Version soumise, en EN_VALIDATION. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la soumission. }
+        "404": { description: Référence ou version inconnue. }
+        "422": { description: État incompatible ou aucun terme. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /vocabulaires/{reference}/versions/{version}/analyse:
+    post:
+      tags: [Vocabulaire]
+      operationId: analyserCompatibiliteVocabulaire
+      summary: Analyse la compatibilité contre la version active courante, s'il en existe une.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      responses:
+        "201": { description: Analyse enregistrée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'analyse. }
+        "404": { description: Référence ou version inconnue. }
+        "422": { description: État incompatible. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /vocabulaires/{reference}/versions/{version}/activation:
+    post:
+      tags: [Vocabulaire]
+      operationId: activerVersionVocabulaire
+      summary: Active la version ; exige analyse, projection et conformité enregistrées.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Version active ; l'ancienne version active, s'il y en avait une, devient REMPLACEE. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'activation. }
+        "404": { description: Référence ou version inconnue. }
+        "422": { description: Analyse, projection ou conformité manquante. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /vocabulaires/{reference}/versions/{version}/projections:
+    post:
+      tags: [Vocabulaire]
+      operationId: genererProjectionVocabulaire
+      summary: Génère une projection dérivée (JSON, constantes PHP, enum OpenAPI, contrainte SQL, documentation).
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type_projection]
+              properties:
+                type_projection: { type: string, enum: [JSON, PHP_CONSTANTS, OPENAPI_ENUM, SQL_CHECK, DOCUMENTATION] }
+      responses:
+        "201": { description: Projection générée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la génération. }
+        "404": { description: Référence ou version inconnue. }
+        "422": { description: Type de projection inconnu. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /vocabulaires/{reference}/versions/{version}/conformite:
+    post:
+      tags: [Vocabulaire]
+      operationId: enregistrerConformiteVocabulaire
+      summary: Enregistre une conformité (CONFORME, NON_CONFORME ou INCOMPLET) pour une version exacte.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resultat, consommateur_reference, type_consommateur]
+              properties:
+                resultat: { type: string, enum: [CONFORME, NON_CONFORME, INCOMPLET] }
+                consommateur_reference: { type: string, maxLength: 64 }
+                type_consommateur: { type: string, enum: [CAPACITE, PRODUIT] }
+                commit_reference: { type: string, maxLength: 128 }
+      responses:
+        "201": { description: Conformité enregistrée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'enregistrement. }
+        "404": { description: Référence ou version inconnue. }
+        "422": { description: Résultat, consommateur ou type invalide. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /vocabulaires/{reference}/versions/{version}/depreciation:
+    post:
+      tags: [Vocabulaire]
+      operationId: deprecierVersionVocabulaire
+      summary: Déprécie une version ACTIVE ; elle reste active mais annonce son remplacement à venir.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Version dépréciée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la dépréciation. }
+        "404": { description: Référence ou version inconnue. }
+        "422": { description: Seule une version ACTIVE se déprécie. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /vocabulaires/{reference}/versions/{version}/retrait:
+    post:
+      tags: [Vocabulaire]
+      operationId: retirerVersionVocabulaire
+      summary: Retire une version ACTIVE ou DEPRECIEE ; rien n'est supprimé, la référence n'est jamais réutilisable.
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - in: path
+          name: version
+          required: true
+          schema: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motif: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Version retirée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le retrait. }
+        "404": { description: Référence ou version inconnue. }
+        "422": { description: Seule une version ACTIVE ou DEPRECIEE se retire. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /termes/{reference}:
+    get:
+      tags: [Vocabulaire]
+      operationId: resoudreTerme
+      summary: Fiche d'un terme canonique, avec libellés, alias, relations, mappings et usages.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Fiche du terme. }
+        "401": { description: Session invalide. }
+        "404": { description: Terme inconnu. }
+  /termes/{reference}/evolution:
+    post:
+      tags: [Vocabulaire]
+      operationId: evoluerTerme
+      summary: >-
+        Fait évoluer un terme existant vers une nouvelle version du même vocabulaire.
+        `terme.reference` est une clé primaire globale : l'évolution insère toujours une
+        ligne neuve sous une référence neuve, reliée à l'ancienne par `remplace_par_reference`,
+        pour que l'analyse de compatibilité suive la lignée au lieu de constater une disparition.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference, nouvelle_version]
+              properties:
+                reference: { type: string, maxLength: 128, description: Nouvelle référence, différente de l'originale. }
+                nouvelle_version: { type: string, pattern: "^\\d+\\.\\d+\\.\\d+$" }
+                code: { type: string, maxLength: 64, description: Facultatif ; reconduit le code d'origine si absent. }
+                definition: { type: string, maxLength: 2000, description: Facultative ; reconduit la définition d'origine si absente. }
+                type_semantique:
+                  type: string
+                  enum: [TYPE, ETAT, ACTION, FINALITE, RELATION, NIVEAU, RESULTAT, ROLE, CATEGORIE, ERREUR, ENVIRONNEMENT, CLASSIFICATION]
+                ordre_affichage: { type: integer }
+      responses:
+        "201": { description: Terme reconduit dans la nouvelle version. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'évolution. }
+        "404": { description: Terme ou version cible inconnu. }
+        "422": { description: Terme déjà remplacé, version cible immuable, ou référence déjà utilisée. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /termes/{reference}/libelles:
+    post:
+      tags: [Vocabulaire]
+      operationId: ajouterLibelleTerme
+      summary: Ajoute un libellé localisé à un terme (n'affecte jamais le code).
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locale, libelle]
+              properties:
+                locale: { type: string, enum: [fr, fr-FR, fr-CI, en] }
+                libelle: { type: string, maxLength: 255 }
+                description_courte: { type: string, maxLength: 500 }
+                principal: { type: boolean }
+      responses:
+        "201": { description: Libellé ajouté. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'ajout. }
+        "404": { description: Terme inconnu. }
+        "422": { description: Version immuable, locale inconnue ou libellé principal déjà défini. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /termes/{reference}/alias:
+    post:
+      tags: [Vocabulaire]
+      operationId: ajouterAliasTerme
+      summary: Ajoute un alias explicite à un terme ; refuse toute ambiguïté dans le même vocabulaire.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alias, type_alias, source_reference]
+              properties:
+                alias: { type: string, maxLength: 128 }
+                locale: { type: string, maxLength: 8 }
+                type_alias: { type: string, enum: [ANCIEN_CODE, LIBELLE, ABREVIATION, CODE_EXTERNE, ORTHOGRAPHE_HISTORIQUE] }
+                source_reference: { type: string, maxLength: 256 }
+      responses:
+        "201": { description: Alias ajouté. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'ajout. }
+        "404": { description: Terme inconnu. }
+        "422": { description: Version immuable, type inconnu ou alias ambigu. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /termes/{reference}/relations:
+    post:
+      tags: [Vocabulaire]
+      operationId: declarerRelationTerme
+      summary: Déclare une relation sémantique vers un autre terme ; refuse l'auto-relation et les cycles hiérarchiques.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [terme_cible_reference, type_relation, preuve]
+              properties:
+                terme_cible_reference: { type: string, maxLength: 128 }
+                type_relation: { type: string, enum: [PLUS_LARGE_QUE, PLUS_ETROIT_QUE, EQUIVALENT_EXPLICITE, REMPLACE, ASSOCIE_A, INCOMPATIBLE_AVEC] }
+                preuve: { type: string, maxLength: 256 }
+      responses:
+        "201": { description: Relation déclarée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la déclaration. }
+        "404": { description: Terme source ou cible inconnu. }
+        "422": { description: Version immuable, auto-relation ou cycle hiérarchique refusé. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /termes/{reference}/mappings:
+    get:
+      tags: [Vocabulaire]
+      operationId: listerMappingsTerme
+      summary: Mappings externes qualifiés d'un terme.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Mappings externes. }
+        "401": { description: Session invalide. }
+        "404": { description: Terme inconnu. }
+    post:
+      tags: [Vocabulaire]
+      operationId: declarerMappingTerme
+      summary: Déclare un mapping externe qualifié pour un terme.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [systeme_reference, vocabulaire_externe, code_externe, sens, statut_mapping, preuve]
+              properties:
+                systeme_reference: { type: string, maxLength: 128 }
+                vocabulaire_externe: { type: string, maxLength: 128 }
+                code_externe: { type: string, maxLength: 128 }
+                sens: { type: string, enum: [ENTRANT, SORTANT, BIDIRECTIONNEL] }
+                statut_mapping: { type: string, enum: [EXACT, APPROXIMATIF, PERTE_INFORMATION, INTERDIT] }
+                preuve: { type: string, maxLength: 256 }
+      responses:
+        "201": { description: Mapping déclaré. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la déclaration. }
+        "404": { description: Terme inconnu. }
+        "422": { description: Version immuable ou dossier incomplet. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /termes/{reference}/usages:
+    get:
+      tags: [Vocabulaire]
+      operationId: listerUsagesTerme
+      summary: Usages déclarés d'un terme (capacité, contrat, politique, produit).
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Usages déclarés. }
+        "401": { description: Session invalide. }
+        "404": { description: Terme inconnu. }
+    post:
+      tags: [Vocabulaire]
+      operationId: declarerUsageTerme
+      summary: Déclare l'usage d'un terme par une capacité, un contrat, une politique ou un produit.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [usage_type]
+              properties:
+                capacite_reference: { type: string, maxLength: 64 }
+                contrat_reference: { type: string, maxLength: 64 }
+                contrat_version: { type: string, maxLength: 32 }
+                politique_reference: { type: string, maxLength: 64 }
+                produit_reference: { type: string, maxLength: 64 }
+                usage_type: { type: string, enum: [ENTREE, SORTIE, REGLE, ETAT_PERSISTE, AFFICHAGE, MAPPING, EVENEMENT, SIGNAL] }
+                obligatoire: { type: boolean }
+      responses:
+        "201": { description: Usage déclaré. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la déclaration. }
+        "404": { description: Terme inconnu. }
+        "422": { description: Type d'usage inconnu ou aucun consommateur désigné. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /termes/{reference}/depreciation:
+    post:
+      tags: [Vocabulaire]
+      operationId: deprecierTerme
+      summary: Déprécie un terme, avec remplaçant explicite le cas échéant.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date_fin: { type: string, format: date }
+                remplace_par_reference: { type: string, maxLength: 128 }
+      responses:
+        "200": { description: Terme déprécié. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la dépréciation. }
+        "404": { description: Terme ou remplaçant inconnu. }
+        "422": { description: État incompatible. }
+        "503": { description: Une dépendance requise est indisponible. }
+  /termes/{reference}/retrait:
+    post:
+      tags: [Vocabulaire]
+      operationId: retirerTerme
+      summary: Retire un terme ; refusé tant qu'un contrat ou une politique active en dépend.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date_fin: { type: string, format: date }
+      responses:
+        "200": { description: Terme retiré. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le retrait. }
+        "404": { description: Terme inconnu. }
+        "422": { description: Un usage obligatoire actif en dépend encore. }
+        "503": { description: Une dépendance requise est indisponible. }
 components:
   securitySchemes:
     bearerSession:

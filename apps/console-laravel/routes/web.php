@@ -16,6 +16,7 @@ use App\Http\Controllers\PolitiqueConsoleController;
 use App\Http\Controllers\ProduitConsoleController;
 use App\Http\Controllers\SatelliteConsoleController;
 use App\Http\Controllers\SourceConsoleController;
+use App\Http\Controllers\VocabulaireConsoleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -215,6 +216,63 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/contrats/{reference}/versions/{version}/retrait', [ContratConsoleController::class, 'retirer'])
         ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
         ->name('console.contrats.versions.retirer');
+
+    // CAP-CORE-010 — registre du vocabulaire canonique. Toute écriture passe
+    // par `AccesVocabulaire`, le même cas d'usage gouverné que l'API v1.
+    Route::get('/vocabulaires', [VocabulaireConsoleController::class, 'index'])
+        ->name('console.vocabulaires.index');
+    Route::get('/vocabulaires/nouveau', [VocabulaireConsoleController::class, 'create'])
+        ->name('console.vocabulaires.create');
+    Route::post('/vocabulaires', [VocabulaireConsoleController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('console.vocabulaires.store');
+    Route::get('/vocabulaires/{reference}', [VocabulaireConsoleController::class, 'show'])
+        ->name('console.vocabulaires.show');
+    Route::post('/vocabulaires/{reference}/versions', [VocabulaireConsoleController::class, 'creerVersion'])
+        ->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.creer');
+    Route::get('/vocabulaires/{reference}/versions/{version}', [VocabulaireConsoleController::class, 'versionShow'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')
+        ->name('console.vocabulaires.version');
+    Route::post('/vocabulaires/{reference}/versions/{version}/termes', [VocabulaireConsoleController::class, 'ajouterTerme'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.termes.ajouter');
+    Route::post('/vocabulaires/{reference}/versions/{version}/termes/evolution', [VocabulaireConsoleController::class, 'evoluerTerme'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.termes.evoluer');
+    Route::post('/vocabulaires/{reference}/versions/{version}/termes/libelles', [VocabulaireConsoleController::class, 'ajouterLibelle'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.termes.libelles.ajouter');
+    Route::post('/vocabulaires/{reference}/versions/{version}/termes/alias', [VocabulaireConsoleController::class, 'ajouterAlias'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.termes.alias.ajouter');
+    Route::post('/vocabulaires/{reference}/versions/{version}/termes/depreciation', [VocabulaireConsoleController::class, 'deprecierTerme'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.termes.deprecier');
+    Route::post('/vocabulaires/{reference}/versions/{version}/termes/retrait', [VocabulaireConsoleController::class, 'retirerTerme'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.termes.retirer');
+    Route::post('/vocabulaires/{reference}/versions/{version}/soumission', [VocabulaireConsoleController::class, 'soumettre'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.soumettre');
+    Route::post('/vocabulaires/{reference}/versions/{version}/analyse', [VocabulaireConsoleController::class, 'analyser'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.analyser');
+    Route::post('/vocabulaires/{reference}/versions/{version}/projections', [VocabulaireConsoleController::class, 'genererProjection'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.projections.generer');
+    Route::post('/vocabulaires/{reference}/versions/{version}/conformite', [VocabulaireConsoleController::class, 'enregistrerConformite'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.conformite');
+    Route::post('/vocabulaires/{reference}/versions/{version}/activation', [VocabulaireConsoleController::class, 'activer'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.activer');
+    Route::post('/vocabulaires/{reference}/versions/{version}/depreciation', [VocabulaireConsoleController::class, 'deprecier'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.deprecier');
+    Route::post('/vocabulaires/{reference}/versions/{version}/retrait', [VocabulaireConsoleController::class, 'retirer'])
+        ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
+        ->name('console.vocabulaires.versions.retirer');
 
     // CAP-CORE-005 — moyens d'accès personnels. Le sujet vient de la session ;
     // on ne gère jamais l'accès d'autrui.
