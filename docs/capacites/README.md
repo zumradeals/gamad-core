@@ -56,4 +56,5 @@ Fiches disponibles :
 - [`CAP-CORE-006-sources-registry.md`](CAP-CORE-006-sources-registry.md)
 - [`CAP-CORE-011-products-registry.md`](CAP-CORE-011-products-registry.md)
 - [`CAP-CORE-012-realms-registry.md`](CAP-CORE-012-realms-registry.md)
+- [`CAP-CORE-014-event-journal.md`](CAP-CORE-014-event-journal.md)
 - [`CAP-CORE-022-satellite-federation.md`](CAP-CORE-022-satellite-federation.md)

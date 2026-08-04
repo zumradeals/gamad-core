@@ -29,7 +29,7 @@ source la plus fine pour qui veut savoir ce qui existe réellement derrière un
 | CAP-CORE-011 | Products Registry | Référencer, gouverner et faire vivre le cycle des produits du Core | `core/registre-produits`, bootstrap idempotent, API v1 `/produits*`, écran Produits, `CAP-CORE-022` raccordé au registre | `GO` — registre persistant gouverné ; CI complète (11 contrôles GitHub, PR #58) verte sur `claude/cap-core-011-products-registry-go` le 2 août 2026 |
 | CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | `core/registre-realms`, bootstrap idempotent (vocabulaire, politique et contrat auto-établis), API v1 `/realms*`, écran Realms, `EvaluateurPortee` déterministe | `GO` — registre persistant gouverné et testé (87 épreuves SQLite/HTTP/console/contrats, exercice PostgreSQL réel local le 3 août 2026 sur onze magasins) ; CI GitHub à confirmer sur `claude/cap-core-012-realms-registry-go` — voir `docs/capacites/CAP-CORE-012-realms-registry.md` |
 | CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | `core/journal-operationnel` | `GO` — chaîne append-only vérifiée, trigger PostgreSQL |
-| CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-operationnel` en écriture seule | `NO GO` — aucune publication vers les satellites |
+| CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-evenements`, `core/evenements-sortants`, bootstrap idempotent (`POL-EVENEMENTS-V1`, huit contrats techniques, huit vocabulaires), API v1 `/evenements*` `/abonnements*` `/rejeux*` `/lettres-mortes*`, écran Événements | `GO` — journal persistant gouverné, chaîné, testé (115 épreuves SQLite/HTTP/console/outbox, exercice PostgreSQL réel local le 4 août 2026 sur douze magasins) ; un seul producteur réel raccordé (CAP-CORE-011) et aucun satellite consommateur réel — voir `docs/capacites/CAP-CORE-014-event-journal.md` |
 | CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | empreinte de baseline, chaîne du journal | `NO GO` — pas de service d’empreintes général |
 | CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | aucun ; secrets hors dépôt | `NO GO` |
 | CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `NO GO` |
@@ -140,11 +140,21 @@ canoniques, des rattachements gouvernés d’organisations (CAP-CORE-002), de
 produits (CAP-CORE-011) et de contrats (CAP-CORE-009), des franchissements
 explicites à refus par défaut et prioritaire, et un moteur déterministe de
 contrôle de portée qui ne constitue jamais une autorisation — `CAP-CORE-004`
-reste seul décideur. Les chantiers ouverts, par ordre d’utilité :
+reste seul décideur. CAP-CORE-014 est livrée à son tour : les événements
+communs ne sont plus une extension du journal d’audit privé de
+CAP-CORE-013, mais un registre persistant et gouverné, avec enveloppe
+chaînée par empreintes, outbox transactionnelle dans chaque magasin
+producteur, abonnements filtrés par realm à refus par défaut, livraison PULL
+par bail avec accusés idempotents et lettres mortes, et rejeu borné
+reprenable par curseur. Un seul producteur réel est raccordé (CAP-CORE-011)
+et aucun satellite consommateur réel ne l’est encore — la preuve de
+consommation repose sur le parcours HTTP de conformité livré dans ce
+chantier, pas sur une intégration de production. Les chantiers ouverts, par
+ordre d’utilité :
 
 ```text
 intégration réelle de GamaDrive V2 sur CAP-CORE-022
-→ CAP-CORE-014 publication d’événements vers les satellites
+→ premier satellite ou producteur réel raccordé à CAP-CORE-014
 → CAP-CORE-021 Matching, désormais consommateur naturel de CAP-CORE-006,
   CAP-CORE-009, CAP-CORE-010 et CAP-CORE-012
 ```
