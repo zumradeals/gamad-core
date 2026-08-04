@@ -665,6 +665,56 @@ final class RegistrePreuves
         return ['reference' => $referencePaquet, 'empreinte_paquet' => $empreintePaquet, 'contenu' => $contenu];
     }
 
+    /**
+     * Vérifie un paquet soumis sans jamais lui faire confiance sur parole
+     * (fiche partie 4 §4.3) : le contenu déclaré n'est qu'un index vers une
+     * preuve locale déjà connue, jamais une source de vérité en soi. Le
+     * paquet est reconstruit côté serveur depuis le registre pour le même
+     * profil, puis comparé structurellement à ce qui a été soumis ; l'état
+     * cryptographique retourné vient toujours de `verifierPreuve()`, jamais
+     * d'une relecture du paquet.
+     *
+     * @param array<string,mixed> $paquetSoumis
+     * @return array<string,mixed>
+     */
+    public function verifierPaquetPreuve(array $paquetSoumis): array
+    {
+        if (($paquetSoumis['format'] ?? null) !== 'gamad-proof-package' || (int) ($paquetSoumis['version'] ?? 0) !== 1) {
+            return $this->refus('FORMAT_PAQUET_INCONNU', 'format ou version de paquet hors liste close');
+        }
+        $reference = (string) ($paquetSoumis['preuve_reference'] ?? '');
+        $profil = (string) ($paquetSoumis['profil'] ?? '');
+        if ($reference === '' || $this->lignePreuve($reference) === null) {
+            return $this->refus('PREUVE_INCONNUE', 'preuve_reference absente ou introuvable localement');
+        }
+        if (!in_array($profil, PolitiquePreuves::PROFILS_EXPORT, true)) {
+            return $this->refus('PROFIL_INCONNU', 'profil hors liste close');
+        }
+
+        $attendu = $this->construirePaquet($reference, $profil);
+        $champs = ['type_preuve', 'empreintes', 'signatures', 'etat'];
+        $divergences = [];
+        foreach ($champs as $champ) {
+            if (Canonicaliseur::canonicaliser($paquetSoumis[$champ] ?? null) !== Canonicaliseur::canonicaliser($attendu[$champ] ?? null)) {
+                $divergences[] = $champ;
+            }
+        }
+        if ($divergences !== []) {
+            return [
+                'preuve_reference' => $reference, 'resultat' => 'PAQUET_DIVERGENT',
+                'paquet_utilisable' => false, 'champs_divergents' => $divergences,
+            ];
+        }
+
+        $verification = $this->verifierPreuve($reference, []);
+
+        return [
+            'preuve_reference' => $reference, 'resultat' => $verification['resultat'],
+            'paquet_utilisable' => $verification['preuve_utilisable'] ?? false,
+            'champs_divergents' => [],
+        ];
+    }
+
     /** @return array<string,mixed> */
     private function construirePaquet(string $reference, string $profil): array
     {

@@ -16,6 +16,7 @@ use App\Http\Controllers\RealmConsoleController;
 use App\Http\Controllers\PasskeyController;
 use App\Http\Controllers\ContratConsoleController;
 use App\Http\Controllers\PolitiqueConsoleController;
+use App\Http\Controllers\PreuveConsoleController;
 use App\Http\Controllers\ProduitConsoleController;
 use App\Http\Controllers\SatelliteConsoleController;
 use App\Http\Controllers\SecretConsoleController;
@@ -272,6 +273,26 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/secrets-cles/{reference}/versions/{id}/compromission', [SecretConsoleController::class, 'compromettreVersion'])
         ->middleware('throttle:10,1')
         ->name('console.secrets-cles.versions.compromettre');
+
+    // CAP-CORE-015 — preuves d'intégrité. Jamais de signature de texte libre
+    // depuis cet écran (fiche partie 4 §9.4) : émission, checkpoint,
+    // manifeste et attestation restent des commandes CLI d'exploitation.
+    Route::get('/preuves', [PreuveConsoleController::class, 'index'])
+        ->name('console.preuves.index');
+    Route::get('/preuves/{reference}', [PreuveConsoleController::class, 'show'])
+        ->name('console.preuves.show');
+    Route::post('/preuves/{reference}/verification', [PreuveConsoleController::class, 'verifier'])
+        ->middleware('throttle:60,1')
+        ->name('console.preuves.verifier');
+    Route::post('/preuves/{reference}/suspension', [PreuveConsoleController::class, 'suspendre'])
+        ->middleware('throttle:10,1')
+        ->name('console.preuves.suspendre');
+    Route::post('/preuves/{reference}/revocation', [PreuveConsoleController::class, 'revoquer'])
+        ->middleware('throttle:10,1')
+        ->name('console.preuves.revoquer');
+    Route::post('/preuves/{reference}/compromission', [PreuveConsoleController::class, 'compromettre'])
+        ->middleware('throttle:10,1')
+        ->name('console.preuves.compromettre');
 
     // CAP-CORE-006 — registre des sources. Vit sous `/registre-sources` : le
     // chemin `/sources/{reference}` reste la route JSON historique de CTR-04
