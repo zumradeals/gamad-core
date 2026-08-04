@@ -133,6 +133,7 @@ Total des épreuves propres à CAP-CORE-014 : **115** (60 + 14 + 15 + 5 + 6 + 15
 - **Un seul producteur réel est raccordé** : CAP-CORE-011 (produits), activation et suspension. Les autres producteurs potentiels (organisations, contrats, realms, sources) ne sont pas raccordés, faute de besoin réel exprimé.
 - **Aucune protection contre les abus** (fiche §11 : rate limiting par producteur/consommateur, quotas de taille/lot/rejeu, circuit breaker) n'est implémentée. Ce n'est pas une régression propre à CAP-CORE-014 : aucune capacité du dépôt n'implémente ce type de protection à ce jour. Un consommateur lent ou un producteur bruyant n'est aujourd'hui limité par aucun mécanisme dédié.
 - **Aucune métrique Prometheus-style ni alerte routée vers un opérateur externe** (fiche §4-5) n'existe. Même réserve que ci-dessus : aucune capacité du dépôt n'a de tel exportateur ; les unités systemd écrivent uniquement dans le journal système local (`auth.alert`), comme pour les timers déjà en service.
+- **La rétention contractuelle de la charge n'est jamais calculée automatiquement.** `RegistreEvenements::accepterEvenement()` n'écrit `charge_expire_le` (`evenement_commun`) ni `expire_le` (`evenement_charge`) sur aucune insertion réelle : ces deux colonnes restent `NULL` pour tout événement réellement accepté aujourd'hui. `listerChargesPurgeables()` et `purgerCharge()` fonctionnent et sont éprouvés (épreuves 59-60 de la garde du noyau), mais avec une date d'expiration posée manuellement par le test — en exploitation réelle, `core:evenements:purger-charges` ne trouvera donc aucun candidat tant qu'un calcul de rétention par contrat n'est pas ajouté à `accepterEvenement()`. Ce n'est pas une fuite de données : une charge sans expiration reste simplement accessible indéfiniment, ce qui est le comportement le plus restrictif, pas le plus permissif. C'est en revanche une promesse de rétention non tenue en pratique, à corriger avant de s'appuyer sur la purge en exploitation.
 - **Le worker de publication n'a jamais tourné en continu en exploitation réelle** : les commandes et leurs unités systemd sont testées à l'exécution unique, jamais sous charge soutenue ni sous crash simulé d'un processus en cours de lot (la reprenabilité du rejeu, elle, est testée par simulation de curseur — épreuves 51-55).
 - **La concurrence réelle multi-processus** n'est pas éprouvée par un test multi-processus : les épreuves d'idempotence (bail, accusé) prouvent l'absence de doublon au rejeu séquentiel, la protection sous charge concurrente réelle tient aux contraintes `UNIQUE` et aux transactions, non à un verrou applicatif testé sous concurrence véritable — même réserve que pour `CAP-CORE-012`.
 - **Signature et preuve d'archive** (fiche §13, après `CAP-CORE-015`/`CAP-CORE-016`) : `signee: false` annoncée, champs facultatifs prévus mais non remplis — conformément à ce que la fiche autorise explicitement dans ce chantier.
@@ -145,6 +146,7 @@ CAP-CORE-014 — GO
 ```
 
 Sous réserve explicite des limites listées en §14, notamment l'absence de
-satellite réel raccordé et l'absence de protection contre les abus — deux
-points à traiter au premier besoin réel, pas par anticipation dans ce
+satellite réel raccordé, l'absence de protection contre les abus et
+l'absence de calcul automatique de rétention de charge — des points à
+traiter au premier besoin réel, pas par anticipation dans ce
 chantier.
