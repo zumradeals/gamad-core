@@ -30,7 +30,7 @@ source la plus fine pour qui veut savoir ce qui existe réellement derrière un
 | CAP-CORE-012 | Realms Registry | Isoler les périmètres techniques et institutionnels | `core/registre-realms`, bootstrap idempotent (vocabulaire, politique et contrat auto-établis), API v1 `/realms*`, écran Realms, `EvaluateurPortee` déterministe | `GO` — registre persistant gouverné et testé (87 épreuves SQLite/HTTP/console/contrats, exercice PostgreSQL réel local le 3 août 2026 sur onze magasins) ; CI GitHub à confirmer sur `claude/cap-core-012-realms-registry-go` — voir `docs/capacites/CAP-CORE-012-realms-registry.md` |
 | CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | `core/journal-operationnel` | `GO` — chaîne append-only vérifiée, trigger PostgreSQL |
 | CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-evenements`, `core/evenements-sortants`, bootstrap idempotent (`POL-EVENEMENTS-V1`, huit contrats techniques, huit vocabulaires), API v1 `/evenements*` `/abonnements*` `/rejeux*` `/lettres-mortes*`, écran Événements | `GO` — journal persistant gouverné, chaîné, testé (115 épreuves SQLite/HTTP/console/outbox, exercice PostgreSQL réel local le 4 août 2026 sur douze magasins) ; un seul producteur réel raccordé (CAP-CORE-011) et aucun satellite consommateur réel — voir `docs/capacites/CAP-CORE-014-event-journal.md` |
-| CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | empreinte de baseline, chaîne du journal | `NO GO` — pas de service d’empreintes général |
+| CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | `core/registre-preuves`, bootstrap idempotent (`POL-PREUVES-V1`, sept contrats techniques, empreinte de baseline reprise et cross-vérifiée), signature Ed25519 bornée via CAP-CORE-016 (clé privée jamais retournée hors du fournisseur), manifestes/checkpoints/attestations, API v1 `/preuves*` (lecture, vérification, empreinte bornée, cycle), écran Preuves d’intégrité, raccordements réels CAP-CORE-013 (checkpoint du journal) et CAP-CORE-019 (manifeste de sauvegarde re-vérifié indépendamment, attestation de restauration liée) | `GO` — registre persistant gouverné, testé (85 épreuves SQLite/HTTP : 66 garde + 19 intégration, exercice PostgreSQL réel local le 5 août 2026 sur quatorze magasins) ; jamais de clé privée conservée ni retournée ; seule l’empreinte JSON bornée est émettable par API, signature/manifeste/checkpoint/attestation restent CLI-only par principe de sécurité, pas par omission ; OpenAPI non renseigné (même réserve que CAP-CORE-016) — voir `docs/capacites/CAP-CORE-015-integrity-proofs.md` |
 | CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | `core/registre-secrets-cles`, bootstrap idempotent (`POL-SECRETS-CLES-V1`, neuf contrats techniques, inventaire réel de dix-sept références sans valeur), API v1 `/secrets-cles*` `/fournisseurs-secrets*` `/rotations-secrets*`, écran Secrets & clés, trois fournisseurs bornés (fichier 0600, credential systemd, transition) | `GO` — registre de gouvernance persistant, testé (88 épreuves SQLite/HTTP, exercice PostgreSQL réel local le 4 août 2026 sur treize magasins) ; jamais de valeur secrète stockée ni exposée ; rotation `APP_KEY` non exécutée en production (mécanisme éprouvé sur un secret pilote), trois fournisseurs (GPG/SSH/externe) non livrés, aucun consommateur réel migré — voir `docs/capacites/CAP-CORE-016-secrets-keys.md` |
 | CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `NO GO` |
 | CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `NO GO` |
@@ -159,18 +159,38 @@ types déclarés, dix-sept références réelles inventoriées sans valeur ;
 aucune rotation `APP_KEY`, PostgreSQL, GPG, SSH ou FTP n’a encore été
 exécutée en production, et aucun consommateur réel (comme la sauvegarde
 hors machine) n’est encore migré vers ce registre — c’était un préalable
-obligatoire avant tout autre chantier, désormais posé. Les chantiers
-ouverts, par ordre d’utilité :
+obligatoire avant tout autre chantier, désormais posé. CAP-CORE-015 est
+livrée à son tour, exactement dans l’ordre annoncé : les preuves
+d’intégrité du Core (empreintes, signatures Ed25519, manifestes,
+checkpoints, attestations) possèdent désormais un registre gouverné,
+séparant toujours artefact / représentation canonique / empreinte /
+signature facultative, et ne conservant ni ne retournant jamais de
+matériel de clé privée — la signature s’exécute dans le fournisseur
+`CAP-CORE-016` (`ResolveurSecret::avecSecret()`), jamais dans le
+registre des preuves lui-même. Deux raccordements réels sont livrés et
+exercés avec des données réelles, pas seulement simulées : un checkpoint
+du journal opérationnel (`CAP-CORE-013`) sur un événement réellement
+écrit, et un manifeste de sauvegarde (`CAP-CORE-019`) qui ré-empreinte
+indépendamment chaque membre du dernier lot de production plutôt que de
+recopier `SHA256SUMS`, puis une attestation de restauration liée au
+manifeste d’origine. L’API n’expose que l’empreinte d’un contenu JSON
+borné ; signature, manifeste, checkpoint et attestation restent des
+commandes CLI d’exploitation — pas une lacune, une frontière de sécurité
+assumée dès la fiche (aucune signature de texte libre, aucun choix de
+clé par l’appelant, aucune lecture de chemin arbitraire par HTTP). Les
+chantiers ouverts, par ordre d’utilité :
 
 ```text
 intégration réelle de GamaDrive V2 sur CAP-CORE-022
 → premier satellite ou producteur réel raccordé à CAP-CORE-014
 → premier consommateur réel raccordé à CAP-CORE-016 (par exemple la copie
   hors machine CAP-CORE-019) et rotation APP_KEY réellement exécutée
-→ CAP-CORE-015 Integrity Proofs, désormais consommateur naturel des clés
-  gouvernées par CAP-CORE-016
-→ CAP-CORE-021 Matching, désormais consommateur naturel de CAP-CORE-006,
-  CAP-CORE-009, CAP-CORE-010 et CAP-CORE-012
+→ premier consommateur réel raccordé à CAP-CORE-015 (checkpoint et
+  manifeste planifiés en production, pas seulement exécutables à la main)
+→ CAP-CORE-008, 017, 018, 020 et 021 restent `NO GO` : aucun chantier ne
+  leur a encore été consacré. La directive « aucun satellite avant que
+  toute capacité NO GO soit GO » s’applique encore à ces cinq-là avant
+  d’ouvrir un satellite
 ```
 
 Le second chemin d’accès est livré : codes de secours à usage unique,
