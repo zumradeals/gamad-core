@@ -58,6 +58,8 @@ jobs:
             garde: core/journal-evenements/tests/evenements_p3.php
           - capacite: CAP-CORE-014 (outbox)
             garde: core/evenements-sortants/tests/outbox_p3.php
+          - capacite: CAP-CORE-016 (secrets et clés)
+            garde: core/registre-secrets-cles/tests/secrets_cles_p3.php
 
     steps:
       - name: Récupérer le dépôt
@@ -193,6 +195,9 @@ jobs:
       - name: Éprouver la console du journal des événements
         run: php apps/console-laravel/tests/Integration/evenements_console_p1.php
 
+      - name: Éprouver l'API des secrets et clés
+        run: php apps/console-laravel/tests/Integration/secrets_cles_v1_p1.php
+
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php
 
@@ -240,6 +245,9 @@ jobs:
 
       - name: Éprouver la continuité pilotée depuis la console
         run: ops/core-foundation/tests/continuite_p1.sh
+
+      - name: Analyser le dépôt à la recherche de secrets committés
+        run: ops/core-foundation/tests/secrets_analyse_depot_p1.sh
 
   syntaxe-php:
     name: Syntaxe PHP du Core et de la console

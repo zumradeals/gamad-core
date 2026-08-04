@@ -138,6 +138,14 @@
                 </span>
                 Journal des événements
             </a>
+            <a class="nav__link"
+               href="{{ route('console.secrets-cles.index') }}"
+               @if(request()->routeIs('console.secrets-cles.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                </span>
+                Secrets &amp; clés
+            </a>
 
             <span class="nav__label">Sécurité et continuité</span>
             <a class="nav__link"

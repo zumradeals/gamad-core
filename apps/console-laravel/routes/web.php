@@ -18,6 +18,7 @@ use App\Http\Controllers\ContratConsoleController;
 use App\Http\Controllers\PolitiqueConsoleController;
 use App\Http\Controllers\ProduitConsoleController;
 use App\Http\Controllers\SatelliteConsoleController;
+use App\Http\Controllers\SecretConsoleController;
 use App\Http\Controllers\SourceConsoleController;
 use App\Http\Controllers\VocabulaireConsoleController;
 use Illuminate\Support\Facades\Route;
@@ -255,6 +256,22 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/rejeux/{reference}/annulation', [EvenementConsoleController::class, 'annulerRejeu'])
         ->middleware('throttle:10,1')
         ->name('console.rejeux.annuler');
+
+    // CAP-CORE-016 — secrets et clés. Métadonnées seules, comme l'API v1 :
+    // aucune vue ne reçoit jamais de valeur secrète (fiche partie 4 §8).
+    Route::get('/secrets-cles', [SecretConsoleController::class, 'index'])
+        ->name('console.secrets-cles.index');
+    Route::get('/secrets-cles/{reference}', [SecretConsoleController::class, 'show'])
+        ->name('console.secrets-cles.show');
+    Route::post('/secrets-cles/{reference}/versions/{id}/suspension', [SecretConsoleController::class, 'suspendreVersion'])
+        ->middleware('throttle:10,1')
+        ->name('console.secrets-cles.versions.suspendre');
+    Route::post('/secrets-cles/{reference}/versions/{id}/revocation', [SecretConsoleController::class, 'revoquerVersion'])
+        ->middleware('throttle:10,1')
+        ->name('console.secrets-cles.versions.revoquer');
+    Route::post('/secrets-cles/{reference}/versions/{id}/compromission', [SecretConsoleController::class, 'compromettreVersion'])
+        ->middleware('throttle:10,1')
+        ->name('console.secrets-cles.versions.compromettre');
 
     // CAP-CORE-006 — registre des sources. Vit sous `/registre-sources` : le
     // chemin `/sources/{reference}` reste la route JSON historique de CTR-04
