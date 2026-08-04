@@ -23,6 +23,7 @@ use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreRealms\Magasin as RealmsMagasin;
+use Gamad\RegistreSecretsCles\Magasin as SecretsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Gamad\RegistreVocabulaire\Magasin as VocabulaireMagasin;
 use Illuminate\Contracts\Http\Kernel;
@@ -43,6 +44,7 @@ $fichiers = [
     'organisations' => $temp . '-organisations.sqlite',
     'realms' => $temp . '-realms.sqlite',
     'evenements' => $temp . '-evenements.sqlite',
+    'secrets' => $temp . '-secrets.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -89,6 +91,8 @@ $environnement = [
     'REALM_REGISTRY_PATH' => $fichiers['realms'],
     'EVENT_JOURNAL_URL' => '',
     'EVENT_JOURNAL_PATH' => $fichiers['evenements'],
+    'SECRET_REGISTRY_URL' => '',
+    'SECRET_REGISTRY_PATH' => $fichiers['secrets'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -115,6 +119,7 @@ VocabulaireMagasin::connecter();
 OrganisationsMagasin::connecter();
 RealmsMagasin::connecter();
 EvenementsMagasin::connecter();
+SecretsMagasin::connecter();
 
 $app = require $application . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
@@ -248,13 +253,13 @@ $verifier(
 $ready = $requete('GET', '/api/v1/health/ready');
 $readyOk = $ready['statut'] === 200
     && ($ready['corps']['pret'] ?? false) === true
-    && count($ready['corps']['cibles'] ?? []) === 12;
+    && count($ready['corps']['cibles'] ?? []) === 13;
 if (!$readyOk) {
     fwrite(STDERR, json_encode($ready, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
 }
 $verifier(
     $readyOk,
-    'la readiness vérifie les douze magasins et leurs migrations',
+    'la readiness vérifie les treize magasins et leurs migrations',
 );
 
 echo "\n";

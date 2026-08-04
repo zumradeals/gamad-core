@@ -14,6 +14,7 @@ use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreRealms\Magasin as RealmsMagasin;
+use Gamad\RegistreSecretsCles\Magasin as SecretsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
 use Gamad\RegistreVocabulaire\Magasin as VocabulaireMagasin;
 
@@ -144,6 +145,17 @@ final class EtatFondation
                 $production,
                 verifierChaineEvenements: true,
             ),
+            'secrets' => $this->inspecterCible(
+                'SECRET_REGISTRY_URL',
+                fn (): \PDO => SecretsMagasin::ouvrir(),
+                [
+                    'migration_registre_secrets_cles', 'secret_ressource', 'secret_fournisseur', 'secret_version',
+                    'secret_version_cycle', 'secret_usage', 'secret_dependance', 'secret_rotation_plan',
+                    'secret_rotation_execution', 'secret_compromission', 'secret_materiel_public',
+                ],
+                $production,
+                verifierSecretsCles: true,
+            ),
         ];
 
         $configuration = [
@@ -184,6 +196,7 @@ final class EtatFondation
         bool $production,
         bool $verifierJournal = false,
         bool $verifierChaineEvenements = false,
+        bool $verifierSecretsCles = false,
     ): array {
         $urlPresente = trim((string) $this->environnement($variable)) !== '';
         if ($production && ! $urlPresente) {
@@ -236,6 +249,30 @@ final class EtatFondation
                     'verification_complete' => 'php artisan core:evenements:verifier',
                 ];
             }
+            if ($verifierSecretsCles && $tablesOk) {
+                $doublons = (int) $pdo->query(
+                    "SELECT count(*) FROM (
+                        SELECT v.secret_reference FROM secret_version v
+                        JOIN secret_version_cycle c1 ON c1.secret_version_id = v.id
+                        WHERE c1.etat = 'ACTIVE_ECRITURE' AND c1.id = (
+                            SELECT MAX(c2.id) FROM secret_version_cycle c2 WHERE c2.secret_version_id = c1.secret_version_id
+                        )
+                        GROUP BY v.secret_reference HAVING count(*) > 1
+                    ) t"
+                )->fetchColumn();
+                $compromisesActives = (int) $pdo->query(
+                    "SELECT count(*) FROM secret_version_cycle c1
+                     WHERE c1.etat = 'COMPROMISE' AND c1.id = (
+                         SELECT MAX(c2.id) FROM secret_version_cycle c2 WHERE c2.secret_version_id = c1.secret_version_id
+                     )"
+                )->fetchColumn();
+                $integrite = [
+                    'tete_lisible' => $doublons === 0,
+                    'doublons_ecriture' => $doublons,
+                    'versions_compromises' => $compromisesActives,
+                    'verification_complete' => 'php artisan core:secrets:diagnostiquer',
+                ];
+            }
             $moteurOk = ! $production || $moteur === 'pgsql';
             $integriteOk = $integrite === null || $integrite['tete_lisible'] === true;
 
@@ -280,6 +317,7 @@ final class EtatFondation
             'ORGANIZATION_REGISTRY_URL' => 'database.connections.gamad_organizations.url',
             'REALM_REGISTRY_URL' => 'database.connections.gamad_realms.url',
             'EVENT_JOURNAL_URL' => 'database.connections.gamad_evenements.url',
+            'SECRET_REGISTRY_URL' => 'database.connections.gamad_secrets.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);
