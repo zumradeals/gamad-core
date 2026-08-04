@@ -66,15 +66,75 @@ final class AccesSecrets
         );
     }
 
-    /** @return array{statut:int,corps:array<string,mixed>} */
+    /**
+     * Active une version — revérifie toujours le fournisseur en direct côté
+     * serveur avant d'activer, plutôt que de faire confiance à un booléen
+     * `verifiee` fourni par l'appelant : un client ne peut jamais se
+     * déclarer lui-même vérifié (fiche partie 3 §6.6, aucun fallback
+     * silencieux).
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
     public function activerVersion(string $reference, int $id, array $dossier, string $acteur, ?string $correlation): array
     {
         return $this->gouverner(
             PolitiqueSecretsCles::ACTION_VERSION_ACTIVER, $reference, $acteur, $correlation, 'VERSION_SECRET_ACTIVEE',
-            fn (array $g): array => $this->registre()->activerVersion($id, array_merge($dossier, $g)),
+            function (array $g) use ($id, $dossier): array {
+                $verification = $this->reverifierVersion($id);
+                if (isset($verification['refus'])) {
+                    return $verification;
+                }
+
+                return $this->registre()->activerVersion($id, array_merge($dossier, ['verifiee' => true], $g));
+            },
             200,
-            ['VERSION_INCONNUE' => 404, 'VERSION_NON_VERIFIEE' => 422, 'VERSION_INACTIVE' => 409],
+            ['VERSION_INCONNUE' => 404, 'VERSION_NON_VERIFIEE' => 422, 'VERSION_INACTIVE' => 409, 'FOURNISSEUR_NON_CONFORME' => 422],
         );
+    }
+
+    /** @return array{statut:int,corps:array<string,mixed>} */
+    public function verifierVersion(string $reference, string $version, string $acteur, ?string $correlation): array
+    {
+        $ligne = $this->registre()->resoudreVersion($reference, $version);
+        $id = $ligne !== null ? (int) $ligne['id'] : 0;
+
+        return $this->gouverner(
+            PolitiqueSecretsCles::ACTION_VERSION_VERIFIER, $reference, $acteur, $correlation, 'VERSION_SECRET_VERIFIEE',
+            fn (array $g): array => $ligne === null ? $this->refus('VERSION_INCONNUE', 'version inconnue') : $this->reverifierVersion($id),
+            200,
+            ['VERSION_INCONNUE' => 404, 'FOURNISSEUR_NON_CONFORME' => 422],
+        );
+    }
+
+    /** @return array<string,mixed> */
+    private function reverifierVersion(int $id): array
+    {
+        $version = null;
+        foreach ($this->registre()->listerSecrets() as $secret) {
+            foreach ($this->registre()->listerVersions((string) $secret['reference']) as $v) {
+                if ((int) $v['id'] === $id) {
+                    $version = $v;
+                }
+            }
+        }
+        if ($version === null) {
+            return $this->refus('VERSION_INCONNUE', "version #{$id} inconnue");
+        }
+        $fournisseur = $this->registre()->resoudreFournisseur((string) $version['fournisseur_reference']);
+        $adaptateur = $fournisseur !== null
+            ? \Gamad\RegistreSecretsCles\AdaptateurParType::resoudre((string) $fournisseur['type_fournisseur'])
+            : null;
+        if ($adaptateur === null) {
+            return $this->refus('FOURNISSEUR_NON_CONFORME', 'aucun adaptateur borné disponible pour ce type de fournisseur');
+        }
+
+        return $this->registre()->verifierVersion($id, $adaptateur, []);
+    }
+
+    /** @return array<string,mixed> */
+    private function refus(string $motif, string $detail): array
+    {
+        return ['refus' => $motif, 'detail' => $detail];
     }
 
     /** @return array{statut:int,corps:array<string,mixed>} */

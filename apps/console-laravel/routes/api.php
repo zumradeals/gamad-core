@@ -426,6 +426,8 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         Route::post('/secrets-cles/{reference}/versions', [SecretController::class, 'storeVersion'])
             ->middleware('throttle:10,1');
         Route::get('/secrets-cles/{reference}/versions/{version}', [SecretController::class, 'showVersion']);
+        Route::post('/secrets-cles/{reference}/versions/{version}/verification', [SecretController::class, 'verifierVersion'])
+            ->middleware('throttle:20,1');
         Route::post('/secrets-cles/{reference}/versions/{id}/activation', [SecretController::class, 'activerVersion'])
             ->middleware('throttle:10,1');
         Route::post('/secrets-cles/{reference}/versions/{id}/suspension', [SecretController::class, 'suspendreVersion'])

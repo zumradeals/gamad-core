@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use Gamad\RegistreIdentites\PolitiqueInscription;
-use Gamad\RegistreSecretsCles\FournisseurCredentialSystemd;
-use Gamad\RegistreSecretsCles\FournisseurEnvironnementTransition;
-use Gamad\RegistreSecretsCles\FournisseurFichier0600;
-use Gamad\RegistreSecretsCles\FournisseurSecret;
+use Gamad\RegistreSecretsCles\AdaptateurParType;
 use Gamad\RegistreSecretsCles\Magasin as SecretsMagasin;
 use Gamad\RegistreSecretsCles\PolitiqueSecretsCles;
 use Gamad\RegistreSecretsCles\RegistreSecretsCles;
@@ -60,7 +57,7 @@ final class DetruireVersionSecretCommand extends Command
             return self::FAILURE;
         }
         $fournisseur = $registre->resoudreFournisseur((string) $version['fournisseur_reference']);
-        $adaptateur = $fournisseur !== null ? $this->adaptateurPour((string) $fournisseur['type_fournisseur']) : null;
+        $adaptateur = $fournisseur !== null ? AdaptateurParType::resoudre((string) $fournisseur['type_fournisseur']) : null;
         if ($adaptateur === null) {
             $this->error('Aucun adaptateur borné disponible pour ce type de fournisseur.');
 
@@ -91,13 +88,4 @@ final class DetruireVersionSecretCommand extends Command
         return self::SUCCESS;
     }
 
-    private function adaptateurPour(string $type): ?FournisseurSecret
-    {
-        return match ($type) {
-            'FICHIER_0600' => new FournisseurFichier0600('', 0),
-            'CREDENTIAL_SYSTEMD' => new FournisseurCredentialSystemd(),
-            'VARIABLE_ENVIRONNEMENT_TRANSITION' => new FournisseurEnvironnementTransition(),
-            default => null,
-        };
-    }
 }

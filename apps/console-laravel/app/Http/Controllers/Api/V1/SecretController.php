@@ -88,9 +88,16 @@ final class SecretController
         return response()->json($execution['corps'], $execution['statut']);
     }
 
+    public function verifierVersion(Request $request, AccesSecrets $acces, string $reference, string $version): JsonResponse
+    {
+        $execution = $acces->verifierVersion($reference, $version, (string) $request->attributes->get('gamad_entite'), $request->attributes->get('gamad_correlation'));
+
+        return response()->json($execution['corps'], $execution['statut']);
+    }
+
     public function activerVersion(Request $request, AccesSecrets $acces, string $reference, int $id): JsonResponse
     {
-        $donnees = $request->validate(['verifiee' => ['required', 'boolean'], 'motif' => ['nullable', 'string', 'max:500']]);
+        $donnees = $request->validate(['motif' => ['nullable', 'string', 'max:500']]);
         $execution = $acces->activerVersion($reference, $id, $donnees, (string) $request->attributes->get('gamad_entite'), $request->attributes->get('gamad_correlation'));
 
         return response()->json($execution['corps'], $execution['statut']);

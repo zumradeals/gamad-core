@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use Gamad\RegistreSecretsCles\FournisseurCredentialSystemd;
-use Gamad\RegistreSecretsCles\FournisseurEnvironnementTransition;
-use Gamad\RegistreSecretsCles\FournisseurFichier0600;
-use Gamad\RegistreSecretsCles\FournisseurSecret;
+use Gamad\RegistreSecretsCles\AdaptateurParType;
 use Gamad\RegistreSecretsCles\Magasin as SecretsMagasin;
 use Gamad\RegistreSecretsCles\RegistreSecretsCles;
 use Illuminate\Console\Command;
@@ -36,7 +33,7 @@ final class VerifierFournisseursSecretsCommand extends Command
 
         $echecs = 0;
         foreach ($registre->listerFournisseurs() as $fournisseur) {
-            $adaptateur = $this->adaptateurPour((string) $fournisseur['type_fournisseur']);
+            $adaptateur = AdaptateurParType::resoudre((string) $fournisseur['type_fournisseur']);
             if ($adaptateur === null) {
                 $this->line("{$fournisseur['reference']} : type {$fournisseur['type_fournisseur']} sans adaptateur borné dans ce chantier — ignoré.");
                 continue;
@@ -59,13 +56,4 @@ final class VerifierFournisseursSecretsCommand extends Command
         return self::SUCCESS;
     }
 
-    private function adaptateurPour(string $type): ?FournisseurSecret
-    {
-        return match ($type) {
-            'FICHIER_0600' => new FournisseurFichier0600('', 0),
-            'CREDENTIAL_SYSTEMD' => new FournisseurCredentialSystemd(),
-            'VARIABLE_ENVIRONNEMENT_TRANSITION' => new FournisseurEnvironnementTransition(),
-            default => null,
-        };
-    }
 }
