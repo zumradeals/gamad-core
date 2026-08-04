@@ -41,6 +41,7 @@ declare -A connexions=(
     [organisations]="$(connexion "${GAMAD_RESTORE_ORGANIZATIONS_PGSERVICE:-}" "${GAMAD_RESTORE_ORGANIZATIONS_PGDATABASE:-}")"
     [realms]="$(connexion "${GAMAD_RESTORE_REALMS_PGSERVICE:-}" "${GAMAD_RESTORE_REALMS_PGDATABASE:-}")"
     [journal]="$(connexion "${GAMAD_RESTORE_JOURNAL_PGSERVICE:-}" "${GAMAD_RESTORE_JOURNAL_PGDATABASE:-}")"
+    [evenements]="$(connexion "${GAMAD_RESTORE_EVENEMENTS_PGSERVICE:-}" "${GAMAD_RESTORE_EVENEMENTS_PGDATABASE:-}")"
 )
 
 # `pg_restore --clean` détruit ce qu'il trouve. La confirmation annonce des
@@ -62,6 +63,7 @@ declare -a production=(
     "${GAMAD_ORGANIZATIONS_PGDATABASE:-}"
     "${GAMAD_REALMS_PGDATABASE:-}"
     "${GAMAD_JOURNAL_PGDATABASE:-}"
+    "${GAMAD_EVENEMENTS_PGDATABASE:-}"
     "${GAMAD_INDEX_PGSERVICE:-}"
     "${GAMAD_ACCESS_PGSERVICE:-}"
     "${GAMAD_IDENTITY_PGSERVICE:-}"
@@ -73,8 +75,9 @@ declare -a production=(
     "${GAMAD_ORGANIZATIONS_PGSERVICE:-}"
     "${GAMAD_REALMS_PGSERVICE:-}"
     "${GAMAD_JOURNAL_PGSERVICE:-}"
+    "${GAMAD_EVENEMENTS_PGSERVICE:-}"
 )
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements; do
     for interdite in "${production[@]}"; do
         [[ -z "$interdite" ]] && continue
         if [[ "${connexions[$cible]}" == *"=${interdite}" ]]; then
@@ -90,7 +93,7 @@ done
     sha256sum --check SHA256SUMS
 )
 
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements; do
     pg_restore \
         --dbname="${connexions[$cible]}" \
         --clean \
@@ -124,5 +127,13 @@ psql "${connexions[realms]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS realms_persistants FROM realm'
 psql "${connexions[journal]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS evenements FROM evenement_operationnel'
+psql "${connexions[evenements]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS evenements_communs FROM evenement_commun'
+psql "${connexions[evenements]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS abonnements FROM abonnement_evenement'
+psql "${connexions[evenements]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS livraisons FROM livraison_evenement'
+psql "${connexions[evenements]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS lettres_mortes FROM lettre_morte_evenement'
 
-echo "Exercice de restauration terminé sur les onze cibles isolées."
+echo "Exercice de restauration terminé sur les douze cibles isolées."

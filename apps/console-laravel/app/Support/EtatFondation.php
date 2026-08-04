@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreContrats\Magasin as ContratsMagasin;
@@ -131,6 +132,18 @@ final class EtatFondation
                 $production,
                 verifierJournal: true,
             ),
+            'evenements' => $this->inspecterCible(
+                'EVENT_JOURNAL_URL',
+                fn (): \PDO => EvenementsMagasin::ouvrir(),
+                [
+                    'migration_journal_evenements', 'evenement_commun', 'evenement_charge', 'recu_publication',
+                    'abonnement_evenement', 'abonnement_cycle', 'abonnement_type_evenement', 'abonnement_producteur',
+                    'abonnement_realm', 'livraison_evenement', 'tentative_livraison', 'curseur_abonnement',
+                    'demande_rejeu', 'lettre_morte_evenement',
+                ],
+                $production,
+                verifierChaineEvenements: true,
+            ),
         ];
 
         $configuration = [
@@ -170,6 +183,7 @@ final class EtatFondation
         array $tables,
         bool $production,
         bool $verifierJournal = false,
+        bool $verifierChaineEvenements = false,
     ): array {
         $urlPresente = trim((string) $this->environnement($variable)) !== '';
         if ($production && ! $urlPresente) {
@@ -202,6 +216,24 @@ final class EtatFondation
                     'tete_lisible' => $tete === false
                         || preg_match('/^[0-9a-f]{64}$/', (string) $tete) === 1,
                     'verification_complete' => 'php artisan core:journal:verifier',
+                ];
+            }
+            if ($verifierChaineEvenements && $tablesOk) {
+                $tete = $pdo->query(
+                    'SELECT empreinte_evenement FROM evenement_commun ORDER BY sequence_id DESC LIMIT 1'
+                )->fetchColumn();
+                $bauxRequete = $pdo->prepare(
+                    "SELECT count(*) FROM livraison_evenement WHERE etat = 'SOUS_BAIL' AND bail_expire_le < ?"
+                );
+                $bauxRequete->execute([gmdate('c')]);
+                $baux = (int) $bauxRequete->fetchColumn();
+                $lettresMortes = (int) $pdo->query('SELECT count(*) FROM lettre_morte_evenement')->fetchColumn();
+                $integrite = [
+                    'tete_lisible' => $tete === false
+                        || preg_match('/^[0-9a-f]{64}$/', (string) $tete) === 1,
+                    'baux_expires_non_liberes' => $baux,
+                    'lettres_mortes' => $lettresMortes,
+                    'verification_complete' => 'php artisan core:evenements:verifier',
                 ];
             }
             $moteurOk = ! $production || $moteur === 'pgsql';
@@ -247,6 +279,7 @@ final class EtatFondation
             'VOCABULARY_REGISTRY_URL' => 'database.connections.gamad_vocabulary.url',
             'ORGANIZATION_REGISTRY_URL' => 'database.connections.gamad_organizations.url',
             'REALM_REGISTRY_URL' => 'database.connections.gamad_realms.url',
+            'EVENT_JOURNAL_URL' => 'database.connections.gamad_evenements.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);

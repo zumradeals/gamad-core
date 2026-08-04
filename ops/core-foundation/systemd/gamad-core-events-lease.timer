@@ -1,0 +1,12 @@
+[Unit]
+Description=Libération périodique des baux de livraison expirés GAMAD Core
+
+[Timer]
+OnBootSec=2m
+OnUnitActiveSec=2m
+Persistent=true
+RandomizedDelaySec=15s
+Unit=gamad-core-events-lease.service
+
+[Install]
+WantedBy=timers.target

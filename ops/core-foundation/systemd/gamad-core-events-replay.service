@@ -1,0 +1,16 @@
+[Unit]
+Description=Traitement des rejeux validés du journal des événements GAMAD Core
+After=postgresql.service
+OnFailure=gamad-core-operations-alert@events-replay.service
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/gamad-core/apps/console-laravel
+ExecStart=/usr/bin/php artisan core:evenements:traiter-rejeux --limite=100 --max-lots=50
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/gamad-core/apps/console-laravel/storage

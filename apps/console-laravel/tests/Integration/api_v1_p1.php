@@ -243,13 +243,13 @@ $verifier(
 $ready = $requete('GET', '/api/v1/health/ready');
 $readyOk = $ready['statut'] === 200
     && ($ready['corps']['pret'] ?? false) === true
-    && count($ready['corps']['cibles'] ?? []) === 11;
+    && count($ready['corps']['cibles'] ?? []) === 12;
 if (!$readyOk) {
     fwrite(STDERR, json_encode($ready, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
 }
 $verifier(
     $readyOk,
-    'la readiness vérifie les onze magasins et leurs migrations',
+    'la readiness vérifie les douze magasins et leurs migrations',
 );
 
 echo "\n";

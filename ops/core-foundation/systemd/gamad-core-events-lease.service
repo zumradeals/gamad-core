@@ -1,0 +1,16 @@
+[Unit]
+Description=Libération des baux de livraison expirés du journal des événements GAMAD Core
+After=postgresql.service
+OnFailure=gamad-core-operations-alert@events-lease.service
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/gamad-core/apps/console-laravel
+ExecStart=/usr/bin/php artisan core:evenements:liberer-baux
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/gamad-core/apps/console-laravel/storage

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
@@ -44,13 +45,14 @@ $vocabulaire = VocabulaireMagasin::connecter();
 $organisations = OrganisationsMagasin::connecter();
 $realms = RealmsMagasin::connecter();
 $journalPdo = JournalMagasin::connecter();
+$evenementsPdo = EvenementsMagasin::connecter();
 
 $verifier(
     array_unique(array_map(
         static fn (\PDO $pdo): string => (string) $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME),
-        [$index, $acces, $identites, $produits, $sources, $politiques, $contrats, $vocabulaire, $organisations, $realms, $journalPdo],
+        [$index, $acces, $identites, $produits, $sources, $politiques, $contrats, $vocabulaire, $organisations, $realms, $journalPdo, $evenementsPdo],
     )) === ['pgsql'],
-    'les onze magasins utilisent réellement PostgreSQL',
+    'les douze magasins utilisent réellement PostgreSQL',
 );
 
 $ctr16 = new Ctr16($acces);
@@ -120,10 +122,14 @@ $request = Request::create(
 $response = $kernel->handle($request);
 $corps = json_decode((string) $response->getContent(), true);
 $kernel->terminate($request, $response);
+$readinessOk = $response->getStatusCode() === 200
+    && ($corps['pret'] ?? false) === true
+    && ($corps['environnement'] ?? null) === 'production';
+if (!$readinessOk) {
+    fwrite(STDERR, json_encode($corps, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
+}
 $verifier(
-    $response->getStatusCode() === 200
-        && ($corps['pret'] ?? false) === true
-        && ($corps['environnement'] ?? null) === 'production',
+    $readinessOk,
     'la readiness de production accepte le socle PostgreSQL complet',
 );
 
