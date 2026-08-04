@@ -35,9 +35,10 @@ use Gamad\RegistreSources\RegistreSources;
  * et seule une décision permise et prouvée atteint l'écriture centrale.
  *
  * `POL-EVENEMENTS-V1`, bootstrapée par `core:evenements:bootstrap`, ne permet
- * aujourd'hui ces actions qu'à `PolitiqueInscription::AUTORITE_INSCRIPTION` :
- * élargir à des producteurs et consommateurs réels reste une décision produit
- * ultérieure (§9 du rapport de PR), pas une extension silencieuse ici.
+ * ces actions qu'à `PolitiqueInscription::AUTORITE_INSCRIPTION` : c'est le
+ * design voulu, confirmé par le dirigeant — `AUT-GAMAD-001` est l'autorité
+ * unique pour toutes les actions sensibles du Core, pas une lacune à
+ * combler par un élargissement à des producteurs/consommateurs distincts.
  */
 final class AccesEvenements
 {
