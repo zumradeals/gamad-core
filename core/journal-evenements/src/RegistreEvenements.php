@@ -352,6 +352,15 @@ final class RegistreEvenements
         return array_map(fn (array $l): array => $this->projeter($l), $st->fetchAll());
     }
 
+    /** Nombre d'événements publiés depuis une date ISO 8601 donnée (tableau de bord, fiche partie 4 §9). */
+    public function compterDepuis(string $depuis): int
+    {
+        $st = $this->magasin->prepare('SELECT COUNT(*) FROM evenement_commun WHERE survenu_le >= ?');
+        $st->execute([$depuis]);
+
+        return (int) $st->fetchColumn();
+    }
+
     /** @return array<string,mixed> */
     public function resoudreCharge(string $reference): array
     {

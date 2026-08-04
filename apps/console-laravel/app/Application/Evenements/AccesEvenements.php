@@ -131,6 +131,45 @@ final class AccesEvenements
         return ['statut' => 200, 'corps' => $this->registreEvenements()->resoudreCharge($reference)];
     }
 
+    /**
+     * Tableau de bord (fiche partie 4 §9) : agrégats de santé uniquement —
+     * jamais de charge, jamais de détail par abonnement au-delà d'un
+     * comptage. « L'administration peut voir la santé sans voir toutes les
+     * charges » (partie 5 §12) : ce n'est pas une lecture d'un événement ou
+     * d'un abonnement précis, donc l'action gouvernée est le diagnostic.
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
+    public function diagnostiquer(string $acteur): array
+    {
+        $refus = $this->verifierLecture(PolitiqueEvenements::ACTION_DIAGNOSTIC_LIRE, null, $acteur);
+        if ($refus !== null) {
+            return $refus;
+        }
+
+        $registreEvenements = $this->registreEvenements();
+        $abonnements = $this->registreAbonnements()->listerAbonnements(null);
+        $parEtat = ['PREPARATION' => 0, 'ACTIF' => 0, 'SUSPENDU' => 0, 'RETIRE' => 0];
+        foreach ($abonnements as $abonnement) {
+            $etat = (string) ($abonnement['etat'] ?? '');
+            if (isset($parEtat[$etat])) {
+                $parEtat[$etat]++;
+            }
+        }
+        $rejeux = $this->rejoueur()->listerDemandes();
+        $rejeuxActifs = count(array_filter($rejeux, static fn (array $r): bool => in_array($r['etat'], ['VALIDEE', 'EN_COURS'], true)));
+
+        return ['statut' => 200, 'corps' => [
+            'diagnostic' => $registreEvenements->diagnostiquerJournal(),
+            'publies_1h' => $registreEvenements->compterDepuis(gmdate('c', time() - 3600)),
+            'publies_24h' => $registreEvenements->compterDepuis(gmdate('c', time() - 86400)),
+            'publies_7j' => $registreEvenements->compterDepuis(gmdate('c', time() - 7 * 86400)),
+            'abonnements_par_etat' => $parEtat,
+            'abonnements_total' => count($abonnements),
+            'rejeux_actifs' => $rejeuxActifs,
+        ]];
+    }
+
     // ------------------------------------------------------------------
     // Abonnements
 
@@ -257,6 +296,22 @@ final class AccesEvenements
             200,
             [],
         );
+    }
+
+    /** Détail des types/producteurs/realms déclarés (écran d'abonnement, fiche partie 4 §9). */
+    public function resoudreDeclarations(string $reference, string $acteur): array
+    {
+        $verification = $this->verifierAppartenanceAbonnement($reference, $acteur);
+        if ($verification !== null) {
+            return $verification;
+        }
+        $registre = $this->registreAbonnements();
+
+        return ['statut' => 200, 'corps' => [
+            'types' => $registre->resoudreTypes($reference),
+            'producteurs' => $registre->resoudreProducteurs($reference),
+            'realms' => $registre->resoudreRealmsAbonnement($reference),
+        ]];
     }
 
     /** @return array{statut:int,corps:array<string,mixed>} */

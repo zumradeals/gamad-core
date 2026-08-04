@@ -348,6 +348,44 @@ final class RegistreAbonnements
         return array_map(fn (array $r): array => $this->resoudreAbonnement((string) $r['reference']) ?? [], $st->fetchAll());
     }
 
+    /**
+     * Types déclarés (fiche partie 4 §9 — écran d'abonnement).
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function resoudreTypes(string $abonnement): array
+    {
+        $st = $this->magasin->prepare(
+            'SELECT contrat_reference, version_contrainte, type_evenement, cree_le
+             FROM abonnement_type_evenement WHERE abonnement_reference = ? ORDER BY id'
+        );
+        $st->execute([$abonnement]);
+
+        return $st->fetchAll();
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function resoudreProducteurs(string $abonnement): array
+    {
+        $st = $this->magasin->prepare(
+            'SELECT producteur_reference, cree_le FROM abonnement_producteur WHERE abonnement_reference = ? ORDER BY id'
+        );
+        $st->execute([$abonnement]);
+
+        return $st->fetchAll();
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function resoudreRealmsAbonnement(string $abonnement): array
+    {
+        $st = $this->magasin->prepare(
+            'SELECT realm_reference, portee, cree_le FROM abonnement_realm WHERE abonnement_reference = ? ORDER BY id'
+        );
+        $st->execute([$abonnement]);
+
+        return $st->fetchAll();
+    }
+
     public function etatCourant(string $abonnement): ?string
     {
         $st = $this->magasin->prepare(
