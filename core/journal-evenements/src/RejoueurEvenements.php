@@ -158,6 +158,51 @@ final class RejoueurEvenements
         return ['reference' => $reference, 'etat' => 'EN_COURS', 'traites' => $traites];
     }
 
+    // ------------------------------------------------------------------
+    // Lectures
+
+    /** @return array<string,mixed>|null */
+    public function resoudreDemande(string $reference): ?array
+    {
+        $l = $this->ligneDemande($reference);
+
+        return $l === null ? null : $this->projeter($l);
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function listerDemandes(?string $abonnement = null): array
+    {
+        if ($abonnement === null) {
+            $st = $this->magasin->query('SELECT * FROM demande_rejeu ORDER BY cree_le');
+
+            return array_map(fn (array $l): array => $this->projeter($l), $st->fetchAll());
+        }
+        $st = $this->magasin->prepare('SELECT * FROM demande_rejeu WHERE abonnement_reference = ? ORDER BY cree_le');
+        $st->execute([$abonnement]);
+
+        return array_map(fn (array $l): array => $this->projeter($l), $st->fetchAll());
+    }
+
+    /** @return array<string,mixed> */
+    private function projeter(array $l): array
+    {
+        return [
+            'reference' => $l['reference'],
+            'abonnement_reference' => $l['abonnement_reference'],
+            'sequence_debut' => $l['sequence_debut'] !== null ? (int) $l['sequence_debut'] : null,
+            'sequence_fin' => $l['sequence_fin'] !== null ? (int) $l['sequence_fin'] : null,
+            'date_debut' => $l['date_debut'],
+            'date_fin' => $l['date_fin'],
+            'types' => json_decode((string) $l['types_json'], true) ?: [],
+            'motif' => $l['motif'],
+            'etat' => $l['etat'],
+            'demandeur_reference' => $l['demandeur_reference'],
+            'volume_estime' => $l['volume_estime'] !== null ? (int) $l['volume_estime'] : null,
+            'cree_le' => $l['cree_le'],
+            'termine_le' => $l['termine_le'],
+        ];
+    }
+
     private function reouvrirOuCreerLivraison(string $abonnement, string $evenementReference, int $sequenceId, string $demandeRejeu): void
     {
         $st = $this->magasin->prepare(

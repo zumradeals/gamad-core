@@ -244,6 +244,68 @@ final class LivreurEvenements
         return ['lettre_morte' => $reference, 'livraison' => $livraison, 'relancee' => true];
     }
 
+    /** @return array<string,mixed>|null */
+    public function resoudreLettreMorte(string $reference): ?array
+    {
+        $st = $this->magasin->prepare('SELECT * FROM lettre_morte_evenement WHERE reference = ?');
+        $st->execute([$reference]);
+        $l = $st->fetch();
+
+        return $l === false ? null : $l + ['cloturee' => $this->lettreMorteEstCloturee($reference)];
+    }
+
+    /**
+     * La table `lettre_morte_evenement` est en ajout seul (partie 2) : la
+     * clôture ne modifie jamais cette ligne. Elle s'exprime comme une
+     * nouvelle `tentative_livraison` de type `CLOTURE` sur la livraison
+     * concernée — une relance ultérieure (type `RELANCE`) redevient
+     * naturellement la tentative la plus récente et lève la clôture.
+     *
+     * @param array<string,mixed> $dossier
+     * @return array<string,mixed>
+     */
+    public function cloturerLettreMorte(string $reference, array $dossier): array
+    {
+        foreach (['acteur', 'motif'] as $champ) {
+            if (trim((string) ($dossier[$champ] ?? '')) === '') {
+                return $this->refus('CHAMP_MANQUANT', "champ obligatoire absent : {$champ}");
+            }
+        }
+        $st = $this->magasin->prepare('SELECT * FROM lettre_morte_evenement WHERE reference = ?');
+        $st->execute([$reference]);
+        $lm = $st->fetch();
+        if ($lm === false) {
+            return $this->refus('LETTRE_MORTE_INCONNUE', "lettre morte `{$reference}` inconnue");
+        }
+        if ($this->lettreMorteEstCloturee($reference)) {
+            return ['lettre_morte' => $reference, 'cloturee' => true, 'idempotent' => true];
+        }
+        $livraison = (string) $lm['livraison_reference'];
+        $ligneLivraison = $this->ligneLivraison($livraison);
+        if (($ligneLivraison['etat'] ?? null) !== 'LETTRE_MORTE') {
+            return $this->refus('ETAT_INCOMPATIBLE', 'seule une lettre morte non relancée peut être clôturée');
+        }
+        $this->ajouterTentative($livraison, 'CLOTURE', 'CLOTURE', null, (string) $dossier['motif']);
+
+        return ['lettre_morte' => $reference, 'cloturee' => true, 'idempotent' => false];
+    }
+
+    private function lettreMorteEstCloturee(string $reference): bool
+    {
+        $st = $this->magasin->prepare('SELECT livraison_reference FROM lettre_morte_evenement WHERE reference = ?');
+        $st->execute([$reference]);
+        $livraison = $st->fetchColumn();
+        if ($livraison === false) {
+            return false;
+        }
+        $st2 = $this->magasin->prepare(
+            'SELECT resultat FROM tentative_livraison WHERE livraison_reference = ? ORDER BY numero DESC LIMIT 1'
+        );
+        $st2->execute([(string) $livraison]);
+
+        return $st2->fetchColumn() === 'CLOTURE';
+    }
+
     /** @return list<array<string,mixed>> */
     public function listerLettresMortes(?string $abonnement = null): array
     {

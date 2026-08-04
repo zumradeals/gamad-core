@@ -33,6 +33,8 @@ final class PolitiqueEvenements
     public const ACTION_LIVRAISON_REFUSER = 'evenement.livraison.refuser';
     public const ACTION_REJEU_DEMANDER = 'evenement.rejeu.demander';
     public const ACTION_LETTRE_MORTE_RELANCER = 'evenement.lettre-morte.relancer';
+    /** Action ajoutée par la couche API (partie 4) : la fiche ne listait que la relance. */
+    public const ACTION_LETTRE_MORTE_CLOTURER = 'evenement.lettre-morte.cloturer';
     public const ACTION_DIAGNOSTIC_LIRE = 'evenement.diagnostic.lire';
 
     public const CLASSIFICATIONS = [

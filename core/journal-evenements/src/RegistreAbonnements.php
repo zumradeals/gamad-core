@@ -198,6 +198,57 @@ final class RegistreAbonnements
         return ['abonnement' => $abonnement, 'realm' => $realmReference, 'idempotent' => false];
     }
 
+    /**
+     * Seuls les paramètres explicitement révisables se modifient, et
+     * seulement tant que l'abonnement reste en `PREPARATION` (partie 4 §5) :
+     * le nom, l'organisation déclarée et les bornes de lot/bail/tentatives
+     * (toujours plafonnées par `PolitiqueEvenements`). Types, producteurs,
+     * realms et cycle de vie ont leurs propres commandes dédiées.
+     *
+     * @param array<string,mixed> $donnees
+     * @return array<string,mixed>
+     */
+    public function modifierAbonnement(string $abonnement, array $donnees): array
+    {
+        $g = $this->exigerPreparation($abonnement);
+        if (isset($g['refus'])) {
+            return $g;
+        }
+
+        $champs = [];
+        $args = [];
+        if (array_key_exists('nom', $donnees) && trim((string) $donnees['nom']) !== '') {
+            $champs[] = 'nom = ?';
+            $args[] = (string) $donnees['nom'];
+        }
+        if (array_key_exists('organisation_reference', $donnees)) {
+            $champs[] = 'organisation_reference = ?';
+            $args[] = $this->nullable($donnees['organisation_reference']);
+        }
+        if (array_key_exists('taille_lot_max', $donnees)) {
+            $champs[] = 'taille_lot_max = ?';
+            $args[] = min((int) $donnees['taille_lot_max'], PolitiqueEvenements::TAILLE_LOT_MAX);
+        }
+        if (array_key_exists('duree_bail_secondes', $donnees)) {
+            $champs[] = 'duree_bail_secondes = ?';
+            $args[] = min((int) $donnees['duree_bail_secondes'], PolitiqueEvenements::BAIL_SECONDES_MAX);
+        }
+        if (array_key_exists('tentatives_max', $donnees)) {
+            $champs[] = 'tentatives_max = ?';
+            $args[] = min((int) $donnees['tentatives_max'], PolitiqueEvenements::TENTATIVES_MAX_PLAFOND);
+        }
+        if ($champs === []) {
+            return $this->refus('AUCUNE_MODIFICATION', 'aucun champ révisable fourni');
+        }
+
+        $args[] = $abonnement;
+        $this->magasin->prepare(
+            'UPDATE abonnement_evenement SET ' . implode(', ', $champs) . ' WHERE reference = ?'
+        )->execute($args);
+
+        return $this->resoudreAbonnement($abonnement) ?? [];
+    }
+
     /** @param array<string,mixed> $dossier @return array<string,mixed> */
     public function activerAbonnement(string $abonnement, array $dossier): array
     {

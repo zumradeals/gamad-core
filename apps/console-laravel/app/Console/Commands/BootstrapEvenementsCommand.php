@@ -56,6 +56,7 @@ final class BootstrapEvenementsCommand extends Command
         PolitiqueEvenements::ACTION_LIVRAISON_REFUSER,
         PolitiqueEvenements::ACTION_REJEU_DEMANDER,
         PolitiqueEvenements::ACTION_LETTRE_MORTE_RELANCER,
+        PolitiqueEvenements::ACTION_LETTRE_MORTE_CLOTURER,
         PolitiqueEvenements::ACTION_DIAGNOSTIC_LIRE,
     ];
 
