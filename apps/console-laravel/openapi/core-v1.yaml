@@ -18,6 +18,7 @@ tags:
   - name: Produits
   - name: Contrats
   - name: Vocabulaire
+  - name: Événements
 paths:
   /health/live:
     get:
@@ -3394,6 +3395,559 @@ paths:
         "404": { description: Terme inconnu. }
         "422": { description: Un usage obligatoire actif en dépend encore. }
         "503": { description: Une dépendance requise est indisponible. }
+  /evenements/publications:
+    post:
+      tags: [Événements]
+      operationId: publierEvenement
+      summary: Publie un événement commun dans le journal central (CAP-CORE-014).
+      security: [{bearerSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type_evenement
+                - contrat_reference
+                - contrat_version
+                - source_reference
+                - realm_reference
+                - finalite_reference
+                - correlation_id
+                - idempotence_reference
+                - survenu_le
+                - classification
+              properties:
+                type_evenement: { type: string, maxLength: 128 }
+                contrat_reference: { type: string, maxLength: 64 }
+                contrat_version: { type: string, maxLength: 32 }
+                producteur_capacite_reference: { type: string, maxLength: 64, nullable: true }
+                producteur_produit_reference: { type: string, maxLength: 64, nullable: true }
+                source_reference: { type: string, maxLength: 64 }
+                realm_reference: { type: string, maxLength: 64 }
+                finalite_reference: { type: string, maxLength: 255 }
+                sujet_type: { type: string, maxLength: 64, nullable: true }
+                sujet_reference: { type: string, maxLength: 64, nullable: true }
+                correlation_id: { type: string, maxLength: 64 }
+                causation_reference: { type: string, maxLength: 64, nullable: true }
+                idempotence_reference: { type: string, maxLength: 128 }
+                survenu_le: { type: string, format: date-time }
+                classification: { type: string, enum: [PUBLIC_ECOSYSTEME, INTERNE, CONFIDENTIEL, RESTREINT, SECRET_CORE] }
+                charge: { type: object, nullable: true }
+                charge_empreinte: { type: string, nullable: true }
+      responses:
+        "201": { description: Première acceptation de l'événement. }
+        "200": { description: Rejeu idempotent déjà accepté (même idempotence_reference). }
+        "401": { description: Session invalide. }
+        "403": { description: "CAP-CORE-004 refuse (autorisation ou PRODUCTEUR_NON_DECLARE)." }
+        "404": { description: "Contrat, source ou realm inconnu ou inactif (CONTRAT_INCONNU, SOURCE_INACTIVE, REALM_INACTIF)." }
+        "409": { description: VERSION_INCOMPATIBLE. }
+        "422": { description: "Enveloppe ou charge invalide (ENVELOPPE_INVALIDE, CONTRAT_TYPE_INVALIDE, FINALITE_ABSENTE, CHARGE_INVALIDE)." }
+        "503": { description: Journal central indisponible ; l'intention reste tracée sans écriture confirmée. }
+  /evenements/publications/{producteur}/{idempotence}:
+    get:
+      tags: [Événements]
+      operationId: resoudrePublicationEvenement
+      summary: Résout le reçu de publication d'un producteur pour une référence d'idempotence donnée.
+      security: [{bearerSession: []}]
+      parameters:
+        - { name: producteur, in: path, required: true, schema: { type: string, maxLength: 64 } }
+        - { name: idempotence, in: path, required: true, schema: { type: string, maxLength: 128 } }
+      responses:
+        "200": { description: Reçu de publication. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+        "404": { description: PUBLICATION_INCONNUE. }
+  /evenements:
+    get:
+      tags: [Événements]
+      operationId: listerEvenements
+      summary: Liste les événements visibles, filtrés et paginés (aucun filtre approximatif).
+      security: [{bearerSession: []}]
+      parameters:
+        - { name: type, in: query, schema: { type: string, maxLength: 128 } }
+        - { name: contrat, in: query, schema: { type: string, maxLength: 64 } }
+        - { name: producteur, in: query, schema: { type: string, maxLength: 64 } }
+        - { name: realm, in: query, schema: { type: string, maxLength: 64 } }
+        - { name: sujet, in: query, schema: { type: string, maxLength: 64 } }
+        - { name: correlation, in: query, schema: { type: string, maxLength: 64 } }
+        - { name: sequence_debut, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: sequence_fin, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: limite, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 50 } }
+        - { name: decalage, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        "200": { description: Page d'événements visibles (enveloppe seule, sans charge). }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+  /evenements/{reference}:
+    get:
+      tags: [Événements]
+      operationId: resoudreEvenement
+      summary: Fiche d'un événement (enveloppe), sans sa charge.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Enveloppe de l'événement. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+        "404": { description: EVENEMENT_INCONNU. }
+  /evenements/{reference}/charge:
+    get:
+      tags: [Événements]
+      operationId: resoudreChargeEvenement
+      summary: Charge d'un événement, réservée à l'autorité, au producteur ou à un consommateur destinataire.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: "Charge, ou état explicite CHARGE_EXPIREE si purgée." }
+        "401": { description: Session invalide. }
+        "403": { description: "CAP-CORE-004 refuse la lecture, ou CHARGE_NON_AUTORISEE (acteur non destinataire)." }
+        "404": { description: EVENEMENT_INCONNU. }
+  /abonnements:
+    get:
+      tags: [Événements]
+      operationId: listerAbonnements
+      summary: Liste les abonnements du consommateur courant (tous pour l'autorité).
+      security: [{bearerSession: []}]
+      responses:
+        "200": { description: Liste d'abonnements. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+    post:
+      tags: [Événements]
+      operationId: creerAbonnement
+      summary: Crée un abonnement en PREPARATION, consommateur résolu depuis la session.
+      security: [{bearerSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nom, realm_reference, finalite_reference, mode_livraison]
+              properties:
+                nom: { type: string, maxLength: 255 }
+                consommateur_capacite_reference: { type: string, maxLength: 64, nullable: true }
+                consommateur_produit_reference: { type: string, maxLength: 64, nullable: true }
+                organisation_reference: { type: string, maxLength: 64, nullable: true }
+                realm_reference: { type: string, maxLength: 64 }
+                finalite_reference: { type: string, maxLength: 255 }
+                mode_livraison: { type: string, enum: [PULL_API, PUSH_HTTPS] }
+                taille_lot_max: { type: integer, minimum: 1, nullable: true }
+                duree_bail_secondes: { type: integer, minimum: 1, nullable: true }
+                tentatives_max: { type: integer, minimum: 1, nullable: true }
+      responses:
+        "201": { description: Abonnement créé en PREPARATION. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la création. }
+        "404": { description: REALM_INACTIF. }
+        "409": { description: REFERENCE_DEJA_UTILISEE. }
+        "422": { description: "CHAMP_MANQUANT, CONSOMMATEUR_ABSENT, CONSOMMATEUR_AMBIGU ou MODE_INCONNU." }
+        "503": { description: Dépendance requise indisponible. }
+  /abonnements/{reference}:
+    get:
+      tags: [Événements]
+      operationId: resoudreAbonnement
+      summary: Fiche d'un abonnement, réservée à son propriétaire ou à l'autorité.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Fiche de l'abonnement. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+        "404": { description: "ABONNEMENT_INCONNU (référence absente ou acteur non propriétaire)." }
+    patch:
+      tags: [Événements]
+      operationId: modifierAbonnement
+      summary: Modifie un abonnement, seulement en PREPARATION sauf paramètres révisables.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom: { type: string, maxLength: 255, nullable: true }
+                organisation_reference: { type: string, maxLength: 64, nullable: true }
+                taille_lot_max: { type: integer, minimum: 1, nullable: true }
+                duree_bail_secondes: { type: integer, minimum: 1, nullable: true }
+                tentatives_max: { type: integer, minimum: 1, nullable: true }
+      responses:
+        "200": { description: Abonnement modifié. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la modification. }
+        "404": { description: ABONNEMENT_INCONNU. }
+        "409": { description: ETAT_INCOMPATIBLE. }
+        "422": { description: AUCUNE_MODIFICATION. }
+  /abonnements/{reference}/types:
+    post:
+      tags: [Événements]
+      operationId: ajouterTypeAbonnement
+      summary: Ajoute un type d'événement (par contrat) à un abonnement en PREPARATION.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contrat_reference, type_evenement]
+              properties:
+                contrat_reference: { type: string, maxLength: 64 }
+                type_evenement: { type: string, maxLength: 128 }
+                version_contrainte: { type: string, maxLength: 32, nullable: true }
+      responses:
+        "201": { description: Type ajouté à l'abonnement. }
+        "401": { description: Session invalide. }
+        "403": { description: "CAP-CORE-004 refuse, ou CONSOMMATEUR_NON_DECLARE." }
+        "404": { description: "ABONNEMENT_INCONNU ou CONTRAT_INACTIF." }
+        "409": { description: ETAT_INCOMPATIBLE. }
+        "422": { description: LIMITE_ATTEINTE (nombre maximal de types par abonnement). }
+  /abonnements/{reference}/producteurs:
+    post:
+      tags: [Événements]
+      operationId: ajouterProducteurAbonnement
+      summary: Ajoute un producteur autorisé à un abonnement en PREPARATION.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [producteur_reference]
+              properties:
+                producteur_reference: { type: string, maxLength: 64 }
+      responses:
+        "201": { description: Producteur ajouté à l'abonnement. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'ajout. }
+        "404": { description: ABONNEMENT_INCONNU. }
+        "409": { description: ETAT_INCOMPATIBLE. }
+        "422": { description: "PRODUCTEUR_INVALIDE ou LIMITE_ATTEINTE." }
+  /abonnements/{reference}/realms:
+    post:
+      tags: [Événements]
+      operationId: ajouterRealmAbonnement
+      summary: Ajoute un realm (avec portée) à un abonnement en PREPARATION.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [realm_reference]
+              properties:
+                realm_reference: { type: string, maxLength: 64 }
+                portee: { type: string, enum: [EXACT, DESCENDANTS_EXPLICITES], nullable: true }
+      responses:
+        "201": { description: Realm ajouté à l'abonnement. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'ajout. }
+        "404": { description: "ABONNEMENT_INCONNU ou REALM_INACTIF." }
+        "409": { description: ETAT_INCOMPATIBLE. }
+        "422": { description: "PORTEE_INCONNUE ou LIMITE_ATTEINTE." }
+  /abonnements/{reference}/activation:
+    post:
+      tags: [Événements]
+      operationId: activerAbonnement
+      summary: Active un abonnement, exige au moins un type, un producteur et un realm.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Abonnement → ACTIF. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'activation. }
+        "404": { description: ABONNEMENT_INCONNU. }
+        "409": { description: ETAT_INCOMPATIBLE. }
+        "422": { description: "AUCUN_TYPE, AUCUN_PRODUCTEUR ou AUCUN_REALM." }
+  /abonnements/{reference}/suspension:
+    post:
+      tags: [Événements]
+      operationId: suspendreAbonnement
+      summary: Suspend un abonnement actif ; il cesse de recevoir de nouvelles livraisons.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Abonnement → SUSPENDU. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la suspension. }
+        "404": { description: ABONNEMENT_INCONNU. }
+        "409": { description: ETAT_INCOMPATIBLE. }
+  /abonnements/{reference}/retrait:
+    post:
+      tags: [Événements]
+      operationId: retirerAbonnement
+      summary: Retire un abonnement, définitif.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Abonnement → RETIRE. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse le retrait. }
+        "404": { description: ABONNEMENT_INCONNU. }
+  /abonnements/{reference}/retard:
+    get:
+      tags: [Événements]
+      operationId: resoudreRetardAbonnement
+      summary: Retard de consommation de l'abonnement (curseur vs tête du journal).
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Mesure de retard. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+        "404": { description: ABONNEMENT_INCONNU. }
+  /abonnements/{reference}/curseur:
+    get:
+      tags: [Événements]
+      operationId: resoudreCurseurAbonnement
+      summary: Position du curseur de consommation de l'abonnement.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Curseur courant. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+        "404": { description: ABONNEMENT_INCONNU. }
+  /abonnements/{reference}/livraisons:
+    get:
+      tags: [Événements]
+      operationId: obtenirLivraisons
+      summary: Lit un lot de livraisons disponibles sous bail (mode PULL).
+      security: [{bearerSession: []}]
+      parameters:
+        - $ref: "#/components/parameters/Reference"
+        - { name: limite, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 20 } }
+        - { name: bail_secondes, in: query, schema: { type: integer, minimum: 1, maximum: 3600 } }
+      responses:
+        "200": { description: Lot de livraisons, bail, enveloppes et charges autorisées. }
+        "401": { description: Session invalide. }
+        "403": { description: "CAP-CORE-004 refuse, ou CONSOMMATEUR_NON_PROPRIETAIRE." }
+        "404": { description: ABONNEMENT_INCONNU. }
+        "409": { description: ABONNEMENT_INACTIF. }
+  /abonnements/{reference}/livraisons/accuses:
+    post:
+      tags: [Événements]
+      operationId: accuserLivraisons
+      summary: Accuse réception d'un lot de livraisons sous un bail valide (idempotent).
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bail, livraisons]
+              properties:
+                bail: { type: string, maxLength: 64 }
+                livraisons: { type: array, minItems: 1, items: { type: string, maxLength: 64 } }
+      responses:
+        "200": { description: Livraisons accusées ; curseur avancé sur la suite contiguë. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'accusé. }
+        "404": { description: ABONNEMENT_INCONNU. }
+  /abonnements/{reference}/livraisons/refus-temporaires:
+    post:
+      tags: [Événements]
+      operationId: refuserLivraisonsTemporairement
+      summary: Refuse temporairement un lot de livraisons ; déclenche une nouvelle tentative bornée.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bail, livraisons, code_erreur]
+              properties:
+                bail: { type: string, maxLength: 64 }
+                livraisons: { type: array, minItems: 1, items: { type: string, maxLength: 64 } }
+                code_erreur: { type: string, enum: [DEPENDANCE_INDISPONIBLE, ERREUR_INTERNE_CONSOMMATEUR] }
+                delai_secondes: { type: integer, minimum: 1, nullable: true }
+      responses:
+        "200": { description: Refus temporaire enregistré par livraison. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse. }
+        "404": { description: ABONNEMENT_INCONNU. }
+  /abonnements/{reference}/livraisons/refus-definitifs:
+    post:
+      tags: [Événements]
+      operationId: refuserLivraisonsDefinitivement
+      summary: Refuse définitivement un lot de livraisons ; peut aboutir en lettre morte au plafond.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bail, livraisons, code_erreur, motif]
+              properties:
+                bail: { type: string, maxLength: 64 }
+                livraisons: { type: array, minItems: 1, items: { type: string, maxLength: 64 } }
+                code_erreur: { type: string, enum: [CONTRAT_INCONNU, VERSION_INCOMPATIBLE, CHARGE_INVALIDE, ERREUR_METIER_DEFINITIVE] }
+                motif: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Refus définitif enregistré par livraison. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse. }
+        "404": { description: ABONNEMENT_INCONNU. }
+  /rejeux:
+    get:
+      tags: [Événements]
+      operationId: listerRejeux
+      summary: Liste les demandes de rejeu, éventuellement filtrées par abonnement.
+      security: [{bearerSession: []}]
+      parameters:
+        - { name: abonnement, in: query, schema: { type: string, maxLength: 64 } }
+      responses:
+        "200": { description: Liste des demandes de rejeu. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+    post:
+      tags: [Événements]
+      operationId: demanderRejeu
+      summary: Demande un rejeu borné (bornes obligatoires), en DEMANDEE.
+      security: [{bearerSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [abonnement_reference, motif]
+              properties:
+                abonnement_reference: { type: string, maxLength: 64 }
+                motif: { type: string, maxLength: 500 }
+                sequence_debut: { type: integer, minimum: 0, nullable: true }
+                sequence_fin: { type: integer, minimum: 0, nullable: true }
+                date_debut: { type: string, format: date-time, nullable: true }
+                date_fin: { type: string, format: date-time, nullable: true }
+                types: { type: array, items: { type: string, maxLength: 128 }, nullable: true }
+      responses:
+        "201": { description: Demande de rejeu créée en DEMANDEE. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la demande. }
+        "404": { description: ABONNEMENT_INCONNU. }
+        "422": { description: "CHAMP_MANQUANT, BORNES_ABSENTES, BORNES_INVALIDES ou VOLUME_EXCESSIF (plafond 10 000)." }
+  /rejeux/{reference}:
+    get:
+      tags: [Événements]
+      operationId: resoudreRejeu
+      summary: Fiche d'une demande de rejeu.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Fiche de la demande de rejeu. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+        "404": { description: DEMANDE_INCONNUE. }
+  /rejeux/{reference}/validation:
+    post:
+      tags: [Événements]
+      operationId: validerRejeu
+      summary: Valide une demande de rejeu DEMANDEE, transition gouvernée vers VALIDEE.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Demande → VALIDEE. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la validation. }
+        "404": { description: DEMANDE_INCONNUE. }
+        "409": { description: ETAT_INCOMPATIBLE. }
+        "422": { description: VOLUME_EXCESSIF. }
+  /rejeux/{reference}/annulation:
+    post:
+      tags: [Événements]
+      operationId: annulerRejeu
+      summary: Annule une demande de rejeu avant exécution.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Demande → ANNULEE. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse l'annulation. }
+        "404": { description: DEMANDE_INCONNUE. }
+        "409": { description: ETAT_INCOMPATIBLE. }
+  /lettres-mortes:
+    get:
+      tags: [Événements]
+      operationId: listerLettresMortes
+      summary: Liste les lettres mortes, éventuellement filtrées par abonnement.
+      security: [{bearerSession: []}]
+      parameters:
+        - { name: abonnement, in: query, schema: { type: string, maxLength: 64 } }
+      responses:
+        "200": { description: Liste des lettres mortes. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+  /lettres-mortes/{reference}:
+    get:
+      tags: [Événements]
+      operationId: resoudreLettreMorte
+      summary: Fiche d'une lettre morte, avec l'historique de tentatives.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      responses:
+        "200": { description: Fiche de la lettre morte. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la lecture. }
+        "404": { description: LETTRE_MORTE_INCONNUE. }
+  /lettres-mortes/{reference}/relance:
+    post:
+      tags: [Événements]
+      operationId: relancerLettreMorte
+      summary: Relance une lettre morte, gouvernée et motivée ; aucun effacement.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motif]
+              properties:
+                motif: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Lettre morte relancée ; livraison de nouveau disponible. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la relance. }
+        "404": { description: LETTRE_MORTE_INCONNUE. }
+        "422": { description: CHAMP_MANQUANT. }
+  /lettres-mortes/{reference}/cloture:
+    post:
+      tags: [Événements]
+      operationId: cloturerLettreMorte
+      summary: Clôture une lettre morte, motivée ; aucun effacement.
+      security: [{bearerSession: []}]
+      parameters: [{$ref: "#/components/parameters/Reference"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motif]
+              properties:
+                motif: { type: string, maxLength: 500 }
+      responses:
+        "200": { description: Lettre morte clôturée. }
+        "401": { description: Session invalide. }
+        "403": { description: CAP-CORE-004 refuse la clôture. }
+        "404": { description: LETTRE_MORTE_INCONNUE. }
+        "409": { description: ETAT_INCOMPATIBLE. }
+        "422": { description: CHAMP_MANQUANT. }
 components:
   securitySchemes:
     bearerSession:
