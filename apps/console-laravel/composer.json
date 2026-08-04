@@ -44,7 +44,8 @@
             "Gamad\\JournalOperationnel\\": "../../core/journal-operationnel/src/",
             "Gamad\\JournalEvenements\\": "../../core/journal-evenements/src/",
             "Gamad\\EvenementsSortants\\": "../../core/evenements-sortants/src/",
-            "Gamad\\RegistreSecretsCles\\": "../../core/registre-secrets-cles/src/"
+            "Gamad\\RegistreSecretsCles\\": "../../core/registre-secrets-cles/src/",
+            "Gamad\\RegistrePreuves\\": "../../core/registre-preuves/src/"
         }
     },
     "autoload-dev": {
