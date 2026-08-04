@@ -19,6 +19,21 @@ final class PolitiqueEvenements
     public const POLITIQUE = 'POL-EVENEMENTS-V1';
     public const SOURCE = 'CAP-CORE-014 — journal des événements';
     public const CAPACITE = 'CAP-CORE-014';
+    public const AUTORITE = 'AUT-GAMAD-001';
+
+    /** Actions minimales de la politique d'administration (fiche partie 4 §13). */
+    public const ACTION_PUBLIER = 'evenement.publier';
+    public const ACTION_LIRE = 'evenement.lire';
+    public const ACTION_ABONNEMENT_CREER = 'evenement.abonnement.creer';
+    public const ACTION_ABONNEMENT_MODIFIER = 'evenement.abonnement.modifier';
+    public const ACTION_ABONNEMENT_ACTIVER = 'evenement.abonnement.activer';
+    public const ACTION_ABONNEMENT_SUSPENDRE = 'evenement.abonnement.suspendre';
+    public const ACTION_ABONNEMENT_RETIRER = 'evenement.abonnement.retirer';
+    public const ACTION_LIVRAISON_ACCUSER = 'evenement.livraison.accuser';
+    public const ACTION_LIVRAISON_REFUSER = 'evenement.livraison.refuser';
+    public const ACTION_REJEU_DEMANDER = 'evenement.rejeu.demander';
+    public const ACTION_LETTRE_MORTE_RELANCER = 'evenement.lettre-morte.relancer';
+    public const ACTION_DIAGNOSTIC_LIRE = 'evenement.diagnostic.lire';
 
     public const CLASSIFICATIONS = [
         'PUBLIC_ECOSYSTEME', 'INTERNE', 'CONFIDENTIEL', 'RESTREINT', 'SECRET_CORE',
