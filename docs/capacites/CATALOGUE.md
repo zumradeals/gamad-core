@@ -31,7 +31,7 @@ source la plus fine pour qui veut savoir ce qui existe réellement derrière un
 | CAP-CORE-013 | Common Audit | Conserver les traces transversales autorisées | `core/journal-operationnel` | `GO` — chaîne append-only vérifiée, trigger PostgreSQL |
 | CAP-CORE-014 | Event Journal | Publier et consommer les événements communs | `core/journal-evenements`, `core/evenements-sortants`, bootstrap idempotent (`POL-EVENEMENTS-V1`, huit contrats techniques, huit vocabulaires), API v1 `/evenements*` `/abonnements*` `/rejeux*` `/lettres-mortes*`, écran Événements | `GO` — journal persistant gouverné, chaîné, testé (115 épreuves SQLite/HTTP/console/outbox, exercice PostgreSQL réel local le 4 août 2026 sur douze magasins) ; un seul producteur réel raccordé (CAP-CORE-011) et aucun satellite consommateur réel — voir `docs/capacites/CAP-CORE-014-event-journal.md` |
 | CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | empreinte de baseline, chaîne du journal | `NO GO` — pas de service d’empreintes général |
-| CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | aucun ; secrets hors dépôt | `NO GO` |
+| CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | `core/registre-secrets-cles`, bootstrap idempotent (`POL-SECRETS-CLES-V1`, neuf contrats techniques, inventaire réel de dix-sept références sans valeur), API v1 `/secrets-cles*` `/fournisseurs-secrets*` `/rotations-secrets*`, écran Secrets & clés, trois fournisseurs bornés (fichier 0600, credential systemd, transition) | `GO` — registre de gouvernance persistant, testé (88 épreuves SQLite/HTTP, exercice PostgreSQL réel local le 4 août 2026 sur treize magasins) ; jamais de valeur secrète stockée ni exposée ; rotation `APP_KEY` non exécutée en production (mécanisme éprouvé sur un secret pilote), trois fournisseurs (GPG/SSH/externe) non livrés, aucun consommateur réel migré — voir `docs/capacites/CAP-CORE-016-secrets-keys.md` |
 | CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `NO GO` |
 | CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `NO GO` |
 | CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation`, écran Continuité | `GO` — copie chiffrée hors machine sur destination réelle, TLS épinglé, et exercice de restauration complet exécuté depuis cette copie le 1er août 2026 |
@@ -149,12 +149,26 @@ par bail avec accusés idempotents et lettres mortes, et rejeu borné
 reprenable par curseur. Un seul producteur réel est raccordé (CAP-CORE-011)
 et aucun satellite consommateur réel ne l’est encore — la preuve de
 consommation repose sur le parcours HTTP de conformité livré dans ce
-chantier, pas sur une intégration de production. Les chantiers ouverts, par
-ordre d’utilité :
+chantier, pas sur une intégration de production. CAP-CORE-016 est livrée à
+son tour : les secrets et clés du Core possèdent désormais un registre de
+gouvernance persistant — références, versions à cycle complet, usages,
+plans et exécutions de rotation idempotentes, compromissions bloquantes —
+sans jamais conserver le matériel secret lui-même. Trois fournisseurs
+bornés (fichier `0600`, credential systemd, variable de transition) sur six
+types déclarés, dix-sept références réelles inventoriées sans valeur ;
+aucune rotation `APP_KEY`, PostgreSQL, GPG, SSH ou FTP n’a encore été
+exécutée en production, et aucun consommateur réel (comme la sauvegarde
+hors machine) n’est encore migré vers ce registre — c’était un préalable
+obligatoire avant tout autre chantier, désormais posé. Les chantiers
+ouverts, par ordre d’utilité :
 
 ```text
 intégration réelle de GamaDrive V2 sur CAP-CORE-022
 → premier satellite ou producteur réel raccordé à CAP-CORE-014
+→ premier consommateur réel raccordé à CAP-CORE-016 (par exemple la copie
+  hors machine CAP-CORE-019) et rotation APP_KEY réellement exécutée
+→ CAP-CORE-015 Integrity Proofs, désormais consommateur naturel des clés
+  gouvernées par CAP-CORE-016
 → CAP-CORE-021 Matching, désormais consommateur naturel de CAP-CORE-006,
   CAP-CORE-009, CAP-CORE-010 et CAP-CORE-012
 ```
