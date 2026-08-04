@@ -44,13 +44,14 @@ declare -A connexions=(
     [realms]="$(connexion "${GAMAD_REALMS_PGSERVICE:-}" "${GAMAD_REALMS_PGDATABASE:-}")"
     [journal]="$(connexion "${GAMAD_JOURNAL_PGSERVICE:-}" "${GAMAD_JOURNAL_PGDATABASE:-}")"
     [evenements]="$(connexion "${GAMAD_EVENEMENTS_PGSERVICE:-}" "${GAMAD_EVENEMENTS_PGDATABASE:-}")"
+    [secrets]="$(connexion "${GAMAD_SECRETS_PGSERVICE:-}" "${GAMAD_SECRETS_PGDATABASE:-}")"
 )
 
 horodatage="$(date -u +%Y%m%dT%H%M%SZ)"
 lot="${GAMAD_BACKUP_DIR%/}/${horodatage}"
 mkdir -p "$lot"
 
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets; do
     destination="${lot}/${cible}.dump"
     pg_dump \
         --dbname="${connexions[$cible]}" \
@@ -63,7 +64,7 @@ done
 
 (
     cd "$lot"
-    sha256sum index.dump acces.dump identites.dump produits.dump sources.dump politiques.dump contrats.dump vocabulaire.dump organisations.dump realms.dump journal.dump evenements.dump > SHA256SUMS
+    sha256sum index.dump acces.dump identites.dump produits.dump sources.dump politiques.dump contrats.dump vocabulaire.dump organisations.dump realms.dump journal.dump evenements.dump secrets.dump > SHA256SUMS
 )
 
 echo "Sauvegarde créée : $lot"
