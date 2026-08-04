@@ -43,6 +43,7 @@ declare -A connexions=(
     [journal]="$(connexion "${GAMAD_RESTORE_JOURNAL_PGSERVICE:-}" "${GAMAD_RESTORE_JOURNAL_PGDATABASE:-}")"
     [evenements]="$(connexion "${GAMAD_RESTORE_EVENEMENTS_PGSERVICE:-}" "${GAMAD_RESTORE_EVENEMENTS_PGDATABASE:-}")"
     [secrets]="$(connexion "${GAMAD_RESTORE_SECRETS_PGSERVICE:-}" "${GAMAD_RESTORE_SECRETS_PGDATABASE:-}")"
+    [preuves]="$(connexion "${GAMAD_RESTORE_PREUVES_PGSERVICE:-}" "${GAMAD_RESTORE_PREUVES_PGDATABASE:-}")"
 )
 
 # `pg_restore --clean` détruit ce qu'il trouve. La confirmation annonce des
@@ -66,6 +67,7 @@ declare -a production=(
     "${GAMAD_JOURNAL_PGDATABASE:-}"
     "${GAMAD_EVENEMENTS_PGDATABASE:-}"
     "${GAMAD_SECRETS_PGDATABASE:-}"
+    "${GAMAD_PREUVES_PGDATABASE:-}"
     "${GAMAD_INDEX_PGSERVICE:-}"
     "${GAMAD_ACCESS_PGSERVICE:-}"
     "${GAMAD_IDENTITY_PGSERVICE:-}"
@@ -79,8 +81,9 @@ declare -a production=(
     "${GAMAD_JOURNAL_PGSERVICE:-}"
     "${GAMAD_EVENEMENTS_PGSERVICE:-}"
     "${GAMAD_SECRETS_PGSERVICE:-}"
+    "${GAMAD_PREUVES_PGSERVICE:-}"
 )
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets preuves; do
     for interdite in "${production[@]}"; do
         [[ -z "$interdite" ]] && continue
         if [[ "${connexions[$cible]}" == *"=${interdite}" ]]; then
@@ -96,7 +99,7 @@ done
     sha256sum --check SHA256SUMS
 )
 
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets preuves; do
     pg_restore \
         --dbname="${connexions[$cible]}" \
         --clean \
@@ -144,5 +147,11 @@ psql "${connexions[secrets]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS secrets_versions FROM secret_version'
 psql "${connexions[secrets]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS secrets_usages FROM secret_usage'
+psql "${connexions[preuves]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS preuves FROM preuve'
+psql "${connexions[preuves]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS preuves_empreintes FROM preuve_empreinte'
+psql "${connexions[preuves]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS preuves_signatures FROM preuve_signature'
 
-echo "Exercice de restauration terminé sur les treize cibles isolées."
+echo "Exercice de restauration terminé sur les quatorze cibles isolées."

@@ -60,6 +60,8 @@ jobs:
             garde: core/evenements-sortants/tests/outbox_p3.php
           - capacite: CAP-CORE-016 (secrets et clés)
             garde: core/registre-secrets-cles/tests/secrets_cles_p3.php
+          - capacite: CAP-CORE-015 (preuves d'intégrité)
+            garde: core/registre-preuves/tests/preuves_p3.php
 
     steps:
       - name: Récupérer le dépôt
@@ -69,7 +71,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: pdo, pdo_sqlite
+          extensions: pdo, pdo_sqlite, sodium
 
       - name: Exécuter la garde
         run: php ${{ matrix.garde }}
@@ -86,7 +88,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: pdo, pdo_sqlite
+          extensions: pdo, pdo_sqlite, sodium
 
       - name: Éprouver le socle opérationnel et le journal append-only
         run: php core/journal-operationnel/tests/fondation_operationnelle_p3.php
@@ -198,6 +200,9 @@ jobs:
       - name: Éprouver l'API des secrets et clés
         run: php apps/console-laravel/tests/Integration/secrets_cles_v1_p1.php
 
+      - name: Éprouver l'API des preuves d'intégrité
+        run: php apps/console-laravel/tests/Integration/preuves_v1_p1.php
+
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php
 
@@ -228,7 +233,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: pdo, pdo_sqlite, pdo_pgsql
+          extensions: pdo, pdo_sqlite, sodium, pdo_pgsql
 
       - name: Installer le monolithe Laravel
         working-directory: apps/console-laravel
