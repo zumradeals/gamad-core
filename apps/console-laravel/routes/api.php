@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\ContratController;
 use App\Http\Controllers\Api\V1\EvenementController;
 use App\Http\Controllers\Api\V1\FederationController;
 use App\Http\Controllers\Api\V1\FondationController;
+use App\Http\Controllers\Api\V1\FournisseurSecretController;
 use App\Http\Controllers\Api\V1\IdentiteController;
 use App\Http\Controllers\Api\V1\LettreMorteController;
 use App\Http\Controllers\Api\V1\OrganisationController;
@@ -16,6 +17,8 @@ use App\Http\Controllers\Api\V1\PolitiqueController;
 use App\Http\Controllers\Api\V1\ProduitController;
 use App\Http\Controllers\Api\V1\RealmController;
 use App\Http\Controllers\Api\V1\RejeuController;
+use App\Http\Controllers\Api\V1\RotationSecretController;
+use App\Http\Controllers\Api\V1\SecretController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Api\V1\SourceController;
 use App\Http\Controllers\Api\V1\VocabulaireController;
@@ -410,6 +413,44 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         Route::post('/lettres-mortes/{reference}/relance', [LettreMorteController::class, 'relance'])
             ->middleware('throttle:20,1');
         Route::post('/lettres-mortes/{reference}/cloture', [LettreMorteController::class, 'cloture'])
+            ->middleware('throttle:20,1');
+
+        // CAP-CORE-016 — secrets et clés : métadonnées seules, jamais de valeur.
+        Route::get('/secrets-cles', [SecretController::class, 'index']);
+        Route::post('/secrets-cles', [SecretController::class, 'store'])
+            ->middleware('throttle:10,1');
+        Route::get('/secrets-cles/diagnostic', [SecretController::class, 'diagnostic']);
+        Route::get('/secrets-cles/compromissions', [SecretController::class, 'compromissions']);
+        Route::get('/secrets-cles/{reference}', [SecretController::class, 'show']);
+        Route::get('/secrets-cles/{reference}/versions', [SecretController::class, 'versions']);
+        Route::post('/secrets-cles/{reference}/versions', [SecretController::class, 'storeVersion'])
+            ->middleware('throttle:10,1');
+        Route::get('/secrets-cles/{reference}/versions/{version}', [SecretController::class, 'showVersion']);
+        Route::post('/secrets-cles/{reference}/versions/{id}/activation', [SecretController::class, 'activerVersion'])
+            ->middleware('throttle:10,1');
+        Route::post('/secrets-cles/{reference}/versions/{id}/suspension', [SecretController::class, 'suspendreVersion'])
+            ->middleware('throttle:10,1');
+        Route::post('/secrets-cles/{reference}/versions/{id}/revocation', [SecretController::class, 'revoquerVersion'])
+            ->middleware('throttle:10,1');
+        Route::post('/secrets-cles/{reference}/versions/{id}/compromission', [SecretController::class, 'compromettreVersion'])
+            ->middleware('throttle:30,1');
+        Route::post('/secrets-cles/{reference}/versions/{id}/destruction', [SecretController::class, 'detruireVersion'])
+            ->middleware('throttle:5,1');
+        Route::get('/secrets-cles/{reference}/usages', [SecretController::class, 'usages']);
+        Route::post('/secrets-cles/{reference}/usages', [SecretController::class, 'storeUsage'])
+            ->middleware('throttle:20,1');
+        Route::get('/secrets-cles/{reference}/dependances', [SecretController::class, 'dependances']);
+        Route::get('/secrets-cles/{reference}/rotations', [SecretController::class, 'rotations']);
+        Route::post('/secrets-cles/{reference}/rotations', [SecretController::class, 'storeRotation'])
+            ->middleware('throttle:10,1');
+
+        Route::get('/fournisseurs-secrets', [FournisseurSecretController::class, 'index']);
+        Route::post('/fournisseurs-secrets', [FournisseurSecretController::class, 'store'])
+            ->middleware('throttle:10,1');
+
+        Route::post('/rotations-secrets/{reference}/validation', [RotationSecretController::class, 'validation'])
+            ->middleware('throttle:10,1');
+        Route::post('/rotations-secrets/{reference}/execution', [RotationSecretController::class, 'execution'])
             ->middleware('throttle:20,1');
     });
 });
