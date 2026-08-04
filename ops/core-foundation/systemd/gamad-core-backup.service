@@ -1,5 +1,5 @@
 [Unit]
-Description=Sauvegarde PostgreSQL des six magasins GAMAD Core
+Description=Sauvegarde PostgreSQL des douze magasins GAMAD Core
 After=postgresql.service
 OnFailure=gamad-core-operations-alert@backup.service
 

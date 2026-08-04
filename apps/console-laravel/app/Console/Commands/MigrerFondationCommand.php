@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreContrats\Magasin as ContratsMagasin;
@@ -45,6 +46,7 @@ final class MigrerFondationCommand extends Command
                 'VOCABULARY_REGISTRY_URL',
                 'ORGANIZATION_REGISTRY_URL',
                 'REALM_REGISTRY_URL',
+                'EVENT_JOURNAL_URL',
             ] as $variable) {
                 if (trim((string) $this->environnement($variable)) === '') {
                     $this->error("{$variable} est obligatoire en production.");
@@ -71,6 +73,7 @@ final class MigrerFondationCommand extends Command
                 'organisations persistantes' => OrganisationsMagasin::connecter(),
                 'realms persistants' => RealmsMagasin::connecter(),
                 'journal opérationnel' => JournalMagasin::connecter(),
+                'journal des événements (CAP-CORE-014)' => EvenementsMagasin::connecter(),
             ];
         } catch (\Throwable $e) {
             $this->error('Migration interrompue : ' . $e->getMessage());
@@ -118,6 +121,7 @@ final class MigrerFondationCommand extends Command
             'VOCABULARY_REGISTRY_URL' => 'database.connections.gamad_vocabulary.url',
             'ORGANIZATION_REGISTRY_URL' => 'database.connections.gamad_organizations.url',
             'REALM_REGISTRY_URL' => 'database.connections.gamad_realms.url',
+            'EVENT_JOURNAL_URL' => 'database.connections.gamad_evenements.url',
             default => null,
         };
 

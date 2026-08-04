@@ -2,7 +2,9 @@
 
 Ce module technique conserve les événements produits par l'exploitation du
 monolithe Laravel. Il ne remplace ni le corpus, ni l'index documentaire, ni
-`CAP-CORE-014`, dont le registre commun et les conventions restent à établir.
+`CAP-CORE-014` (`core/journal-evenements`) — le registre commun des
+événements communs entre produits, physiquement distinct de ce journal
+d'audit privé. Voir `core/journal-evenements/README.md`.
 
 Sa portée est volontairement étroite :
 

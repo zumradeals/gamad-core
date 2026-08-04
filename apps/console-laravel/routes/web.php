@@ -9,6 +9,7 @@ use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
 use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
+use App\Http\Controllers\EvenementConsoleController;
 use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\OrganisationConsoleController;
 use App\Http\Controllers\RealmConsoleController;
@@ -196,6 +197,64 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/realms/{reference}/portee', [RealmConsoleController::class, 'verifierPortee'])
         ->middleware('throttle:60,1')
         ->name('console.realms.portee.verifier');
+
+    // CAP-CORE-014 — journal des événements. Toute lecture et toute écriture
+    // passent par `AccesEvenements`, le même cas d'usage gouverné que l'API
+    // v1 (fiche partie 4 §9) : contrairement aux consoles ci-dessus, la
+    // confidentialité par realm de CAP-CORE-014 s'applique aussi aux
+    // lectures, pas seulement aux écritures.
+    Route::get('/evenements', [EvenementConsoleController::class, 'index'])
+        ->name('console.evenements.index');
+    Route::get('/evenements/{reference}', [EvenementConsoleController::class, 'showEvenement'])
+        ->name('console.evenements.show');
+
+    Route::get('/abonnements/{reference}', [EvenementConsoleController::class, 'showAbonnement'])
+        ->name('console.abonnements.show');
+    Route::post('/abonnements/{reference}/activation', [EvenementConsoleController::class, 'activerAbonnement'])
+        ->middleware('throttle:20,1')
+        ->name('console.abonnements.activer');
+    Route::post('/abonnements/{reference}/suspension', [EvenementConsoleController::class, 'suspendreAbonnement'])
+        ->middleware('throttle:20,1')
+        ->name('console.abonnements.suspendre');
+    Route::post('/abonnements/{reference}/retrait', [EvenementConsoleController::class, 'retirerAbonnement'])
+        ->middleware('throttle:20,1')
+        ->name('console.abonnements.retirer');
+    Route::post('/abonnements/{reference}/types', [EvenementConsoleController::class, 'ajouterType'])
+        ->middleware('throttle:20,1')
+        ->name('console.abonnements.types.ajouter');
+    Route::post('/abonnements/{reference}/producteurs', [EvenementConsoleController::class, 'ajouterProducteur'])
+        ->middleware('throttle:20,1')
+        ->name('console.abonnements.producteurs.ajouter');
+    Route::post('/abonnements/{reference}/realms', [EvenementConsoleController::class, 'ajouterRealm'])
+        ->middleware('throttle:20,1')
+        ->name('console.abonnements.realms.ajouter');
+
+    Route::get('/lettres-mortes', [EvenementConsoleController::class, 'lettresMortesIndex'])
+        ->name('console.lettres-mortes.index');
+    Route::get('/lettres-mortes/{reference}', [EvenementConsoleController::class, 'lettresMortesShow'])
+        ->name('console.lettres-mortes.show');
+    Route::post('/lettres-mortes/{reference}/relance', [EvenementConsoleController::class, 'relancerLettreMorte'])
+        ->middleware('throttle:20,1')
+        ->name('console.lettres-mortes.relancer');
+    Route::post('/lettres-mortes/{reference}/cloture', [EvenementConsoleController::class, 'cloturerLettreMorte'])
+        ->middleware('throttle:20,1')
+        ->name('console.lettres-mortes.cloturer');
+
+    Route::get('/rejeux', [EvenementConsoleController::class, 'rejeuxIndex'])
+        ->name('console.rejeux.index');
+    Route::get('/rejeux/nouveau', [EvenementConsoleController::class, 'rejeuxCreate'])
+        ->name('console.rejeux.create');
+    Route::post('/rejeux', [EvenementConsoleController::class, 'rejeuxStore'])
+        ->middleware('throttle:10,1')
+        ->name('console.rejeux.store');
+    Route::get('/rejeux/{reference}', [EvenementConsoleController::class, 'rejeuxShow'])
+        ->name('console.rejeux.show');
+    Route::post('/rejeux/{reference}/validation', [EvenementConsoleController::class, 'validerRejeu'])
+        ->middleware('throttle:10,1')
+        ->name('console.rejeux.valider');
+    Route::post('/rejeux/{reference}/annulation', [EvenementConsoleController::class, 'annulerRejeu'])
+        ->middleware('throttle:10,1')
+        ->name('console.rejeux.annuler');
 
     // CAP-CORE-006 — registre des sources. Vit sous `/registre-sources` : le
     // chemin `/sources/{reference}` reste la route JSON historique de CTR-04

@@ -28,7 +28,7 @@ trap nettoyer EXIT
     --wait \
     start >/dev/null
 
-for base in gamad_index gamad_access gamad_identity gamad_products gamad_sources gamad_policies gamad_contracts gamad_vocabulary gamad_organizations gamad_realms gamad_journal; do
+for base in gamad_index gamad_access gamad_identity gamad_products gamad_sources gamad_policies gamad_contracts gamad_vocabulary gamad_organizations gamad_realms gamad_journal gamad_events; do
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
 done
 
@@ -61,6 +61,7 @@ environnement=(
     "ORGANIZATION_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_organizations"
     "REALM_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_realms"
     "JOURNAL_OPERATIONNEL_URL=postgresql://postgres@127.0.0.1:${port}/gamad_journal"
+    "EVENT_JOURNAL_URL=postgresql://postgres@127.0.0.1:${port}/gamad_events"
 )
 
 (
@@ -71,7 +72,7 @@ environnement=(
 
 env "${environnement[@]}" php "$application/tests/Integration/postgresql_p0.php"
 
-for base in drill_index drill_access drill_identity drill_products drill_sources drill_policies drill_contracts drill_vocabulary drill_organizations drill_realms drill_journal; do
+for base in drill_index drill_access drill_identity drill_products drill_sources drill_policies drill_contracts drill_vocabulary drill_organizations drill_realms drill_journal drill_events; do
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
 done
 
@@ -90,6 +91,7 @@ export GAMAD_VOCABULARY_PGDATABASE=gamad_vocabulary
 export GAMAD_ORGANIZATIONS_PGDATABASE=gamad_organizations
 export GAMAD_REALMS_PGDATABASE=gamad_realms
 export GAMAD_JOURNAL_PGDATABASE=gamad_journal
+export GAMAD_EVENEMENTS_PGDATABASE=gamad_events
 
 "$racine/ops/core-foundation/backup.sh"
 lot="$(find "$GAMAD_BACKUP_DIR" -mindepth 1 -maxdepth 1 -type d -print -quit)"
@@ -106,6 +108,7 @@ export GAMAD_RESTORE_VOCABULARY_PGDATABASE=drill_vocabulary
 export GAMAD_RESTORE_ORGANIZATIONS_PGDATABASE=drill_organizations
 export GAMAD_RESTORE_REALMS_PGDATABASE=drill_realms
 export GAMAD_RESTORE_JOURNAL_PGDATABASE=drill_journal
+export GAMAD_RESTORE_EVENEMENTS_PGDATABASE=drill_events
 export GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases
 
 "$racine/ops/core-foundation/restore-drill.sh"

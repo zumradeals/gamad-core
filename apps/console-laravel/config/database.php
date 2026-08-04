@@ -227,6 +227,22 @@ return [
             'foreign_key_constraints' => true,
         ],
 
+        'gamad_evenements' => [
+            'driver' => env('GAMAD_EVENT_DRIVER', 'sqlite'),
+            'url' => env('EVENT_JOURNAL_URL'),
+            'host' => env('GAMAD_EVENEMENTS_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_EVENEMENTS_PORT', '5432'),
+            'database' => env('EVENT_JOURNAL_PATH', database_path('gamad-evenements.sqlite')),
+            'username' => env('GAMAD_EVENEMENTS_USERNAME'),
+            'password' => env('GAMAD_EVENEMENTS_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_EVENEMENTS_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

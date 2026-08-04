@@ -1,0 +1,19 @@
+[Unit]
+Description=Purge gouvernée des charges expirées du journal des événements GAMAD Core (simulation)
+After=postgresql.service
+OnFailure=gamad-core-operations-alert@events-purge.service
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/gamad-core/apps/console-laravel
+# Simulation seule : cette unité rapporte les charges purgeables sans écrire.
+# `--force` reste un choix d'opérateur explicite, jamais un défaut automatisé
+# — voir ops/core-foundation/README.md.
+ExecStart=/usr/bin/php artisan core:evenements:purger-charges --limite=500
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/gamad-core/apps/console-laravel/storage

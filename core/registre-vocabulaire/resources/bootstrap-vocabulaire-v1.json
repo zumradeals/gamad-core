@@ -1510,6 +1510,328 @@
                     "type_semantique": "TYPE"
                 }
             ]
+        },
+        {
+            "reference": "VOC-GAMAD-EVENEMENT-OUTBOX-ETAT",
+            "namespace": "gamad.evenement.outbox.etat",
+            "nom": "États d’une ligne d’outbox producteur",
+            "domaine": "evenements",
+            "portee": "CORE",
+            "source_reference": "core/journal-evenements/src/PolitiqueEvenements.php — CAP-CORE-014::ETATS_OUTBOX",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-OUTBOX-ETAT-EN_ATTENTE",
+                    "code": "EN_ATTENTE",
+                    "definition": "ligne créée dans la transaction métier, pas encore relayée",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-OUTBOX-ETAT-EN_COURS",
+                    "code": "EN_COURS",
+                    "definition": "prise en charge par un relais, publication en cours",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-OUTBOX-ETAT-PUBLIE",
+                    "code": "PUBLIE",
+                    "definition": "acceptée par le journal central, référence reçue",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-OUTBOX-ETAT-ECHEC_TEMPORAIRE",
+                    "code": "ECHEC_TEMPORAIRE",
+                    "definition": "échec de relais retentable",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-OUTBOX-ETAT-ECHEC_DEFINITIF",
+                    "code": "ECHEC_DEFINITIF",
+                    "definition": "échec de relais non retentable (ex. contrat inconnu)",
+                    "type_semantique": "ETAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-EVENEMENT-ABONNEMENT-ETAT",
+            "namespace": "gamad.evenement.abonnement.etat",
+            "nom": "États d’un abonnement au journal des événements",
+            "domaine": "evenements",
+            "portee": "CORE",
+            "source_reference": "core/journal-evenements/src/PolitiqueEvenements.php — CAP-CORE-014::ETATS_ABONNEMENT",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-ABONNEMENT-ETAT-PREPARATION",
+                    "code": "PREPARATION",
+                    "definition": "abonnement en cours de configuration, modifiable",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-ABONNEMENT-ETAT-ACTIF",
+                    "code": "ACTIF",
+                    "definition": "abonnement activé, reçoit des livraisons",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-ABONNEMENT-ETAT-SUSPENDU",
+                    "code": "SUSPENDU",
+                    "definition": "abonnement suspendu, ne reçoit plus de nouvelles livraisons",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-ABONNEMENT-ETAT-RETIRE",
+                    "code": "RETIRE",
+                    "definition": "abonnement retiré, définitif",
+                    "type_semantique": "ETAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-EVENEMENT-LIVRAISON-MODE",
+            "namespace": "gamad.evenement.livraison.mode",
+            "nom": "Modes de livraison d’un abonnement",
+            "domaine": "evenements",
+            "portee": "CORE",
+            "source_reference": "core/journal-evenements/src/PolitiqueEvenements.php — CAP-CORE-014::MODES_LIVRAISON",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-LIVRAISON-MODE-PULL_API",
+                    "code": "PULL_API",
+                    "definition": "le consommateur lit ses livraisons via l’API",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-LIVRAISON-MODE-PUSH_HTTPS",
+                    "code": "PUSH_HTTPS",
+                    "definition": "livraison poussée par HTTPS (capacité future)",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-EVENEMENT-ABONNEMENT-PORTEE-REALM",
+            "namespace": "gamad.evenement.abonnement.portee_realm",
+            "nom": "Portées de realm d’un abonnement",
+            "domaine": "evenements",
+            "portee": "CORE",
+            "source_reference": "core/journal-evenements/src/PolitiqueEvenements.php — CAP-CORE-014::PORTEES_REALM",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-ABONNEMENT-PORTEE-REALM-EXACT",
+                    "code": "EXACT",
+                    "definition": "seul le realm déclaré est reçu",
+                    "type_semantique": "TYPE"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-ABONNEMENT-PORTEE-REALM-DESCENDANTS_EXPLICITES",
+                    "code": "DESCENDANTS_EXPLICITES",
+                    "definition": "le realm déclaré et ses descendants explicitement autorisés",
+                    "type_semantique": "TYPE"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-EVENEMENT-LIVRAISON-ETAT",
+            "namespace": "gamad.evenement.livraison.etat",
+            "nom": "États d’une livraison au consommateur",
+            "domaine": "evenements",
+            "portee": "CORE",
+            "source_reference": "core/journal-evenements/src/PolitiqueEvenements.php — CAP-CORE-014::ETATS_LIVRAISON",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-LIVRAISON-ETAT-DISPONIBLE",
+                    "code": "DISPONIBLE",
+                    "definition": "livraison prête à être lue",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-LIVRAISON-ETAT-SOUS_BAIL",
+                    "code": "SOUS_BAIL",
+                    "definition": "livraison distribuée, bail en cours, non redistribuable",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-LIVRAISON-ETAT-ACCUSE",
+                    "code": "ACCUSE",
+                    "definition": "livraison accusée par le consommateur",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-LIVRAISON-ETAT-A_REESSAYER",
+                    "code": "A_REESSAYER",
+                    "definition": "refus temporaire, nouvelle tentative programmée",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-LIVRAISON-ETAT-LETTRE_MORTE",
+                    "code": "LETTRE_MORTE",
+                    "definition": "plafond de tentatives atteint, mise en lettre morte",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-LIVRAISON-ETAT-ANNULE",
+                    "code": "ANNULE",
+                    "definition": "livraison annulée (ex. abonnement retiré)",
+                    "type_semantique": "ETAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-EVENEMENT-TENTATIVE-RESULTAT",
+            "namespace": "gamad.evenement.tentative.resultat",
+            "nom": "Résultats canoniques d’une tentative de livraison",
+            "domaine": "evenements",
+            "portee": "CORE",
+            "source_reference": "core/journal-evenements/src/PolitiqueEvenements.php — CAP-CORE-014::RESULTATS_TENTATIVE",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-TENTATIVE-RESULTAT-MISE_A_DISPOSITION",
+                    "code": "MISE_A_DISPOSITION",
+                    "definition": "la livraison a été rendue disponible",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-TENTATIVE-RESULTAT-BAIL_ACCORDE",
+                    "code": "BAIL_ACCORDE",
+                    "definition": "un bail de lecture a été accordé",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-TENTATIVE-RESULTAT-ACCUSE",
+                    "code": "ACCUSE",
+                    "definition": "le consommateur a accusé réception",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-TENTATIVE-RESULTAT-REFUS_TEMPORAIRE",
+                    "code": "REFUS_TEMPORAIRE",
+                    "definition": "le consommateur a refusé temporairement",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-TENTATIVE-RESULTAT-REFUS_DEFINITIF",
+                    "code": "REFUS_DEFINITIF",
+                    "definition": "le consommateur a refusé définitivement",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-TENTATIVE-RESULTAT-BAIL_EXPIRE",
+                    "code": "BAIL_EXPIRE",
+                    "definition": "le bail est arrivé à expiration sans accusé",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-TENTATIVE-RESULTAT-ERREUR_TRANSPORT",
+                    "code": "ERREUR_TRANSPORT",
+                    "definition": "échec de transport, indépendant du consommateur",
+                    "type_semantique": "RESULTAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-TENTATIVE-RESULTAT-RELANCE",
+                    "code": "RELANCE",
+                    "definition": "nouvelle tentative après lettre morte relancée",
+                    "type_semantique": "RESULTAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-EVENEMENT-REJEU-ETAT",
+            "namespace": "gamad.evenement.rejeu.etat",
+            "nom": "États d’une demande de rejeu",
+            "domaine": "evenements",
+            "portee": "CORE",
+            "source_reference": "core/journal-evenements/src/PolitiqueEvenements.php — CAP-CORE-014::ETATS_REJEU",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-REJEU-ETAT-DEMANDEE",
+                    "code": "DEMANDEE",
+                    "definition": "rejeu demandé, en attente de validation",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-REJEU-ETAT-VALIDEE",
+                    "code": "VALIDEE",
+                    "definition": "rejeu validé par l’autorité gouvernée",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-REJEU-ETAT-EN_COURS",
+                    "code": "EN_COURS",
+                    "definition": "rejeu en cours d’exécution",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-REJEU-ETAT-TERMINEE",
+                    "code": "TERMINEE",
+                    "definition": "rejeu terminé, rapport disponible",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-REJEU-ETAT-REFUSEE",
+                    "code": "REFUSEE",
+                    "definition": "rejeu refusé (hors bornes ou hors autorisation)",
+                    "type_semantique": "ETAT"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-REJEU-ETAT-ANNULEE",
+                    "code": "ANNULEE",
+                    "definition": "rejeu annulé avant exécution",
+                    "type_semantique": "ETAT"
+                }
+            ]
+        },
+        {
+            "reference": "VOC-GAMAD-EVENEMENT-CODE-ERREUR",
+            "namespace": "gamad.evenement.code_erreur",
+            "nom": "Codes d’erreur canoniques du journal des événements",
+            "domaine": "evenements",
+            "portee": "CORE",
+            "source_reference": "core/journal-evenements/src/PolitiqueEvenements.php — CAP-CORE-014::CODES_ERREUR_RETENTABLES, CODES_ERREUR_DEFINITIFS",
+            "description": null,
+            "termes": [
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-CODE-ERREUR-DEPENDANCE_INDISPONIBLE",
+                    "code": "DEPENDANCE_INDISPONIBLE",
+                    "definition": "dépendance technique indisponible, retentable",
+                    "type_semantique": "ERREUR"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-CODE-ERREUR-ERREUR_INTERNE_CONSOMMATEUR",
+                    "code": "ERREUR_INTERNE_CONSOMMATEUR",
+                    "definition": "erreur interne du consommateur, retentable",
+                    "type_semantique": "ERREUR"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-CODE-ERREUR-CONTRAT_INCONNU",
+                    "code": "CONTRAT_INCONNU",
+                    "definition": "contrat référencé absent ou inactif, définitif",
+                    "type_semantique": "ERREUR"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-CODE-ERREUR-VERSION_INCOMPATIBLE",
+                    "code": "VERSION_INCOMPATIBLE",
+                    "definition": "version de contrat incompatible, définitif",
+                    "type_semantique": "ERREUR"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-CODE-ERREUR-CHARGE_INVALIDE",
+                    "code": "CHARGE_INVALIDE",
+                    "definition": "charge hors schéma, définitif",
+                    "type_semantique": "ERREUR"
+                },
+                {
+                    "reference": "TERM-GAMAD-EVENEMENT-CODE-ERREUR-ERREUR_METIER_DEFINITIVE",
+                    "code": "ERREUR_METIER_DEFINITIVE",
+                    "definition": "refus métier non retentable",
+                    "type_semantique": "ERREUR"
+                }
+            ]
         }
     ]
 }

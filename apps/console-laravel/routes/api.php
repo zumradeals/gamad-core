@@ -2,16 +2,20 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\AbonnementController;
 use App\Http\Controllers\Api\V1\AutorisationController;
 use App\Http\Controllers\Api\V1\ContratController;
+use App\Http\Controllers\Api\V1\EvenementController;
 use App\Http\Controllers\Api\V1\FederationController;
 use App\Http\Controllers\Api\V1\FondationController;
 use App\Http\Controllers\Api\V1\IdentiteController;
+use App\Http\Controllers\Api\V1\LettreMorteController;
 use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PasskeySessionController;
 use App\Http\Controllers\Api\V1\PolitiqueController;
 use App\Http\Controllers\Api\V1\ProduitController;
 use App\Http\Controllers\Api\V1\RealmController;
+use App\Http\Controllers\Api\V1\RejeuController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Api\V1\SourceController;
 use App\Http\Controllers\Api\V1\VocabulaireController;
@@ -339,6 +343,73 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
             [RealmController::class, 'fermerFranchissement'],
         )->middleware('throttle:20,1');
         Route::post('/realms/{reference}/verifications', [RealmController::class, 'enregistrerVerification'])
+            ->middleware('throttle:20,1');
+
+        // CAP-CORE-014 — journal des événements : publications.
+        Route::post('/evenements/publications', [EvenementController::class, 'publier'])
+            ->middleware('throttle:60,1');
+        Route::get(
+            '/evenements/publications/{producteur}/{idempotence}',
+            [EvenementController::class, 'resoudrePublication'],
+        );
+
+        // CAP-CORE-014 — lecture des événements.
+        Route::get('/evenements', [EvenementController::class, 'index']);
+        Route::get('/evenements/{reference}', [EvenementController::class, 'show']);
+        Route::get('/evenements/{reference}/charge', [EvenementController::class, 'charge']);
+
+        // CAP-CORE-014 — abonnements.
+        Route::get('/abonnements', [AbonnementController::class, 'index']);
+        Route::post('/abonnements', [AbonnementController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('/abonnements/{reference}', [AbonnementController::class, 'show']);
+        Route::patch('/abonnements/{reference}', [AbonnementController::class, 'update'])
+            ->middleware('throttle:20,1');
+        Route::post('/abonnements/{reference}/types', [AbonnementController::class, 'ajouterType'])
+            ->middleware('throttle:20,1');
+        Route::post('/abonnements/{reference}/producteurs', [AbonnementController::class, 'ajouterProducteur'])
+            ->middleware('throttle:20,1');
+        Route::post('/abonnements/{reference}/realms', [AbonnementController::class, 'ajouterRealm'])
+            ->middleware('throttle:20,1');
+        Route::post('/abonnements/{reference}/activation', [AbonnementController::class, 'activer'])
+            ->middleware('throttle:20,1');
+        Route::post('/abonnements/{reference}/suspension', [AbonnementController::class, 'suspendre'])
+            ->middleware('throttle:20,1');
+        Route::post('/abonnements/{reference}/retrait', [AbonnementController::class, 'retirer'])
+            ->middleware('throttle:20,1');
+        Route::get('/abonnements/{reference}/retard', [AbonnementController::class, 'retard']);
+        Route::get('/abonnements/{reference}/curseur', [AbonnementController::class, 'curseur']);
+
+        // CAP-CORE-014 — livraisons PULL.
+        Route::get('/abonnements/{reference}/livraisons', [AbonnementController::class, 'livraisons'])
+            ->middleware('throttle:120,1');
+        Route::post('/abonnements/{reference}/livraisons/accuses', [AbonnementController::class, 'accuser'])
+            ->middleware('throttle:120,1');
+        Route::post(
+            '/abonnements/{reference}/livraisons/refus-temporaires',
+            [AbonnementController::class, 'refusTemporaire'],
+        )->middleware('throttle:120,1');
+        Route::post(
+            '/abonnements/{reference}/livraisons/refus-definitifs',
+            [AbonnementController::class, 'refusDefinitif'],
+        )->middleware('throttle:120,1');
+
+        // CAP-CORE-014 — rejeu borné.
+        Route::get('/rejeux', [RejeuController::class, 'index']);
+        Route::post('/rejeux', [RejeuController::class, 'store'])
+            ->middleware('throttle:10,1');
+        Route::get('/rejeux/{reference}', [RejeuController::class, 'show']);
+        Route::post('/rejeux/{reference}/validation', [RejeuController::class, 'validation'])
+            ->middleware('throttle:10,1');
+        Route::post('/rejeux/{reference}/annulation', [RejeuController::class, 'annulation'])
+            ->middleware('throttle:10,1');
+
+        // CAP-CORE-014 — lettres mortes.
+        Route::get('/lettres-mortes', [LettreMorteController::class, 'index']);
+        Route::get('/lettres-mortes/{reference}', [LettreMorteController::class, 'show']);
+        Route::post('/lettres-mortes/{reference}/relance', [LettreMorteController::class, 'relance'])
+            ->middleware('throttle:20,1');
+        Route::post('/lettres-mortes/{reference}/cloture', [LettreMorteController::class, 'cloture'])
             ->middleware('throttle:20,1');
     });
 });

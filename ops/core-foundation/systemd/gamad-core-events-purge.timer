@@ -1,0 +1,11 @@
+[Unit]
+Description=Rapport quotidien de purge des charges du journal des événements GAMAD Core
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 UTC
+Persistent=true
+RandomizedDelaySec=10m
+Unit=gamad-core-events-purge.service
+
+[Install]
+WantedBy=timers.target

@@ -9,7 +9,7 @@ La cible unique est le serveur actuel :
 Nginx HTTPS
 → /var/www/gamad-core/apps/console-laravel/public/index.php
 → PHP 8.3 FPM
-→ onze bases PostgreSQL locales dédiées
+→ douze bases PostgreSQL locales dédiées
 ```
 
 L'ancien `nixpacks.toml`, qui décrivait un déploiement Railway abandonné, est
@@ -17,7 +17,7 @@ retiré du dépôt afin qu'il ne puisse plus être pris pour une cible active.
 
 ## Topologie minimale
 
-Onze bases PostgreSQL physiquement distinctes sont attendues :
+Douze bases PostgreSQL physiquement distinctes sont attendues :
 
 | Cible | Variable applicative | Contenu |
 |---|---|---|
@@ -32,6 +32,7 @@ Onze bases PostgreSQL physiquement distinctes sont attendues :
 | organisations | `ORGANIZATION_REGISTRY_URL` | registre des organisations (CAP-CORE-002) |
 | realms | `REALM_REGISTRY_URL` | registre des realms (CAP-CORE-012) |
 | journal | `JOURNAL_OPERATIONNEL_URL` | événements d'exploitation et audit |
+| evenements | `EVENT_JOURNAL_URL` | journal central des événements communs (CAP-CORE-014) |
 
 Laravel stocke aussi ses sessions web dans la cible `gamad_access` avec :
 
@@ -46,8 +47,8 @@ SESSION_SECURE_COOKIE=true
 En production, définir `GAMAD_INDEX_DRIVER`, `GAMAD_ACCESS_DRIVER`,
 `GAMAD_IDENTITY_DRIVER`, `GAMAD_PRODUCTS_DRIVER`, `GAMAD_SOURCES_DRIVER`,
 `GAMAD_POLICIES_DRIVER`, `GAMAD_CONTRACTS_DRIVER`, `GAMAD_VOCABULARY_DRIVER`,
-`GAMAD_ORGANIZATIONS_DRIVER`, `GAMAD_REALMS_DRIVER` et `GAMAD_JOURNAL_DRIVER`
-à `pgsql`. La readiness refuse SQLite en production.
+`GAMAD_ORGANIZATIONS_DRIVER`, `GAMAD_REALMS_DRIVER`, `GAMAD_JOURNAL_DRIVER` et
+`GAMAD_EVENT_DRIVER` à `pgsql`. La readiness refuse SQLite en production.
 
 Pour les essais SQLite locaux uniquement, les répertoires `var/` des modules
 doivent appartenir à l'utilisateur PHP-FPM. En production PostgreSQL, aucun
@@ -121,7 +122,7 @@ déploiement reste une action explicite sur ce serveur.
 
 ## Sauvegarde sans secret en ligne de commande
 
-Installer onze services dans `pg_service.conf`, avec mots de passe dans un
+Installer douze services dans `pg_service.conf`, avec mots de passe dans un
 fichier `.pgpass` protégé, puis exporter uniquement leurs noms :
 
 ```text
@@ -136,6 +137,7 @@ GAMAD_VOCABULARY_PGSERVICE=gamad_vocabulary
 GAMAD_ORGANIZATIONS_PGSERVICE=gamad_organizations
 GAMAD_REALMS_PGSERVICE=gamad_realms
 GAMAD_JOURNAL_PGSERVICE=gamad_journal
+GAMAD_EVENEMENTS_PGSERVICE=gamad_evenements
 GAMAD_BACKUP_DIR=/var/backups/gamad-core/daily
 PGSERVICEFILE=/etc/gamad-core/pg_service.conf
 PGPASSFILE=/etc/gamad-core/pgpass
@@ -156,6 +158,7 @@ GAMAD_VOCABULARY_PGDATABASE=registre_vocabulaire
 GAMAD_ORGANIZATIONS_PGDATABASE=registre_organisations
 GAMAD_REALMS_PGDATABASE=registre_realms
 GAMAD_JOURNAL_PGDATABASE=journal_operationnel
+GAMAD_EVENEMENTS_PGDATABASE=journal_evenements
 ```
 
 Exécuter :
@@ -164,7 +167,7 @@ Exécuter :
 ops/core-foundation/backup.sh
 ```
 
-Chaque lot contient onze archives au format custom et un manifeste
+Chaque lot contient douze archives au format custom et un manifeste
 `SHA256SUMS`.
 
 ## Import initial des magasins SQLite
@@ -190,8 +193,8 @@ la transaction. Il ne supprime ni ne renomme les fichiers SQLite sources.
 
 ## Exercice de restauration
 
-Ne jamais viser les bases de production. Préparer onze bases isolées et
-onze services `pg_service.conf` distincts, puis définir :
+Ne jamais viser les bases de production. Préparer douze bases isolées et
+douze services `pg_service.conf` distincts, puis définir :
 
 ```text
 GAMAD_RESTORE_SOURCE=/srv/backups/gamad-core/AAAAMMJJTHHMMSSZ
@@ -206,6 +209,7 @@ GAMAD_RESTORE_VOCABULARY_PGSERVICE=drill_vocabulary
 GAMAD_RESTORE_ORGANIZATIONS_PGSERVICE=drill_organizations
 GAMAD_RESTORE_REALMS_PGSERVICE=drill_realms
 GAMAD_RESTORE_JOURNAL_PGSERVICE=drill_journal
+GAMAD_RESTORE_EVENEMENTS_PGSERVICE=drill_evenements
 GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases
 ```
 
@@ -216,8 +220,8 @@ Lancer `ops/core-foundation/restore-drill.sh`. Le script vérifie les empreintes
 restaure en transaction et exécute une lecture minimale de chaque base. Le
 résultat et la durée doivent ensuite être inscrits au registre opérationnel.
 
-La CI exécute ce cycle complet sur vingt-deux bases PostgreSQL temporaires
-(onze sources et onze cibles isolées) via
+La CI exécute ce cycle complet sur vingt-quatre bases PostgreSQL temporaires
+(douze sources et douze cibles isolées) via
 `apps/console-laravel/tests/Integration/postgresql_p0.sh`.
 
 ## Copie hors machine
@@ -358,9 +362,27 @@ GAMAD_OFFSITE_DRILL_DUMPS_ONLY=1 ops/core-foundation/offsite-drill.sh
 - readiness : `GET /api/v1/health/ready`;
 - alerte critique : trois réponses `503` consécutives sur la readiness;
 - alerte sécurité : échec de `php artisan core:journal:verifier`;
+- alerte sécurité : échec de `php artisan core:evenements:verifier`
+  (CAP-CORE-014);
 - alerte sauvegarde : aucun lot complet depuis 24 heures;
 - exercice de restauration : mensuel tant que le socle n'a pas atteint sa
   qualification globale.
+
+Le journal des événements (CAP-CORE-014) ajoute cinq unités d'exploitation,
+sous le même modèle `oneshot` + `OnFailure=gamad-core-operations-alert@…` :
+
+| Timer | Commande | Fréquence |
+|---|---|---|
+| `gamad-core-events-publish` | `core:evenements:publier --limite=200` | chaque minute |
+| `gamad-core-events-lease` | `core:evenements:liberer-baux` | toutes les deux minutes |
+| `gamad-core-events-replay` | `core:evenements:traiter-rejeux` | toutes les cinq minutes |
+| `gamad-core-events-verify` | `core:evenements:verifier` | horaire |
+| `gamad-core-events-purge` | `core:evenements:purger-charges` (simulation) | quotidien, 02h30 UTC |
+
+`gamad-core-events-purge` reste en simulation par défaut : le service ne
+passe jamais `--force` de lui-même. Activer la purge réelle est une décision
+d'exploitation explicite, prise en éditant `ExecStart=` après avoir revu au
+moins un rapport de simulation — jamais un défaut automatisé.
 
 Les unités proposées sous `ops/core-foundation/systemd/` écrivent les échecs
 critiques dans le journal système avec la priorité `auth.alert`. Le routage de
@@ -377,6 +399,7 @@ GAMAD_ACCESS_PGDATABASE=registre_acces
 GAMAD_IDENTITY_PGDATABASE=registre_identites
 GAMAD_PRODUCTS_PGDATABASE=registre_produits
 GAMAD_JOURNAL_PGDATABASE=journal_operationnel
+GAMAD_EVENEMENTS_PGDATABASE=journal_evenements
 ```
 
 La sonde `gamad-core-readiness.timer` interroge la readiness publique toutes
@@ -386,8 +409,10 @@ horaire et la sauvegarde quotidienne.
 
 Les unités et l’environnement non secret sont installés depuis
 `ops/core-foundation/systemd/`, puis activés avec `systemctl enable --now` pour
-les trois timers. Toute modification d’une unité doit être suivie de
-`systemctl daemon-reload` et d’une exécution manuelle de son service.
+les huit timers (readiness, sauvegarde, vérification du journal opérationnel
+et les cinq unités du journal des événements ci-dessus). Toute modification
+d’une unité doit être suivie de `systemctl daemon-reload` et d’une exécution
+manuelle de son service.
 
 La spécification HTTP est dans
 `apps/console-laravel/openapi/core-v1.yaml`.

@@ -35,6 +35,18 @@ final class PolitiqueProduits
     /** Source technique inscrite par défaut dans les écritures gouvernées. */
     public const SOURCE = 'CAP-CORE-011 — registre des produits';
 
+    /**
+     * Référence de source (CAP-CORE-006) utilisée pour les événements
+     * communs de cycle de vie produit publiés via CAP-CORE-014, distincte du
+     * libellé descriptif `SOURCE` ci-dessus. Doit être enregistrée et active
+     * dans le registre des sources avant que la publication ne réussisse
+     * réellement — un chantier de bootstrap non encore livré dans ce dépôt.
+     */
+    public const SOURCE_EVENEMENTS_REFERENCE = 'SRC-GAMAD-CAP-CORE-011';
+
+    /** Finalité par défaut de la diffusion des événements de cycle de vie produit. */
+    public const FINALITE_EVENEMENTS_DEFAUT = 'FINALITE-DIFFUSION-EVENEMENTS-COMMUNS';
+
     /** Autorité institutionnelle déjà canonique dans le corpus. */
     public const AUTORITE = 'AUT-GAMAD-001';
 

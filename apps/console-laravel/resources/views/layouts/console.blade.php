@@ -130,6 +130,14 @@
                 </span>
                 Mots officiels
             </a>
+            <a class="nav__link"
+               href="{{ route('console.evenements.index') }}"
+               @if(request()->routeIs('console.evenements.*') || request()->routeIs('console.abonnements.*') || request()->routeIs('console.lettres-mortes.*') || request()->routeIs('console.rejeux.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.2"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>
+                </span>
+                Journal des événements
+            </a>
 
             <span class="nav__label">Sécurité et continuité</span>
             <a class="nav__link"

@@ -9,6 +9,7 @@ declare(strict_types=1);
  *   php apps/console-laravel/tests/Integration/api_v1_p1.php
  */
 
+use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
@@ -41,6 +42,7 @@ $fichiers = [
     'vocabulaire' => $temp . '-vocabulaire.sqlite',
     'organisations' => $temp . '-organisations.sqlite',
     'realms' => $temp . '-realms.sqlite',
+    'evenements' => $temp . '-evenements.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -85,6 +87,8 @@ $environnement = [
     'ORGANIZATION_REGISTRY_PATH' => $fichiers['organisations'],
     'REALM_REGISTRY_URL' => '',
     'REALM_REGISTRY_PATH' => $fichiers['realms'],
+    'EVENT_JOURNAL_URL' => '',
+    'EVENT_JOURNAL_PATH' => $fichiers['evenements'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -110,6 +114,7 @@ ContratsMagasin::connecter();
 VocabulaireMagasin::connecter();
 OrganisationsMagasin::connecter();
 RealmsMagasin::connecter();
+EvenementsMagasin::connecter();
 
 $app = require $application . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
@@ -243,13 +248,13 @@ $verifier(
 $ready = $requete('GET', '/api/v1/health/ready');
 $readyOk = $ready['statut'] === 200
     && ($ready['corps']['pret'] ?? false) === true
-    && count($ready['corps']['cibles'] ?? []) === 11;
+    && count($ready['corps']['cibles'] ?? []) === 12;
 if (!$readyOk) {
     fwrite(STDERR, json_encode($ready, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
 }
 $verifier(
     $readyOk,
-    'la readiness vérifie les onze magasins et leurs migrations',
+    'la readiness vérifie les douze magasins et leurs migrations',
 );
 
 echo "\n";

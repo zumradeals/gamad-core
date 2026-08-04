@@ -85,10 +85,10 @@ $secretAutorite = 'Secret-Vocabulaire-Autorite-1!';
 $ctr16->inscrireAuthentificateur('AUT-GAMAD-001', $secretAutorite);
 
 $app = require $application . '/bootstrap/app.php';
-// Bootstrappe `POL-VOCABULAIRE-V1` (auto-gouvernance) et les trente-trois
-// vocabulaires déjà exploités — vingt-quatre repris depuis les constantes
-// réelles de CAP-CORE-001/006/007/011, plus neuf propres à CAP-CORE-002
-// depuis l'ouverture du registre des organisations. Sans
+// Bootstrappe `POL-VOCABULAIRE-V1` (auto-gouvernance) et les quarante-et-un
+// vocabulaires déjà exploités — trente-trois repris depuis les constantes
+// réelles de CAP-CORE-001/002/006/007/009/011/012, plus huit propres à
+// CAP-CORE-014 (`PolitiqueEvenements`, fiche partie 4 §2). Sans
 // `POL-VOCABULAIRE-V1`, toute écriture gouvernée sur ce registre, y compris
 // depuis ce test, serait refusée par CTR-03.
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
@@ -159,16 +159,17 @@ $sessionTiersReponse = $requete('POST', '/api/v1/sessions', [
 $sessionTiers = (string) ($sessionTiersReponse['corps']['jeton'] ?? '');
 $verifier($sessionTiers !== '', 'le tiers ouvre aussi une session Core, sans aucun droit de gouvernance');
 
-// 2 — la liste porte déjà les trente-trois vocabulaires repris.
+// 2 — la liste porte déjà les quarante-et-un vocabulaires repris.
 $listeInitiale = $requete('GET', '/api/v1/vocabulaires', null, $sessionAutorite);
 $referencesInitiales = array_column($listeInitiale['corps']['vocabulaires'] ?? [], 'reference');
 $verifier(
     $listeInitiale['statut'] === 200
-        && count($referencesInitiales) === 33
+        && count($referencesInitiales) === 41
         && in_array('VOC-GAMAD-IDENTITE-TYPE', $referencesInitiales, true)
         && in_array('VOC-GAMAD-CONTRAT-TYPE-OPERATION', $referencesInitiales, true)
-        && in_array('VOC-GAMAD-ORGANISATION-TYPE', $referencesInitiales, true),
-    'la liste porte les trente-trois vocabulaires repris par le bootstrap',
+        && in_array('VOC-GAMAD-ORGANISATION-TYPE', $referencesInitiales, true)
+        && in_array('VOC-GAMAD-EVENEMENT-CODE-ERREUR', $referencesInitiales, true),
+    'la liste porte les quarante-et-un vocabulaires repris par le bootstrap',
 );
 
 // 3 — inscription gouvernée : naît sans version active.

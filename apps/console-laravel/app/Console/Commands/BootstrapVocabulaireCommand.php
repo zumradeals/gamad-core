@@ -25,9 +25,12 @@ use Illuminate\Console\Command;
  *    l'existant mais l'auto-gouvernance sans laquelle `AccesVocabulaire`
  *    resterait bloquée à 403 dès le premier appel.
  * 2. `core/registre-vocabulaire/resources/bootstrap-vocabulaire-v1.json` —
- *    vingt-quatre vocabulaires établis par audit du code réel (constantes
+ *    quarante-et-un vocabulaires établis par audit du code réel (constantes
  *    PHP déjà appliquées par contrainte CHECK SQL ou vérification PHP dans
- *    CAP-CORE-001, 006, 007, 009 et 011). Aucun terme inventé.
+ *    CAP-CORE-001, 002, 006, 007, 009, 010, 011, 012 et 014). Aucun terme
+ *    inventé ; les huit derniers reprennent les listes fermées de
+ *    `PolitiqueEvenements` (CAP-CORE-014, fiche partie 4 §2) — leur ajout ici
+ *    est descriptif et ne modifie pas les listes fermées vérifiées en code.
  *
  * Idempotent : rejouer cette commande ne crée aucun doublon et ne réactive
  * pas une version déjà active.
@@ -40,7 +43,7 @@ final class BootstrapVocabulaireCommand extends Command
 
     private const RESSOURCE = __DIR__ . '/../../../../../core/registre-vocabulaire/resources/bootstrap-vocabulaire-v1.json';
 
-    private const EMPREINTE_SHA256 = 'cf57640eafe218f1ae904d5638b23a741b1f509526f0b9a4b124614fca5999d4';
+    private const EMPREINTE_SHA256 = 'ae8954544ec9b6895f9e47b2a740775c89e411e3cd173e7d88a31ad5d818e69d';
 
     private const SOURCE = 'core/registre-vocabulaire/resources/bootstrap-vocabulaire-v1.json — bootstrap CAP-CORE-010';
 

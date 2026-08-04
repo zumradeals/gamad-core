@@ -1,0 +1,12 @@
+[Unit]
+Description=Publication régulière de l'outbox vers le journal des événements GAMAD Core
+
+[Timer]
+OnBootSec=1m
+OnUnitActiveSec=1m
+Persistent=true
+RandomizedDelaySec=10s
+Unit=gamad-core-events-publish.service
+
+[Install]
+WantedBy=timers.target

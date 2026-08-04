@@ -1,0 +1,11 @@
+[Unit]
+Description=Vérification horaire de la chaîne du journal des événements GAMAD Core
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=5m
+Unit=gamad-core-events-verify.service
+
+[Install]
+WantedBy=timers.target
