@@ -746,11 +746,17 @@ final class RegistrePreuves
         return $st->fetchAll();
     }
 
-    /** @return array<string,mixed>|null */
-    public function resoudreManifeste(string $preuveReference): ?array
+    /**
+     * Accepte indifféremment la référence de la preuve porteuse (PRF-…) ou
+     * la référence propre du manifeste (MNF-…) — l'opérateur ne connaît
+     * souvent que la seconde, affichée en premier par les CLI d'émission.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function resoudreManifeste(string $reference): ?array
     {
-        $st = $this->magasin->prepare('SELECT * FROM manifeste WHERE preuve_reference = ?');
-        $st->execute([$preuveReference]);
+        $st = $this->magasin->prepare('SELECT * FROM manifeste WHERE reference = ? OR preuve_reference = ?');
+        $st->execute([$reference, $reference]);
         $manifeste = $st->fetch();
         if ($manifeste === false) {
             return null;
