@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gamad\RegistreProduits;
 
+use Gamad\EvenementsSortants\OutboxProducteur;
+use Gamad\EvenementsSortants\SchemaOutbox;
 use Gamad\RegistreIdentites\Ctr01;
 
 /**
@@ -378,6 +380,7 @@ final class RegistreProduits
                 $this->nullable($dossier['correlation_id'] ?? null),
             );
             $this->toucher($reference);
+            $this->publierEvenementCycle($reference, 'PRODUIT_ACTIVE', 'ACTIF', $dossier);
 
             return ['reference' => $reference, 'etat' => 'ACTIF', 'idempotent' => false];
         });
@@ -415,6 +418,7 @@ final class RegistreProduits
                 $this->nullable($dossier['correlation_id'] ?? null),
             );
             $this->toucher($reference);
+            $this->publierEvenementCycle($reference, 'PRODUIT_SUSPENDU', 'SUSPENDU', $dossier);
 
             return ['reference' => $reference, 'etat' => 'SUSPENDU', 'idempotent' => false];
         });
@@ -451,6 +455,7 @@ final class RegistreProduits
                 $this->nullable($dossier['correlation_id'] ?? null),
             );
             $this->toucher($reference);
+            $this->publierEvenementCycle($reference, 'PRODUIT_RETIRE', 'RETIRE', $dossier);
 
             return ['reference' => $reference, 'etat' => 'RETIRE', 'idempotent' => false];
         });
@@ -695,6 +700,55 @@ final class RegistreProduits
     {
         $this->magasin->prepare('UPDATE produit SET modifie_le = ? WHERE reference = ?')
             ->execute([gmdate('c'), $reference]);
+    }
+
+    /**
+     * Prépare, dans la même transaction que la mutation métier, un événement
+     * commun de cycle de vie produit destiné à CAP-CORE-014
+     * (`core/evenements-sortants`).
+     *
+     * Facultatif et explicite : n'agit que si l'appelant fournit
+     * `realm_reference` dans le dossier de gouvernance — CAP-CORE-011 ne
+     * décide pas lui-même dans quel realm un produit publie ses faits. En
+     * l'absence de cette information, aucun événement n'est préparé et aucun
+     * comportement existant n'est modifié (partie 3 §3 : « pour les
+     * événements non critiques, le caractère obligatoire ou facultatif doit
+     * être explicitement défini » — ici, facultatif par absence de realm).
+     * Une fois le realm fourni, la préparation devient un invariant de cet
+     * appel précis : si elle échoue, toute la transaction est annulée.
+     *
+     * @param array<string,mixed> $dossier
+     */
+    private function publierEvenementCycle(string $reference, string $typeEvenement, string $nouvelEtat, array $dossier): void
+    {
+        $realm = $this->nullable($dossier['realm_reference'] ?? null);
+        if ($realm === null) {
+            return;
+        }
+
+        $suffixeContrat = match ($nouvelEtat) {
+            'ACTIF' => 'ACTIVE',
+            default => $nouvelEtat,
+        };
+
+        SchemaOutbox::migrer($this->magasin);
+        OutboxProducteur::preparerEvenement($this->magasin, [
+            'type_evenement' => $typeEvenement,
+            'contrat_reference' => 'EVT-GAMAD-PRODUIT-' . $suffixeContrat,
+            'contrat_version' => (string) ($dossier['contrat_version_evenement'] ?? '1.0.0'),
+            'producteur_capacite_reference' => self::CAPACITE,
+            'source_reference' => (string) ($dossier['source_evenement'] ?? PolitiqueProduits::SOURCE_EVENEMENTS_REFERENCE),
+            'realm_reference' => $realm,
+            'finalite_reference' => (string) ($dossier['finalite_evenement'] ?? PolitiqueProduits::FINALITE_EVENEMENTS_DEFAUT),
+            'sujet_type' => 'PRODUIT',
+            'sujet_reference' => $reference,
+            'correlation_id' => (string) ($dossier['correlation_id'] ?? ('COR-GAMAD-' . strtoupper(bin2hex(random_bytes(8))))),
+            'causation_reference' => $this->nullable($dossier['preuve'] ?? null),
+            'survenu_le' => gmdate('c'),
+            'classification' => (string) ($dossier['classification_evenement'] ?? 'INTERNE'),
+            'idempotence_reference' => 'IDEMP-GAMAD-' . strtoupper(bin2hex(random_bytes(12))),
+            'charge' => ['produit_reference' => $reference, 'nouvel_etat' => $nouvelEtat],
+        ]);
     }
 
     /** @param array<string,mixed> $p @return array<string,mixed> */
