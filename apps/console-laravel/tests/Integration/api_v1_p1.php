@@ -9,6 +9,7 @@ declare(strict_types=1);
  *   php apps/console-laravel/tests/Integration/api_v1_p1.php
  */
 
+use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
@@ -41,6 +42,7 @@ $fichiers = [
     'vocabulaire' => $temp . '-vocabulaire.sqlite',
     'organisations' => $temp . '-organisations.sqlite',
     'realms' => $temp . '-realms.sqlite',
+    'evenements' => $temp . '-evenements.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -85,6 +87,8 @@ $environnement = [
     'ORGANIZATION_REGISTRY_PATH' => $fichiers['organisations'],
     'REALM_REGISTRY_URL' => '',
     'REALM_REGISTRY_PATH' => $fichiers['realms'],
+    'EVENT_JOURNAL_URL' => '',
+    'EVENT_JOURNAL_PATH' => $fichiers['evenements'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -110,6 +114,7 @@ ContratsMagasin::connecter();
 VocabulaireMagasin::connecter();
 OrganisationsMagasin::connecter();
 RealmsMagasin::connecter();
+EvenementsMagasin::connecter();
 
 $app = require $application . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');

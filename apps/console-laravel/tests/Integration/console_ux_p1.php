@@ -13,6 +13,7 @@ use App\Application\Identites\InscrireIdentite;
 use App\Http\Controllers\Ctr04Controller;
 use App\Http\Controllers\IdentiteConsoleController;
 use App\Support\EtatFondation;
+use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreFederation\SchemaFederation;
@@ -44,6 +45,7 @@ $fichiers = [
     'organisations' => $temp.'-organisations.sqlite',
     'realms' => $temp.'-realms.sqlite',
     'journal' => $temp.'-journal.sqlite',
+    'evenements' => $temp.'-evenements.sqlite',
     'config' => $temp.'-config.php',
     'events' => $temp.'-events.php',
     'packages' => $temp.'-packages.php',
@@ -94,6 +96,8 @@ $environnement = [
     'REALM_REGISTRY_PATH' => $fichiers['realms'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
+    'EVENT_JOURNAL_URL' => '',
+    'EVENT_JOURNAL_PATH' => $fichiers['evenements'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -115,6 +119,7 @@ VocabulaireMagasin::connecter();
 OrganisationsMagasin::connecter();
 RealmsMagasin::connecter();
 JournalMagasin::connecter();
+EvenementsMagasin::connecter();
 
 $app = require $application.'/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
