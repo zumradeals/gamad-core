@@ -22,6 +22,7 @@ declare(strict_types=1);
 use Gamad\JournalEvenements\EnveloppeEvenement;
 use Gamad\JournalEvenements\LivreurEvenements;
 use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
+use Gamad\JournalEvenements\RapprochementEvenements;
 use Gamad\JournalEvenements\RegistreAbonnements;
 use Gamad\JournalEvenements\RegistreEvenements;
 use Gamad\JournalEvenements\RejoueurEvenements;
@@ -79,6 +80,7 @@ require __DIR__ . '/../src/RouteurEvenements.php';
 require __DIR__ . '/../src/RegistreAbonnements.php';
 require __DIR__ . '/../src/LivreurEvenements.php';
 require __DIR__ . '/../src/RejoueurEvenements.php';
+require __DIR__ . '/../src/RapprochementEvenements.php';
 
 $prefixe = sys_get_temp_dir() . '/gamad-evenements-p3-' . getmypid();
 $fichiers = [
@@ -562,6 +564,75 @@ foreach ($evenementsAvecLivraisonMultiple as $l) {
 $verifier(
     count($parEvenement) === 3 && array_sum($parEvenement) === 3,
     '55. les trois événements du rejeu multi-lots ont chacun exactement une ligne de livraison, aucun doublon malgré trois exécutions successives',
+);
+
+/* ---------------------------------------------------------------- 56-58 : rapprochement (fiche partie 5 §8) */
+$rapprochement = new RapprochementEvenements($evtMagasin);
+$rapportSain = $rapprochement->rapprocher([], 1000);
+$verifier(
+    array_keys($rapportSain) === [
+        'evenement_sans_recu_publication', 'livraison_sans_evenement', 'curseur_au_dela_du_journal',
+        'charge_manquante_avant_expiration', 'abonnement_actif_sans_type', 'lettre_morte_orpheline',
+        'outbox_publie_sans_evenement_central', 'outbox_en_attente_deja_acceptee',
+    ]
+        && $rapportSain['livraison_sans_evenement'] === []
+        && $rapportSain['lettre_morte_orpheline'] === []
+        && $rapportSain['curseur_au_dela_du_journal'] === [],
+    '56. le rapprochement sur un magasin sain ne rapporte aucune livraison, lettre morte ou curseur orphelins',
+);
+
+$evtMagasin->prepare(
+    "INSERT INTO livraison_evenement(reference,abonnement_reference,evenement_reference,sequence_evenement,etat,disponible_le,cree_le)
+     VALUES('LIV-P3-ORPHELINE', ?, 'EVT-GAMAD-INEXISTANT-000', 999999, 'DISPONIBLE', ?, ?)"
+)->execute([$ABN, gmdate('c'), gmdate('c')]);
+$evtMagasin->prepare(
+    "INSERT INTO lettre_morte_evenement(reference,livraison_reference,raison_code,tentatives_total,premiere_erreur_le,derniere_erreur_le,cree_le)
+     VALUES('LM-P3-ORPHELINE', 'LIV-P3-INEXISTANTE-000', 'ERREUR_METIER_DEFINITIVE', 1, ?, ?, ?)"
+)->execute([gmdate('c'), gmdate('c'), gmdate('c')]);
+
+$rapportAvecAnomalies = $rapprochement->rapprocher([], 1000);
+$verifier(
+    in_array('LIV-P3-ORPHELINE', array_column($rapportAvecAnomalies['livraison_sans_evenement'], 'livraison_reference'), true),
+    '57. une livraison référençant un événement inexistant est détectée par le rapprochement',
+);
+$verifier(
+    in_array('LM-P3-ORPHELINE', array_column($rapportAvecAnomalies['lettre_morte_orpheline'], 'reference'), true),
+    '58. une lettre morte référençant une livraison inexistante est détectée par le rapprochement',
+);
+
+/* ---------------------------------------------------------------- 59-60 : purge d'une charge réellement expirée */
+// `accepterEvenement()` ne fixe aujourd'hui jamais `charge_expire_le` (aucun
+// calcul de rétention contractuelle dans ce chantier, fiche partie 5 §10) :
+// `evenement_commun` étant en ajout seul, la seule façon d'éprouver le
+// chemin de succès de `purgerCharge()` est d'insérer directement une fiche
+// synthétique déjà expirée, comme pour les orphelins 57-58.
+$evtMagasin->prepare(
+    "INSERT INTO evenement_commun
+     (reference,type_evenement,contrat_reference,contrat_version,producteur_reference,source_reference,
+      realm_reference,finalite_reference,correlation_id,idempotence_reference,survenu_le,enregistre_le,
+      classification,schema_empreinte,charge_empreinte,empreinte_evenement,charge_expire_le)
+     VALUES('EVT-P3-CHARGE-EXPIREE',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+)->execute([
+    'PRODUIT_ACTIVE', $CTR, '1.0.0', $PRODUCTEUR_CAPACITE, $SRC, $RLM_A, $FINALITE,
+    'COR-P3-CHARGE-EXPIREE', 'IDEMP-P3-CHARGE-EXPIREE', gmdate('c'), gmdate('c'), 'INTERNE',
+    str_repeat('a', 64), str_repeat('b', 64), str_repeat('c', 64), gmdate('c', time() - 3600),
+]);
+$evtMagasin->prepare(
+    "INSERT INTO evenement_charge(evenement_reference,media_type,schema_format,charge_json,empreinte,taille_octets,cree_le,expire_le)
+     VALUES('EVT-P3-CHARGE-EXPIREE','application/json','JSON','{}',?,2,?,?)"
+)->execute([str_repeat('d', 64), gmdate('c'), gmdate('c', time() - 3600)]);
+
+$purgeables = $registre->listerChargesPurgeables(null, 100);
+$verifier(
+    in_array('EVT-P3-CHARGE-EXPIREE', array_column($purgeables, 'reference'), true),
+    '59. listerChargesPurgeables() retrouve une charge dont l’expiration contractuelle est dépassée',
+);
+
+$purgeReussie = $registre->purgerCharge('EVT-P3-CHARGE-EXPIREE', $dossierGouvernance);
+$chargeApresPurge = $registre->resoudreCharge('EVT-P3-CHARGE-EXPIREE');
+$verifier(
+    ($purgeReussie['purgee'] ?? false) === true && ($chargeApresPurge['etat'] ?? null) === 'CHARGE_EXPIREE',
+    '60. une charge réellement expirée et sans livraison active se purge ; l’enveloppe et l’empreinte restent lisibles',
 );
 
 /* -------------------------------------------------------------------- fin */
