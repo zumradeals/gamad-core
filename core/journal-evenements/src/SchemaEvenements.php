@@ -264,6 +264,7 @@ final class SchemaEvenements
                     preuve_reference         TEXT NOT NULL,
                     correlation_id           TEXT,
                     volume_estime            INTEGER,
+                    curseur_sequence         INTEGER,
                     cree_le                  TEXT NOT NULL,
                     termine_le               TEXT
                 )

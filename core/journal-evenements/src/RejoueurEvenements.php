@@ -113,7 +113,13 @@ final class RejoueurEvenements
 
         $sql = 'SELECT sequence_id, reference FROM evenement_commun WHERE 1=1';
         $args = [];
-        if ($demande['sequence_debut'] !== null) {
+        $curseur = $demande['curseur_sequence'] !== null ? (int) $demande['curseur_sequence'] : null;
+        if ($curseur !== null) {
+            // Reprise : ne revoir aucun événement déjà traité par un appel
+            // précédent de cette même exécution (traiter-rejeux reprenable).
+            $sql .= ' AND sequence_id > ?';
+            $args[] = $curseur;
+        } elseif ($demande['sequence_debut'] !== null) {
             $sql .= ' AND sequence_id >= ?';
             $args[] = (int) $demande['sequence_debut'];
         }
@@ -143,17 +149,22 @@ final class RejoueurEvenements
 
         $abonnement = (string) $demande['abonnement_reference'];
         $traites = 0;
+        $dernierSequence = $curseur;
         foreach ($lignes as $ligne) {
             $this->reouvrirOuCreerLivraison($abonnement, (string) $ligne['reference'], (int) $ligne['sequence_id'], $reference);
             $traites++;
+            $dernierSequence = (int) $ligne['sequence_id'];
         }
 
         if (count($lignes) < $limiteLot) {
-            $this->magasin->prepare("UPDATE demande_rejeu SET etat = 'TERMINEE', termine_le = ? WHERE reference = ?")
-                ->execute([gmdate('c'), $reference]);
+            $this->magasin->prepare("UPDATE demande_rejeu SET etat = 'TERMINEE', curseur_sequence = ?, termine_le = ? WHERE reference = ?")
+                ->execute([$dernierSequence, gmdate('c'), $reference]);
 
             return ['reference' => $reference, 'etat' => 'TERMINEE', 'traites' => $traites];
         }
+
+        $this->magasin->prepare('UPDATE demande_rejeu SET curseur_sequence = ? WHERE reference = ?')
+            ->execute([$dernierSequence, $reference]);
 
         return ['reference' => $reference, 'etat' => 'EN_COURS', 'traites' => $traites];
     }
@@ -198,6 +209,7 @@ final class RejoueurEvenements
             'etat' => $l['etat'],
             'demandeur_reference' => $l['demandeur_reference'],
             'volume_estime' => $l['volume_estime'] !== null ? (int) $l['volume_estime'] : null,
+            'curseur_sequence' => $l['curseur_sequence'] !== null ? (int) $l['curseur_sequence'] : null,
             'cree_le' => $l['cree_le'],
             'termine_le' => $l['termine_le'],
         ];

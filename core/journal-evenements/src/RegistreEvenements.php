@@ -386,6 +386,40 @@ final class RegistreEvenements
     // ------------------------------------------------------------------
     // Purge gouvernée de la charge (jamais de l'enveloppe)
 
+    /**
+     * Références d'événements dont la charge a contractuellement expiré et
+     * qui ne dépendent plus d'aucune livraison active — candidats sûrs pour
+     * `purgerCharge()`. `$avant` ne peut que resserrer la sélection, jamais
+     * l'élargir au-delà de l'expiration réelle : `purgerCharge()` referait de
+     * toute façon le même contrôle, mais la liste de simulation doit rester
+     * honnête sur ce qui sera réellement purgé.
+     *
+     * @return list<array{reference:string,charge_expire_le:string}>
+     */
+    public function listerChargesPurgeables(?string $avant, int $limite): array
+    {
+        $borne = $avant !== null && $avant < gmdate('c') ? $avant : gmdate('c');
+        $st = $this->magasin->prepare(
+            'SELECT e.reference AS reference, e.charge_expire_le AS charge_expire_le
+             FROM evenement_commun e
+             INNER JOIN evenement_charge ec ON ec.evenement_reference = e.reference
+             WHERE e.charge_expire_le IS NOT NULL AND e.charge_expire_le <= ?
+               AND NOT EXISTS (
+                   SELECT 1 FROM livraison_evenement l
+                   WHERE l.evenement_reference = e.reference
+                     AND l.etat IN (\'DISPONIBLE\', \'SOUS_BAIL\', \'A_REESSAYER\')
+               )
+             ORDER BY e.sequence_id
+             LIMIT ?'
+        );
+        $st->execute([$borne, max(1, $limite)]);
+
+        return array_map(
+            static fn (array $l): array => ['reference' => (string) $l['reference'], 'charge_expire_le' => (string) $l['charge_expire_le']],
+            $st->fetchAll(),
+        );
+    }
+
     /** @param array<string,mixed> $dossier @return array<string,mixed> */
     public function purgerCharge(string $reference, array $dossier): array
     {

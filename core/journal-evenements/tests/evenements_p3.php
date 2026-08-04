@@ -519,6 +519,51 @@ foreach ($livreur->listerLivraisons($ABN) as $l) {
 }
 $verifier($livraisonRejouee !== null, '52. le rejeu marque la livraison comme issue d’un rejeu, sans créer de nouvel événement (référence d’origine inchangée)');
 
+/* ---------------------------------------------------------------- 53-55 : rejeu reprenable sur plusieurs lots */
+$demandeMultiple = $rejoueur->demanderRejeu($ABN, [
+    'motif' => 'test de reprise multi-lots', 'demandeur' => $CONSOMMATEUR_CAPACITE,
+    'politique' => 'POL-EVENEMENTS-V1', 'preuve' => 'EVT-P3-REJ-MULTI',
+    'sequence_debut' => (int) $accepte1['sequence'], 'sequence_fin' => (int) $accepte3['sequence'],
+]);
+$rejoueur->validerRejeu((string) $demandeMultiple['reference'], []);
+
+// Trois événements en portée, un par lot : les trois premiers appels
+// traitent chacun un événement distinct (page pleine, encore EN_COURS) ; le
+// quatrième constate qu'il ne reste plus rien et clôt en TERMINEE — la
+// convention de pagination usuelle (page pleine ⇒ peut-être encore, page
+// vide ⇒ fini) exige cet appel supplémentaire quand le total est un
+// multiple exact de la taille de lot.
+$lot1 = $rejoueur->executerRejeu((string) $demandeMultiple['reference'], 1);
+$lot2 = $rejoueur->executerRejeu((string) $demandeMultiple['reference'], 1);
+$lot3 = $rejoueur->executerRejeu((string) $demandeMultiple['reference'], 1);
+$lot4 = $rejoueur->executerRejeu((string) $demandeMultiple['reference'], 1);
+$verifier(
+    ($lot1['etat'] ?? null) === 'EN_COURS' && ($lot1['traites'] ?? 0) === 1
+        && ($lot2['etat'] ?? null) === 'EN_COURS' && ($lot2['traites'] ?? 0) === 1
+        && ($lot3['etat'] ?? null) === 'EN_COURS' && ($lot3['traites'] ?? 0) === 1
+        && ($lot4['etat'] ?? null) === 'TERMINEE' && ($lot4['traites'] ?? 0) === 0,
+    '53. un rejeu multi-lots avance par curseur : chaque appel traite le lot suivant, jamais le même deux fois',
+);
+
+$lotSurplus = $rejoueur->executerRejeu((string) $demandeMultiple['reference'], 1);
+$verifier(
+    ($lotSurplus['refus'] ?? null) === 'ETAT_INCOMPATIBLE',
+    '54. rejouer l’exécution d’une demande déjà TERMINEE est refusé, pas silencieusement ignoré',
+);
+
+$evenementsAvecLivraisonMultiple = array_filter(
+    $livreur->listerLivraisons($ABN),
+    static fn (array $l): bool => in_array($l['evenement_reference'], [$accepte1['reference'], $accepte2['reference'], $accepte3['reference']], true) && (int) $l['rejeu'] === 1,
+);
+$parEvenement = [];
+foreach ($evenementsAvecLivraisonMultiple as $l) {
+    $parEvenement[$l['evenement_reference']] = ($parEvenement[$l['evenement_reference']] ?? 0) + 1;
+}
+$verifier(
+    count($parEvenement) === 3 && array_sum($parEvenement) === 3,
+    '55. les trois événements du rejeu multi-lots ont chacun exactement une ligne de livraison, aucun doublon malgré trois exécutions successives',
+);
+
 /* -------------------------------------------------------------------- fin */
 echo "\n";
 if ($echecs === 0) {
