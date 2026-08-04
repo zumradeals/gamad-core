@@ -22,6 +22,7 @@ final class FournisseurSecretController
     public function store(Request $request, AccesSecrets $acces): JsonResponse
     {
         $donnees = $request->validate([
+            'reference' => ['nullable', 'string', 'max:64', 'regex:/^FOU-GAMAD-[A-Z0-9-]+$/'],
             'nom' => ['required', 'string', 'max:255'],
             'type_fournisseur' => ['required', 'string', 'in:' . implode(',', PolitiqueSecretsCles::TYPES_FOURNISSEUR)],
             'realm_reference' => ['nullable', 'string', 'max:64'],
