@@ -187,6 +187,9 @@ jobs:
       - name: Éprouver la cohérence OpenAPI du journal des événements
         run: php apps/console-laravel/tests/Integration/evenements_drift_p1.php
 
+      - name: Éprouver les commandes d'exploitation du journal des événements
+        run: php apps/console-laravel/tests/Integration/evenements_commandes_p1.php
+
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php
 
