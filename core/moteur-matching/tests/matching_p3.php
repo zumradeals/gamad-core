@@ -29,11 +29,13 @@ require __DIR__ . '/../src/Apparieur.php';
 require __DIR__ . '/../src/EvaluateurDeterministe.php';
 require __DIR__ . '/../src/Classement.php';
 require __DIR__ . '/../src/CompilateurPolitique.php';
+require __DIR__ . '/../src/Segments.php';
 
 use Gamad\MoteurMatching\Apparieur;
 use Gamad\MoteurMatching\Classement;
 use Gamad\MoteurMatching\CompilateurPolitique;
 use Gamad\MoteurMatching\EvaluateurDeterministe;
+use Gamad\MoteurMatching\Segments;
 
 $echecs = 0;
 $verifier = static function (bool $ok, string $libelle) use (&$echecs): void {
@@ -225,6 +227,34 @@ $specificationVersionB = $specificationValide;
 $specificationVersionB['politique_version'] = '2.0.0';
 $compilationB = CompilateurPolitique::compiler($specificationVersionB);
 $verifier($compilationB['plan_hash'] !== $compilation1['plan_hash'], '75. une politique de version différente produit un plan — et donc un résultat — lié à sa propre version');
+
+echo "\nSegments — construction protégée et vérification d’appartenance\n";
+
+$sujetsInsuffisants = ['SUJ-001', 'SUJ-002'];
+$refusPetitePopulation = Segments::construire($sujetsInsuffisants, 25);
+$verifier(($refusPetitePopulation['refus'] ?? null) === 'MATCHING_POPULATION_TOO_SMALL', '94. petite population refusée plutôt qu’un segment fabriqué');
+
+$sujetsSuffisants = array_map(static fn (int $i): string => "SUJ-" . str_pad((string) $i, 3, '0', STR_PAD_LEFT), range(1, 30));
+$segmentA = Segments::construire($sujetsSuffisants, 25);
+$segmentB = Segments::construire(array_reverse($sujetsSuffisants), 25);
+$verifier(!isset($segmentA['refus']), 'population suffisante : segment construit');
+$verifier($segmentA['membres_hash'] === $segmentB['membres_hash'], '95. empreinte des membres stable, indépendante de l’ordre d’entrée');
+$verifier($segmentA['population_nombre'] === 30, 'population_nombre reflète exactement le nombre de sujets admissibles');
+
+$tokens = array_column($segmentA['membres'], 'membre_token');
+$verifier(count($tokens) === count(array_unique($tokens)), '90bis. chaque membre reçoit un token distinct');
+$verifier(str_starts_with($tokens[0], 'MTK-') && strlen($tokens[0]) === 68, 'token opaque au format attendu (préfixe + 256 bits hexadécimaux)');
+
+$instant = '2026-08-06T00:00:00Z';
+$membresActifs = [
+    ['membre_token' => $tokens[0], 'sujet_reference_interne' => 'SUJ-001', 'statut' => 'ACTIF', 'valide_jusqua' => '2026-12-31T00:00:00Z'],
+];
+$verifier(Segments::verifierAppartenance($membresActifs, $tokens[0], $instant) === 'APPARTIENT', 'vérification d’appartenance : token actif et valide reconnu');
+$verifier(Segments::verifierAppartenance($membresActifs, 'MTK-' . bin2hex(random_bytes(32)), $instant) === 'N_APPARTIENT_PAS', 'un token inconnu ne révèle jamais la liste, seulement N_APPARTIENT_PAS');
+$membresExpires = [['membre_token' => $tokens[0], 'sujet_reference_interne' => 'SUJ-001', 'statut' => 'ACTIF', 'valide_jusqua' => '2020-01-01T00:00:00Z']];
+$verifier(Segments::verifierAppartenance($membresExpires, $tokens[0], $instant) === 'N_APPARTIENT_PAS', '98. un token expiré n’appartient plus, même retrouvé');
+$membresRevoques = [['membre_token' => $tokens[0], 'sujet_reference_interne' => 'SUJ-001', 'statut' => 'REVOQUE', 'valide_jusqua' => '2026-12-31T00:00:00Z']];
+$verifier(Segments::verifierAppartenance($membresRevoques, $tokens[0], $instant) === 'N_APPARTIENT_PAS', '96/99. un membre révoqué n’appartient plus au segment');
 
 if ($echecs > 0) {
     fwrite(STDERR, "\n{$echecs} épreuve(s) en échec.\n");
