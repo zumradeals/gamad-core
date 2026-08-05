@@ -25,8 +25,10 @@ declare(strict_types=1);
 require __DIR__ . '/../src/PolitiqueMatching.php';
 require __DIR__ . '/../src/Apparieur.php';
 require __DIR__ . '/../src/EvaluateurDeterministe.php';
+require __DIR__ . '/../src/Classement.php';
 
 use Gamad\MoteurMatching\Apparieur;
+use Gamad\MoteurMatching\Classement;
 use Gamad\MoteurMatching\EvaluateurDeterministe;
 
 $echecs = 0;
@@ -152,6 +154,30 @@ $resultatContradictoirePondere = EvaluateurDeterministe::evaluer($critereContrad
     'CRT-D' => ['etat' => 'SATISFAIT', 'confiance_source' => 0.8],
 ]);
 $verifier($resultatContradictoirePondere['pertinence'] === 1.0, 'un critère pondéré contradictoire n’altère pas la contribution admissible de calcul (exclu du dénominateur par défaut)');
+
+echo "\nClassement — tri déterministe de plusieurs résultats\n";
+
+$candidats = [
+    ['candidat_reference' => 'CAND-B', 'admissible' => true, 'classe' => 'CORRESPONDANCE_PARTIELLE', 'pertinence' => 0.4, 'confiance' => 0.9, 'regles_secondaires' => []],
+    ['candidat_reference' => 'CAND-A', 'admissible' => true, 'classe' => 'CORRESPONDANCE_FORTE', 'pertinence' => 0.95, 'confiance' => 0.5, 'regles_secondaires' => []],
+    ['candidat_reference' => 'CAND-C', 'admissible' => false, 'classe' => 'CORRESPONDANCE_FORTE', 'pertinence' => 1.0, 'confiance' => 1.0, 'regles_secondaires' => []],
+    ['candidat_reference' => 'CAND-D', 'admissible' => true, 'classe' => 'INDETERMINE', 'pertinence' => null, 'confiance' => null, 'regles_secondaires' => []],
+];
+$classe1 = Classement::classer($candidats);
+$classe2 = Classement::classer($candidats);
+$verifier($classe1 === $classe2, '70. classement stable : même entrée, même ordre à chaque appel');
+$verifier($classe1[0]['candidat_reference'] === 'CAND-A' && $classe1[0]['rang'] === 1, 'admissibilité et classe priment sur la pertinence brute (CAND-A avant CAND-C non admissible)');
+$verifier($classe1[1]['candidat_reference'] === 'CAND-B' && $classe1[1]['rang'] === 2, 'ordre de classe respecté (FORTE avant PARTIELLE)');
+$dernier = end($classe1);
+$verifier($dernier['candidat_reference'] === 'CAND-C' && $dernier['rang'] === null, 'un candidat non admissible n’est jamais classé, quelle que soit sa pertinence brute');
+
+$exAequo = [
+    ['candidat_reference' => 'CAND-Z', 'admissible' => true, 'classe' => 'CORRESPONDANCE_PROBABLE', 'pertinence' => 0.6, 'confiance' => 0.6, 'regles_secondaires' => []],
+    ['candidat_reference' => 'CAND-Y', 'admissible' => true, 'classe' => 'CORRESPONDANCE_PROBABLE', 'pertinence' => 0.6, 'confiance' => 0.6, 'regles_secondaires' => []],
+];
+$classeExAequo = Classement::classer($exAequo);
+$verifier($classeExAequo[0]['candidat_reference'] === 'CAND-Y', '71. départage stable par référence lorsque tout le reste est identique');
+$verifier(array_keys($classeExAequo[0]) === array_keys($exAequo[0] + ['rang' => null]), '72. le classement n’ajoute aucun attribut caché : seul `rang` est produit en plus des champs fournis');
 
 if ($echecs > 0) {
     fwrite(STDERR, "\n{$echecs} épreuve(s) en échec.\n");
