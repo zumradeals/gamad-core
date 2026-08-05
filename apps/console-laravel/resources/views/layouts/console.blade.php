@@ -146,6 +146,14 @@
                 </span>
                 Secrets &amp; clés
             </a>
+            <a class="nav__link"
+               href="{{ route('console.preuves.index') }}"
+               @if(request()->routeIs('console.preuves.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+                </span>
+                Preuves d’intégrité
+            </a>
 
             <span class="nav__label">Sécurité et continuité</span>
             <a class="nav__link"

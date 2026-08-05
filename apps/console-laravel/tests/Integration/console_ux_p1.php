@@ -23,6 +23,7 @@ use Gamad\RegistreNormes\Db;
 use Gamad\RegistreContrats\Magasin as ContratsMagasin;
 use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
+use Gamad\RegistrePreuves\Magasin as PreuvesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreRealms\Magasin as RealmsMagasin;
 use Gamad\RegistreSecretsCles\Magasin as SecretsMagasin;
@@ -48,6 +49,7 @@ $fichiers = [
     'journal' => $temp.'-journal.sqlite',
     'evenements' => $temp.'-evenements.sqlite',
     'secrets' => $temp.'-secrets.sqlite',
+    'preuves' => $temp.'-preuves.sqlite',
     'config' => $temp.'-config.php',
     'events' => $temp.'-events.php',
     'packages' => $temp.'-packages.php',
@@ -102,6 +104,8 @@ $environnement = [
     'EVENT_JOURNAL_PATH' => $fichiers['evenements'],
     'SECRET_REGISTRY_URL' => '',
     'SECRET_REGISTRY_PATH' => $fichiers['secrets'],
+    'PROOF_REGISTRY_URL' => '',
+    'PROOF_REGISTRY_PATH' => $fichiers['preuves'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -125,6 +129,7 @@ RealmsMagasin::connecter();
 JournalMagasin::connecter();
 EvenementsMagasin::connecter();
 SecretsMagasin::connecter();
+PreuvesMagasin::connecter();
 
 $app = require $application.'/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');

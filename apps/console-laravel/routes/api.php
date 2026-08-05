@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\LettreMorteController;
 use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PasskeySessionController;
 use App\Http\Controllers\Api\V1\PolitiqueController;
+use App\Http\Controllers\Api\V1\PreuveController;
 use App\Http\Controllers\Api\V1\ProduitController;
 use App\Http\Controllers\Api\V1\RealmController;
 use App\Http\Controllers\Api\V1\RejeuController;
@@ -453,6 +454,35 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         Route::post('/rotations-secrets/{reference}/validation', [RotationSecretController::class, 'validation'])
             ->middleware('throttle:10,1');
         Route::post('/rotations-secrets/{reference}/execution', [RotationSecretController::class, 'execution'])
+            ->middleware('throttle:20,1');
+
+        // CAP-CORE-015 — preuves d'intégrité : lecture, vérification et
+        // cycle. Aucune signature de contenu libre ni choix de clé par
+        // l'appelant (fiche partie 4 §1) — voir PreuveController.
+        Route::get('/preuves', [PreuveController::class, 'index']);
+        Route::post('/preuves', [PreuveController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::get('/preuves/diagnostic', [PreuveController::class, 'diagnostic']);
+        Route::post('/preuves/verification-paquet', [PreuveController::class, 'verificationPaquet'])
+            ->middleware('throttle:30,1');
+        Route::get('/preuves/{reference}', [PreuveController::class, 'show']);
+        Route::get('/preuves/{reference}/etat', [PreuveController::class, 'etat']);
+        Route::get('/preuves/{reference}/empreintes', [PreuveController::class, 'empreintes']);
+        Route::get('/preuves/{reference}/signatures', [PreuveController::class, 'signatures']);
+        Route::get('/preuves/{reference}/manifeste', [PreuveController::class, 'manifeste']);
+        Route::get('/preuves/{reference}/attestation', [PreuveController::class, 'attestation']);
+        Route::get('/preuves/{reference}/checkpoint', [PreuveController::class, 'checkpoint']);
+        Route::get('/preuves/{reference}/verifications', [PreuveController::class, 'verifications']);
+        Route::get('/preuves/{reference}/liens', [PreuveController::class, 'liens']);
+        Route::post('/preuves/{reference}/verification', [PreuveController::class, 'verification'])
+            ->middleware('throttle:60,1');
+        Route::post('/preuves/{reference}/suspension', [PreuveController::class, 'suspension'])
+            ->middleware('throttle:10,1');
+        Route::post('/preuves/{reference}/revocation', [PreuveController::class, 'revocation'])
+            ->middleware('throttle:10,1');
+        Route::post('/preuves/{reference}/compromission', [PreuveController::class, 'compromission'])
+            ->middleware('throttle:30,1');
+        Route::post('/preuves/{reference}/export', [PreuveController::class, 'export'])
             ->middleware('throttle:20,1');
     });
 });

@@ -9,7 +9,7 @@ La cible unique est le serveur actuel :
 Nginx HTTPS
 → /var/www/gamad-core/apps/console-laravel/public/index.php
 → PHP 8.3 FPM
-→ treize bases PostgreSQL locales dédiées
+→ quatorze bases PostgreSQL locales dédiées
 ```
 
 L'ancien `nixpacks.toml`, qui décrivait un déploiement Railway abandonné, est
@@ -17,7 +17,7 @@ retiré du dépôt afin qu'il ne puisse plus être pris pour une cible active.
 
 ## Topologie minimale
 
-Treize bases PostgreSQL physiquement distinctes sont attendues :
+Quatorze bases PostgreSQL physiquement distinctes sont attendues :
 
 | Cible | Variable applicative | Contenu |
 |---|---|---|
@@ -34,6 +34,7 @@ Treize bases PostgreSQL physiquement distinctes sont attendues :
 | journal | `JOURNAL_OPERATIONNEL_URL` | événements d'exploitation et audit |
 | evenements | `EVENT_JOURNAL_URL` | journal central des événements communs (CAP-CORE-014) |
 | secrets | `SECRET_REGISTRY_URL` | registre de gouvernance des secrets et clés (CAP-CORE-016) |
+| preuves | `PROOF_REGISTRY_URL` | registre des preuves d'intégrité (CAP-CORE-015) |
 
 Laravel stocke aussi ses sessions web dans la cible `gamad_access` avec :
 
@@ -48,8 +49,8 @@ SESSION_SECURE_COOKIE=true
 En production, définir `GAMAD_INDEX_DRIVER`, `GAMAD_ACCESS_DRIVER`,
 `GAMAD_IDENTITY_DRIVER`, `GAMAD_PRODUCTS_DRIVER`, `GAMAD_SOURCES_DRIVER`,
 `GAMAD_POLICIES_DRIVER`, `GAMAD_CONTRACTS_DRIVER`, `GAMAD_VOCABULARY_DRIVER`,
-`GAMAD_ORGANIZATIONS_DRIVER`, `GAMAD_REALMS_DRIVER`, `GAMAD_JOURNAL_DRIVER`, `GAMAD_EVENT_DRIVER` et
-`GAMAD_SECRETS_DRIVER` à `pgsql`. La readiness refuse SQLite en production.
+`GAMAD_ORGANIZATIONS_DRIVER`, `GAMAD_REALMS_DRIVER`, `GAMAD_JOURNAL_DRIVER`, `GAMAD_EVENT_DRIVER`,
+`GAMAD_SECRETS_DRIVER` et `GAMAD_PROOFS_DRIVER` à `pgsql`. La readiness refuse SQLite en production.
 
 Pour les essais SQLite locaux uniquement, les répertoires `var/` des modules
 doivent appartenir à l'utilisateur PHP-FPM. En production PostgreSQL, aucun
@@ -123,7 +124,7 @@ déploiement reste une action explicite sur ce serveur.
 
 ## Sauvegarde sans secret en ligne de commande
 
-Installer treize services dans `pg_service.conf`, avec mots de passe dans un
+Installer quatorze services dans `pg_service.conf`, avec mots de passe dans un
 fichier `.pgpass` protégé, puis exporter uniquement leurs noms :
 
 ```text
@@ -140,6 +141,7 @@ GAMAD_REALMS_PGSERVICE=gamad_realms
 GAMAD_JOURNAL_PGSERVICE=gamad_journal
 GAMAD_EVENEMENTS_PGSERVICE=gamad_evenements
 GAMAD_SECRETS_PGSERVICE=gamad_secrets
+GAMAD_PREUVES_PGSERVICE=gamad_preuves
 GAMAD_BACKUP_DIR=/var/backups/gamad-core/daily
 PGSERVICEFILE=/etc/gamad-core/pg_service.conf
 PGPASSFILE=/etc/gamad-core/pgpass
@@ -162,6 +164,7 @@ GAMAD_REALMS_PGDATABASE=registre_realms
 GAMAD_JOURNAL_PGDATABASE=journal_operationnel
 GAMAD_EVENEMENTS_PGDATABASE=journal_evenements
 GAMAD_SECRETS_PGDATABASE=registre_secrets_cles
+GAMAD_PREUVES_PGDATABASE=registre_preuves
 ```
 
 Exécuter :
@@ -170,7 +173,7 @@ Exécuter :
 ops/core-foundation/backup.sh
 ```
 
-Chaque lot contient treize archives au format custom et un manifeste
+Chaque lot contient quatorze archives au format custom et un manifeste
 `SHA256SUMS`.
 
 ## Import initial des magasins SQLite
@@ -196,8 +199,8 @@ la transaction. Il ne supprime ni ne renomme les fichiers SQLite sources.
 
 ## Exercice de restauration
 
-Ne jamais viser les bases de production. Préparer treize bases isolées et
-treize services `pg_service.conf` distincts, puis définir :
+Ne jamais viser les bases de production. Préparer quatorze bases isolées et
+quatorze services `pg_service.conf` distincts, puis définir :
 
 ```text
 GAMAD_RESTORE_SOURCE=/srv/backups/gamad-core/AAAAMMJJTHHMMSSZ
@@ -214,6 +217,7 @@ GAMAD_RESTORE_REALMS_PGSERVICE=drill_realms
 GAMAD_RESTORE_JOURNAL_PGSERVICE=drill_journal
 GAMAD_RESTORE_EVENEMENTS_PGSERVICE=drill_evenements
 GAMAD_RESTORE_SECRETS_PGSERVICE=drill_secrets
+GAMAD_RESTORE_PREUVES_PGSERVICE=drill_preuves
 GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases
 ```
 
@@ -224,8 +228,8 @@ Lancer `ops/core-foundation/restore-drill.sh`. Le script vérifie les empreintes
 restaure en transaction et exécute une lecture minimale de chaque base. Le
 résultat et la durée doivent ensuite être inscrits au registre opérationnel.
 
-La CI exécute ce cycle complet sur vingt-quatre bases PostgreSQL temporaires
-(treize sources et treize cibles isolées) via
+La CI exécute ce cycle complet sur vingt-huit bases PostgreSQL temporaires
+(quatorze sources et quatorze cibles isolées) via
 `apps/console-laravel/tests/Integration/postgresql_p0.sh`.
 
 ## Copie hors machine

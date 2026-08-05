@@ -13,6 +13,7 @@ use Gamad\RegistreNormes\Db;
 use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistrePreuves\Magasin as PreuvesMagasin;
 use Gamad\RegistreRealms\Magasin as RealmsMagasin;
 use Gamad\RegistreSecretsCles\Magasin as SecretsMagasin;
 use Gamad\RegistreSources\Magasin as SourcesMagasin;
@@ -156,6 +157,17 @@ final class EtatFondation
                 $production,
                 verifierSecretsCles: true,
             ),
+            'preuves' => $this->inspecterCible(
+                'PROOF_REGISTRY_URL',
+                fn (): \PDO => PreuvesMagasin::ouvrir(),
+                [
+                    'migration_registre_preuves', 'preuve', 'preuve_representation', 'preuve_empreinte',
+                    'preuve_signature', 'preuve_cycle', 'manifeste', 'manifeste_membre', 'attestation',
+                    'checkpoint_preuve', 'verification_preuve', 'preuve_lien', 'paquet_preuve',
+                ],
+                $production,
+                verifierPreuves: true,
+            ),
         ];
 
         $configuration = [
@@ -197,6 +209,7 @@ final class EtatFondation
         bool $verifierJournal = false,
         bool $verifierChaineEvenements = false,
         bool $verifierSecretsCles = false,
+        bool $verifierPreuves = false,
     ): array {
         $urlPresente = trim((string) $this->environnement($variable)) !== '';
         if ($production && ! $urlPresente) {
@@ -273,6 +286,26 @@ final class EtatFondation
                     'verification_complete' => 'php artisan core:secrets:diagnostiquer',
                 ];
             }
+            if ($verifierPreuves && $tablesOk) {
+                $preparees = (int) $pdo->query(
+                    "SELECT count(*) FROM preuve p
+                     WHERE NOT EXISTS (SELECT 1 FROM preuve_cycle c WHERE c.preuve_reference = p.reference AND c.etat <> 'PREPAREE')"
+                )->fetchColumn();
+                $compromises = (int) $pdo->query(
+                    "SELECT count(*) FROM preuve_cycle c1
+                     WHERE c1.etat = 'COMPROMISE' AND c1.id = (
+                         SELECT MAX(c2.id) FROM preuve_cycle c2 WHERE c2.preuve_reference = c1.preuve_reference
+                     )"
+                )->fetchColumn();
+                $sodiumDisponible = extension_loaded('sodium') && function_exists('sodium_crypto_sign_detached');
+                $integrite = [
+                    'tete_lisible' => $sodiumDisponible,
+                    'preparees_bloquees' => $preparees,
+                    'compromises' => $compromises,
+                    'sodium_disponible' => $sodiumDisponible,
+                    'verification_complete' => 'php artisan core:preuves:diagnostiquer',
+                ];
+            }
             $moteurOk = ! $production || $moteur === 'pgsql';
             $integriteOk = $integrite === null || $integrite['tete_lisible'] === true;
 
@@ -318,6 +351,7 @@ final class EtatFondation
             'REALM_REGISTRY_URL' => 'database.connections.gamad_realms.url',
             'EVENT_JOURNAL_URL' => 'database.connections.gamad_evenements.url',
             'SECRET_REGISTRY_URL' => 'database.connections.gamad_secrets.url',
+            'PROOF_REGISTRY_URL' => 'database.connections.gamad_preuves.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);
