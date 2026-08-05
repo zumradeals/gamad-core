@@ -30,11 +30,15 @@ require __DIR__ . '/../src/EvaluateurDeterministe.php';
 require __DIR__ . '/../src/Classement.php';
 require __DIR__ . '/../src/CompilateurPolitique.php';
 require __DIR__ . '/../src/Segments.php';
+require __DIR__ . '/../src/Explication.php';
+require __DIR__ . '/../src/Activation.php';
 
+use Gamad\MoteurMatching\Activation;
 use Gamad\MoteurMatching\Apparieur;
 use Gamad\MoteurMatching\Classement;
 use Gamad\MoteurMatching\CompilateurPolitique;
 use Gamad\MoteurMatching\EvaluateurDeterministe;
+use Gamad\MoteurMatching\Explication;
 use Gamad\MoteurMatching\Segments;
 
 $echecs = 0;
@@ -255,6 +259,84 @@ $membresExpires = [['membre_token' => $tokens[0], 'sujet_reference_interne' => '
 $verifier(Segments::verifierAppartenance($membresExpires, $tokens[0], $instant) === 'N_APPARTIENT_PAS', '98. un token expiré n’appartient plus, même retrouvé');
 $membresRevoques = [['membre_token' => $tokens[0], 'sujet_reference_interne' => 'SUJ-001', 'statut' => 'REVOQUE', 'valide_jusqua' => '2026-12-31T00:00:00Z']];
 $verifier(Segments::verifierAppartenance($membresRevoques, $tokens[0], $instant) === 'N_APPARTIENT_PAS', '96/99. un membre révoqué n’appartient plus au segment');
+
+echo "\nExplication — projection consommateur filtrée\n";
+
+$resultatType = [
+    'classe' => 'CORRESPONDANCE_PROBABLE', 'pertinence' => 0.6, 'confiance' => 0.4,
+    'non_decisionnel' => true, 'expire_le' => '2026-12-31T00:00:00Z',
+    'politique_reference' => 'POL-MATCHING-V1', 'politique_version' => '1.0.0',
+    'preuve_reference' => 'PRV-GAMAD-TEST', 'obligations' => ['NO_RAW_EXPORT', 'PURPOSE_BOUND'],
+];
+$facteursMixtes = [
+    ['critere_reference' => 'CRT-A', 'nature' => 'FAVORABLE', 'code_explication' => 'territoire_correspond', 'public_autorise' => true],
+    ['critere_reference' => 'CRT-B', 'nature' => 'DEFAVORABLE', 'code_explication' => 'age_hors_plage', 'public_autorise' => true],
+    ['critere_reference' => 'CRT-C', 'nature' => 'NON_ETABLI', 'code_explication' => 'permis_non_verifie', 'public_autorise' => true],
+    ['critere_reference' => 'CRT-SENSIBLE', 'nature' => 'DEFAVORABLE', 'code_explication' => 'source_interne_sensible', 'public_autorise' => false],
+];
+$projection = Explication::projeter($resultatType, $facteursMixtes, 'WASPLEX_AUDIENCE');
+$verifier($projection['facteurs_favorables'] === ['territoire_correspond'], '76. facteurs favorables projetés');
+$verifier($projection['facteurs_defavorables'] === ['age_hors_plage'], '77. facteurs défavorables projetés');
+$verifier($projection['facteurs_non_etablis'] === ['permis_non_verifie'], '78. facteurs non établis projetés');
+$verifier(!in_array('source_interne_sensible', $projection['facteurs_defavorables'], true), '79. facteur marqué non public jamais exposé au consommateur');
+$verifier($projection['non_decisionnel'] === true, '81. non_decisionnel=true toujours présent dans la projection');
+$verifier($projection['confiance'] !== $projection['pertinence'], '83/84. confiance faible reste visible séparément, la pertinence ne la masque pas');
+
+$exceptionLevee = false;
+try {
+    Explication::projeter(['classe' => 'X', 'pertinence' => null, 'confiance' => null, 'non_decisionnel' => false, 'expire_le' => '2026-01-01', 'politique_reference' => 'P', 'politique_version' => '1', 'preuve_reference' => null, 'obligations' => []], []);
+} catch (\Gamad\MoteurMatching\ExceptionMatching) {
+    $exceptionLevee = true;
+}
+$verifier($exceptionLevee, 'non_decisionnel=false est un invariant violé, jamais projeté silencieusement');
+
+$verifier(Explication::estExpire('2026-01-01T00:00:00Z', '2026-06-01T00:00:00Z') === true, '82. un résultat expiré est détecté, jamais présenté comme actuel');
+$verifier(Explication::estExpire('2026-12-31T00:00:00Z', '2026-06-01T00:00:00Z') === false, '82bis. un résultat encore valide n’est pas marqué expiré');
+
+echo "\nActivation — vérification déterministe des préconditions\n";
+
+$faitsValides = [
+    'segment_etat' => 'ACTIF', 'segment_expire_le' => '2026-12-31T00:00:00Z', 'instant_reference' => '2026-08-06T00:00:00Z',
+    'segment_consommateur_produit' => 'PRD-GAMAD-002', 'demande_consommateur_produit' => 'PRD-GAMAD-002',
+    'segment_finalite_reference' => 'AUDIENCE_TEST', 'demande_finalite_reference' => 'AUDIENCE_TEST',
+    'segment_realm_reference' => 'RLM-GAMAD-CORE', 'demande_realm_reference' => 'RLM-GAMAD-CORE',
+    'produit_actif' => true, 'contrat_actif' => true, 'politique_active' => true,
+    'autorisation_decision' => 'PERMIS', 'decision_formelle_requise' => false, 'decision_formelle_presente' => false,
+    'risque_bloquant' => false, 'incident_bloquant' => false, 'obligations_acceptees' => true,
+];
+$verifier(Activation::verifier($faitsValides)['decision'] === 'AUTORISEE', '101. activation valide autorisée');
+
+$sansAutorisation = $faitsValides;
+$sansAutorisation['autorisation_decision'] = 'REFUSE';
+$verifier(Activation::verifier($sansAutorisation) === ['decision' => 'REFUSEE', 'motif_code' => 'MATCHING_ACTIVATION_DENIED'], '102. activation sans autorisation CAP-CORE-004 refusée');
+
+$autreProduit = $faitsValides;
+$autreProduit['demande_consommateur_produit'] = 'PRD-GAMAD-004';
+$verifier(Activation::verifier($autreProduit)['motif_code'] === 'MATCHING_CONSUMER_NOT_ALLOWED', '104. activation pour un autre produit refusée');
+
+$autreFinalite = $faitsValides;
+$autreFinalite['demande_finalite_reference'] = 'AUTRE_FINALITE';
+$verifier(Activation::verifier($autreFinalite)['motif_code'] === 'MATCHING_PURPOSE_NOT_ALLOWED', '105. activation pour une autre finalité refusée');
+
+$autreRealm = $faitsValides;
+$autreRealm['demande_realm_reference'] = 'RLM-AUTRE';
+$verifier(Activation::verifier($autreRealm)['motif_code'] === 'MATCHING_REALM_NOT_ALLOWED', '106. activation dans un autre realm refusée');
+
+$produitSuspendu = $faitsValides;
+$produitSuspendu['produit_actif'] = false;
+$verifier(Activation::verifier($produitSuspendu)['motif_code'] === 'MATCHING_PRODUCT_INACTIVE', '112. produit suspendu suspend l’activation');
+
+$incidentBloquant = $faitsValides;
+$incidentBloquant['incident_bloquant'] = true;
+$verifier(Activation::verifier($incidentBloquant)['motif_code'] === 'MATCHING_INCIDENT_BLOCKED', '113. incident bloquant suspend l’activation');
+
+$risqueBloquant = $faitsValides;
+$risqueBloquant['risque_bloquant'] = true;
+$verifier(Activation::verifier($risqueBloquant)['motif_code'] === 'MATCHING_RISK_BLOCKED', '114. risque bloquant refuse l’activation');
+
+$segmentExpire = $faitsValides;
+$segmentExpire['segment_etat'] = 'EXPIRE';
+$verifier(Activation::verifier($segmentExpire)['motif_code'] === 'MATCHING_SEGMENT_EXPIRED', '115. segment expiré refuse toute activation');
 
 if ($echecs > 0) {
     fwrite(STDERR, "\n{$echecs} épreuve(s) en échec.\n");
