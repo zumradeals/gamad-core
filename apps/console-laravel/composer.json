@@ -45,7 +45,8 @@
             "Gamad\\JournalEvenements\\": "../../core/journal-evenements/src/",
             "Gamad\\EvenementsSortants\\": "../../core/evenements-sortants/src/",
             "Gamad\\RegistreSecretsCles\\": "../../core/registre-secrets-cles/src/",
-            "Gamad\\RegistrePreuves\\": "../../core/registre-preuves/src/"
+            "Gamad\\RegistrePreuves\\": "../../core/registre-preuves/src/",
+            "Gamad\\MoteurMatching\\": "../../core/moteur-matching/src/"
         }
     },
     "autoload-dev": {
