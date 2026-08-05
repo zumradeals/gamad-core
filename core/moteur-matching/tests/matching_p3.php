@@ -22,13 +22,17 @@ declare(strict_types=1);
  * Code de sortie : 0 si toutes les épreuves passent.
  */
 
+require __DIR__ . '/../../registre-preuves/src/Canonicaliseur.php';
 require __DIR__ . '/../src/PolitiqueMatching.php';
+require __DIR__ . '/../src/ExceptionMatching.php';
 require __DIR__ . '/../src/Apparieur.php';
 require __DIR__ . '/../src/EvaluateurDeterministe.php';
 require __DIR__ . '/../src/Classement.php';
+require __DIR__ . '/../src/CompilateurPolitique.php';
 
 use Gamad\MoteurMatching\Apparieur;
 use Gamad\MoteurMatching\Classement;
+use Gamad\MoteurMatching\CompilateurPolitique;
 use Gamad\MoteurMatching\EvaluateurDeterministe;
 
 $echecs = 0;
@@ -178,6 +182,49 @@ $exAequo = [
 $classeExAequo = Classement::classer($exAequo);
 $verifier($classeExAequo[0]['candidat_reference'] === 'CAND-Y', '71. départage stable par référence lorsque tout le reste est identique');
 $verifier(array_keys($classeExAequo[0]) === array_keys($exAequo[0] + ['rang' => null]), '72. le classement n’ajoute aucun attribut caché : seul `rang` est produit en plus des champs fournis');
+
+echo "\nCompilateurPolitique — compilation déterministe et reproductible\n";
+
+$specificationValide = [
+    'politique_reference' => 'POL-MATCHING-V1', 'politique_version' => '1.0.0',
+    'contexte_reference' => 'WASPLEX_AUDIENCE', 'contrat_reference' => 'CTR-MAT-05', 'contrat_version' => '1.0.0',
+    'criteres' => [
+        ['critere_reference' => 'CRT-TERRITOIRE', 'operateur' => 'EQ', 'traitement_inconnu' => 'IGNORER_AVEC_TRACE', 'poids' => 2.0, 'sources_autorisees' => ['SRC-ORGANISATIONS']],
+        ['critere_reference' => 'CRT-AGE', 'operateur' => 'BETWEEN', 'traitement_inconnu' => 'INDETERMINE', 'poids' => 1.0, 'obligatoire' => true, 'sources_autorisees' => ['SRC-IDENTITES']],
+    ],
+    'seuils_classe' => ['fort' => 0.75, 'moyen' => 0.5, 'bas' => 0.25],
+    'precision_arrondi' => 4,
+];
+$compilation1 = CompilateurPolitique::compiler($specificationValide);
+$compilation2 = CompilateurPolitique::compiler($specificationValide);
+$verifier(!isset($compilation1['refus']), 'compilation d’une spécification valide acceptée');
+$verifier($compilation1['plan_hash'] === $compilation2['plan_hash'], '17bis. compilation déterministe : même spécification → même empreinte de plan à chaque appel');
+$verifier(strlen($compilation1['plan_hash']) === 64, 'empreinte de plan au format SHA-256 (64 caractères hexadécimaux)');
+
+$specificationOperateurInvalide = $specificationValide;
+$specificationOperateurInvalide['criteres'][0]['operateur'] = 'SELECT * FROM organisations';
+$refusOperateur = CompilateurPolitique::compiler($specificationOperateurInvalide);
+$verifier(($refusOperateur['refus'] ?? null) === 'OPERATEUR_INCONNU', '19. code exécutable ou expression libre refusé (opérateur hors liste close)');
+
+$specificationCritereInconnu = $specificationValide;
+$specificationCritereInconnu['criteres'][0]['operateur'] = 'REGEX_LIBRE';
+$refusCritereInconnu = CompilateurPolitique::compiler($specificationCritereInconnu);
+$verifier(($refusCritereInconnu['refus'] ?? null) === 'OPERATEUR_INCONNU', '20. critère non canonique refusé');
+
+$specificationSeuilsIncoherents = $specificationValide;
+$specificationSeuilsIncoherents['seuils_classe'] = ['fort' => 0.2, 'moyen' => 0.5, 'bas' => 0.8];
+$refusSeuils = CompilateurPolitique::compiler($specificationSeuilsIncoherents);
+$verifier(($refusSeuils['refus'] ?? null) === 'SEUILS_INCOHERENTS', 'seuils incohérents (fort < bas) refusés plutôt qu’acceptés silencieusement');
+
+$specificationChampAbsent = $specificationValide;
+unset($specificationChampAbsent['contexte_reference']);
+$refusChamp = CompilateurPolitique::compiler($specificationChampAbsent);
+$verifier(($refusChamp['refus'] ?? null) === 'CHAMP_ABSENT', 'spécification incomplète refusée plutôt que complétée par une valeur inventée');
+
+$specificationVersionB = $specificationValide;
+$specificationVersionB['politique_version'] = '2.0.0';
+$compilationB = CompilateurPolitique::compiler($specificationVersionB);
+$verifier($compilationB['plan_hash'] !== $compilation1['plan_hash'], '75. une politique de version différente produit un plan — et donc un résultat — lié à sa propre version');
 
 if ($echecs > 0) {
     fwrite(STDERR, "\n{$echecs} épreuve(s) en échec.\n");
