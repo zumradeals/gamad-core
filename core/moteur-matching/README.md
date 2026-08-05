@@ -10,7 +10,10 @@ Décisions de lancement du dirigeant (2026-08-05) : voir mémoire `projet-cap-co
 
 - `src/Magasin.php` — connexion au magasin persistant (`MATCHING_REGISTRY_URL` / `MATCHING_REGISTRY_PATH`).
 - `src/SchemaMatching.php` — migration additive des tables (doc 02), réutilise l'outbox partagé `Gamad\EvenementsSortants\SchemaOutbox` pour la publication transactionnelle vers CAP-CORE-014 (pas de table `matching_outbox` bespoke).
+- `src/PolitiqueMatching.php` — vocabulaire technique fermé (actions, opérateurs, états, obligations, codes d'erreur, limites). Même précédent que `PolitiquePreuves` (CAP-CORE-015) et `PolitiqueSecretsCles` (CAP-CORE-016) : listes fermées vérifiées en code, intégration dynamique avec CAP-CORE-010 laissée à un chantier ultérieur non bloquant — réserve documentée, pas une omission.
 - `tests/matching_p3.php` — garde de comportement (à venir).
+
+`apps/console-laravel/app/Console/Commands/BootstrapMatchingCommand.php` établit `POL-MATCHING-V1` (CAP-CORE-007) et les douze contrats `CTR-MAT-01`..`12` (CAP-CORE-009), en type `COMMANDE` (pas `HTTP_API`, qui exigerait un consommateur réel déjà déclaré). Vérifié réellement : bootstrap et rejeu idempotent sur SQLite frais, exit code 0 les deux fois.
 
 ## Ce que ce module NE possède PAS
 
