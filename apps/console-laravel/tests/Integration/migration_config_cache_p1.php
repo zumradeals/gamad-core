@@ -64,6 +64,7 @@ $connexions = [
     'EVENT_JOURNAL_URL' => 'postgresql://exemple@127.0.0.1:1/evenements_inexistants',
     'SECRET_REGISTRY_URL' => 'postgresql://exemple@127.0.0.1:1/secrets_inexistants',
     'PROOF_REGISTRY_URL' => 'postgresql://exemple@127.0.0.1:1/preuves_inexistantes',
+    'MATCHING_REGISTRY_URL' => 'postgresql://exemple@127.0.0.1:1/matching_inexistant',
 ];
 
 $executer = static function (array $environnement, string $commande) use ($application): string {
@@ -106,6 +107,7 @@ $vides = [
     'EVENT_JOURNAL_URL' => '',
     'SECRET_REGISTRY_URL' => '',
     'PROOF_REGISTRY_URL' => '',
+    'MATCHING_REGISTRY_URL' => '',
 ];
 
 // 1 — connexions vides jusque dans le cache : la garde bloque. C'est son rôle,
