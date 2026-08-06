@@ -26,11 +26,41 @@ use Gamad\EvenementsSortants\OutboxProducteur;
  *
  * Une exécution terminée est immuable ; un réexamen ne réécrit jamais un
  * ancien résultat, il produit un nouveau constat (doc 02 §15, §24).
+ *
+ * Câblage partiel introduit après le premier commit de cette classe : le
+ * statut réel d'un produit (CAP-CORE-011), d'une version de contrat
+ * (CAP-CORE-009) et d'une source (CAP-CORE-006) peut être vérifié via des
+ * résolveurs injectés (fonctions pures `fn(...): bool`), sans que cette
+ * classe importe elle-même ces registres — l'appelant (`AccesMatching`)
+ * reste seul responsable de construire un résolveur véridique. Sans
+ * résolveur fourni, le comportement par défaut est permissif (`true`) pour
+ * préserver la compatibilité des tests existants (`matching_p4.php`) qui ne
+ * câblent aucun autre magasin — **ce défaut n'est pas sûr pour la
+ * production** et ne doit jamais être utilisé hors test.
  */
 final class RegistreMatching
 {
-    public function __construct(private \PDO $magasin)
+    public function __construct(
+        private \PDO $magasin,
+        private ?\Closure $resolveurProduitActif = null,
+        private ?\Closure $resolveurContratActif = null,
+        private ?\Closure $resolveurSourceActive = null,
+    ) {
+    }
+
+    private function produitActif(string $reference): bool
     {
+        return $this->resolveurProduitActif !== null ? (bool) ($this->resolveurProduitActif)($reference) : true;
+    }
+
+    private function contratActif(string $reference, string $version): bool
+    {
+        return $this->resolveurContratActif !== null ? (bool) ($this->resolveurContratActif)($reference, $version) : true;
+    }
+
+    private function sourceActive(string $reference): bool
+    {
+        return $this->resolveurSourceActive !== null ? (bool) ($this->resolveurSourceActive)($reference) : true;
     }
 
     // ==================================================================
@@ -242,6 +272,12 @@ final class RegistreMatching
         }
         if (!in_array($donnees['mode_resultat'], PolitiqueMatching::MODES_RESULTAT, true)) {
             return $this->refus('MODE_RESULTAT_INCONNU', 'mode_resultat hors liste close');
+        }
+        if (!$this->produitActif((string) $donnees['consommateur_produit'])) {
+            return $this->refus('MATCHING_PRODUCT_INACTIVE', "produit consommateur `{$donnees['consommateur_produit']}` inactif ou inconnu");
+        }
+        if (!$this->contratActif((string) $donnees['contrat_reference'], (string) $donnees['contrat_version'])) {
+            return $this->refus('MATCHING_CONTRACT_INACTIVE', "contrat `{$donnees['contrat_reference']}` version `{$donnees['contrat_version']}` non actif");
         }
 
         $contexte = $this->resoudreContexte((string) $donnees['contexte_reference']);
@@ -607,7 +643,7 @@ final class RegistreMatching
                         if ($signal !== null) {
                             $verif = ResolutionSources::verifierSignal(
                                 ['sources_autorisees' => json_decode((string) $critereProfil['sources_autorisees_json'], true), 'fraicheur_max_secondes' => $critereProfil['fraicheur_max_secondes']],
-                                ['source_reference' => $signal['source_reference'], 'source_active' => true, 'finalite_reference' => $signal['finalite_reference'], 'statut' => $signal['statut'], 'observation_le' => $signal['observation_le']],
+                                ['source_reference' => $signal['source_reference'], 'source_active' => $this->sourceActive((string) $signal['source_reference']), 'finalite_reference' => $signal['finalite_reference'], 'statut' => $signal['statut'], 'observation_le' => $signal['observation_le']],
                                 $demande['finalite_reference'],
                                 $instant,
                             );

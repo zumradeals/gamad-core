@@ -205,14 +205,11 @@ final class MatchingController
             'duree_secondes' => ['nullable', 'integer', 'min:1'],
             'obligations_supplementaires' => ['nullable', 'array'],
             'decision_reference' => ['nullable', 'string', 'max:64'],
-            'faits' => ['nullable', 'array'],
+            'obligations_acceptees' => ['nullable', 'boolean'],
         ]);
-        $faits = $donnees['faits'] ?? [];
-        unset($donnees['faits']);
         $execution = $acces->demanderActivation(
             $reference,
             $donnees,
-            $faits,
             (string) $request->attributes->get('gamad_entite'),
             $request->attributes->get('gamad_correlation'),
         );
@@ -256,14 +253,12 @@ final class MatchingController
             'contrat_version' => ['nullable', 'string', 'max:32'],
             'classification' => ['required', 'string', 'max:32'],
             'correlation_id' => ['nullable', 'string', 'max:128'],
-            'faits' => ['nullable', 'array'],
+            'finalite_reference' => ['required', 'string', 'max:255'],
+            'nominative' => ['nullable', 'boolean'],
         ]);
-        $faits = $donnees['faits'] ?? [];
-        unset($donnees['faits']);
         $execution = $acces->enregistrerMesure(
             $reference,
             $donnees,
-            $faits,
             (string) $request->attributes->get('gamad_entite'),
             $request->attributes->get('gamad_correlation'),
         );
@@ -283,13 +278,9 @@ final class MatchingController
             'source_contestee' => ['nullable', 'string', 'max:255'],
             'realm_reference' => ['required', 'string', 'max:64'],
             'classification' => ['required', 'string', 'max:32'],
-            'faits' => ['nullable', 'array'],
         ]);
-        $faits = $donnees['faits'] ?? [];
-        unset($donnees['faits']);
         $execution = $acces->ouvrirContestation(
             $donnees,
-            $faits,
             (string) $request->attributes->get('gamad_entite'),
             $request->attributes->get('gamad_correlation'),
         );

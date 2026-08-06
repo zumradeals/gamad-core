@@ -10,7 +10,15 @@ use Gamad\MoteurMatching\Magasin as MatchingMagasin;
 use Gamad\MoteurMatching\PolitiqueMatching;
 use Gamad\MoteurMatching\RegistreMatching;
 use Gamad\RegistreAutorisation\Ctr03;
+use Gamad\RegistreContrats\Magasin as ContratsMagasin;
+use Gamad\RegistreContrats\RegistreContrats;
+use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
+use Gamad\RegistreNormes\Db;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreProduits\RegistreProduits;
+use Gamad\RegistreSources\Magasin as SourcesMagasin;
+use Gamad\RegistreSources\RegistreSources;
 
 /**
  * Cas d'usage HTTP de CAP-CORE-021 (doc de chantier 04). Même chemin gouverné
@@ -34,6 +42,17 @@ use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
  * L'inscription et l'activation d'un contexte, ainsi que l'activation d'un
  * profil compilé, restent des opérations d'exploitation (CLI), pas des
  * routes HTTP — la fiche ne leur donne d'ailleurs aucune route dédiée.
+ *
+ * Câblage réel des dépendances Core (voir chaque méthode d'écriture pour le
+ * détail) : CAP-CORE-011 (produits), CAP-CORE-009 (contrats) et CAP-CORE-006
+ * (sources) sont interrogés pour de vrai — jamais acceptés depuis le corps
+ * d'une requête cliente. CAP-CORE-017 (risques), CAP-CORE-018 (incidents) et
+ * CAP-CORE-008 (décisions formelles) ne peuvent pas l'être : ces capacités
+ * n'existent pas encore comme code dans ce dépôt (aucun `core/registre-*`
+ * correspondant). Les faits qui en dépendraient sont figés à leur valeur la
+ * moins permissive côté blocage (`false`) plutôt que devinés ou acceptés du
+ * client — mais ce n'est pas une vraie vérification, et le rapport
+ * d'admission doit le dire explicitement.
  */
 final class AccesMatching
 {
@@ -232,12 +251,54 @@ final class AccesMatching
         );
     }
 
-    /** @return array{statut:int,corps:array<string,mixed>} */
-    public function demanderActivation(string $segmentReference, array $donnees, array $faits, string $acteur, ?string $correlation): array
+    /**
+     * Les faits d'`Activation::verifier` ne sont jamais acceptés depuis le
+     * corps de la requête (voir l'ancienne signature avec `$faits` client,
+     * corrigée ici) : un appelant aurait pu s'auto-autoriser en envoyant
+     * `{"faits":{"autorisation_decision":"PERMIS", ...}}`. Tous les faits
+     * de sécurité sont recalculés côté serveur :
+     *
+     * - `autorisation_decision` : garanti `PERMIS` à ce point — `gouverner()`
+     *   a déjà refusé l'appel sinon (CTR-03, CAP-CORE-004 réel) ;
+     * - `produit_actif`, `contrat_actif` : requêtes réelles à CAP-CORE-011
+     *   et CAP-CORE-009 ;
+     * - `politique_active` : le profil actif du contexte du segment existe
+     *   réellement dans le magasin du Matching ;
+     * - `risque_bloquant`, `incident_bloquant`, `decision_formelle_requise` :
+     *   figés à `false` — **réserve non contournable** : CAP-CORE-017,
+     *   CAP-CORE-018 et CAP-CORE-008 n'existent pas encore comme code dans
+     *   ce dépôt (aucun `core/registre-*` correspondant), donc aucune vraie
+     *   vérification n'est possible aujourd'hui. Ce n'est pas un oubli
+     *   silencieux : tant que ces capacités ne sont pas codées, aucune
+     *   activation n'est bloquée pour ce motif, et le rapport d'admission
+     *   doit le dire.
+     * - `obligations_acceptees` : seul fait accepté du corps de la requête,
+     *   parce qu'il n'autorise rien — c'est l'accusé du consommateur.
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
+    public function demanderActivation(string $segmentReference, array $donnees, string $acteur, ?string $correlation): array
     {
         return $this->gouverner(
             PolitiqueMatching::ACTION_SEGMENT_ACTIVER, $segmentReference, $acteur, $correlation, 'ACTIVATION_DEMANDEE',
-            fn (): array => $this->registre()->demanderActivation($segmentReference, $donnees, $faits, $acteur),
+            function () use ($segmentReference, $donnees, $acteur): array {
+                $registre = $this->registre();
+                $segment = $registre->resoudreSegment($segmentReference);
+                $politiqueActive = $segment !== null && $registre->resoudreProfilActif((string) $segment['contexte_reference']) !== null;
+                $faits = [
+                    'produit_actif' => $this->produitActifReel((string) ($donnees['consommateur_produit'] ?? '')),
+                    'contrat_actif' => $this->contratActifReel((string) ($donnees['contrat_reference'] ?? ''), (string) ($donnees['contrat_version'] ?? '')),
+                    'politique_active' => $politiqueActive,
+                    'autorisation_decision' => 'PERMIS',
+                    'decision_formelle_requise' => false,
+                    'decision_formelle_presente' => false,
+                    'risque_bloquant' => false,
+                    'incident_bloquant' => false,
+                    'obligations_acceptees' => (bool) ($donnees['obligations_acceptees'] ?? false),
+                ];
+
+                return $registre->demanderActivation($segmentReference, $donnees, $faits, $acteur);
+            },
             201,
             $this->codesRefusStandard(),
         );
@@ -265,23 +326,69 @@ final class AccesMatching
         );
     }
 
-    /** @return array{statut:int,corps:array<string,mixed>} */
-    public function enregistrerMesure(string $activationReference, array $donnees, array $faits, string $acteur, ?string $correlation): array
+    /**
+     * `contrat_actif` (CAP-CORE-009 réel), `finalite_identique` (comparée à
+     * l'activation résolue en magasin) et `nominatif_autorise_contrat`
+     * (figé à `false` — aucun champ de contrat ne porte aujourd'hui cette
+     * autorisation dans CAP-CORE-009, réserve documentée) ne sont jamais
+     * acceptés depuis le corps de la requête. `nominative` reste déclarée
+     * par l'appelant : c'est une classification de la donnée, pas un fait
+     * d'autorisation — le Core ne peut pas la déduire seul.
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
+    public function enregistrerMesure(string $activationReference, array $donnees, string $acteur, ?string $correlation): array
     {
         return $this->gouverner(
             PolitiqueMatching::ACTION_MESURE_ENREGISTRER, $activationReference, $acteur, $correlation, 'MESURE_ENREGISTREE',
-            fn (): array => $this->registre()->enregistrerMesure($activationReference, $donnees, $faits, $acteur),
+            function () use ($activationReference, $donnees, $acteur): array {
+                $registre = $this->registre();
+                $activation = $registre->resoudreActivation($activationReference);
+                $faits = [
+                    'contrat_actif' => $this->contratActifReel((string) ($donnees['contrat_reference'] ?? ''), (string) ($donnees['contrat_version'] ?? '1')),
+                    'finalite_identique' => $activation !== null && ($donnees['finalite_reference'] ?? null) === $activation['finalite_reference'],
+                    'nominative' => (bool) ($donnees['nominative'] ?? false),
+                    'nominatif_autorise_contrat' => false,
+                ];
+
+                return $registre->enregistrerMesure($activationReference, $donnees, $faits, $acteur);
+            },
             201,
             $this->codesRefusStandard() + ['MATCHING_RAW_EXPORT_FORBIDDEN' => 403],
         );
     }
 
-    /** @return array{statut:int,corps:array<string,mixed>} */
-    public function ouvrirContestation(array $donnees, array $faits, string $acteur, ?string $correlation): array
+    /**
+     * `contestant_autorise` n'est jamais accepté depuis le corps de la
+     * requête. Vérification réelle mais volontairement étroite pour ce
+     * périmètre : le contestant est autorisé s'il est l'acteur qui a soumis
+     * la demande à l'origine du résultat contesté (`matching_demande.
+     * soumise_par`) — typiquement l'identité d'intégration du consommateur
+     * produit. **Réserve documentée** : un membre de la population qui
+     * contesterait sa propre qualification (plutôt que le consommateur qui
+     * a soumis la demande) exigerait de relier `contestant_reference` à une
+     * identité ou un mandat réel via CAP-CORE-001/002/003, non câblé ici.
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
+    public function ouvrirContestation(array $donnees, string $acteur, ?string $correlation): array
     {
         return $this->gouverner(
             PolitiqueMatching::ACTION_CONTESTATION_OUVRIR, $donnees['resultat_reference'] ?? null, $acteur, $correlation, 'CONTESTATION_OUVERTE',
-            fn (): array => $this->registre()->ouvrirContestation($donnees, $faits, $acteur),
+            function () use ($donnees, $acteur): array {
+                $registre = $this->registre();
+                $contestantAutorise = false;
+                $resultatReference = $donnees['resultat_reference'] ?? null;
+                if (is_string($resultatReference) && $resultatReference !== '') {
+                    $resultat = $registre->resoudreResultat($resultatReference);
+                    $execution = $resultat !== null ? $registre->resoudreExecution((string) $resultat['execution_reference']) : null;
+                    $demande = $execution !== null ? $registre->resoudreDemande((string) $execution['demande_reference']) : null;
+                    $contestantAutorise = $demande !== null && ($donnees['contestant_reference'] ?? null) === $demande['soumise_par'];
+                }
+                $faits = ['contestant_autorise' => $contestantAutorise];
+
+                return $registre->ouvrirContestation($donnees, $faits, $acteur);
+            },
             201,
             $this->codesRefusStandard(),
         );
@@ -303,7 +410,60 @@ final class AccesMatching
 
     private function registre(): RegistreMatching
     {
-        return new RegistreMatching(MatchingMagasin::connecter());
+        return new RegistreMatching(
+            MatchingMagasin::connecter(),
+            resolveurProduitActif: fn (string $reference): bool => $this->produitActifReel($reference),
+            resolveurContratActif: fn (string $reference, string $version): bool => $this->contratActifReel($reference, $version),
+            resolveurSourceActive: fn (string $reference): bool => $this->sourceActiveReelle($reference),
+        );
+    }
+
+    /** Requête réelle à CAP-CORE-011 : `false` si le produit est inconnu, inactif, ou si le registre est indisponible (échec fermé). */
+    private function produitActifReel(string $reference): bool
+    {
+        if ($reference === '') {
+            return false;
+        }
+        try {
+            $registre = new RegistreProduits(Db::connect(), IdentiteMagasin::connecter(), ProduitsMagasin::connecter());
+            $produit = $registre->resoudreProduit($reference);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return $produit !== null && $produit['etat'] === 'ACTIF';
+    }
+
+    /** Requête réelle à CAP-CORE-009 : `false` si la version demandée n'est pas la version active, ou si le registre est indisponible (échec fermé). */
+    private function contratActifReel(string $reference, string $version): bool
+    {
+        if ($reference === '' || $version === '') {
+            return false;
+        }
+        try {
+            $registre = new RegistreContrats(Db::connect(), IdentiteMagasin::connecter(), ContratsMagasin::connecter());
+            $active = $registre->resoudreVersionActive($reference);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return $active !== null && (string) $active['version'] === $version;
+    }
+
+    /** Requête réelle à CAP-CORE-006 : `false` si la source est inconnue, non `ACTIVE`, ou si le registre est indisponible (échec fermé). */
+    private function sourceActiveReelle(string $reference): bool
+    {
+        if ($reference === '') {
+            return false;
+        }
+        try {
+            $registre = new RegistreSources(Db::connect(), IdentiteMagasin::connecter(), SourcesMagasin::connecter(), ProduitsMagasin::connecter());
+            $source = $registre->resoudreSource($reference);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return $source !== null && $source['etat'] === 'ACTIVE';
     }
 
     private function journal(): Journal

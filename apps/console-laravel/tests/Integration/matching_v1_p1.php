@@ -24,9 +24,17 @@ use Gamad\MoteurMatching\Magasin as MatchingMagasin;
 use Gamad\MoteurMatching\RegistreMatching;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
+use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
+use Gamad\RegistreIdentites\PolitiqueInscription;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreProduits\PolitiqueProduits;
+use Gamad\RegistreProduits\RegistreProduits;
+use Gamad\RegistreSources\Magasin as SourcesMagasin;
+use Gamad\RegistreSources\PolitiqueSources;
+use Gamad\RegistreSources\RegistreSources;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
@@ -92,6 +100,43 @@ $ctr16 = new Ctr16(AccesMagasin::connecter());
 $secretAutorite = 'Secret-Matching-Autorite-1!';
 $ctr16->inscrireAuthentificateur('AUT-GAMAD-001', $secretAutorite);
 
+// Produit consommateur de test, réellement inscrit et actif dans CAP-CORE-011 :
+// depuis le câblage réel de AccesMatching, soumettre-demande-matching vérifie
+// pour de vrai que le produit consommateur est ACTIF, plus de confiance aveugle.
+$ctr01 = new Ctr01(Db::connect(), IdentiteMagasin::connecter());
+$identiteProduitTest = (string) $ctr01->inscrireIdentite([
+    'canal' => 'AUTORITE', 'type' => 'produit', 'libelle' => 'Produit de test matching_v1_p1',
+    'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION, 'politique' => 'POL-CONSOLE-P1',
+    'source' => 'épreuve HTTP CAP-CORE-021', 'preuve' => 'EVT-MATCHING-P1-PRD-IDENTITE',
+])['reference'];
+$produits = new RegistreProduits(Db::connect(), IdentiteMagasin::connecter(), ProduitsMagasin::connecter());
+$produits->inscrireProduit([
+    'reference' => 'PRD-TEST-MATCHING', 'identite_reference' => $identiteProduitTest,
+    'nom_canonique' => 'produit-test-matching', 'nom_affichage' => 'Produit de test Matching',
+    'type_produit' => 'SATELLITE', 'proprietaire_reference' => PolitiqueInscription::AUTORITE_INSCRIPTION,
+    'source' => 'épreuve HTTP CAP-CORE-021', 'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION,
+    'politique' => PolitiqueProduits::POLITIQUE, 'preuve' => 'EVT-MATCHING-P1-PRD-INSCRIPTION',
+]);
+$produits->activerProduit('PRD-TEST-MATCHING', [
+    'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION, 'preuve' => 'EVT-MATCHING-P1-PRD-ACTIVATION',
+    'politique' => PolitiqueProduits::POLITIQUE, 'source' => 'épreuve HTTP CAP-CORE-021',
+]);
+
+// Source de test, réellement inscrite et active dans CAP-CORE-006 : depuis le
+// câblage réel de AccesMatching, l'exécution vérifie pour de vrai que la
+// source d'un signal est active avant d'en tenir compte dans l'évaluation.
+$sources = new RegistreSources(Db::connect(), IdentiteMagasin::connecter(), SourcesMagasin::connecter(), ProduitsMagasin::connecter());
+$sources->inscrireSource([
+    'reference' => 'SRC-TEST', 'nom_canonique' => 'Source de test matching_v1_p1', 'nom_affichage' => 'Source de test',
+    'type_source' => 'SERVICE_CORE', 'proprietaire_reference' => PolitiqueInscription::AUTORITE_INSCRIPTION,
+    'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION, 'source' => 'épreuve HTTP CAP-CORE-021',
+    'politique' => PolitiqueSources::POLITIQUE, 'preuve' => 'EVT-MATCHING-P1-SRC-INSCRIPTION',
+]);
+$sources->activerSource('SRC-TEST', [
+    'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION, 'preuve' => 'EVT-MATCHING-P1-SRC-ACTIVATION',
+    'politique' => PolitiqueSources::POLITIQUE, 'source' => 'épreuve HTTP CAP-CORE-021',
+]);
+
 $app = require $application . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:contrats:bootstrap');
@@ -154,10 +199,25 @@ $verifier($contextes['statut'] === 200 && count($contextes['corps']['contextes']
 $lectureContexte = $requete('GET', "/api/v1/matching/contextes/{$contexte['reference']}", null, $jeton);
 $verifier($lectureContexte['statut'] === 200 && ($lectureContexte['corps']['contexte']['etat'] ?? null) === 'ACTIF', 'lecture d’un contexte actif via HTTP');
 
+// produit_actif est vérifié pour de vrai contre CAP-CORE-011 (jamais deviné) :
+// un produit qui n'existe pas y est refusé, avant même de toucher au reste.
+$demandeProduitInconnu = $requete('POST', '/api/v1/matching/demandes', [
+    'idempotency_key' => 'IDEMP-HTTP-PRODUIT-INCONNU', 'consommateur_produit' => 'PRD-N-EXISTE-PAS', 'contexte_reference' => $contexte['reference'],
+    'finalite_reference' => 'x', 'realm_reference' => 'RLM-GAMAD-001', 'environnement' => 'TEST',
+    'mode_resultat' => 'CLASSEMENT', 'classification' => 'INTERNE', 'contrat_reference' => 'CTR-MAT-01', 'contrat_version' => '1.0.0',
+    'correlation_id' => 'COR-HTTP-PRODUIT-INCONNU',
+    'objets' => [['role_objet' => 'CANDIDAT', 'objet_type' => 'PERSONNE', 'objet_reference_externe' => 'CAND-X', 'source_reference' => 'SRC-TEST', 'contrat_reference' => 'CTR-MAT-02', 'valide_depuis' => '2026-01-01T00:00:00Z', 'classification' => 'INTERNE']],
+    'criteres' => [],
+], $jeton);
+$verifier(
+    ($demandeProduitInconnu['corps']['resultat']['refus'] ?? null) === 'MATCHING_PRODUCT_INACTIVE',
+    'un produit consommateur inexistant est refusé par une vraie vérification CAP-CORE-011, pas devinée',
+);
+
 $demande = $requete('POST', '/api/v1/matching/demandes', [
-    'idempotency_key' => 'IDEMP-HTTP-001', 'consommateur_produit' => 'PRD-GAMAD-002', 'contexte_reference' => $contexte['reference'],
+    'idempotency_key' => 'IDEMP-HTTP-001', 'consommateur_produit' => 'PRD-TEST-MATCHING', 'contexte_reference' => $contexte['reference'],
     'finalite_reference' => 'Épreuve d’intégration HTTP', 'realm_reference' => 'RLM-GAMAD-001', 'environnement' => 'TEST',
-    'mode_resultat' => 'CLASSEMENT', 'classification' => 'INTERNE', 'contrat_reference' => 'CTR-MAT-01', 'contrat_version' => '1',
+    'mode_resultat' => 'CLASSEMENT', 'classification' => 'INTERNE', 'contrat_reference' => 'CTR-MAT-01', 'contrat_version' => '1.0.0',
     'correlation_id' => 'COR-HTTP-001',
     'objets' => [
         ['role_objet' => 'CANDIDAT', 'objet_type' => 'PERSONNE', 'objet_reference_externe' => 'CAND-HTTP-A', 'source_reference' => 'SRC-TEST', 'contrat_reference' => 'CTR-MAT-02', 'valide_depuis' => '2026-01-01T00:00:00Z', 'classification' => 'INTERNE'],
@@ -225,12 +285,28 @@ foreach ($resultatsReferences as $r) {
 $resultatB = $resultatsParCandidat[$candidatsIndex['CAND-HTTP-B']] ?? null;
 $verifier($resultatB !== null && $resultatB['classe_resultat'] === 'NON_CORRESPONDANT', 'CAND-HTTP-B non correspondant (région différente) — préparation de la contestation');
 
-$contestation = $requete('POST', '/api/v1/matching/contestations', [
-    'resultat_reference' => $resultatB['reference'], 'contestant_reference' => 'IDN-CONTESTANT-HTTP', 'motif_code' => 'DESACCORD_CLASSEMENT',
+// contestant_autorise est désormais calculé côté serveur (jamais accepté du
+// corps de la requête) : il compare contestant_reference à
+// matching_demande.soumise_par — un tiers non lié à la demande est refusé,
+// même s'il tente de s'auto-autoriser.
+$contestationRefusee = $requete('POST', '/api/v1/matching/contestations', [
+    'resultat_reference' => $resultatB['reference'], 'contestant_reference' => 'IDN-CONTESTANT-NON-LIE', 'motif_code' => 'DESACCORD_CLASSEMENT',
     'realm_reference' => 'RLM-GAMAD-001', 'classification' => 'INTERNE', 'faits' => ['contestant_autorise' => true],
 ], $jeton);
+$verifier(
+    $contestationRefusee['statut'] !== 201,
+    'un tiers non lié à la demande ne peut pas s’auto-autoriser à contester via faits.contestant_autorise',
+);
+
+$contestation = $requete('POST', '/api/v1/matching/contestations', [
+    'resultat_reference' => $resultatB['reference'], 'contestant_reference' => 'AUT-GAMAD-001', 'motif_code' => 'DESACCORD_CLASSEMENT',
+    'realm_reference' => 'RLM-GAMAD-001', 'classification' => 'INTERNE',
+], $jeton);
 $contestationReference = (string) ($contestation['corps']['resultat']['reference'] ?? '');
-$verifier($contestation['statut'] === 201 && $contestationReference !== '', 'ouverture de contestation via HTTP');
+$verifier(
+    $contestation['statut'] === 201 && $contestationReference !== '',
+    'ouverture de contestation via HTTP par l’acteur ayant réellement soumis la demande',
+);
 
 $reexamen = $requete('POST', "/api/v1/matching/contestations/{$contestationReference}/reexecution", [], $jeton);
 $verifier($reexamen['statut'] === 201 && ($reexamen['corps']['resultat']['verdict'] ?? null) === 'ANNULE', 'réexamen sans nouvelle exécution fournie : verdict ANNULE via HTTP');
