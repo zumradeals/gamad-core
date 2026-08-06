@@ -319,6 +319,24 @@ $ancienResultatIntact = $registre->resoudreResultat($resultatB['reference']);
 $verifier($ancienResultatIntact['classe_resultat'] === 'NON_CORRESPONDANT', 'l’ancien résultat n’est jamais réécrit par le réexamen');
 
 // ----------------------------------------------------------------------
+echo "\nExpiration planifiée (matching:expiration, doc 05 §6)\n";
+
+$expirationPrematuree = $registre->expirerSegmentsEchus('2026-08-16T00:00:00Z');
+$verifier($expirationPrematuree['segments_expires'] === 0, 'aucun segment marqué expiré avant son échéance réelle');
+$verifier($registre->resoudreSegment($segment['reference'])['etat'] === 'ACTIF', 'le segment reste ACTIF avant échéance');
+
+$expirationSegments = $registre->expirerSegmentsEchus('2027-01-01T00:00:00Z');
+$verifier($expirationSegments['segments_expires'] === 1, 'le segment échu est marqué EXPIRE après son échéance réelle');
+$verifier($registre->resoudreSegment($segment['reference'])['etat'] === 'EXPIRE', 'la fiche du segment reflète l’expiration');
+
+$expirationSegmentsRejouee = $registre->expirerSegmentsEchus('2027-01-01T00:00:00Z');
+$verifier($expirationSegmentsRejouee['segments_expires'] === 0, 'rejouer l’expiration sur un segment déjà EXPIRE ne compte rien de plus (idempotent)');
+
+$expirationActivations = $registre->expirerActivationsEchues('2027-01-01T00:00:00Z');
+$verifier($expirationActivations['activations_expirees'] === 1, 'l’activation ACTIVE échue est marquée EXPIREE');
+$verifier($registre->resoudreActivation($activation['reference'])['etat'] === 'EXPIREE', 'la fiche de l’activation reflète l’expiration');
+
+// ----------------------------------------------------------------------
 echo "\nOutbox transactionnelle (CAP-CORE-014)\n";
 
 $evenements = (int) $pdo->query("SELECT COUNT(*) FROM evenement_sortant WHERE type_evenement LIKE 'CAP-CORE-021.%'")->fetchColumn();

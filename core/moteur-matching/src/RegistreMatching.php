@@ -970,6 +970,29 @@ final class RegistreMatching
         });
     }
 
+    /**
+     * Tâche planifiée `matching:expiration` (doc 05 §6) pour les segments.
+     * Idempotente : rejouer sur des segments déjà `EXPIRE` ne change rien.
+     * Purement déclaratif — l'expiration réelle est déjà appliquée à la
+     * décision (`Activation::verifier` compare `expire_le` à l'instant de
+     * référence, jamais seulement à cette colonne `etat`) ; cette tâche
+     * maintient seulement l'état affiché cohérent pour la console, l'API et
+     * les métriques.
+     *
+     * @return array{segments_expires:int}
+     */
+    public function expirerSegmentsEchus(?string $instantReference = null): array
+    {
+        $instant = $instantReference ?? gmdate('c');
+
+        return $this->transaction(function () use ($instant): array {
+            $st = $this->magasin->prepare("UPDATE matching_segment SET etat = 'EXPIRE' WHERE etat = 'ACTIF' AND expire_le < ?");
+            $st->execute([$instant]);
+
+            return ['segments_expires' => $st->rowCount()];
+        });
+    }
+
     // ==================================================================
     // Activations (doc 02 §20-21, doc 03 §13)
 
@@ -1103,6 +1126,29 @@ final class RegistreMatching
             $this->magasin->prepare($sql)->execute($params);
 
             return ['reference' => $reference, 'etat' => $cible];
+        });
+    }
+
+    /**
+     * Tâche planifiée `matching:expiration` (doc 05 §6) pour les
+     * activations. Même principe que `expirerSegmentsEchus` : la décision
+     * effective (`Activation::verifier`) compare déjà `expire_le` à
+     * l'instant réel, cette tâche maintient seulement l'état affiché
+     * cohérent.
+     *
+     * @return array{activations_expirees:int}
+     */
+    public function expirerActivationsEchues(?string $instantReference = null): array
+    {
+        $instant = $instantReference ?? gmdate('c');
+
+        return $this->transaction(function () use ($instant): array {
+            $st = $this->magasin->prepare(
+                "UPDATE matching_activation SET etat = 'EXPIREE' WHERE etat IN ('AUTORISEE','ACTIVE') AND expire_le < ?"
+            );
+            $st->execute([$instant]);
+
+            return ['activations_expirees' => $st->rowCount()];
         });
     }
 
