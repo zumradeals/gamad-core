@@ -62,6 +62,10 @@ jobs:
             garde: core/registre-secrets-cles/tests/secrets_cles_p3.php
           - capacite: CAP-CORE-015 (preuves d'intégrité)
             garde: core/registre-preuves/tests/preuves_p3.php
+          - capacite: CAP-CORE-021 (matching — fonctions pures)
+            garde: core/moteur-matching/tests/matching_p3.php
+          - capacite: CAP-CORE-021 (matching — orchestration persistante)
+            garde: core/moteur-matching/tests/matching_p4.php
 
     steps:
       - name: Récupérer le dépôt

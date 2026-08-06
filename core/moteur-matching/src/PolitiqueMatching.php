@@ -180,4 +180,27 @@ final class PolitiqueMatching
 
     /** Seuil minimal d'agrégation en dessous duquel une estimation est refusée (doc 02 §31), versionné par contexte. */
     public const SEUIL_PETITE_POPULATION_DEFAUT = 25;
+
+    /** Durées par défaut (secondes), reprises telles quelles faute de valeur adoptée par contexte — réserve documentée. */
+    public const RESULTAT_TTL_SECONDES_DEFAUT = 2_592_000; // 30 jours
+    public const SEGMENT_TTL_SECONDES_DEFAUT = 7_776_000; // 90 jours
+    public const ACTIVATION_TTL_SECONDES_DEFAUT = 2_592_000; // 30 jours
+
+    /** Préfixes de référence, même précédent que `PolitiqueOrganisations::PREFIXE`. */
+    public const PREFIXE = [
+        'matching_contexte' => 'CTX-GAMAD',
+        'matching_profil_execution' => 'PRF-GAMAD',
+        'matching_demande' => 'DEM-GAMAD',
+        'matching_objet' => 'OBJ-GAMAD',
+        'matching_signal' => 'SIG-GAMAD',
+        'matching_execution' => 'EXE-GAMAD',
+        'matching_resultat' => 'RES-GAMAD',
+        'matching_segment' => 'SEG-GAMAD',
+        'matching_activation' => 'ACT-GAMAD',
+        'matching_activation_mesure' => 'MES-GAMAD',
+        'matching_contestation' => 'CTS-GAMAD',
+        'matching_reexamen' => 'REX-GAMAD',
+        'matching_jeu_evaluation' => 'JEV-GAMAD',
+        'matching_comparaison_politique' => 'CMP-GAMAD',
+    ];
 }
