@@ -32,13 +32,19 @@ require __DIR__ . '/../src/CompilateurPolitique.php';
 require __DIR__ . '/../src/Segments.php';
 require __DIR__ . '/../src/Explication.php';
 require __DIR__ . '/../src/Activation.php';
+require __DIR__ . '/../src/Mesure.php';
+require __DIR__ . '/../src/Contestations.php';
+require __DIR__ . '/../src/ResolutionSources.php';
 
 use Gamad\MoteurMatching\Activation;
 use Gamad\MoteurMatching\Apparieur;
 use Gamad\MoteurMatching\Classement;
 use Gamad\MoteurMatching\CompilateurPolitique;
+use Gamad\MoteurMatching\Contestations;
 use Gamad\MoteurMatching\EvaluateurDeterministe;
 use Gamad\MoteurMatching\Explication;
+use Gamad\MoteurMatching\Mesure;
+use Gamad\MoteurMatching\ResolutionSources;
 use Gamad\MoteurMatching\Segments;
 
 $echecs = 0;
@@ -337,6 +343,75 @@ $verifier(Activation::verifier($risqueBloquant)['motif_code'] === 'MATCHING_RISK
 $segmentExpire = $faitsValides;
 $segmentExpire['segment_etat'] = 'EXPIRE';
 $verifier(Activation::verifier($segmentExpire)['motif_code'] === 'MATCHING_SEGMENT_EXPIRED', '115. segment expiré refuse toute activation');
+
+echo "\nMesure — validation et agrégation\n";
+
+$mesureValide = ['contrat_actif' => true, 'finalite_identique' => true, 'nominative' => false, 'nominatif_autorise_contrat' => false];
+$verifier(Mesure::valider($mesureValide)['valide'] === true, '116. mesure valide acceptée');
+
+$mesureHorsFinalite = $mesureValide;
+$mesureHorsFinalite['finalite_identique'] = false;
+$verifier(Mesure::valider($mesureHorsFinalite) === ['valide' => false, 'motif_code' => 'MATCHING_PURPOSE_NOT_ALLOWED'], '117. mesure hors finalité refusée');
+
+$mesureNominativeNonContractuelle = $mesureValide;
+$mesureNominativeNonContractuelle['nominative'] = true;
+$verifier(Mesure::valider($mesureNominativeNonContractuelle)['motif_code'] === 'MATCHING_RAW_EXPORT_FORBIDDEN', '118. mesure nominative non contractuelle refusée');
+
+$mesures = [
+    ['mesure_code' => 'VUE', 'valeur_numerique' => 10.0],
+    ['mesure_code' => 'VUE', 'valeur_numerique' => 20.0],
+    ['mesure_code' => 'PLAINTE', 'valeur_numerique' => null],
+];
+$agregation = Mesure::agreger($mesures);
+$verifier($agregation['VUE']['nombre'] === 2 && $agregation['VUE']['somme'] === 30.0 && $agregation['VUE']['moyenne'] === 15.0, '120. agrégation correcte, mécanique, sans pondération inventée');
+$verifier($agregation['PLAINTE']['moyenne'] === null, '125. absence de valeur numérique honnêtement signalée (moyenne null, pas 0)');
+
+echo "\nContestations — recevabilité et réexamen\n";
+
+$contestationRecevable = ['contestant_autorise' => true, 'resultat_existe' => true, 'motif_code' => 'DESACCORD_CRITERE'];
+$verifier(Contestations::verifierRecevabilite($contestationRecevable)['recevable'] === true, '139. contestation recevable acceptée');
+
+$contestantNonAutorise = $contestationRecevable;
+$contestantNonAutorise['contestant_autorise'] = false;
+$verifier(Contestations::verifierRecevabilite($contestantNonAutorise)['recevable'] === false, '140. contestant non autorisé refusé');
+
+$verifier(Contestations::determinerVerdict('CORRESPONDANCE_FORTE', 'CORRESPONDANCE_FORTE') === 'CONFIRME', '144. résultat confirmé après réexécution identique');
+$verifier(Contestations::determinerVerdict('CORRESPONDANCE_FORTE', 'CORRESPONDANCE_PARTIELLE') === 'MODIFIE', '145. résultat modifié après réexécution divergente');
+$verifier(Contestations::determinerVerdict('CORRESPONDANCE_FORTE', 'INDETERMINE') === 'DEVENU_INDETERMINE', '146. résultat devenu indéterminé après correction de source');
+$verifier(Contestations::determinerVerdict('CORRESPONDANCE_FORTE', null) === 'ANNULE', 'un résultat retiré après réexamen est annulé, pas silencieusement conservé');
+
+echo "\nResolutionSources — utilisabilité d’un signal\n";
+
+$critereSource = ['sources_autorisees' => ['SRC-ORGANISATIONS'], 'fraicheur_max_secondes' => 3600];
+$signalValide = ['source_reference' => 'SRC-ORGANISATIONS', 'source_active' => true, 'finalite_reference' => 'AUDIENCE_TEST', 'statut' => 'VALIDE', 'observation_le' => '2026-08-06T00:00:00Z'];
+$verifier(ResolutionSources::verifierSignal($critereSource, $signalValide, 'AUDIENCE_TEST', '2026-08-06T00:10:00Z')['utilisable'] === true, '26. source active acceptée');
+
+$signalAutreSource = $signalValide;
+$signalAutreSource['source_reference'] = 'SRC-INCONNUE';
+$verifier(ResolutionSources::verifierSignal($critereSource, $signalAutreSource, 'AUDIENCE_TEST', '2026-08-06T00:10:00Z')['motif_code'] === 'MATCHING_SOURCE_UNKNOWN', 'source hors liste autorisée par le critère refusée');
+
+$signalSourceSuspendue = $signalValide;
+$signalSourceSuspendue['source_active'] = false;
+$verifier(ResolutionSources::verifierSignal($critereSource, $signalSourceSuspendue, 'AUDIENCE_TEST', '2026-08-06T00:10:00Z')['motif_code'] === 'MATCHING_SOURCE_UNUSABLE', '27. source suspendue refusée');
+
+$signalMauvaiseFinalite = $signalValide;
+$verifier(ResolutionSources::verifierSignal($critereSource, $signalMauvaiseFinalite, 'AUTRE_FINALITE', '2026-08-06T00:10:00Z')['motif_code'] === 'MATCHING_PURPOSE_NOT_ALLOWED', '28. mauvaise finalité refusée');
+
+$signalPerime = $signalValide;
+$signalPerime['statut'] = 'PERIME';
+$verifier(ResolutionSources::verifierSignal($critereSource, $signalPerime, 'AUDIENCE_TEST', '2026-08-06T00:10:00Z')['motif_code'] === 'MATCHING_SIGNAL_EXPIRED', '30. signal expiré refusé');
+
+$signalRevoque = $signalValide;
+$signalRevoque['statut'] = 'REVOQUE';
+$verifier(ResolutionSources::verifierSignal($critereSource, $signalRevoque, 'AUDIENCE_TEST', '2026-08-06T00:10:00Z')['motif_code'] === 'MATCHING_SOURCE_UNUSABLE', '31. signal révoqué refusé');
+
+$signalContradictoire = $signalValide;
+$signalContradictoire['statut'] = 'CONTRADICTOIRE';
+$resultatContradictoireSource = ResolutionSources::verifierSignal($critereSource, $signalContradictoire, 'AUDIENCE_TEST', '2026-08-06T00:10:00Z');
+$verifier($resultatContradictoireSource['utilisable'] === true && $resultatContradictoireSource['etat_signal'] === 'CONTRADICTOIRE', '32. signal contradictoire reste visible, pas rejeté en silence');
+
+$signalHorsFraicheur = $signalValide;
+$verifier(ResolutionSources::verifierSignal($critereSource, $signalHorsFraicheur, 'AUDIENCE_TEST', '2026-08-06T05:00:00Z')['motif_code'] === 'MATCHING_SIGNAL_EXPIRED', 'signal au-delà de la fraîcheur maximale déclarée par le critère refusé');
 
 if ($echecs > 0) {
     fwrite(STDERR, "\n{$echecs} épreuve(s) en échec.\n");
