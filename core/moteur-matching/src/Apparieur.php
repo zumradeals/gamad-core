@@ -112,8 +112,20 @@ final class Apparieur
         return $na !== null && $nb !== null && $na === $nb;
     }
 
+    /**
+     * `NAN` n'est jamais traité comme une valeur numérique comparable : sans
+     * ce garde-fou, les comparaisons PHP (`NAN >= x` vaut toujours `false`)
+     * transformeraient silencieusement une valeur non déterminable en un
+     * résultat déterminé DEFAVORABLE — une invention, pas une constatation
+     * (doc 03 §1). `JSON` ne peut pas transporter `NaN`/`Infinity` comme
+     * littéraux ; ce cas ne survient que si une valeur déjà en mémoire PHP
+     * est comparée directement, jamais depuis une charge HTTP décodée.
+     */
     private static function numerique(mixed $v): ?float
     {
+        if (is_float($v) && is_nan($v)) {
+            return null;
+        }
         if (is_int($v) || is_float($v)) {
             return (float) $v;
         }

@@ -68,6 +68,8 @@ jobs:
             garde: core/moteur-matching/tests/matching_p4.php
           - capacite: CAP-CORE-021 (matching — acquisition de signaux CAP-CORE-014)
             garde: core/moteur-matching/tests/matching_p5.php
+          - capacite: CAP-CORE-021 (matching — sécurité applicative)
+            garde: core/moteur-matching/tests/matching_p6.php
 
     steps:
       - name: Récupérer le dépôt
