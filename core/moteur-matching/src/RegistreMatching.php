@@ -197,6 +197,11 @@ final class RegistreMatching
         });
     }
 
+    public function resoudreProfil(string $reference): ?array
+    {
+        return $this->ligne('SELECT * FROM matching_profil_execution WHERE reference = ?', [$reference]);
+    }
+
     public function resoudreProfilActif(string $contexteReference): ?array
     {
         return $this->ligne(

@@ -207,6 +207,9 @@ jobs:
       - name: Éprouver l'API des preuves d'intégrité
         run: php apps/console-laravel/tests/Integration/preuves_v1_p1.php
 
+      - name: Éprouver l'API du Matching
+        run: php apps/console-laravel/tests/Integration/matching_v1_p1.php
+
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php
 
