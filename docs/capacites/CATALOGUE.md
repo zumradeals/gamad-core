@@ -33,10 +33,10 @@ source la plus fine pour qui veut savoir ce qui existe réellement derrière un
 | CAP-CORE-015 | Integrity Proofs | Vérifier les empreintes et preuves techniques | `core/registre-preuves`, bootstrap idempotent (`POL-PREUVES-V1`, sept contrats techniques, empreinte de baseline reprise et cross-vérifiée), signature Ed25519 bornée via CAP-CORE-016 (clé privée jamais retournée hors du fournisseur), manifestes/checkpoints/attestations, API v1 `/preuves*` (lecture, vérification, empreinte bornée, cycle), écran Preuves d’intégrité, raccordements réels CAP-CORE-013 (checkpoint du journal) et CAP-CORE-019 (manifeste de sauvegarde re-vérifié indépendamment, attestation de restauration liée) | `GO` — registre persistant gouverné, testé (85 épreuves SQLite/HTTP : 66 garde + 19 intégration, exercice PostgreSQL réel local le 5 août 2026 sur quatorze magasins) ; jamais de clé privée conservée ni retournée ; seule l’empreinte JSON bornée est émettable par API, signature/manifeste/checkpoint/attestation restent CLI-only par principe de sécurité, pas par omission ; OpenAPI non renseigné (même réserve que CAP-CORE-016) — voir `docs/capacites/CAP-CORE-015-integrity-proofs.md` |
 | CAP-CORE-016 | Secrets & Keys | Gérer les références, rotations et usages des secrets | `core/registre-secrets-cles`, bootstrap idempotent (`POL-SECRETS-CLES-V1`, neuf contrats techniques, inventaire réel de dix-sept références sans valeur), API v1 `/secrets-cles*` `/fournisseurs-secrets*` `/rotations-secrets*`, écran Secrets & clés, trois fournisseurs bornés (fichier 0600, credential systemd, transition) | `GO` — registre de gouvernance persistant, testé (88 épreuves SQLite/HTTP, exercice PostgreSQL réel local le 4 août 2026 sur treize magasins) ; jamais de valeur secrète stockée ni exposée ; rotation `APP_KEY` non exécutée en production (mécanisme éprouvé sur un secret pilote), trois fournisseurs (GPG/SSH/externe) non livrés, aucun consommateur réel migré — voir `docs/capacites/CAP-CORE-016-secrets-keys.md` |
 | CAP-CORE-017 | Risks & Exceptions | Enregistrer et suivre les risques et exceptions techniques | aucun | `NO GO` |
-| CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `NO GO` |
+| CAP-CORE-018 | Incidents | Déclarer, suivre et clôturer les incidents | aucun | `NO GO` — nommé le 5 août 2026 comme l'un des deux derniers chantiers de codage avant clôture du Core ; rejoint le 6 août 2026 la feuille de route future non bloquante (008/017/020), décision explicite du dirigeant, pas un oubli. Conséquence concrète pour CAP-CORE-021 : `incident_bloquant` y reste figé à `false`, aucun incident ne peut aujourd'hui bloquer une activation |
 | CAP-CORE-019 | Backup & Restore | Sauvegarder, restaurer et prouver la continuité | `ops/core-foundation`, écran Continuité | `GO` — copie chiffrée hors machine sur destination réelle, TLS épinglé, et exercice de restauration complet exécuté depuis cette copie le 1er août 2026 |
 | CAP-CORE-020 | Directory & Atlas | Produire un annuaire opérationnel des capacités et produits | aucun | `NO GO` — l’ancien module dérivait d’un corpus supprimé |
-| CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | aucun | `NO GO` |
+| CAP-CORE-021 | Matching Engine | Produire des correspondances contextualisées entre besoins, offres et signaux | `core/moteur-matching`, bootstrap idempotent (`POL-MATCHING-V1`, douze contrats `CTR-MAT-*`), orchestration persistante (`RegistreMatching`), API v1 `/matching/*` (22 routes gouvernées CTR-03), console de lecture, acquisition réelle de signaux CAP-CORE-014 (`AcquisitionSignaux`), tâche planifiée d'expiration, câblage réel CAP-CORE-011/009/006 | `NO GO` — moteur complet et testé (179 épreuves SQLite/HTTP/console/sécurité, exercice PostgreSQL réel local le 6 août 2026 sans modification de code) ; une faille d'auto-autorisation trouvée et corrigée avant tout déploiement ; reste `NO GO` au sens strict de la fiche faute de deuxième consommateur réel, de rapport de qualité/équité, de tests de charge et d'exercice de sauvegarde/restauration — voir `core/moteur-matching/README.md` pour le détail des réserves |
 | CAP-CORE-022 | Satellite Federation | Relier le Compte GAMAD, le Portail et les comptes produit locaux | `core/registre-federation`, API v1 `/produits*` | `GO` — parcours pilote GamaDrive éprouvé ; aucun satellite réel raccordé |
 
 Un état `NO GO` est une information utile : il nomme un chantier ouvert plutôt
@@ -187,11 +187,34 @@ intégration réelle de GamaDrive V2 sur CAP-CORE-022
   hors machine CAP-CORE-019) et rotation APP_KEY réellement exécutée
 → premier consommateur réel raccordé à CAP-CORE-015 (checkpoint et
   manifeste planifiés en production, pas seulement exécutables à la main)
-→ CAP-CORE-008, 017, 018, 020 et 021 restent `NO GO` : aucun chantier ne
-  leur a encore été consacré. La directive « aucun satellite avant que
-  toute capacité NO GO soit GO » s’applique encore à ces cinq-là avant
-  d’ouvrir un satellite
+→ CAP-CORE-021 (Matching Engine) : chantier de codage livré et déployé le
+  6 août 2026 — moteur complet, testé (179 épreuves), câblé réellement à
+  CAP-CORE-006/009/011/014. Reste `NO GO` au sens strict de la fiche faute
+  de deuxième consommateur réel, de rapport de qualité/équité, de tests de
+  charge et d'exercice de sauvegarde/restauration.
+→ CAP-CORE-008 (Decisions), CAP-CORE-017 (Risks & Exceptions),
+  CAP-CORE-018 (Incidents) et CAP-CORE-020 (Directory & Atlas) restent
+  `NO GO` et rejoignent une feuille de route future, hors périmètre du GO
+  officiel ; aucun chantier ne leur a encore été consacré et aucune
+  dépendance technique ne les lie à CAP-CORE-022. CAP-CORE-018 avait été
+  nommé le 5 août 2026 comme l'un des deux derniers chantiers de codage
+  avant de considérer le Core clos ; reporté explicitement le 6 août 2026
+  par décision du dirigeant plutôt que silencieusement oublié — conséquence
+  concrète documentée sur CAP-CORE-021 ci-dessus et dans son README.
 ```
+
+Correction du 5 août 2026 : la version antérieure de ce texte affirmait une
+« directive » interdisant tout satellite tant que les cinq capacités NO GO
+d'alors (008, 017, 018, 020, 021) n'étaient pas `GO`. Vérification faite dans
+l'historique Git : cette formulation avait été introduite par une session
+précédente le jour même (commit `1b1cdb9`), sans décision explicite du
+dirigeant et sans dépendance technique réelle entre CAP-CORE-022 et ces
+capacités. Elle est retirée. La décision réelle du dirigeant, prise le
+5 août 2026, était de clore le codage du Core avec CAP-CORE-018 et
+CAP-CORE-021 avant de stabiliser et tester. Le 6 août 2026, CAP-CORE-021 est
+livré et déployé ; CAP-CORE-018, jamais commencé, rejoint CAP-CORE-008, 017
+et 020 en feuille de route future, non bloquante — décision explicite, pas
+un oubli.
 
 Le second chemin d’accès est livré : codes de secours à usage unique,
 attachement d’une passkey sans ligne de commande, et refus de retirer le
