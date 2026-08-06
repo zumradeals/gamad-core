@@ -47,9 +47,13 @@ $verifier = static function (bool $ok, string $libelle) use (&$echecs): void {
     }
 };
 
-echo "GARDE — ORCHESTRATION PERSISTANTE DU MATCHING (CAP-CORE-021)\n\n";
+// MATCHING_REGISTRY_URL permet de rejouer cette même garde contre PostgreSQL
+// réel (doc de chantier 05 §24) sans dupliquer le fichier : si la variable
+// est absente (cas par défaut en CI), on reste sur SQLite en mémoire.
+$surPostgres = getenv('MATCHING_REGISTRY_URL') !== false && getenv('MATCHING_REGISTRY_URL') !== '';
+echo 'GARDE — ORCHESTRATION PERSISTANTE DU MATCHING (CAP-CORE-021)' . ($surPostgres ? ' — PostgreSQL réel' : ' — SQLite') . "\n\n";
 
-$pdo = Magasin::connecter(':memory:');
+$pdo = $surPostgres ? Magasin::connecter() : Magasin::connecter(':memory:');
 $registre = new RegistreMatching($pdo);
 $acteur = 'IDN-TEST-OPERATEUR';
 

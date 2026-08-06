@@ -28,7 +28,7 @@ trap nettoyer EXIT
     --wait \
     start >/dev/null
 
-for base in gamad_index gamad_access gamad_identity gamad_products gamad_sources gamad_policies gamad_contracts gamad_vocabulary gamad_organizations gamad_realms gamad_journal gamad_events gamad_secrets gamad_preuves; do
+for base in gamad_index gamad_access gamad_identity gamad_products gamad_sources gamad_policies gamad_contracts gamad_vocabulary gamad_organizations gamad_realms gamad_journal gamad_events gamad_secrets gamad_preuves gamad_matching; do
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
 done
 
@@ -64,6 +64,7 @@ environnement=(
     "EVENT_JOURNAL_URL=postgresql://postgres@127.0.0.1:${port}/gamad_events"
     "SECRET_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_secrets"
     "PROOF_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_preuves"
+    "MATCHING_REGISTRY_URL=postgresql://postgres@127.0.0.1:${port}/gamad_matching"
 )
 
 (
@@ -73,6 +74,12 @@ environnement=(
 )
 
 env "${environnement[@]}" php "$application/tests/Integration/postgresql_p0.php"
+
+# CAP-CORE-021 — orchestration persistante du Matching contre PostgreSQL réel
+# (doc de chantier 05 §24). Ne couvre pas encore la sauvegarde/restauration
+# ci-dessous : gamad_matching n'est pas encore intégrée à backup.sh /
+# restore-drill.sh — réserve documentée, pas un oubli.
+env "${environnement[@]}" php "$racine/core/moteur-matching/tests/matching_p4.php"
 
 for base in drill_index drill_access drill_identity drill_products drill_sources drill_policies drill_contracts drill_vocabulary drill_organizations drill_realms drill_journal drill_events drill_secrets drill_preuves; do
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
