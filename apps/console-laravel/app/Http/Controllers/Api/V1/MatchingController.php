@@ -62,9 +62,24 @@ final class MatchingController
         return response()->json($execution['corps'], $execution['statut']);
     }
 
+    public function demandes(Request $request, AccesMatching $acces): JsonResponse
+    {
+        $filtres = $request->only(['contexte_reference', 'consommateur_produit', 'etat']);
+        $execution = $acces->listerDemandes($filtres, (string) $request->attributes->get('gamad_entite'));
+
+        return response()->json($execution['corps'], $execution['statut']);
+    }
+
     public function demande(Request $request, AccesMatching $acces, string $reference): JsonResponse
     {
         $execution = $acces->resoudreDemande($reference, (string) $request->attributes->get('gamad_entite'));
+
+        return response()->json($execution['corps'], $execution['statut']);
+    }
+
+    public function historiqueDemande(Request $request, AccesMatching $acces, string $reference): JsonResponse
+    {
+        $execution = $acces->historiqueDemande($reference, (string) $request->attributes->get('gamad_entite'));
 
         return response()->json($execution['corps'], $execution['statut']);
     }

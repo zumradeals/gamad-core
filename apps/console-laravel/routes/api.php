@@ -497,9 +497,11 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         Route::get('/matching/profils/{reference}', [MatchingController::class, 'profil']);
         Route::post('/matching/profils/compilation', [MatchingController::class, 'compilerProfil'])
             ->middleware('throttle:20,1');
+        Route::get('/matching/demandes', [MatchingController::class, 'demandes']);
         Route::post('/matching/demandes', [MatchingController::class, 'soumettreDemande'])
             ->middleware('throttle:60,1');
         Route::get('/matching/demandes/{reference}', [MatchingController::class, 'demande']);
+        Route::get('/matching/demandes/{reference}/historique', [MatchingController::class, 'historiqueDemande']);
         Route::post('/matching/demandes/{reference}/annulation', [MatchingController::class, 'annulerDemande'])
             ->middleware('throttle:20,1');
         Route::post('/matching/demandes/{reference}/execution', [MatchingController::class, 'executerDemande'])

@@ -405,6 +405,50 @@ final class RegistreMatching
         return $this->ligne('SELECT * FROM matching_demande WHERE reference = ?', [$reference]);
     }
 
+    /**
+     * @param array{contexte_reference?:string,consommateur_produit?:string,etat?:string} $filtres
+     * @return list<array<string,mixed>>
+     */
+    public function listerDemandes(array $filtres = [], int $limite = 100): array
+    {
+        $conditions = [];
+        $params = [];
+        foreach (['contexte_reference', 'consommateur_produit', 'etat'] as $champ) {
+            if (isset($filtres[$champ]) && $filtres[$champ] !== '') {
+                $conditions[] = "{$champ} = ?";
+                $params[] = $filtres[$champ];
+            }
+        }
+        $ou = $conditions === [] ? '' : ('WHERE ' . implode(' AND ', $conditions));
+        $params[] = max(1, min(500, $limite));
+
+        return $this->lignes("SELECT * FROM matching_demande {$ou} ORDER BY created_at DESC LIMIT ?", $params);
+    }
+
+    /** Historique en ajout seul des transitions d'une demande (doc 02 §6). @return list<array<string,mixed>> */
+    public function historiqueDemande(string $demandeReference): array
+    {
+        return $this->lignes('SELECT * FROM matching_cycle WHERE demande_reference = ? ORDER BY cree_le', [$demandeReference]);
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function listerExecutions(string $demandeReference): array
+    {
+        return $this->lignes('SELECT * FROM matching_execution WHERE demande_reference = ? ORDER BY demarre_le DESC', [$demandeReference]);
+    }
+
+    /** Dernière exécution, quel que soit son état (l'appelant filtre TERMINEE si nécessaire). */
+    public function derniereExecution(string $demandeReference): ?array
+    {
+        return $this->ligne('SELECT * FROM matching_execution WHERE demande_reference = ? ORDER BY demarre_le DESC LIMIT 1', [$demandeReference]);
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function segmentsDeDemande(string $demandeReference): array
+    {
+        return $this->lignes('SELECT * FROM matching_segment WHERE demande_reference = ? ORDER BY cree_le DESC', [$demandeReference]);
+    }
+
     private function inscrireCycle(string $demandeReference, string $etat, string $date, ?string $motifRef, ?string $motifDetail, string $acteur): void
     {
         $this->magasin->prepare(

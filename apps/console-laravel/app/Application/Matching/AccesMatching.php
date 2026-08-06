@@ -82,6 +82,28 @@ final class AccesMatching
     }
 
     /** @return array{statut:int,corps:array<string,mixed>} */
+    public function listerDemandes(array $filtres, string $acteur): array
+    {
+        $refus = $this->verifierLecture(PolitiqueMatching::ACTION_DEMANDE_CONSULTER, null, $acteur);
+        if ($refus !== null) {
+            return $refus;
+        }
+
+        return ['statut' => 200, 'corps' => ['demandes' => $this->registre()->listerDemandes($filtres)]];
+    }
+
+    /** @return array{statut:int,corps:array<string,mixed>} */
+    public function historiqueDemande(string $reference, string $acteur): array
+    {
+        $refus = $this->verifierLecture(PolitiqueMatching::ACTION_DEMANDE_CONSULTER, $reference, $acteur);
+        if ($refus !== null) {
+            return $refus;
+        }
+
+        return ['statut' => 200, 'corps' => ['historique' => $this->registre()->historiqueDemande($reference)]];
+    }
+
+    /** @return array{statut:int,corps:array<string,mixed>} */
     public function resoudreDemande(string $reference, string $acteur): array
     {
         $refus = $this->verifierLecture(PolitiqueMatching::ACTION_DEMANDE_CONSULTER, $reference, $acteur);
