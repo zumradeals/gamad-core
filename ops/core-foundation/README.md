@@ -392,6 +392,23 @@ passe jamais `--force` de lui-même. Activer la purge réelle est une décision
 d'exploitation explicite, prise en éditant `ExecStart=` après avoir revu au
 moins un rapport de simulation — jamais un défaut automatisé.
 
+Le moteur de Matching (CAP-CORE-021) ajoute une unité, sous le même modèle :
+
+| Timer | Commande | Fréquence |
+|---|---|---|
+| `gamad-matching-expiration` | `matching:expiration` | toutes les 15 minutes |
+
+`matching:expiration` est purement déclarative : la décision effective
+(`Activation::verifier`, appartenance de segment) compare déjà `expire_le` à
+l'instant réel, indépendamment de l'état affiché — cette unité maintient
+seulement l'état cohérent pour la console, l'API et les futures métriques.
+Réserve documentée dans `core/moteur-matching/README.md` : `matching:purge`,
+`matching:reconciliation`, les rapports de qualité et d'équité et la
+vérification des preuves (doc de chantier CAP-CORE-021, partie 05 §6) ne
+sont pas livrés — chacun exigerait soit une politique de rétention non
+encore adoptée, soit un raccordement réel non encore fait, jamais une
+simulation présentée comme preuve.
+
 Les unités proposées sous `ops/core-foundation/systemd/` écrivent les échecs
 critiques dans le journal système avec la priorité `auth.alert`. Le routage de
 ces alertes vers un opérateur externe reste à installer avant de prétendre à
@@ -418,10 +435,10 @@ horaire et la sauvegarde quotidienne.
 
 Les unités et l’environnement non secret sont installés depuis
 `ops/core-foundation/systemd/`, puis activés avec `systemctl enable --now` pour
-les huit timers (readiness, sauvegarde, vérification du journal opérationnel
-et les cinq unités du journal des événements ci-dessus). Toute modification
-d’une unité doit être suivie de `systemctl daemon-reload` et d’une exécution
-manuelle de son service.
+les neuf timers (readiness, sauvegarde, vérification du journal opérationnel,
+les cinq unités du journal des événements ci-dessus, et l’expiration du
+Matching). Toute modification d’une unité doit être suivie de
+`systemctl daemon-reload` et d’une exécution manuelle de son service.
 
 La spécification HTTP est dans
 `apps/console-laravel/openapi/core-v1.yaml`.

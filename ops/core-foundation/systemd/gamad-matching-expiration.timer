@@ -1,0 +1,11 @@
+[Unit]
+Description=Expiration périodique des segments et activations du Matching GAMAD Core (CAP-CORE-021)
+
+[Timer]
+OnCalendar=*-*-* *:0/15:00 UTC
+Persistent=true
+RandomizedDelaySec=30s
+Unit=gamad-matching-expiration.service
+
+[Install]
+WantedBy=timers.target

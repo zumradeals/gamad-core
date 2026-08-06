@@ -154,6 +154,14 @@
                 </span>
                 Preuves d’intégrité
             </a>
+            <a class="nav__link"
+               href="{{ route('console.matching.index') }}"
+               @if(request()->routeIs('console.matching.*')) aria-current="page" @endif>
+                <span class="nav__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="3"/><circle cx="17" cy="16" r="3"/><path d="M9.5 9.8 14.5 14.2"/></svg>
+                </span>
+                Matching
+            </a>
 
             <span class="nav__label">Sécurité et continuité</span>
             <a class="nav__link"

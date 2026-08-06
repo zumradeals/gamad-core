@@ -62,6 +62,14 @@ jobs:
             garde: core/registre-secrets-cles/tests/secrets_cles_p3.php
           - capacite: CAP-CORE-015 (preuves d'intégrité)
             garde: core/registre-preuves/tests/preuves_p3.php
+          - capacite: CAP-CORE-021 (matching — fonctions pures)
+            garde: core/moteur-matching/tests/matching_p3.php
+          - capacite: CAP-CORE-021 (matching — orchestration persistante)
+            garde: core/moteur-matching/tests/matching_p4.php
+          - capacite: CAP-CORE-021 (matching — acquisition de signaux CAP-CORE-014)
+            garde: core/moteur-matching/tests/matching_p5.php
+          - capacite: CAP-CORE-021 (matching — sécurité applicative)
+            garde: core/moteur-matching/tests/matching_p6.php
 
     steps:
       - name: Récupérer le dépôt
@@ -202,6 +210,12 @@ jobs:
 
       - name: Éprouver l'API des preuves d'intégrité
         run: php apps/console-laravel/tests/Integration/preuves_v1_p1.php
+
+      - name: Éprouver l'API du Matching
+        run: php apps/console-laravel/tests/Integration/matching_v1_p1.php
+
+      - name: Éprouver la console du Matching
+        run: php apps/console-laravel/tests/Integration/matching_console_p1.php
 
       - name: Éprouver la console de continuité
         run: php apps/console-laravel/tests/Integration/continuite_console_p1.php

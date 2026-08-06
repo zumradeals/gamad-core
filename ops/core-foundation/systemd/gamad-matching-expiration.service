@@ -1,0 +1,16 @@
+[Unit]
+Description=Marque EXPIRE/EXPIREE les segments et activations du Matching dont expire_le est dépassé (CAP-CORE-021)
+After=postgresql.service
+OnFailure=gamad-core-operations-alert@matching-expiration.service
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/gamad-core/apps/console-laravel
+ExecStart=/usr/bin/php artisan matching:expiration
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/gamad-core/apps/console-laravel/storage

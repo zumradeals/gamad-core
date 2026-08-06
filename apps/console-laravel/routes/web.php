@@ -16,6 +16,7 @@ use App\Http\Controllers\RealmConsoleController;
 use App\Http\Controllers\PasskeyController;
 use App\Http\Controllers\ContratConsoleController;
 use App\Http\Controllers\PolitiqueConsoleController;
+use App\Http\Controllers\MatchingConsoleController;
 use App\Http\Controllers\PreuveConsoleController;
 use App\Http\Controllers\ProduitConsoleController;
 use App\Http\Controllers\SatelliteConsoleController;
@@ -293,6 +294,18 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::post('/preuves/{reference}/compromission', [PreuveConsoleController::class, 'compromettre'])
         ->middleware('throttle:10,1')
         ->name('console.preuves.compromettre');
+
+    // CAP-CORE-021 — Matching. Console de lecture seule : aucune écriture
+    // (soumission, exécution, segment, activation) n'est exposée ici — voir
+    // MatchingConsoleController. Aucun membre de segment n'est jamais affiché.
+    Route::get('/matching', [MatchingConsoleController::class, 'index'])
+        ->name('console.matching.index');
+    Route::get('/matching/demandes/{reference}', [MatchingConsoleController::class, 'showDemande'])
+        ->name('console.matching.demandes.show');
+    Route::get('/matching/contextes/{reference}', [MatchingConsoleController::class, 'showContexte'])
+        ->name('console.matching.contextes.show');
+    Route::get('/matching/segments/{reference}', [MatchingConsoleController::class, 'showSegment'])
+        ->name('console.matching.segments.show');
 
     // CAP-CORE-006 — registre des sources. Vit sous `/registre-sources` : le
     // chemin `/sources/{reference}` reste la route JSON historique de CTR-04

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\FondationController;
 use App\Http\Controllers\Api\V1\FournisseurSecretController;
 use App\Http\Controllers\Api\V1\IdentiteController;
 use App\Http\Controllers\Api\V1\LettreMorteController;
+use App\Http\Controllers\Api\V1\MatchingController;
 use App\Http\Controllers\Api\V1\OrganisationController;
 use App\Http\Controllers\Api\V1\PasskeySessionController;
 use App\Http\Controllers\Api\V1\PolitiqueController;
@@ -483,6 +484,46 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         Route::post('/preuves/{reference}/compromission', [PreuveController::class, 'compromission'])
             ->middleware('throttle:30,1');
         Route::post('/preuves/{reference}/export', [PreuveController::class, 'export'])
+            ->middleware('throttle:20,1');
+
+        // CAP-CORE-021 — Matching : périmètre exposé restreint à ce qui a un
+        // code d'action exact dans PolitiqueMatching::ACTIONS — voir la
+        // réserve documentée en tête d'AccesMatching (routes de lecture,
+        // d'accusé, de suspension et de révocation d'une activation isolée,
+        // et d'instruction d'une contestation, non câblées faute d'action
+        // dédiée dans le vocabulaire fermé actuel).
+        Route::get('/matching/contextes', [MatchingController::class, 'contextes']);
+        Route::get('/matching/contextes/{reference}', [MatchingController::class, 'contexte']);
+        Route::get('/matching/profils/{reference}', [MatchingController::class, 'profil']);
+        Route::post('/matching/profils/compilation', [MatchingController::class, 'compilerProfil'])
+            ->middleware('throttle:20,1');
+        Route::get('/matching/demandes', [MatchingController::class, 'demandes']);
+        Route::post('/matching/demandes', [MatchingController::class, 'soumettreDemande'])
+            ->middleware('throttle:60,1');
+        Route::get('/matching/demandes/{reference}', [MatchingController::class, 'demande']);
+        Route::get('/matching/demandes/{reference}/historique', [MatchingController::class, 'historiqueDemande']);
+        Route::post('/matching/demandes/{reference}/annulation', [MatchingController::class, 'annulerDemande'])
+            ->middleware('throttle:20,1');
+        Route::post('/matching/demandes/{reference}/execution', [MatchingController::class, 'executerDemande'])
+            ->middleware('throttle:20,1');
+        Route::get('/matching/resultats/{reference}', [MatchingController::class, 'resultat']);
+        Route::get('/matching/resultats/{reference}/explication', [MatchingController::class, 'explicationResultat']);
+        Route::post('/matching/segments', [MatchingController::class, 'construireSegment'])
+            ->middleware('throttle:20,1');
+        Route::get('/matching/segments/{reference}', [MatchingController::class, 'segment']);
+        Route::post('/matching/segments/{reference}/appartenance', [MatchingController::class, 'appartenanceSegment'])
+            ->middleware('throttle:60,1');
+        Route::post('/matching/segments/{reference}/activation', [MatchingController::class, 'activerSegment'])
+            ->middleware('throttle:20,1');
+        Route::post('/matching/segments/{reference}/suspension', [MatchingController::class, 'suspensionSegment'])
+            ->middleware('throttle:10,1');
+        Route::post('/matching/segments/{reference}/revocation', [MatchingController::class, 'revocationSegment'])
+            ->middleware('throttle:10,1');
+        Route::post('/matching/activations/{reference}/mesures', [MatchingController::class, 'mesureActivation'])
+            ->middleware('throttle:60,1');
+        Route::post('/matching/contestations', [MatchingController::class, 'ouvrirContestation'])
+            ->middleware('throttle:20,1');
+        Route::post('/matching/contestations/{reference}/reexecution', [MatchingController::class, 'reexecutionContestation'])
             ->middleware('throttle:20,1');
     });
 });
