@@ -24,6 +24,10 @@ Un satellite peut choisir son expérience humaine :
 
 Mais le résultat de la résolution est toujours une seule référence canonique `IDN-...`.
 
+Un produit n'est pas satellite parce qu'il se présente comme tel. Le statut vient exclusivement de **CAP-CORE-011 — Products Registry**. Dès qu'un produit y est réellement inscrit avec `type_produit = SATELLITE` et `etat = ACTIF`, il reçoit automatiquement le droit borné **`créer un Compte GAMAD` pour autrui**. Il n'est donc pas nécessaire d'ajouter une règle nominative pour chaque futur satellite.
+
+Ce plein droit porte sur la création de Comptes GAMAD. Il ne donne pas au satellite un droit générique d'écriture dans Identity Registry, le registre des politiques, les mandats, les preuves, les contrats ou les autres registres souverains du Core. Un produit non satellite, suspendu, retiré ou seulement en préparation n'hérite pas de ce droit.
+
 ```text
 email -------------------\
 téléphone ----------------> Identity Registry -> IDN-PER-...
@@ -81,7 +85,9 @@ Une collision ne provoque jamais une fusion automatique : elle doit être refus�
 - `VERIFIE`
 - `RETIRE`
 
-La possession vérifiée d'un email ou d'un téléphone augmente la confiance attachée à cet identifiant, mais ne transforme pas automatiquement toute l'identité en assurance forte.
+Un email ou un téléphone créé par un portail ou un satellite reste `NON_VERIFIE` jusqu'à preuve de possession. Le Core crée un défi `VRF-...`, engendre un code court, ne persiste que son empreinte forte et borne sa durée et son nombre de tentatives. Le code brut n'est retourné qu'une fois au produit authentifié afin qu'il puisse le remettre au canal concerné.
+
+Tant que l'identifiant reste `NON_VERIFIE`, il ne peut pas servir à `POST /api/v1/sessions`, même si le mot de passe correspondant est correct. La possession vérifiée d'un email ou d'un téléphone augmente la confiance attachée à cet identifiant, mais ne transforme pas automatiquement toute l'identité en assurance forte.
 
 ## Authentification
 
@@ -91,7 +97,7 @@ La possession vérifiée d'un email ou d'un téléphone augmente la confiance at
 {"entite":"IDN-PER-...","secret":"..."}
 ```
 
-et accepte désormais le parcours humain :
+et accepte le parcours humain après vérification :
 
 ```json
 {"identifiant":"personne@example.com","type_identifiant":"EMAIL","secret":"..."}
@@ -103,17 +109,18 @@ ou :
 {"identifiant":"+2250701020304","type_identifiant":"TELEPHONE","secret":"..."}
 ```
 
-La couche API résout l'identifiant vers `IDN-...`, puis CAP-CORE-005 vérifie l'authentificateur. CAP-CORE-005 n'a donc pas à connaître les emails ou téléphones.
+La couche API résout l'identifiant vérifié vers `IDN-...`, puis CAP-CORE-005 vérifie l'authentificateur. CAP-CORE-005 n'a donc pas à connaître les emails ou téléphones.
 
-## Inscription publique — tranche suivante
+## Inscription par portail ou satellite reconnu
 
-Le portail ou un produit reconnu pourra demander une inscription gouvernée contenant un identifiant initial. Le Core devra alors, dans une même opération cohérente :
+Le portail explicitement habilité ou tout `SATELLITE ACTIF` reconnu par CAP-CORE-011 peut demander une inscription gouvernée contenant un identifiant initial. Le Core réalise alors le parcours suivant :
 
 1. refuser une collision active ;
 2. créer l'identité canonique ;
 3. attacher l'identifiant de résolution ;
 4. créer l'authentificateur ;
-5. produire les preuves d'audit ;
-6. ouvrir éventuellement la première session.
+5. créer, pour email/téléphone, un défi de preuve de possession ;
+6. produire les preuves d'audit ;
+7. n'autoriser la reconnexion humaine qu'après vérification du canal externe.
 
 L'interface publique peut donc rester simple (`nom + email/téléphone + secret`) sans exposer `IDN-...`, `AUTHN-...` ni la mécanique interne du Core.
