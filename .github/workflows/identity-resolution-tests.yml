@@ -12,6 +12,7 @@ on:
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
       - 'apps/console-laravel/routes/compte-gamad.php'
       - 'apps/console-laravel/bootstrap/providers.php'
+      - 'apps/console-laravel/tests/Integration/compte_gamad_p1.php'
       - '.github/workflows/identity-resolution-tests.yml'
   push:
     branches:
@@ -26,6 +27,7 @@ on:
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
       - 'apps/console-laravel/routes/compte-gamad.php'
       - 'apps/console-laravel/bootstrap/providers.php'
+      - 'apps/console-laravel/tests/Integration/compte_gamad_p1.php'
       - '.github/workflows/identity-resolution-tests.yml'
 
 jobs:
@@ -50,5 +52,23 @@ jobs:
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php
           php -l apps/console-laravel/app/Providers/CompteGamadServiceProvider.php
           php -l apps/console-laravel/routes/compte-gamad.php
+          php -l apps/console-laravel/tests/Integration/compte_gamad_p1.php
       - name: Exécuter la garde multi-identifiants
         run: php core/registre-identites/tests/identifiants_resolution_p3.php
+
+  compte-gamad-integration:
+    name: Compte GAMAD — intégration P1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_sqlite, sodium
+      - name: Installer le monolithe Laravel
+        working-directory: apps/console-laravel
+        run: composer install --no-interaction --prefer-dist
+      - name: Éprouver la création et la reconnexion Compte GAMAD
+        run: php apps/console-laravel/tests/Integration/compte_gamad_p1.php
