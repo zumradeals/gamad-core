@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Application\Comptes;
 
-use App\Application\Identites\InscrireIdentite;
 use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
+use Gamad\RegistreAutorisation\Ctr03;
+use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\IdentifiantsResolution;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
+use Gamad\RegistreNormes\Db;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 
 /**
  * Création gouvernée d'un Compte GAMAD pour une personne.
@@ -19,6 +22,11 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
  * un produit reconnu). Le navigateur public n'appelle jamais ce cas d'usage
  * directement.
  *
+ * Cette commande possède sa propre permission : `créer un Compte GAMAD`.
+ * Elle ne délègue jamais au produit la permission générique d'inscrire une
+ * identité. Le type créé reste fermé à `personne` et le canal à
+ * `PRODUIT_RECONNU`.
+ *
  * Les registres identité et accès pouvant être physiquement séparés, cette
  * orchestration ne prétend pas fournir une transaction SQL distribuée. Elle
  * précontrôle les collisions et reste fail-closed : aucune session n'est
@@ -26,6 +34,8 @@ use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
  */
 final class CreerCompteGamad
 {
+    public const ACTION = 'créer un Compte GAMAD';
+
     /**
      * @param array{nom:string,type_identifiant:string,identifiant:string,mot_de_passe:string} $donnees
      * @return array{statut:int,corps:array<string,mixed>}
@@ -38,10 +48,49 @@ final class CreerCompteGamad
         $motDePasse = $donnees['mot_de_passe'];
 
         try {
+            $index = Db::connect();
             $registreIdentites = IdentiteMagasin::connecter();
+            $ctr01 = new Ctr01($index, $registreIdentites);
             $resolution = new IdentifiantsResolution($registreIdentites);
+            $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
+                $produit,
+                self::ACTION,
+                'personne',
+            );
+            $journal = new Journal(JournalMagasin::connecter());
         } catch (\Throwable) {
-            return $this->indisponible('REGISTRE_IDENTITES_INDISPONIBLE');
+            return $this->indisponible('SOCLE_INDISPONIBLE');
+        }
+
+        try {
+            $preuveDecision = $journal->enregistrer([
+                'categorie' => 'AUTORISATION',
+                'type' => 'DECISION_CREATION_COMPTE_GAMAD',
+                'acteur' => $produit,
+                'action' => self::ACTION,
+                'ressource' => 'personne',
+                'decision' => ($decision['decision'] ?? null) === 'PERMIS' ? 'PERMIS' : 'REFUSE',
+                'motif' => $decision['motif'] ?? null,
+                'correlation_id' => $correlation,
+                'donnees' => [
+                    'type_identifiant' => $type,
+                    'politique' => $decision['politique'] ?? null,
+                    'version' => $decision['version'] ?? null,
+                ],
+            ]);
+        } catch (\Throwable) {
+            return $this->indisponible('JOURNAL_INDISPONIBLE');
+        }
+
+        if (($decision['decision'] ?? null) !== 'PERMIS') {
+            return [
+                'statut' => 403,
+                'corps' => [
+                    'erreur' => 'CREATION_COMPTE_NON_AUTORISEE',
+                    'message' => 'Ce produit n’est pas habilité à créer des Comptes GAMAD.',
+                    'preuve' => $preuveDecision,
+                ],
+            ];
         }
 
         if ($resolution->resoudre($identifiant, $type) !== null) {
@@ -51,24 +100,41 @@ final class CreerCompteGamad
                 'corps' => [
                     'erreur' => 'COMPTE_NON_CREATABLE',
                     'message' => 'Ce moyen de connexion ne peut pas être utilisé pour créer un nouveau compte.',
+                    'preuve' => $preuveDecision,
                 ],
             ];
         }
 
-        $inscription = (new InscrireIdentite())->executer([
-            'canal' => 'PRODUIT_RECONNU',
-            'type' => 'personne',
-            'libelle' => $nom,
-            'classification' => 'CONFIDENTIEL',
-            'provisoire' => false,
-        ], $produit, $correlation);
-
-        if ($inscription['statut'] !== 201) {
-            return $inscription;
+        try {
+            $identite = $ctr01->inscrireIdentite([
+                'canal' => 'PRODUIT_RECONNU',
+                'type' => 'personne',
+                'libelle' => $nom,
+                'producteur' => $produit,
+                'politique' => (string) ($decision['politique'] ?? 'POL-COMPTES-GAMAD-V1'),
+                'source' => (string) ($decision['source'] ?? 'CAP-CORE — Compte GAMAD'),
+                'preuve' => (string) $preuveDecision['reference'],
+                'classification' => 'CONFIDENTIEL',
+                'provisoire' => false,
+                'date' => gmdate('Y-m-d'),
+            ]);
+        } catch (\Throwable) {
+            return $this->indisponible('REGISTRE_IDENTITES_INDISPONIBLE');
         }
 
-        $reference = (string) ($inscription['corps']['identite']['reference'] ?? '');
-        $preuveInscription = (string) ($inscription['corps']['preuve']['reference'] ?? '');
+        if (isset($identite['refus'])) {
+            return [
+                'statut' => 422,
+                'corps' => [
+                    'erreur' => 'INSCRIPTION_IDENTITE_REFUSEE',
+                    'message' => 'Le Core a refusé la création de l’identité canonique.',
+                    'resultat' => $identite,
+                    'preuve' => $preuveDecision,
+                ],
+            ];
+        }
+
+        $reference = (string) ($identite['reference'] ?? '');
         if ($reference === '') {
             return $this->indisponible('INSCRIPTION_INCOMPLETE');
         }
@@ -76,8 +142,8 @@ final class CreerCompteGamad
         try {
             $identifiantLie = $resolution->attacher($reference, $type, $identifiant, [
                 'verifie' => false,
-                'source' => 'COMPTE_GAMAD_VIA_PRODUIT',
-                'preuve' => $preuveInscription !== '' ? $preuveInscription : 'PREUVE-INSCRIPTION-COMPTE',
+                'source' => (string) ($decision['source'] ?? 'CAP-CORE — Compte GAMAD'),
+                'preuve' => (string) $preuveDecision['reference'],
                 'producteur' => $produit,
                 'classification' => 'CONFIDENTIEL',
             ]);
@@ -109,11 +175,11 @@ final class CreerCompteGamad
         }
 
         try {
-            $preuve = (new Journal(JournalMagasin::connecter()))->enregistrer([
+            $preuve = $journal->enregistrer([
                 'categorie' => 'IDENTITE',
                 'type' => 'COMPTE_GAMAD_CREE',
                 'acteur' => $reference,
-                'action' => 'créer un Compte GAMAD via un produit reconnu',
+                'action' => self::ACTION,
                 'ressource' => $produit,
                 'decision' => 'EXECUTEE',
                 'correlation_id' => $correlation,
