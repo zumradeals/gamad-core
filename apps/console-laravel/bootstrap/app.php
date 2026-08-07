@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: env('TRUSTED_PROXIES'));
         $middleware->alias([
+            'throttle' => \App\Http\Middleware\GamadThrottleRequests::class,
             'gamad.session' => \App\Http\Middleware\ExigerSession::class,
             'gamad.api' => \App\Http\Middleware\AuthentifierApi::class,
             'gamad.https' => \App\Http\Middleware\ExigerHttpsEnProduction::class,

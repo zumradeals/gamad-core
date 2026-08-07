@@ -9,6 +9,8 @@ use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
 use Gamad\RegistreFederation\Federation;
+use Gamad\RegistreIdentites\IdentifiantsResolution;
+use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,13 +19,39 @@ final class SessionController
     public function store(Request $request): JsonResponse
     {
         $donnees = $request->validate([
-            'entite' => ['required', 'string', 'max:64'],
+            'entite' => ['nullable', 'string', 'max:64', 'required_without:identifiant'],
+            'identifiant' => ['nullable', 'string', 'max:512', 'required_without:entite'],
+            'type_identifiant' => ['nullable', 'string', 'in:EMAIL,TELEPHONE,USERNAME,EXTERNE'],
             'secret' => ['required', 'string', 'max:4096'],
         ]);
 
+        $entite = isset($donnees['entite']) ? trim((string) $donnees['entite']) : '';
+        $typeResolution = null;
+
+        if ($entite === '' && isset($donnees['identifiant'])) {
+            try {
+                $resolution = (new IdentifiantsResolution(IdentiteMagasin::connecter()))->resoudrePourAuthentification(
+                    (string) $donnees['identifiant'],
+                    isset($donnees['type_identifiant']) ? (string) $donnees['type_identifiant'] : null,
+                );
+            } catch (\Throwable) {
+                return response()->json([
+                    'erreur' => 'REGISTRE_IDENTITES_INDISPONIBLE',
+                    'message' => 'La session ne peut pas être établie.',
+                ], 503);
+            }
+
+            if ($resolution !== null) {
+                $entite = $resolution['identite'];
+                $typeResolution = $resolution['type'];
+            }
+        }
+
         try {
             $ctr = new Ctr16(Magasin::connecter());
-            $session = $ctr->etablirSession($donnees['entite'], $donnees['secret']);
+            $session = $entite !== ''
+                ? $ctr->etablirSession($entite, $donnees['secret'])
+                : null;
         } catch (\Throwable) {
             return response()->json([
                 'erreur' => 'MAGASIN_ACCES_INDISPONIBLE',
@@ -40,7 +68,10 @@ final class SessionController
                 'decision' => $session === null ? 'REFUSEE' : 'ACCEPTEE',
                 'motif' => $session === null ? 'identifiant ou secret refusé' : null,
                 'correlation_id' => $request->header('X-Correlation-ID'),
-                'donnees' => ['assurance' => $session['assurance'] ?? null],
+                'donnees' => [
+                    'assurance' => $session['assurance'] ?? null,
+                    'type_resolution' => $typeResolution,
+                ],
             ]);
         } catch (\Throwable) {
             if ($session !== null) {

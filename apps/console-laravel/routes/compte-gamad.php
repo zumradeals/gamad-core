@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Controllers\Api\V1\CompteController;
+use App\Http\Controllers\Api\V1\RenvoiVerificationCompteController;
+use App\Http\Controllers\Api\V1\VerificationCompteController;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('v1')
+    ->middleware(['gamad.https', 'gamad.api'])
+    ->group(function (): void {
+        Route::post('/comptes', [CompteController::class, 'store'])
+            ->middleware('throttle:gamad-account-create');
+        Route::post('/comptes/verifications', [VerificationCompteController::class, 'store'])
+            ->middleware('throttle:20,1');
+        Route::post('/comptes/verifications/renvoi', [RenvoiVerificationCompteController::class, 'store'])
+            ->middleware('throttle:gamad-account-verification-resend');
+    });

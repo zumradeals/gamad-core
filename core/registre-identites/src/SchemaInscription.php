@@ -14,12 +14,13 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 1;
+    public const VERSION = 2;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
         'compteur_reference_identite',
         'identite_inscrite',
+        'identifiant_resolution',
         'evenement_cycle_identite',
         'evenement_assurance_identite',
         'relation_produit',
@@ -68,6 +69,33 @@ final class SchemaInscription
                 date_creation         TEXT NOT NULL
             )
         SQL);
+
+        // Identifiants humains de résolution. La valeur brute (email, téléphone,
+        // username...) n'est pas conservée : seule son empreinte normalisée sert
+        // à retrouver la référence canonique. Un identifiant n'est ni une
+        // identité, ni un secret d'authentification.
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS identifiant_resolution (
+                reference          TEXT PRIMARY KEY,
+                identite_reference TEXT NOT NULL,
+                type               TEXT NOT NULL CHECK (type IN ('EMAIL','TELEPHONE','USERNAME','EXTERNE')),
+                empreinte          TEXT NOT NULL,
+                etat               TEXT NOT NULL CHECK (etat IN ('NON_VERIFIE','VERIFIE','RETIRE')),
+                source             TEXT NOT NULL,
+                preuve_reference   TEXT NOT NULL,
+                producteur         TEXT NOT NULL,
+                date_debut         TEXT NOT NULL,
+                classification     TEXT NOT NULL
+            )
+        SQL);
+        $pdo->exec(
+            'CREATE INDEX IF NOT EXISTS idx_identifiant_resolution_lookup
+             ON identifiant_resolution(type, empreinte, etat)'
+        );
+        $pdo->exec(
+            'CREATE INDEX IF NOT EXISTS idx_identifiant_resolution_identite
+             ON identifiant_resolution(identite_reference, etat)'
+        );
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS evenement_cycle_identite (
