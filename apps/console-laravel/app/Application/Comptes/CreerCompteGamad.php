@@ -14,23 +14,20 @@ use Gamad\RegistreIdentites\IdentifiantsResolution;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreProduits\RegistreProduits;
 
 /**
  * Création gouvernée d'un Compte GAMAD pour une personne.
  *
- * L'appelant est obligatoirement un sujet Core déjà authentifié (typiquement
- * un produit reconnu). Le navigateur public n'appelle jamais ce cas d'usage
- * directement.
+ * Deux portes seulement peuvent créer un compte :
+ * - un produit explicitement autorisé par CAP-CORE-004 (ex. le PORTAIL) ;
+ * - tout produit réellement inscrit comme SATELLITE et ACTIF dans CAP-CORE-011.
  *
- * Cette commande possède sa propre permission : `créer un Compte GAMAD`.
- * Elle ne délègue jamais au produit la permission générique d'inscrire une
- * identité. Le type créé reste fermé à `personne` et le canal à
- * `PRODUIT_RECONNU`.
- *
- * Les registres identité et accès pouvant être physiquement séparés, cette
- * orchestration ne prétend pas fournir une transaction SQL distribuée. Elle
- * précontrôle les collisions et reste fail-closed : aucune session n'est
- * rendue tant que toutes les briques ne sont pas établies.
+ * Le statut SATELLITE n'est donc jamais autodéclaré par l'appelant. Il vient
+ * du registre souverain des produits. Cette habilitation automatique reste
+ * bornée à la création d'un Compte GAMAD ; elle ne donne aucun droit général
+ * d'écriture dans les autres registres du Core.
  */
 final class CreerCompteGamad
 {
@@ -52,11 +49,36 @@ final class CreerCompteGamad
             $registreIdentites = IdentiteMagasin::connecter();
             $ctr01 = new Ctr01($index, $registreIdentites);
             $resolution = new IdentifiantsResolution($registreIdentites);
+            $registreProduits = new RegistreProduits(
+                $index,
+                $registreIdentites,
+                ProduitsMagasin::connecter(),
+                $ctr01,
+            );
             $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
                 $produit,
                 self::ACTION,
                 'personne',
             );
+
+            if (($decision['decision'] ?? null) !== 'PERMIS') {
+                $ficheProduit = $registreProduits->resoudreProduit($produit);
+                if (is_array($ficheProduit)
+                    && ($ficheProduit['type_produit'] ?? null) === 'SATELLITE'
+                    && ($ficheProduit['etat'] ?? null) === 'ACTIF') {
+                    $decision = [
+                        'decision' => 'PERMIS',
+                        'sujet' => $produit,
+                        'action' => self::ACTION,
+                        'ressource' => 'personne',
+                        'motif' => 'Tout SATELLITE ACTIF reconnu par CAP-CORE-011 peut créer un Compte GAMAD.',
+                        'politique' => 'POL-COMPTES-GAMAD-V1',
+                        'version' => '1.0.0',
+                        'source' => 'CAP-CORE-011 — statut SATELLITE ACTIF',
+                        'habilitation' => 'SATELLITE_ACTIF',
+                    ];
+                }
+            }
             $journal = new Journal(JournalMagasin::connecter());
         } catch (\Throwable) {
             return $this->indisponible('SOCLE_INDISPONIBLE');
@@ -76,6 +98,7 @@ final class CreerCompteGamad
                     'type_identifiant' => $type,
                     'politique' => $decision['politique'] ?? null,
                     'version' => $decision['version'] ?? null,
+                    'habilitation' => $decision['habilitation'] ?? 'POLITIQUE_EXPLICITE',
                 ],
             ]);
         } catch (\Throwable) {
@@ -87,14 +110,13 @@ final class CreerCompteGamad
                 'statut' => 403,
                 'corps' => [
                     'erreur' => 'CREATION_COMPTE_NON_AUTORISEE',
-                    'message' => 'Ce produit n’est pas habilité à créer des Comptes GAMAD.',
+                    'message' => 'Seul un produit explicitement habilité ou un SATELLITE ACTIF reconnu peut créer un Compte GAMAD.',
                     'preuve' => $preuveDecision,
                 ],
             ];
         }
 
         if ($resolution->resoudre($identifiant, $type) !== null) {
-            // Ne jamais révéler si l'identifiant correspond à un compte actif.
             return [
                 'statut' => 409,
                 'corps' => [
@@ -141,7 +163,7 @@ final class CreerCompteGamad
 
         try {
             $identifiantLie = $resolution->attacher($reference, $type, $identifiant, [
-                'verifie' => false,
+                'verifie' => $type === 'USERNAME',
                 'source' => (string) ($decision['source'] ?? 'CAP-CORE — Compte GAMAD'),
                 'preuve' => (string) $preuveDecision['reference'],
                 'producteur' => $produit,
@@ -163,15 +185,35 @@ final class CreerCompteGamad
                 'mot_de_passe',
                 'AS1 — FACTEUR UNIQUE',
             );
-            $session = $acces->etablirSession($reference, $motDePasse);
         } catch (\InvalidArgumentException) {
             return $this->compensationRequise($reference, 'SECRET_NON_CONFORME', $correlation, $produit);
         } catch (\Throwable) {
             return $this->compensationRequise($reference, 'REGISTRE_ACCES_INDISPONIBLE', $correlation, $produit);
         }
 
-        if ($session === null) {
-            return $this->compensationRequise($reference, 'SESSION_INITIALE_REFUSEE', $correlation, $produit);
+        $verification = null;
+        $session = null;
+        if (in_array($type, ['EMAIL', 'TELEPHONE'], true)) {
+            try {
+                $verification = $resolution->demarrerVerification(
+                    (string) $identifiantLie['reference'],
+                    [
+                        'source' => (string) ($decision['source'] ?? 'CAP-CORE — Compte GAMAD'),
+                        'preuve' => (string) $preuveDecision['reference'],
+                        'producteur' => $produit,
+                    ],
+                );
+            } catch (\Throwable) {
+                return $this->compensationRequise($reference, 'VERIFICATION_INDISPONIBLE', $correlation, $produit);
+            }
+            if (isset($verification['refus'])) {
+                return $this->compensationRequise($reference, 'VERIFICATION_REFUSEE', $correlation, $produit);
+            }
+        } else {
+            $session = $acces->etablirSession($reference, $motDePasse);
+            if ($session === null) {
+                return $this->compensationRequise($reference, 'SESSION_INITIALE_REFUSEE', $correlation, $produit);
+            }
         }
 
         try {
@@ -187,39 +229,52 @@ final class CreerCompteGamad
                     'type_identifiant' => $type,
                     'identifiant_reference' => $identifiantLie['reference'] ?? null,
                     'authentificateur_reference' => $authn,
-                    'assurance' => $session['assurance'] ?? null,
+                    'verification_reference' => $verification['reference'] ?? null,
+                    'verification_requise' => $verification !== null,
                 ],
             ]);
         } catch (\Throwable) {
-            // Une session sans preuve opérationnelle n'est jamais livrée.
-            try {
-                $acces->revoquerSession((string) $session['session']);
-            } catch (\Throwable) {
-                // Le refus reste fermé même si la révocation doit être reprise par l'exploitation.
+            if (is_array($session) && isset($session['session'])) {
+                try {
+                    $acces->revoquerSession((string) $session['session']);
+                } catch (\Throwable) {
+                }
             }
             return $this->compensationRequise($reference, 'JOURNAL_INDISPONIBLE', $correlation, $produit);
         }
 
-        return [
-            'statut' => 201,
-            'corps' => [
-                'compte' => [
-                    'identite' => $reference,
-                    'type_identifiant' => $type,
-                    'identifiant_reference' => $identifiantLie['reference'] ?? null,
-                    'authentificateur_reference' => $authn,
-                    'assurance' => $session['assurance'],
-                ],
-                'session' => [
-                    'type' => 'Bearer',
-                    'jeton' => $session['session'],
-                    'entite' => $session['entite'],
-                    'assurance' => $session['assurance'],
-                    'expire_le' => $session['expire_le'],
-                ],
-                'preuve' => $preuve,
+        $corps = [
+            'compte' => [
+                'identite' => $reference,
+                'type_identifiant' => $type,
+                'identifiant_reference' => $identifiantLie['reference'] ?? null,
+                'authentificateur_reference' => $authn,
+                'verification_requise' => $verification !== null,
             ],
+            'preuve' => $preuve,
         ];
+
+        if (is_array($verification)) {
+            // Le code n'est montré qu'une fois au produit authentifié. Le
+            // produit doit le remettre au canal externe et ne pas l'exposer
+            // dans ses journaux ni dans une URL.
+            $corps['verification'] = [
+                'reference' => $verification['reference'],
+                'code' => $verification['code'],
+                'expire_le' => $verification['expire_le'],
+            ];
+        }
+        if (is_array($session)) {
+            $corps['session'] = [
+                'type' => 'Bearer',
+                'jeton' => $session['session'],
+                'entite' => $session['entite'],
+                'assurance' => $session['assurance'],
+                'expire_le' => $session['expire_le'],
+            ];
+        }
+
+        return ['statut' => 201, 'corps' => $corps];
     }
 
     /** @return array{statut:int,corps:array<string,mixed>} */
@@ -253,7 +308,6 @@ final class CreerCompteGamad
                 'correlation_id' => $correlation,
             ]);
         } catch (\Throwable) {
-            // L'erreur primaire reste prioritaire ; aucune session n'est rendue.
         }
 
         return [
