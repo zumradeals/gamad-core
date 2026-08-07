@@ -15,18 +15,20 @@ use Gamad\RegistrePolitiques\RegistrePolitiques;
 use Illuminate\Console\Command;
 
 /**
- * Première délégation gouvernée de création de Comptes GAMAD.
+ * Politique explicite de création de Comptes GAMAD pour les produits qui ne
+ * tirent pas ce droit de leur statut structurel.
  *
- * Elle n'altère pas POL-INSCRIPTION-IDENTITES-V1, qui reste une reprise
- * historique. Une politique distincte donne seulement au portail DG AFRIQUE
- * la capacité `créer un Compte GAMAD`. Tout futur produit devra recevoir sa
- * propre règle dans une nouvelle version gouvernée de cette politique.
+ * `PRD-GAMAD-005` (DG AFRIQUE Portal) reçoit ici sa permission explicite.
+ * Les SATELLITES n'ont pas besoin d'une règle individuelle : tout produit
+ * réellement inscrit `SATELLITE` et `ACTIF` dans CAP-CORE-011 reçoit
+ * automatiquement le droit borné `créer un Compte GAMAD` dans le cas d'usage
+ * applicatif. Un produit ne peut donc jamais s'autoproclamer satellite.
  */
 final class BootstrapComptesGamadCommand extends Command
 {
     protected $signature = 'core:comptes:bootstrap';
 
-    protected $description = 'Inscrit et active la première politique de délégation de création des Comptes GAMAD.';
+    protected $description = 'Inscrit la permission explicite du portail ; les SATELLITES ACTIFS sont habilités structurellement via CAP-CORE-011.';
 
     private const POLITIQUE = 'POL-COMPTES-GAMAD-V1';
     private const VERSION = '1.0.0';
@@ -71,7 +73,7 @@ final class BootstrapComptesGamadCommand extends Command
                 'domaine' => 'IDENTITE_ET_ACCES',
                 'proprietaire_reference' => $acteur,
                 'source_reference' => self::SOURCE,
-                'description' => 'Détermine explicitement quels produits peuvent créer une personne canonique, son identifiant de résolution et son premier authentificateur.',
+                'description' => 'Porte les permissions explicites de produits non-satellites. Les SATELLITES ACTIFS reconnus par CAP-CORE-011 disposent structurellement du droit borné de créer un Compte GAMAD.',
                 'politique' => $gouvernance,
                 'producteur' => $acteur,
                 'source' => self::SOURCE,
@@ -107,7 +109,7 @@ final class BootstrapComptesGamadCommand extends Command
         $creation = $registre->creerVersion(self::POLITIQUE, [
             ...$commun,
             'version' => self::VERSION,
-            'description' => 'Première délégation : DG AFRIQUE Portal uniquement.',
+            'description' => 'Permission explicite du portail DG AFRIQUE ; les SATELLITES ACTIFS sont couverts par leur statut CAP-CORE-011.',
             'preuve' => 'BOOT-COMPTES-GAMAD-VERSION',
         ]);
         if (isset($creation['refus'])) {
@@ -165,14 +167,14 @@ final class BootstrapComptesGamadCommand extends Command
         $activation = $registre->activerVersion(self::POLITIQUE, self::VERSION, [
             ...$commun,
             'preuve' => 'BOOT-COMPTES-GAMAD-ACTIVATION',
-            'motif' => 'Activation de la première délégation explicite de création de Compte GAMAD.',
+            'motif' => 'Activation de la permission explicite du portail ; le droit structurel des satellites dépend de CAP-CORE-011.',
         ]);
         if (isset($activation['refus'])) {
             $this->error('Activation refusée : ' . json_encode($activation, JSON_UNESCAPED_UNICODE));
             return self::FAILURE;
         }
 
-        $this->info(self::POLITIQUE . ' ' . self::VERSION . ' : ACTIVE pour ' . self::PRODUIT . '.');
+        $this->info(self::POLITIQUE . ' ' . self::VERSION . ' : ACTIVE pour ' . self::PRODUIT . ' ; SATELLITES ACTIFS habilités via CAP-CORE-011.');
         return self::SUCCESS;
     }
 }
