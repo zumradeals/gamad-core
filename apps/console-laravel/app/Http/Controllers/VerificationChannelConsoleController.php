@@ -31,7 +31,7 @@ final class VerificationChannelConsoleController
             'email_driver' => ['required', 'in:smtp'],
             'email_host' => ['nullable', 'string', 'max:255'],
             'email_port' => ['required', 'integer', 'min:1', 'max:65535'],
-            'email_scheme' => ['nullable', 'in:tls,ssl'],
+            'email_scheme' => ['required', 'in:smtp,smtps'],
             'email_username' => ['nullable', 'string', 'max:255'],
             'email_password' => ['nullable', 'string', 'max:2048'],
             'email_from_address' => ['nullable', 'email', 'max:255'],
