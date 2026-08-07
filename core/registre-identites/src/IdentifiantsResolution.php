@@ -20,6 +20,8 @@ final class IdentifiantsResolution
 {
     public const TYPES = ['EMAIL', 'TELEPHONE', 'USERNAME', 'EXTERNE'];
     public const ETATS = ['NON_VERIFIE', 'VERIFIE', 'RETIRE'];
+    public const DELAI_RENVOI_SECONDES = 60;
+    public const MAX_VERIFICATIONS_PAR_HEURE = 5;
 
     public function __construct(private \PDO $registre)
     {
@@ -116,13 +118,7 @@ final class IdentifiantsResolution
         return null;
     }
 
-    /**
-     * Résolution utilisable par CAP-CORE-005. Un canal externe non vérifié ne
-     * doit jamais devenir une porte de reconnexion, même si son mot de passe
-     * est correct.
-     *
-     * @return array{identite:string,type:string,etat:string,reference:string}|null
-     */
+    /** @return array{identite:string,type:string,etat:string,reference:string}|null */
     public function resoudrePourAuthentification(string $valeur, ?string $type = null): ?array
     {
         $resolution = $this->resoudre($valeur, $type);
@@ -134,11 +130,31 @@ final class IdentifiantsResolution
     }
 
     /**
-     * Démarre une preuve de possession à courte durée et retourne le code une
-     * seule fois à l'appelant souverain. Le magasin ne conserve que son hash.
-     *
-     * @return array<string,mixed>
+     * Vérifie qu'une destination fournie à nouveau correspond bien au RID sans
+     * nécessiter de conserver sa valeur brute dans le registre.
      */
+    public function destinationCorrespond(string $identifiantReference, string $valeur): bool
+    {
+        $st = $this->registre->prepare(
+            "SELECT type,empreinte FROM identifiant_resolution
+             WHERE reference = ? AND etat <> 'RETIRE' LIMIT 1"
+        );
+        $st->execute([$identifiantReference]);
+        $identifiant = $st->fetch();
+        if (!is_array($identifiant)) {
+            return false;
+        }
+
+        $type = (string) $identifiant['type'];
+        $normalisee = self::normaliser($type, $valeur);
+        if ($normalisee === null) {
+            return false;
+        }
+
+        return hash_equals((string) $identifiant['empreinte'], self::empreinte($type, $normalisee));
+    }
+
+    /** @return array<string,mixed> */
     public function demarrerVerification(string $identifiantReference, array $dossier = []): array
     {
         $st = $this->registre->prepare(
@@ -162,48 +178,86 @@ final class IdentifiantsResolution
              WHERE identifiant_reference = ? AND etat = 'EN_ATTENTE'"
         )->execute([$identifiantReference]);
 
-        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $empreinte = password_hash($code, PASSWORD_ARGON2ID);
-        if (!is_string($empreinte) || $empreinte === '') {
-            throw new \RuntimeException('empreinte de vérification indisponible');
-        }
-
-        $reference = 'VRF-' . strtoupper(bin2hex(random_bytes(8)));
-        $expireLe = gmdate('c', time() + (int) ($dossier['duree_secondes'] ?? 600));
-        $this->registre->prepare(
-            'INSERT INTO verification_identifiant
-             (reference,identifiant_reference,secret_empreinte,etat,tentatives,expire_le,
-              source,preuve_reference,producteur,cree_le)
-             VALUES(?,?,?,?,?,?,?,?,?,?)'
-        )->execute([
-            $reference,
-            $identifiantReference,
-            $empreinte,
-            'EN_ATTENTE',
-            0,
-            $expireLe,
-            (string) ($dossier['source'] ?? 'SOURCE-NON-PRECISEE'),
-            (string) ($dossier['preuve'] ?? 'PREUVE-NON-PRECISEE'),
-            (string) ($dossier['producteur'] ?? 'PRODUCTEUR-NON-PRECISE'),
-            gmdate('c'),
-        ]);
-
-        return [
-            'reference' => $reference,
-            'identifiant_reference' => $identifiantReference,
-            'identite' => (string) $identifiant['identite_reference'],
-            'type' => (string) $identifiant['type'],
-            'code' => $code,
-            'expire_le' => $expireLe,
-        ];
+        return $this->creerVerification($identifiant, $identifiantReference, $dossier);
     }
 
     /**
-     * Valide la preuve de possession. Seule l'identité porteuse peut consommer
-     * le défi ; cinq erreurs ou l'expiration le rendent inutilisable.
+     * Renvoi gouverné : même destination, même producteur, délai minimal et
+     * volume horaire borné. Un nouveau défi invalide automatiquement l'ancien.
      *
      * @return array<string,mixed>
      */
+    public function renvoyerVerification(
+        string $identifiantReference,
+        string $destination,
+        string $producteur,
+        array $dossier = [],
+    ): array {
+        $st = $this->registre->prepare(
+            "SELECT reference,identite_reference,type,etat FROM identifiant_resolution
+             WHERE reference = ? AND etat <> 'RETIRE' LIMIT 1"
+        );
+        $st->execute([$identifiantReference]);
+        $identifiant = $st->fetch();
+        if (!is_array($identifiant)) {
+            return ['refus' => 'IDENTIFIANT_INCONNU'];
+        }
+        if ($identifiant['etat'] === 'VERIFIE') {
+            return ['refus' => 'IDENTIFIANT_DEJA_VERIFIE'];
+        }
+        if (!in_array((string) $identifiant['type'], ['EMAIL', 'TELEPHONE'], true)) {
+            return ['refus' => 'VERIFICATION_EXTERNE_NON_REQUISE'];
+        }
+        if (!$this->destinationCorrespond($identifiantReference, $destination)) {
+            return ['refus' => 'DESTINATION_INCORRECTE'];
+        }
+
+        $dernier = $this->registre->prepare(
+            'SELECT producteur,cree_le FROM verification_identifiant
+             WHERE identifiant_reference = ? ORDER BY cree_le DESC, id DESC LIMIT 1'
+        );
+        $dernier->execute([$identifiantReference]);
+        $precedent = $dernier->fetch();
+        if (!is_array($precedent) || !hash_equals((string) $precedent['producteur'], $producteur)) {
+            return ['refus' => 'RENVOI_NON_AUTORISE'];
+        }
+
+        $maintenant = time();
+        $cree = strtotime((string) $precedent['cree_le']);
+        if ($cree !== false && ($maintenant - $cree) < self::DELAI_RENVOI_SECONDES) {
+            return [
+                'refus' => 'RENVOI_TROP_RAPIDE',
+                'reessayer_dans' => self::DELAI_RENVOI_SECONDES - ($maintenant - $cree),
+            ];
+        }
+
+        $depuis = gmdate('c', $maintenant - 3600);
+        $compte = $this->registre->prepare(
+            'SELECT count(*) FROM verification_identifiant
+             WHERE identifiant_reference = ? AND cree_le >= ?'
+        );
+        $compte->execute([$identifiantReference, $depuis]);
+        if ((int) $compte->fetchColumn() >= self::MAX_VERIFICATIONS_PAR_HEURE) {
+            return ['refus' => 'LIMITE_RENVOI_ATTEINTE'];
+        }
+
+        $this->registre->prepare(
+            "UPDATE verification_identifiant SET etat = 'EXPIREE'
+             WHERE identifiant_reference = ? AND etat = 'EN_ATTENTE'"
+        )->execute([$identifiantReference]);
+
+        return $this->creerVerification($identifiant, $identifiantReference, [
+            ...$dossier,
+            'producteur' => $producteur,
+        ]);
+    }
+
+    public function annulerVerification(string $verificationReference): void
+    {
+        $this->expirerVerification($verificationReference);
+    }
+
+    /** @return array<string,mixed> */
     public function verifierPossession(
         string $identite,
         string $identifiantReference,
@@ -310,6 +364,45 @@ final class IdentifiantsResolution
     private static function empreinte(string $type, string $normalisee): string
     {
         return hash('sha256', strtoupper($type) . "\0" . $normalisee);
+    }
+
+    /** @param array<string,mixed> $identifiant @return array<string,mixed> */
+    private function creerVerification(array $identifiant, string $identifiantReference, array $dossier): array
+    {
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $empreinte = password_hash($code, PASSWORD_ARGON2ID);
+        if (!is_string($empreinte) || $empreinte === '') {
+            throw new \RuntimeException('empreinte de vérification indisponible');
+        }
+
+        $reference = 'VRF-' . strtoupper(bin2hex(random_bytes(8)));
+        $expireLe = gmdate('c', time() + (int) ($dossier['duree_secondes'] ?? 600));
+        $this->registre->prepare(
+            'INSERT INTO verification_identifiant
+             (reference,identifiant_reference,secret_empreinte,etat,tentatives,expire_le,
+              source,preuve_reference,producteur,cree_le)
+             VALUES(?,?,?,?,?,?,?,?,?,?)'
+        )->execute([
+            $reference,
+            $identifiantReference,
+            $empreinte,
+            'EN_ATTENTE',
+            0,
+            $expireLe,
+            (string) ($dossier['source'] ?? 'SOURCE-NON-PRECISEE'),
+            (string) ($dossier['preuve'] ?? 'PREUVE-NON-PRECISEE'),
+            (string) ($dossier['producteur'] ?? 'PRODUCTEUR-NON-PRECISE'),
+            gmdate('c'),
+        ]);
+
+        return [
+            'reference' => $reference,
+            'identifiant_reference' => $identifiantReference,
+            'identite' => (string) $identifiant['identite_reference'],
+            'type' => (string) $identifiant['type'],
+            'code' => $code,
+            'expire_le' => $expireLe,
+        ];
     }
 
     private function expirerVerification(string $reference): void
