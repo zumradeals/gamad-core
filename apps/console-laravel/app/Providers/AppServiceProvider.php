@@ -33,5 +33,19 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(20)->by('gamad-account-create:' . $cle);
         });
+
+        /*
+         * Un portail ou satellite peut être un proxy partagé par beaucoup
+         * d'utilisateurs. Le renvoi est donc borné par RID et non par IP.
+         * La couche registre applique en plus 60 s minimum et 5 défis/heure.
+         */
+        RateLimiter::for('gamad-account-verification-resend', static function (Request $request): Limit {
+            $rid = trim((string) $request->input('identifiant_reference', ''));
+            $cle = $rid !== ''
+                ? hash('sha256', $rid)
+                : hash('sha256', 'sans-rid:' . (string) $request->ip());
+
+            return Limit::perMinute(5)->by('gamad-account-verification-resend:' . $cle);
+        });
     }
 }
