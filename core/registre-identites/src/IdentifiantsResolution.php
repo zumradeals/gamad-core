@@ -11,6 +11,10 @@ namespace Gamad\RegistreIdentites;
  * Le registre conserve uniquement une empreinte déterministe de la valeur
  * normalisée : le courriel ou le numéro brut n'est pas nécessaire pour
  * retrouver IDN-... lors d'une connexion.
+ *
+ * EMAIL et TELEPHONE doivent être VERIFIE avant de pouvoir servir à une
+ * authentification normale. USERNAME peut être déclaré vérifié au moment de sa
+ * création puisqu'il ne prétend pas à la possession d'un canal externe.
  */
 final class IdentifiantsResolution
 {
@@ -20,6 +24,7 @@ final class IdentifiantsResolution
     public function __construct(private \PDO $registre)
     {
         SchemaInscription::migrer($registre);
+        SchemaVerificationIdentifiants::migrer($registre);
     }
 
     /** @return array<string,mixed> */
@@ -79,7 +84,7 @@ final class IdentifiantsResolution
         ];
     }
 
-    /** @return array{identite:string,type:string,etat:string}|null */
+    /** @return array{identite:string,type:string,etat:string,reference:string}|null */
     public function resoudre(string $valeur, ?string $type = null): ?array
     {
         $types = $type !== null ? [strtoupper(trim($type))] : ['EMAIL', 'TELEPHONE', 'USERNAME', 'EXTERNE'];
@@ -92,7 +97,7 @@ final class IdentifiantsResolution
                 continue;
             }
             $st = $this->registre->prepare(
-                "SELECT identite_reference,type,etat FROM identifiant_resolution
+                "SELECT reference,identite_reference,type,etat FROM identifiant_resolution
                  WHERE type = ? AND empreinte = ? AND etat <> 'RETIRE'
                  ORDER BY CASE etat WHEN 'VERIFIE' THEN 0 ELSE 1 END, date_debut DESC LIMIT 1"
             );
@@ -100,6 +105,7 @@ final class IdentifiantsResolution
             $r = $st->fetch();
             if (is_array($r)) {
                 return [
+                    'reference' => (string) $r['reference'],
                     'identite' => (string) $r['identite_reference'],
                     'type' => (string) $r['type'],
                     'etat' => (string) $r['etat'],
@@ -108,6 +114,161 @@ final class IdentifiantsResolution
         }
 
         return null;
+    }
+
+    /**
+     * Résolution utilisable par CAP-CORE-005. Un canal externe non vérifié ne
+     * doit jamais devenir une porte de reconnexion, même si son mot de passe
+     * est correct.
+     *
+     * @return array{identite:string,type:string,etat:string,reference:string}|null
+     */
+    public function resoudrePourAuthentification(string $valeur, ?string $type = null): ?array
+    {
+        $resolution = $this->resoudre($valeur, $type);
+        if ($resolution === null || $resolution['etat'] !== 'VERIFIE') {
+            return null;
+        }
+
+        return $resolution;
+    }
+
+    /**
+     * Démarre une preuve de possession à courte durée et retourne le code une
+     * seule fois à l'appelant souverain. Le magasin ne conserve que son hash.
+     *
+     * @return array<string,mixed>
+     */
+    public function demarrerVerification(string $identifiantReference, array $dossier = []): array
+    {
+        $st = $this->registre->prepare(
+            "SELECT reference,identite_reference,type,etat FROM identifiant_resolution
+             WHERE reference = ? AND etat <> 'RETIRE' LIMIT 1"
+        );
+        $st->execute([$identifiantReference]);
+        $identifiant = $st->fetch();
+        if (!is_array($identifiant)) {
+            return ['refus' => 'IDENTIFIANT_INCONNU'];
+        }
+        if ($identifiant['etat'] === 'VERIFIE') {
+            return ['refus' => 'IDENTIFIANT_DEJA_VERIFIE'];
+        }
+        if (!in_array((string) $identifiant['type'], ['EMAIL', 'TELEPHONE'], true)) {
+            return ['refus' => 'VERIFICATION_EXTERNE_NON_REQUISE'];
+        }
+
+        $this->registre->prepare(
+            "UPDATE verification_identifiant SET etat = 'EXPIREE'
+             WHERE identifiant_reference = ? AND etat = 'EN_ATTENTE'"
+        )->execute([$identifiantReference]);
+
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $empreinte = password_hash($code, PASSWORD_ARGON2ID);
+        if (!is_string($empreinte) || $empreinte === '') {
+            throw new \RuntimeException('empreinte de vérification indisponible');
+        }
+
+        $reference = 'VRF-' . strtoupper(bin2hex(random_bytes(8)));
+        $expireLe = gmdate('c', time() + (int) ($dossier['duree_secondes'] ?? 600));
+        $this->registre->prepare(
+            'INSERT INTO verification_identifiant
+             (reference,identifiant_reference,secret_empreinte,etat,tentatives,expire_le,
+              source,preuve_reference,producteur,cree_le)
+             VALUES(?,?,?,?,?,?,?,?,?,?)'
+        )->execute([
+            $reference,
+            $identifiantReference,
+            $empreinte,
+            'EN_ATTENTE',
+            0,
+            $expireLe,
+            (string) ($dossier['source'] ?? 'SOURCE-NON-PRECISEE'),
+            (string) ($dossier['preuve'] ?? 'PREUVE-NON-PRECISEE'),
+            (string) ($dossier['producteur'] ?? 'PRODUCTEUR-NON-PRECISE'),
+            gmdate('c'),
+        ]);
+
+        return [
+            'reference' => $reference,
+            'identifiant_reference' => $identifiantReference,
+            'identite' => (string) $identifiant['identite_reference'],
+            'type' => (string) $identifiant['type'],
+            'code' => $code,
+            'expire_le' => $expireLe,
+        ];
+    }
+
+    /**
+     * Valide la preuve de possession. Seule l'identité porteuse peut consommer
+     * le défi ; cinq erreurs ou l'expiration le rendent inutilisable.
+     *
+     * @return array<string,mixed>
+     */
+    public function verifierPossession(
+        string $identite,
+        string $identifiantReference,
+        string $verificationReference,
+        string $code,
+    ): array {
+        $st = $this->registre->prepare(
+            'SELECT v.*, i.identite_reference, i.etat AS identifiant_etat
+             FROM verification_identifiant v
+             JOIN identifiant_resolution i ON i.reference = v.identifiant_reference
+             WHERE v.reference = ? AND v.identifiant_reference = ? LIMIT 1'
+        );
+        $st->execute([$verificationReference, $identifiantReference]);
+        $verification = $st->fetch();
+        if (!is_array($verification)
+            || !hash_equals((string) $verification['identite_reference'], $identite)) {
+            return ['refus' => 'VERIFICATION_INCONNUE'];
+        }
+        if ($verification['identifiant_etat'] === 'VERIFIE') {
+            return ['identifiant_reference' => $identifiantReference, 'etat' => 'VERIFIE', 'idempotent' => true];
+        }
+        if ($verification['etat'] !== 'EN_ATTENTE') {
+            return ['refus' => 'VERIFICATION_INACTIVE'];
+        }
+        if ((string) $verification['expire_le'] < gmdate('c')) {
+            $this->expirerVerification($verificationReference);
+            return ['refus' => 'VERIFICATION_EXPIREE'];
+        }
+        if ((int) $verification['tentatives'] >= 5) {
+            $this->expirerVerification($verificationReference);
+            return ['refus' => 'TROP_DE_TENTATIVES'];
+        }
+
+        if (!password_verify($code, (string) $verification['secret_empreinte'])) {
+            $tentatives = ((int) $verification['tentatives']) + 1;
+            $etat = $tentatives >= 5 ? 'EXPIREE' : 'EN_ATTENTE';
+            $this->registre->prepare(
+                'UPDATE verification_identifiant SET tentatives = ?, etat = ? WHERE reference = ?'
+            )->execute([$tentatives, $etat, $verificationReference]);
+
+            return ['refus' => $etat === 'EXPIREE' ? 'TROP_DE_TENTATIVES' : 'CODE_INVALIDE'];
+        }
+
+        $this->registre->beginTransaction();
+        try {
+            $this->registre->prepare(
+                "UPDATE verification_identifiant SET etat = 'CONSOMMEE' WHERE reference = ?"
+            )->execute([$verificationReference]);
+            $this->registre->prepare(
+                "UPDATE identifiant_resolution SET etat = 'VERIFIE' WHERE reference = ? AND etat = 'NON_VERIFIE'"
+            )->execute([$identifiantReference]);
+            $this->registre->commit();
+        } catch (\Throwable $e) {
+            if ($this->registre->inTransaction()) {
+                $this->registre->rollBack();
+            }
+            throw $e;
+        }
+
+        return [
+            'identifiant_reference' => $identifiantReference,
+            'verification_reference' => $verificationReference,
+            'etat' => 'VERIFIE',
+            'idempotent' => false,
+        ];
     }
 
     public static function normaliser(string $type, string $valeur): ?string
@@ -149,5 +310,12 @@ final class IdentifiantsResolution
     private static function empreinte(string $type, string $normalisee): string
     {
         return hash('sha256', strtoupper($type) . "\0" . $normalisee);
+    }
+
+    private function expirerVerification(string $reference): void
+    {
+        $this->registre->prepare(
+            "UPDATE verification_identifiant SET etat = 'EXPIREE' WHERE reference = ? AND etat = 'EN_ATTENTE'"
+        )->execute([$reference]);
     }
 }
