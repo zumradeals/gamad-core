@@ -73,7 +73,7 @@ final class ConfigurationCanauxVerification
                 'driver' => (string) ($entree['email_driver'] ?? 'smtp'),
                 'host' => trim((string) ($entree['email_host'] ?? '')),
                 'port' => (int) ($entree['email_port'] ?? 587),
-                'scheme' => trim((string) ($entree['email_scheme'] ?? 'tls')),
+                'scheme' => trim((string) ($entree['email_scheme'] ?? 'smtp')),
                 'username' => trim((string) ($entree['email_username'] ?? '')),
                 'password' => $emailPassword !== '' ? $emailPassword : (string) ($actuelle['email']['password'] ?? ''),
                 'from_address' => trim((string) ($entree['email_from_address'] ?? '')),
@@ -121,6 +121,9 @@ final class ConfigurationCanauxVerification
             if (($email['driver'] ?? null) !== 'smtp') {
                 throw new \InvalidArgumentException('Le pilote email doit être SMTP pour cette première version console.');
             }
+            if (!in_array((string) ($email['scheme'] ?? ''), ['smtp', 'smtps'], true)) {
+                throw new \InvalidArgumentException('Le mode de sécurité SMTP est invalide.');
+            }
             if ($email['host'] === '' || $email['from_address'] === '' || !filter_var($email['from_address'], FILTER_VALIDATE_EMAIL)) {
                 throw new \InvalidArgumentException('Renseignez un serveur SMTP et une adresse expéditeur valide.');
             }
@@ -151,7 +154,7 @@ final class ConfigurationCanauxVerification
                 'driver' => 'smtp',
                 'host' => '',
                 'port' => 587,
-                'scheme' => 'tls',
+                'scheme' => 'smtp',
                 'username' => '',
                 'password' => '',
                 'from_address' => '',
