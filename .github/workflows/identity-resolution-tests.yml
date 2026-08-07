@@ -5,10 +5,12 @@ on:
     paths:
       - 'core/registre-identites/**'
       - 'core/registre-acces/**'
+      - 'core/registre-produits/**'
       - 'apps/console-laravel/app/Application/Comptes/**'
       - 'apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
+      - 'apps/console-laravel/app/Http/Controllers/Api/V1/VerificationCompteController.php'
       - 'apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php'
       - 'apps/console-laravel/app/Providers/AppServiceProvider.php'
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
@@ -23,10 +25,12 @@ on:
     paths:
       - 'core/registre-identites/**'
       - 'core/registre-acces/**'
+      - 'core/registre-produits/**'
       - 'apps/console-laravel/app/Application/Comptes/**'
       - 'apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
+      - 'apps/console-laravel/app/Http/Controllers/Api/V1/VerificationCompteController.php'
       - 'apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php'
       - 'apps/console-laravel/app/Providers/AppServiceProvider.php'
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
@@ -52,10 +56,12 @@ jobs:
         run: |
           php -l core/registre-identites/src/IdentifiantsResolution.php
           php -l core/registre-identites/src/SchemaInscription.php
+          php -l core/registre-identites/src/SchemaVerificationIdentifiants.php
           php -l apps/console-laravel/app/Application/Comptes/CreerCompteGamad.php
           php -l apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php
+          php -l apps/console-laravel/app/Http/Controllers/Api/V1/VerificationCompteController.php
           php -l apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php
           php -l apps/console-laravel/app/Providers/AppServiceProvider.php
           php -l apps/console-laravel/app/Providers/CompteGamadServiceProvider.php
@@ -79,5 +85,5 @@ jobs:
       - name: Installer le monolithe Laravel
         working-directory: apps/console-laravel
         run: composer install --no-interaction --prefer-dist
-      - name: Éprouver la création et la reconnexion Compte GAMAD
+      - name: Éprouver satellites, vérification et reconnexion Compte GAMAD
         run: php apps/console-laravel/tests/Integration/compte_gamad_p1.php
