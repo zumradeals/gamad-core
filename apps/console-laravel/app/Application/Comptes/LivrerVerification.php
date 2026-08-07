@@ -58,12 +58,19 @@ final class LivrerVerification
     /** @return array{livree:bool,canal:string,motif?:string} */
     private function sms(string $telephone, string $code, string $expireLe): array
     {
-        // Le Core n'invente aucun fournisseur SMS. Tant qu'un pilote explicite
-        // n'est pas raccorde, la creation par telephone reste fail-closed.
         if (config('gamad_verification.sms.enabled') !== true) {
             return ['livree' => false, 'canal' => 'TELEPHONE', 'motif' => 'SMS_NON_CONFIGURE'];
         }
 
+        $driver = (string) config('gamad_verification.sms.driver', '');
+        if ($driver === 'array' && app()->environment('testing')) {
+            // Pilote exclusivement destiné à la CI : il prouve que le Core
+            // n'expose pas le code au satellite sans prétendre envoyer un SMS.
+            return ['livree' => true, 'canal' => 'TELEPHONE'];
+        }
+
+        // Le Core n'invente aucun fournisseur SMS. En exploitation, le canal
+        // reste fermé tant qu'un adaptateur réel n'a pas été raccordé.
         return ['livree' => false, 'canal' => 'TELEPHONE', 'motif' => 'TRANSPORT_SMS_NON_IMPLEMENTE'];
     }
 }
