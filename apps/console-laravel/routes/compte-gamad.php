@@ -15,5 +15,5 @@ Route::prefix('v1')
         Route::post('/comptes/verifications', [VerificationCompteController::class, 'store'])
             ->middleware('throttle:20,1');
         Route::post('/comptes/verifications/renvoi', [RenvoiVerificationCompteController::class, 'store'])
-            ->middleware('throttle:10,1');
+            ->middleware('throttle:gamad-account-verification-resend');
     });
