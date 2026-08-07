@@ -7,12 +7,14 @@ declare(strict_types=1);
  *
  * Prouve qu'un SATELLITE ACTIF reconnu par CAP-CORE-011 peut spontanément
  * créer un Compte GAMAD pour autrui, sans règle individuelle ajoutée pour lui.
- * Prouve aussi qu'un partenaire ou un sujet ordinaire n'obtient pas ce droit.
+ * Prouve aussi qu'un partenaire ou un sujet ordinaire n'obtient pas ce droit,
+ * et que les codes de possession ne franchissent pas la frontière HTTP Core -> satellite.
  */
 
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreIdentites\Ctr01;
+use Gamad\RegistreIdentites\IdentifiantsResolution;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
 use Gamad\RegistreNormes\Db;
@@ -57,6 +59,13 @@ $environnement = [
     'CACHE_STORE' => 'array',
     'SESSION_DRIVER' => 'array',
     'LOG_CHANNEL' => 'errorlog',
+    'MAIL_MAILER' => 'array',
+    'MAIL_FROM_ADDRESS' => 'no-reply@example.test',
+    'MAIL_FROM_NAME' => 'GAMAD',
+    'GAMAD_VERIFICATION_EMAIL_ENABLED' => 'true',
+    'GAMAD_VERIFICATION_EMAIL_MAILER' => 'array',
+    'GAMAD_VERIFICATION_SMS_ENABLED' => 'true',
+    'GAMAD_VERIFICATION_SMS_DRIVER' => 'array',
     'DATABASE_URL' => '',
     'SQLITE_PATH' => $fichiers['index'],
     'MAGASIN_URL' => '',
@@ -82,6 +91,7 @@ $index = Db::connect();
 BaselineOperationnelle::standard()->reconstruire($index);
 $registreIdentites = IdentiteMagasin::connecter();
 $ctr01 = new Ctr01($index, $registreIdentites);
+$resolution = new IdentifiantsResolution($registreIdentites);
 $acces = AccesMagasin::connecter();
 
 $app = require $application . '/bootstrap/app.php';
@@ -138,8 +148,8 @@ $ouvrirProduit = static function (string $produit, string $secret) use ($ctr16):
     return (string) ($session['session'] ?? '');
 };
 
-$satellite = 'PRD-GAMAD-002'; // GamaDrive : SATELLITE ACTIF dans le bootstrap CAP-CORE-011.
-$partenaire = 'PRD-GAMAD-003'; // Wasplex : PARTENAIRE en PREPARATION.
+$satellite = 'PRD-GAMAD-002';
+$partenaire = 'PRD-GAMAD-003';
 $autorite = 'AUT-GAMAD-001';
 $jetonSatellite = $ouvrirProduit($satellite, 'Secret-Satellite-Compte-2026!');
 $jetonPartenaire = $ouvrirProduit($partenaire, 'Secret-Partenaire-Compte-2026!');
@@ -153,10 +163,7 @@ $refusPartenaire = $requete('POST', '/api/v1/comptes', [
     'identifiant' => 'partenaire.refus@example.test',
     'mot_de_passe' => 'Mot-de-passe-partenaire-2026!',
 ], $jetonPartenaire);
-$verifier(
-    $refusPartenaire['statut'] === 403,
-    'un PARTENAIRE en préparation ne devient pas satellite par déclaration et ne crée pas de compte',
-);
+$verifier($refusPartenaire['statut'] === 403, 'un PARTENAIRE en préparation ne crée pas de compte');
 
 $refusAutorite = $requete('POST', '/api/v1/comptes', [
     'nom' => 'Personne autorité refusée',
@@ -164,10 +171,7 @@ $refusAutorite = $requete('POST', '/api/v1/comptes', [
     'identifiant' => 'autorite.refus@example.test',
     'mot_de_passe' => 'Mot-de-passe-autorite-2026!',
 ], $jetonAutorite);
-$verifier(
-    $refusAutorite['statut'] === 403,
-    'un sujet authentifié qui n’est ni satellite actif ni explicitement habilité est refusé',
-);
+$verifier($refusAutorite['statut'] === 403, 'un sujet ordinaire non habilité est refusé');
 
 $email = 'Personne.Test+Satellite@Example.Test';
 $motDePasse = 'Compte-GAMAD-email-2026!';
@@ -180,16 +184,16 @@ $creation = $requete('POST', '/api/v1/comptes', [
 $reference = (string) ($creation['corps']['compte']['identite'] ?? '');
 $rid = (string) ($creation['corps']['compte']['identifiant_reference'] ?? '');
 $vrf = (string) ($creation['corps']['verification']['reference'] ?? '');
-$code = (string) ($creation['corps']['verification']['code'] ?? '');
 $verifier(
     $creation['statut'] === 201
         && str_starts_with($reference, 'IDN-PER-')
         && str_starts_with($rid, 'RID-')
         && str_starts_with($vrf, 'VRF-')
-        && preg_match('/^[0-9]{6}$/', $code) === 1
-        && ($creation['corps']['compte']['verification_requise'] ?? false) === true
+        && !array_key_exists('code', $creation['corps']['verification'] ?? [])
+        && ($creation['corps']['verification']['livraison']['livree'] ?? false) === true
+        && ($creation['corps']['verification']['livraison']['canal'] ?? null) === 'EMAIL'
         && !isset($creation['corps']['session']),
-    'un SATELLITE ACTIF crée spontanément identité, accès et défi de possession sans règle individuelle',
+    'le satellite crée le compte, le Core livre le code et ne le révèle jamais dans la réponse',
 );
 
 $connexionAvant = $requete('POST', '/api/v1/sessions', [
@@ -197,32 +201,34 @@ $connexionAvant = $requete('POST', '/api/v1/sessions', [
     'type_identifiant' => 'EMAIL',
     'secret' => $motDePasse,
 ]);
-$verifier(
-    $connexionAvant['statut'] === 401,
-    'un email NON_VERIFIE ne peut pas encore ouvrir de session',
-);
+$verifier($connexionAvant['statut'] === 401, 'un email NON_VERIFIE ne peut pas ouvrir de session');
+
+// La garde interne ouvre un nouveau défi afin d'éprouver l'endpoint de validation
+// sans réintroduire le code dans la réponse HTTP faite au satellite.
+$defiInterne = $resolution->demarrerVerification($rid, [
+    'source' => 'TEST-INTERNE', 'preuve' => 'TEST-VRF-EMAIL', 'producteur' => $satellite,
+]);
+$vrfInterne = (string) ($defiInterne['reference'] ?? '');
+$codeInterne = (string) ($defiInterne['code'] ?? '');
 
 $mauvaisCode = $requete('POST', '/api/v1/comptes/verifications', [
     'identite' => $reference,
     'identifiant_reference' => $rid,
-    'verification_reference' => $vrf,
-    'code' => '000000' === $code ? '000001' : '000000',
+    'verification_reference' => $vrfInterne,
+    'code' => '000000' === $codeInterne ? '000001' : '000000',
 ], $jetonSatellite);
-$verifier(
-    $mauvaisCode['statut'] === 422,
-    'un code de possession erroné est refusé',
-);
+$verifier($mauvaisCode['statut'] === 422, 'un code de possession erroné est refusé');
 
 $validation = $requete('POST', '/api/v1/comptes/verifications', [
     'identite' => $reference,
     'identifiant_reference' => $rid,
-    'verification_reference' => $vrf,
-    'code' => $code,
+    'verification_reference' => $vrfInterne,
+    'code' => $codeInterne,
 ], $jetonSatellite);
 $verifier(
     $validation['statut'] === 200
         && ($validation['corps']['identifiant']['etat'] ?? null) === 'VERIFIE',
-    'le satellite valide la preuve de possession avec le code correct',
+    'le code correct vérifie la possession',
 );
 
 $connexionEmail = $requete('POST', '/api/v1/sessions', [
@@ -231,9 +237,8 @@ $connexionEmail = $requete('POST', '/api/v1/sessions', [
     'secret' => $motDePasse,
 ]);
 $verifier(
-    $connexionEmail['statut'] === 201
-        && ($connexionEmail['corps']['entite'] ?? null) === $reference,
-    'après vérification, la personne se reconnecte par email sans connaître son IDN',
+    $connexionEmail['statut'] === 201 && ($connexionEmail['corps']['entite'] ?? null) === $reference,
+    'après vérification la personne se reconnecte par email sans connaître son IDN',
 );
 
 $duplique = $requete('POST', '/api/v1/comptes', [
@@ -242,10 +247,7 @@ $duplique = $requete('POST', '/api/v1/comptes', [
     'identifiant' => 'PERSONNE.TEST+SATELLITE@example.test',
     'mot_de_passe' => 'Autre-secret-doublon-2026!',
 ], $jetonSatellite);
-$verifier(
-    $duplique['statut'] === 409,
-    'le même email normalisé ne peut pas créer une seconde identité',
-);
+$verifier($duplique['statut'] === 409, 'le même email normalisé ne peut pas créer une seconde identité');
 
 $telephone = '+225 07 18 71 37 81';
 $motDePasseTel = 'Compte-GAMAD-phone-2026!';
@@ -257,20 +259,23 @@ $creationTel = $requete('POST', '/api/v1/comptes', [
 ], $jetonSatellite);
 $referenceTel = (string) ($creationTel['corps']['compte']['identite'] ?? '');
 $ridTel = (string) ($creationTel['corps']['compte']['identifiant_reference'] ?? '');
-$vrfTel = (string) ($creationTel['corps']['verification']['reference'] ?? '');
-$codeTel = (string) ($creationTel['corps']['verification']['code'] ?? '');
 $verifier(
     $creationTel['statut'] === 201
         && str_starts_with($referenceTel, 'IDN-PER-')
-        && str_starts_with($vrfTel, 'VRF-'),
-    'un SATELLITE ACTIF crée aussi un compte avec téléphone international',
+        && !array_key_exists('code', $creationTel['corps']['verification'] ?? [])
+        && ($creationTel['corps']['verification']['livraison']['livree'] ?? false) === true
+        && ($creationTel['corps']['verification']['livraison']['canal'] ?? null) === 'TELEPHONE',
+    'le téléphone suit la même frontière de livraison sans fuite du code',
 );
 
+$defiTel = $resolution->demarrerVerification($ridTel, [
+    'source' => 'TEST-INTERNE', 'preuve' => 'TEST-VRF-TEL', 'producteur' => $satellite,
+]);
 $validationTel = $requete('POST', '/api/v1/comptes/verifications', [
     'identite' => $referenceTel,
     'identifiant_reference' => $ridTel,
-    'verification_reference' => $vrfTel,
-    'code' => $codeTel,
+    'verification_reference' => (string) ($defiTel['reference'] ?? ''),
+    'code' => (string) ($defiTel['code'] ?? ''),
 ], $jetonSatellite);
 $verifier($validationTel['statut'] === 200, 'la possession du téléphone est vérifiée');
 
@@ -280,8 +285,7 @@ $connexionTel = $requete('POST', '/api/v1/sessions', [
     'secret' => $motDePasseTel,
 ]);
 $verifier(
-    $connexionTel['statut'] === 201
-        && ($connexionTel['corps']['entite'] ?? null) === $referenceTel,
+    $connexionTel['statut'] === 201 && ($connexionTel['corps']['entite'] ?? null) === $referenceTel,
     'la personne se reconnecte par téléphone normalisé après vérification',
 );
 
