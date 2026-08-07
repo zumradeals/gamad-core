@@ -12,6 +12,8 @@ use Gamad\RegistreNormes\Db;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistrePolitiques\PolitiqueAdministration;
 use Gamad\RegistrePolitiques\RegistrePolitiques;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreProduits\RegistreProduits;
 use Illuminate\Console\Command;
 
 /**
@@ -41,7 +43,15 @@ final class BootstrapComptesGamadCommand extends Command
             $index = Db::connect();
             $registreIdentites = IdentiteMagasin::connecter();
             $ctr01 = new Ctr01($index, $registreIdentites);
-            $identiteProduit = $ctr01->resoudreIdentite(self::PRODUIT);
+
+            $registreProduits = new RegistreProduits($index, $registreIdentites, ProduitsMagasin::connecter(), $ctr01);
+            $produit = $registreProduits->resoudreProduit(self::PRODUIT);
+            if (!is_array($produit)) {
+                $this->error(self::PRODUIT . ' doit exister comme produit inscrit (CAP-CORE-011) avant cette délégation.');
+                return self::FAILURE;
+            }
+
+            $identiteProduit = $ctr01->resoudreIdentite((string) $produit['identite_reference']);
             if (!is_array($identiteProduit) || ($identiteProduit['type'] ?? null) !== 'produit') {
                 $this->error(self::PRODUIT . ' doit exister comme identité canonique de type produit avant cette délégation.');
                 return self::FAILURE;
