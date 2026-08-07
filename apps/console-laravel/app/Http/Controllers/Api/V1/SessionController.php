@@ -30,7 +30,7 @@ final class SessionController
 
         if ($entite === '' && isset($donnees['identifiant'])) {
             try {
-                $resolution = (new IdentifiantsResolution(IdentiteMagasin::connecter()))->resoudre(
+                $resolution = (new IdentifiantsResolution(IdentiteMagasin::connecter()))->resoudrePourAuthentification(
                     (string) $donnees['identifiant'],
                     isset($donnees['type_identifiant']) ? (string) $donnees['type_identifiant'] : null,
                 );
