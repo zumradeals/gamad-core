@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Comptes;
 
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -64,13 +65,40 @@ final class LivrerVerification
 
         $driver = (string) config('gamad_verification.sms.driver', '');
         if ($driver === 'array' && app()->environment('testing')) {
-            // Pilote exclusivement destiné à la CI : il prouve que le Core
-            // n'expose pas le code au satellite sans prétendre envoyer un SMS.
             return ['livree' => true, 'canal' => 'TELEPHONE'];
         }
+        if ($driver !== 'relay') {
+            return ['livree' => false, 'canal' => 'TELEPHONE', 'motif' => 'TRANSPORT_SMS_NON_SUPPORTE'];
+        }
 
-        // Le Core n'invente aucun fournisseur SMS. En exploitation, le canal
-        // reste fermé tant qu'un adaptateur réel n'a pas été raccordé.
-        return ['livree' => false, 'canal' => 'TELEPHONE', 'motif' => 'TRANSPORT_SMS_NON_IMPLEMENTE'];
+        $url = trim((string) config('gamad_verification.sms.relay_url', ''));
+        $token = trim((string) config('gamad_verification.sms.relay_token', ''));
+        if ($url === '' || $token === '' || !str_starts_with($url, 'https://')) {
+            return ['livree' => false, 'canal' => 'TELEPHONE', 'motif' => 'RELAIS_SMS_NON_CONFIGURE'];
+        }
+
+        $message = "GAMAD : votre code de verification est {$code}. "
+            . "Il expire le {$expireLe}. Ne le partagez avec personne.";
+
+        try {
+            $reponse = Http::asJson()
+                ->acceptJson()
+                ->withToken($token)
+                ->timeout(max(1, (int) config('gamad_verification.sms.timeout_seconds', 5)))
+                ->post($url, [
+                    'destination' => $telephone,
+                    'sender' => (string) config('gamad_verification.sms.sender', 'GAMAD'),
+                    'message' => $message,
+                    'purpose' => 'GAMAD_IDENTITY_VERIFICATION',
+                ]);
+        } catch (\Throwable) {
+            return ['livree' => false, 'canal' => 'TELEPHONE', 'motif' => 'RELAIS_SMS_INDISPONIBLE'];
+        }
+
+        if (!$reponse->successful()) {
+            return ['livree' => false, 'canal' => 'TELEPHONE', 'motif' => 'ECHEC_LIVRAISON_SMS'];
+        }
+
+        return ['livree' => true, 'canal' => 'TELEPHONE'];
     }
 }
