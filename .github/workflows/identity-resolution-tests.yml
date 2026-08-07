@@ -53,8 +53,11 @@ jobs:
           php -l apps/console-laravel/app/Providers/CompteGamadServiceProvider.php
           php -l apps/console-laravel/routes/compte-gamad.php
           php -l apps/console-laravel/tests/Integration/compte_gamad_p1.php
+          php -l core/registre-identites/tests/telephone_resolution_debug_p1.php
       - name: Exécuter la garde multi-identifiants
         run: php core/registre-identites/tests/identifiants_resolution_p3.php
+      - name: Isoler la normalisation et résolution téléphone
+        run: php core/registre-identites/tests/telephone_resolution_debug_p1.php
 
   compte-gamad-integration:
     name: Compte GAMAD — intégration P1
