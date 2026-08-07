@@ -12,6 +12,9 @@
             clés du Core. Cet écran n’affiche jamais une valeur secrète — seulement des métadonnées.
         </p>
     </div>
+    <div>
+        <a class="button button--primary" href="{{ route('console.parametres.verification.index') }}">Configurer email &amp; SMS</a>
+    </div>
 </header>
 
 @unless($autorise)

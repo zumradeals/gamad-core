@@ -12,17 +12,23 @@ on:
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/VerificationCompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/RenvoiVerificationCompteController.php'
+      - 'apps/console-laravel/app/Http/Controllers/VerificationChannelConsoleController.php'
       - 'apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php'
       - 'apps/console-laravel/app/Providers/AppServiceProvider.php'
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
+      - 'apps/console-laravel/app/Providers/VerificationChannelConsoleServiceProvider.php'
+      - 'apps/console-laravel/resources/views/parametres/**'
+      - 'apps/console-laravel/resources/views/secrets-cles/tableau-de-bord.blade.php'
       - 'apps/console-laravel/routes/compte-gamad.php'
       - 'apps/console-laravel/bootstrap/app.php'
       - 'apps/console-laravel/bootstrap/providers.php'
       - 'apps/console-laravel/tests/Integration/compte_gamad_p1.php'
+      - 'apps/console-laravel/tests/Integration/configuration_canaux_console_p1.php'
       - '.github/workflows/identity-resolution-tests.yml'
   push:
     branches:
       - cap-core-identity-resolution
+      - console-verification-channels
     paths:
       - 'core/registre-identites/**'
       - 'core/registre-acces/**'
@@ -33,12 +39,18 @@ on:
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/VerificationCompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/RenvoiVerificationCompteController.php'
+      - 'apps/console-laravel/app/Http/Controllers/VerificationChannelConsoleController.php'
       - 'apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php'
       - 'apps/console-laravel/app/Providers/AppServiceProvider.php'
+      - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
+      - 'apps/console-laravel/app/Providers/VerificationChannelConsoleServiceProvider.php'
+      - 'apps/console-laravel/resources/views/parametres/**'
+      - 'apps/console-laravel/resources/views/secrets-cles/tableau-de-bord.blade.php'
       - 'apps/console-laravel/routes/compte-gamad.php'
       - 'apps/console-laravel/bootstrap/app.php'
       - 'apps/console-laravel/bootstrap/providers.php'
       - 'apps/console-laravel/tests/Integration/compte_gamad_p1.php'
+      - 'apps/console-laravel/tests/Integration/configuration_canaux_console_p1.php'
       - '.github/workflows/identity-resolution-tests.yml'
 
 jobs:
@@ -60,17 +72,22 @@ jobs:
           php -l core/registre-identites/src/SchemaVerificationIdentifiants.php
           php -l apps/console-laravel/app/Application/Comptes/CreerCompteGamad.php
           php -l apps/console-laravel/app/Application/Comptes/LivrerVerification.php
+          php -l apps/console-laravel/app/Application/Comptes/ConfigurationCanauxVerification.php
           php -l apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/VerificationCompteController.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/RenvoiVerificationCompteController.php
+          php -l apps/console-laravel/app/Http/Controllers/VerificationChannelConsoleController.php
           php -l apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php
           php -l apps/console-laravel/app/Providers/AppServiceProvider.php
           php -l apps/console-laravel/app/Providers/CompteGamadServiceProvider.php
+          php -l apps/console-laravel/app/Providers/VerificationChannelConsoleServiceProvider.php
           php -l apps/console-laravel/bootstrap/app.php
+          php -l apps/console-laravel/bootstrap/providers.php
           php -l apps/console-laravel/routes/compte-gamad.php
           php -l apps/console-laravel/tests/Integration/compte_gamad_p1.php
+          php -l apps/console-laravel/tests/Integration/configuration_canaux_console_p1.php
       - name: Exécuter la garde multi-identifiants
         run: php core/registre-identites/tests/identifiants_resolution_p3.php
       - name: Éprouver le renvoi des vérifications
@@ -92,3 +109,5 @@ jobs:
         run: composer install --no-interaction --prefer-dist
       - name: Éprouver satellites, vérification et reconnexion Compte GAMAD
         run: php apps/console-laravel/tests/Integration/compte_gamad_p1.php
+      - name: Éprouver la configuration chiffrée email et SMS depuis la console
+        run: php apps/console-laravel/tests/Integration/configuration_canaux_console_p1.php
