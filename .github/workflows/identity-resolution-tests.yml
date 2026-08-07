@@ -11,6 +11,7 @@ on:
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/VerificationCompteController.php'
+      - 'apps/console-laravel/app/Http/Controllers/Api/V1/RenvoiVerificationCompteController.php'
       - 'apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php'
       - 'apps/console-laravel/app/Providers/AppServiceProvider.php'
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
@@ -31,6 +32,7 @@ on:
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/VerificationCompteController.php'
+      - 'apps/console-laravel/app/Http/Controllers/Api/V1/RenvoiVerificationCompteController.php'
       - 'apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php'
       - 'apps/console-laravel/app/Providers/AppServiceProvider.php'
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
@@ -62,6 +64,7 @@ jobs:
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/VerificationCompteController.php
+          php -l apps/console-laravel/app/Http/Controllers/Api/V1/RenvoiVerificationCompteController.php
           php -l apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php
           php -l apps/console-laravel/app/Providers/AppServiceProvider.php
           php -l apps/console-laravel/app/Providers/CompteGamadServiceProvider.php
@@ -70,6 +73,8 @@ jobs:
           php -l apps/console-laravel/tests/Integration/compte_gamad_p1.php
       - name: Exécuter la garde multi-identifiants
         run: php core/registre-identites/tests/identifiants_resolution_p3.php
+      - name: Éprouver le renvoi des vérifications
+        run: php core/registre-identites/tests/renvoi_verification_p3.php
 
   compte-gamad-integration:
     name: Compte GAMAD — intégration P1
