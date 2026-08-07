@@ -78,8 +78,8 @@
                     <div>
                         <label class="field-label" for="email_scheme">Sécurité</label>
                         <select class="field-input" id="email_scheme" name="email_scheme">
-                            <option value="tls" @selected(old('email_scheme', $email['scheme'] ?? 'tls') === 'tls')>TLS</option>
-                            <option value="ssl" @selected(old('email_scheme', $email['scheme'] ?? 'tls') === 'ssl')>SSL</option>
+                            <option value="smtp" @selected(old('email_scheme', $email['scheme'] ?? 'smtp') === 'smtp')>SMTP avec chiffrement automatique (recommandé)</option>
+                            <option value="smtps" @selected(old('email_scheme', $email['scheme'] ?? 'smtp') === 'smtps')>SMTPS direct</option>
                         </select>
                     </div>
                 </div>
