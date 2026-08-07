@@ -17,9 +17,13 @@ final class ConfigurationCanauxVerification
 {
     private const VERSION = 1;
 
+    public function __construct(private readonly ?string $cheminPersonnalise = null)
+    {
+    }
+
     public function chemin(): string
     {
-        return storage_path('app/private/gamad-verification/canaux.enc');
+        return $this->cheminPersonnalise ?? storage_path('app/private/gamad-verification/canaux.enc');
     }
 
     /** @return array<string,mixed> */
