@@ -9,8 +9,11 @@ on:
       - 'apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
+      - 'apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php'
+      - 'apps/console-laravel/app/Providers/AppServiceProvider.php'
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
       - 'apps/console-laravel/routes/compte-gamad.php'
+      - 'apps/console-laravel/bootstrap/app.php'
       - 'apps/console-laravel/bootstrap/providers.php'
       - 'apps/console-laravel/tests/Integration/compte_gamad_p1.php'
       - '.github/workflows/identity-resolution-tests.yml'
@@ -24,8 +27,11 @@ on:
       - 'apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
+      - 'apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php'
+      - 'apps/console-laravel/app/Providers/AppServiceProvider.php'
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
       - 'apps/console-laravel/routes/compte-gamad.php'
+      - 'apps/console-laravel/bootstrap/app.php'
       - 'apps/console-laravel/bootstrap/providers.php'
       - 'apps/console-laravel/tests/Integration/compte_gamad_p1.php'
       - '.github/workflows/identity-resolution-tests.yml'
@@ -50,7 +56,10 @@ jobs:
           php -l apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php
+          php -l apps/console-laravel/app/Http/Middleware/GamadThrottleRequests.php
+          php -l apps/console-laravel/app/Providers/AppServiceProvider.php
           php -l apps/console-laravel/app/Providers/CompteGamadServiceProvider.php
+          php -l apps/console-laravel/bootstrap/app.php
           php -l apps/console-laravel/routes/compte-gamad.php
           php -l apps/console-laravel/tests/Integration/compte_gamad_p1.php
           php -l core/registre-identites/tests/telephone_resolution_debug_p1.php
