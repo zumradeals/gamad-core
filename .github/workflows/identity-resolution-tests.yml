@@ -6,6 +6,7 @@ on:
       - 'core/registre-identites/**'
       - 'core/registre-acces/**'
       - 'apps/console-laravel/app/Application/Comptes/**'
+      - 'apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
@@ -19,6 +20,7 @@ on:
       - 'core/registre-identites/**'
       - 'core/registre-acces/**'
       - 'apps/console-laravel/app/Application/Comptes/**'
+      - 'apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php'
       - 'apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php'
       - 'apps/console-laravel/app/Providers/CompteGamadServiceProvider.php'
@@ -43,6 +45,7 @@ jobs:
           php -l core/registre-identites/src/IdentifiantsResolution.php
           php -l core/registre-identites/src/SchemaInscription.php
           php -l apps/console-laravel/app/Application/Comptes/CreerCompteGamad.php
+          php -l apps/console-laravel/app/Console/Commands/BootstrapComptesGamadCommand.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/CompteController.php
           php -l apps/console-laravel/app/Http/Controllers/Api/V1/SessionController.php
           php -l apps/console-laravel/app/Providers/CompteGamadServiceProvider.php
