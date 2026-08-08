@@ -32,6 +32,7 @@ use Gamad\RegistreProduits\RegistreProduits;
 final class CreerCompteGamad
 {
     public const ACTION = 'créer un Compte GAMAD';
+    public const LONGUEUR_MINIMALE_MOT_DE_PASSE = 6;
 
     /**
      * @param array{nom:string,type_identifiant:string,identifiant:string,mot_de_passe:string} $donnees
@@ -185,6 +186,7 @@ final class CreerCompteGamad
                 $motDePasse,
                 'mot_de_passe',
                 'AS1 — FACTEUR UNIQUE',
+                self::LONGUEUR_MINIMALE_MOT_DE_PASSE,
             );
         } catch (\InvalidArgumentException) {
             return $this->compensationRequise($reference, 'SECRET_NON_CONFORME', $correlation, $produit);
