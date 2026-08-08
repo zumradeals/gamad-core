@@ -56,6 +56,12 @@ final class RenvoiVerificationCompteController
             (string) $donnees['destination'],
             (string) $nouveau['code'],
             (string) $nouveau['expire_le'],
+            [
+                'produit' => $produit,
+                'identifiant_reference' => (string) $donnees['identifiant_reference'],
+                'verification_reference' => (string) $nouveau['reference'],
+                'correlation' => $correlation,
+            ],
         );
 
         if (($livraison['livree'] ?? false) !== true) {

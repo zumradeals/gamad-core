@@ -57,6 +57,12 @@ final class CompteController
                 (string) $donnees['identifiant'],
                 $code,
                 $expireLe,
+                [
+                    'produit' => $produit,
+                    'identifiant_reference' => $execution['corps']['compte']['identifiant_reference'] ?? null,
+                    'verification_reference' => $verification['reference'] ?? null,
+                    'correlation' => $request->attributes->get('gamad_correlation'),
+                ],
             );
 
             // Le code brut ne franchit jamais la frontière Core -> produit.
