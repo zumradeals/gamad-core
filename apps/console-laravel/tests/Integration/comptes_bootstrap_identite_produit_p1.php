@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 /**
- * Contre-épreuve de `core:comptes:bootstrap` pour un produit inscrit par la
- * voie normale de la console.
+ * Contre-épreuve du parcours complet d'un produit inscrit par la voie
+ * normale de la console, jusqu'à la création réelle d'un Compte GAMAD.
  *
  * Les quatre produits de la baseline (PRD-GAMAD-001 à 004) portent une
  * identité DÉRIVÉE dont la référence vaut littéralement leur propre code
@@ -16,24 +16,29 @@ declare(strict_types=1);
  * (`PRD-GAMAD-005`). C'est exactement ainsi que DG AFRIQUE Portal a été créé
  * en production le 7 août 2026.
  *
- * `BootstrapComptesGamadCommand` résolvait l'identité canonique en
- * réutilisant le code produit tel quel, une hypothèse vraie seulement pour
- * la baseline. Sur un produit inscrit via la console, la résolution échouait
- * et la délégation `POL-COMPTES-GAMAD-V1` ne s'activait jamais. Cette épreuve
- * rejoue le cas réel : produit inscrit avec une identité d'auto-référence
- * différente, puis exécution de `core:comptes:bootstrap`.
+ * Deux écarts distincts ont bloqué ce parcours, corrigés l'un après l'autre :
  *
- * Portée volontairement limitée à cette commande : `Ctr01::produitReconnu()`
- * (canal `PRODUIT_RECONNU`, utilisé ensuite par la création effective d'un
- * Compte GAMAD) porte un écart distinct et préexistant — il ne reconnaît que
- * les produits figés dans `index-baseline-v1.json`, jamais un produit
- * inscrit/activé dynamiquement via CAP-CORE-011. Cet écart n'est pas corrigé
- * ici et reste à traiter séparément.
+ * 1. `BootstrapComptesGamadCommand` résolvait l'identité canonique en
+ *    réutilisant le code produit tel quel — vrai seulement pour la baseline.
+ * 2. `Ctr01::produitReconnu()` (canal `PRODUIT_RECONNU`) ne reconnaissait que
+ *    les produits figés dans `index-baseline-v1.json`, jamais un produit
+ *    gouverné dynamiquement par CAP-CORE-011 (`RegistreProduits`) — même
+ *    ACTIF. Il lit maintenant aussi `produit_cycle` via la connexion
+ *    `produits` injectée dans `Ctr01`, sans jamais recopier cet état dans son
+ *    propre magasin.
+ *
+ * Cette épreuve rejoue le cas réel de bout en bout : produit inscrit avec une
+ * identité d'auto-référence différente, bootstrap de la délégation, refus
+ * tant que le produit n'est pas ACTIF, puis création effective d'un Compte
+ * GAMAD par l'API une fois activé — et refus de nouveau une fois suspendu ou
+ * retiré.
  *
  * Exécution depuis la racine du dépôt :
  *   php apps/console-laravel/tests/Integration/comptes_bootstrap_identite_produit_p1.php
  */
 
+use Gamad\RegistreAcces\Ctr16;
+use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\BaselineOperationnelle;
@@ -42,6 +47,8 @@ use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistrePolitiques\RegistrePolitiques;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 use Gamad\RegistreProduits\RegistreProduits;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Http\Request;
 
 $application = dirname(__DIR__, 2);
 $temp = sys_get_temp_dir() . '/gamad-comptes-bootstrap-' . getmypid();
@@ -82,7 +89,10 @@ $environnement = [
     'SESSION_DRIVER' => 'array',
     'LOG_CHANNEL' => 'errorlog',
     'MAIL_MAILER' => 'array',
-    'GAMAD_VERIFICATION_EMAIL_ENABLED' => 'false',
+    'MAIL_FROM_ADDRESS' => 'no-reply@example.test',
+    'MAIL_FROM_NAME' => 'GAMAD',
+    'GAMAD_VERIFICATION_EMAIL_ENABLED' => 'true',
+    'GAMAD_VERIFICATION_EMAIL_MAILER' => 'array',
     'GAMAD_VERIFICATION_SMS_ENABLED' => 'false',
     'DATABASE_URL' => '',
     'SQLITE_PATH' => $fichiers['index'],
@@ -108,8 +118,9 @@ require $application . '/vendor/autoload.php';
 $index = Db::connect();
 BaselineOperationnelle::standard()->reconstruire($index);
 $registreIdentites = IdentiteMagasin::connecter();
-$ctr01 = new Ctr01($index, $registreIdentites);
-$registreProduits = new RegistreProduits($index, $registreIdentites, ProduitsMagasin::connecter(), $ctr01);
+$produitsMagasin = ProduitsMagasin::connecter();
+$ctr01 = new Ctr01($index, $registreIdentites, produits: $produitsMagasin);
+$registreProduits = new RegistreProduits($index, $registreIdentites, $produitsMagasin, $ctr01);
 
 $app = require $application . '/bootstrap/app.php';
 $console = $app->make(\Illuminate\Contracts\Console\Kernel::class);
@@ -122,7 +133,7 @@ $verifier = static function (bool $ok, string $libelle) use (&$echecs): void {
     }
 };
 
-echo "CONTRE-ÉPREUVE — core:comptes:bootstrap SUR UN PRODUIT INSCRIT PAR LA CONSOLE\n\n";
+echo "CONTRE-ÉPREUVE — PRODUIT INSCRIT PAR LA CONSOLE, DU BOOTSTRAP AU COMPTE GAMAD\n\n";
 
 $console->call('core:politiques:bootstrap');
 // Volontairement PAS de core:produits:bootstrap : PRD-GAMAD-005 n'appartient
@@ -186,6 +197,122 @@ foreach ((array) ($version['regles'] ?? []) as $candidate) {
 $verifier(
     is_array($regle) && ($regle['effet'] ?? null) === 'PERMET',
     'la règle vise le code produit PRD-GAMAD-005 (pas la référence d’identité), pour rester compatible avec l’authentification par produit',
+);
+
+// La délégation POL-COMPTES-GAMAD-V1 est désormais active, mais elle ne dit
+// rien de l'état réel du produit. Tant que PRD-GAMAD-005 reste PREPARATION,
+// le canal PRODUIT_RECONNU doit encore refuser — c'est CAP-CORE-011, pas la
+// politique de délégation, qui gouverne cette compétence.
+$refusPreparation = $ctr01->inscrireIdentite([
+    'canal' => 'PRODUIT_RECONNU',
+    'type' => 'personne',
+    'libelle' => 'Personne refusée — produit PREPARATION',
+    'producteur' => 'PRD-GAMAD-005',
+    'politique' => 'POL-COMPTES-GAMAD-V1',
+    'source' => 'TEST-COMPTES-BOOTSTRAP-IDENTITE-PRODUIT',
+    'preuve' => 'TEST-COMPTES-BOOTSTRAP-REFUS-PREPARATION',
+]);
+$verifier(
+    ($refusPreparation['refus'] ?? null) === 'PRODUCTEUR_INCOMPETENT',
+    'un produit CAP-CORE-011 encore PREPARATION est refusé par le canal PRODUIT_RECONNU',
+);
+
+$activation = $registreProduits->activerProduit('PRD-GAMAD-005', [
+    'politique' => 'POL-PRODUITS-V1',
+    'producteur' => 'AUT-GAMAD-001',
+    'source' => 'TEST-COMPTES-BOOTSTRAP-IDENTITE-PRODUIT',
+    'preuve' => 'TEST-COMPTES-BOOTSTRAP-ACTIVATION',
+]);
+$verifier(
+    ($activation['etat'] ?? null) === 'ACTIF' && !isset($activation['refus']),
+    'PRD-GAMAD-005 s’active via CAP-CORE-011, sans toucher au registre des identités',
+);
+
+// Bout en bout : une fois ACTIF, le produit nouvellement délégué crée
+// réellement un Compte GAMAD par l'API — pas seulement passer la garde de la
+// commande. C'est la contre-épreuve du second écart (produitReconnu).
+$acces = AccesMagasin::connecter();
+$ctr16 = new Ctr16($acces);
+$ctr16->inscrireAuthentificateur('PRD-GAMAD-005', 'Secret-Portail-Bootstrap-2026!');
+$session = $ctr16->etablirSession('PRD-GAMAD-005', 'Secret-Portail-Bootstrap-2026!');
+$jeton = (string) ($session['session'] ?? '');
+
+$kernel = $app->make(Kernel::class);
+$requeteCompte = static function () use ($kernel, $jeton): array {
+    $requete = Request::create(
+        '/api/v1/comptes',
+        'POST',
+        [],
+        [],
+        [],
+        [
+            'HTTP_ACCEPT' => 'application/json',
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $jeton,
+        ],
+        json_encode([
+            'nom' => 'Personne Portail Bootstrap',
+            'type_identifiant' => 'EMAIL',
+            'identifiant' => 'personne.portail.bootstrap@example.test',
+            'mot_de_passe' => 'Compte-GAMAD-portail-2026!',
+        ], JSON_THROW_ON_ERROR),
+    );
+    $reponse = $kernel->handle($requete);
+    $corps = json_decode((string) $reponse->getContent(), true);
+    $kernel->terminate($requete, $reponse);
+
+    return ['statut' => $reponse->getStatusCode(), 'corps' => is_array($corps) ? $corps : []];
+};
+
+$reponseActif = $requeteCompte();
+$verifier(
+    $reponseActif['statut'] === 201,
+    'le portail nouvellement ACTIF crée effectivement un Compte GAMAD via l’API (statut '
+        . $reponseActif['statut'] . ' — ' . json_encode($reponseActif['corps'], JSON_UNESCAPED_UNICODE) . ')',
+);
+
+$suspension = $registreProduits->suspendreProduit('PRD-GAMAD-005', [
+    'politique' => 'POL-PRODUITS-V1',
+    'producteur' => 'AUT-GAMAD-001',
+    'source' => 'TEST-COMPTES-BOOTSTRAP-IDENTITE-PRODUIT',
+    'preuve' => 'TEST-COMPTES-BOOTSTRAP-SUSPENSION',
+]);
+$verifier(($suspension['etat'] ?? null) === 'SUSPENDU', 'PRD-GAMAD-005 se suspend via CAP-CORE-011');
+
+$refusSuspendu = $ctr01->inscrireIdentite([
+    'canal' => 'PRODUIT_RECONNU',
+    'type' => 'personne',
+    'libelle' => 'Personne refusée — produit SUSPENDU',
+    'producteur' => 'PRD-GAMAD-005',
+    'politique' => 'POL-COMPTES-GAMAD-V1',
+    'source' => 'TEST-COMPTES-BOOTSTRAP-IDENTITE-PRODUIT',
+    'preuve' => 'TEST-COMPTES-BOOTSTRAP-REFUS-SUSPENDU',
+]);
+$verifier(
+    ($refusSuspendu['refus'] ?? null) === 'PRODUCTEUR_INCOMPETENT',
+    'un produit SUSPENDU est refusé par le canal PRODUIT_RECONNU',
+);
+
+$retrait = $registreProduits->retirerProduit('PRD-GAMAD-005', [
+    'politique' => 'POL-PRODUITS-V1',
+    'producteur' => 'AUT-GAMAD-001',
+    'source' => 'TEST-COMPTES-BOOTSTRAP-IDENTITE-PRODUIT',
+    'preuve' => 'TEST-COMPTES-BOOTSTRAP-RETRAIT',
+]);
+$verifier(($retrait['etat'] ?? null) === 'RETIRE', 'PRD-GAMAD-005 se retire via CAP-CORE-011');
+
+$refusRetire = $ctr01->inscrireIdentite([
+    'canal' => 'PRODUIT_RECONNU',
+    'type' => 'personne',
+    'libelle' => 'Personne refusée — produit RETIRE',
+    'producteur' => 'PRD-GAMAD-005',
+    'politique' => 'POL-COMPTES-GAMAD-V1',
+    'source' => 'TEST-COMPTES-BOOTSTRAP-IDENTITE-PRODUIT',
+    'preuve' => 'TEST-COMPTES-BOOTSTRAP-REFUS-RETIRE',
+]);
+$verifier(
+    ($refusRetire['refus'] ?? null) === 'PRODUCTEUR_INCOMPETENT',
+    'un produit RETIRE est refusé par le canal PRODUIT_RECONNU',
 );
 
 echo "\n";

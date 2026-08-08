@@ -47,12 +47,13 @@ final class CreerCompteGamad
         try {
             $index = Db::connect();
             $registreIdentites = IdentiteMagasin::connecter();
-            $ctr01 = new Ctr01($index, $registreIdentites);
+            $produitsMagasin = ProduitsMagasin::connecter();
+            $ctr01 = new Ctr01($index, $registreIdentites, produits: $produitsMagasin);
             $resolution = new IdentifiantsResolution($registreIdentites);
             $registreProduits = new RegistreProduits(
                 $index,
                 $registreIdentites,
-                ProduitsMagasin::connecter(),
+                $produitsMagasin,
                 $ctr01,
             );
             $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser(
