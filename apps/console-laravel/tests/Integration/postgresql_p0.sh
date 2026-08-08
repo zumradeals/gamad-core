@@ -76,12 +76,10 @@ environnement=(
 env "${environnement[@]}" php "$application/tests/Integration/postgresql_p0.php"
 
 # CAP-CORE-021 — orchestration persistante du Matching contre PostgreSQL réel
-# (doc de chantier 05 §24). Ne couvre pas encore la sauvegarde/restauration
-# ci-dessous : gamad_matching n'est pas encore intégrée à backup.sh /
-# restore-drill.sh — réserve documentée, pas un oubli.
+# (doc de chantier 05 §24).
 env "${environnement[@]}" php "$racine/core/moteur-matching/tests/matching_p4.php"
 
-for base in drill_index drill_access drill_identity drill_products drill_sources drill_policies drill_contracts drill_vocabulary drill_organizations drill_realms drill_journal drill_events drill_secrets drill_preuves; do
+for base in drill_index drill_access drill_identity drill_products drill_sources drill_policies drill_contracts drill_vocabulary drill_organizations drill_realms drill_journal drill_events drill_secrets drill_preuves drill_matching; do
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
 done
 
@@ -103,6 +101,7 @@ export GAMAD_JOURNAL_PGDATABASE=gamad_journal
 export GAMAD_EVENEMENTS_PGDATABASE=gamad_events
 export GAMAD_SECRETS_PGDATABASE=gamad_secrets
 export GAMAD_PREUVES_PGDATABASE=gamad_preuves
+export GAMAD_MATCHING_PGDATABASE=gamad_matching
 
 "$racine/ops/core-foundation/backup.sh"
 lot="$(find "$GAMAD_BACKUP_DIR" -mindepth 1 -maxdepth 1 -type d -print -quit)"
@@ -122,6 +121,7 @@ export GAMAD_RESTORE_JOURNAL_PGDATABASE=drill_journal
 export GAMAD_RESTORE_EVENEMENTS_PGDATABASE=drill_events
 export GAMAD_RESTORE_SECRETS_PGDATABASE=drill_secrets
 export GAMAD_RESTORE_PREUVES_PGDATABASE=drill_preuves
+export GAMAD_RESTORE_MATCHING_PGDATABASE=drill_matching
 export GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases
 
 "$racine/ops/core-foundation/restore-drill.sh"

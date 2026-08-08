@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
+use Gamad\MoteurMatching\Magasin as MatchingMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreContrats\Magasin as ContratsMagasin;
 use Gamad\RegistreFederation\SchemaFederation;
@@ -51,6 +52,7 @@ final class MigrerFondationCommand extends Command
                 'EVENT_JOURNAL_URL',
                 'SECRET_REGISTRY_URL',
                 'PROOF_REGISTRY_URL',
+                'MATCHING_REGISTRY_URL',
             ] as $variable) {
                 if (trim((string) $this->environnement($variable)) === '') {
                     $this->error("{$variable} est obligatoire en production.");
@@ -80,6 +82,7 @@ final class MigrerFondationCommand extends Command
                 'journal des événements (CAP-CORE-014)' => EvenementsMagasin::connecter(),
                 'secrets et clés (CAP-CORE-016)' => SecretsMagasin::connecter(),
                 'preuves d’intégrité (CAP-CORE-015)' => PreuvesMagasin::connecter(),
+                'moteur de matching (CAP-CORE-021)' => MatchingMagasin::connecter(),
             ];
         } catch (\Throwable $e) {
             $this->error('Migration interrompue : ' . $e->getMessage());
@@ -130,6 +133,7 @@ final class MigrerFondationCommand extends Command
             'EVENT_JOURNAL_URL' => 'database.connections.gamad_evenements.url',
             'SECRET_REGISTRY_URL' => 'database.connections.gamad_secrets.url',
             'PROOF_REGISTRY_URL' => 'database.connections.gamad_preuves.url',
+            'MATCHING_REGISTRY_URL' => 'database.connections.gamad_matching.url',
             default => null,
         };
 

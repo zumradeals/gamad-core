@@ -6,6 +6,8 @@ namespace App\Support;
 
 use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
+use Gamad\MoteurMatching\Magasin as MatchingMagasin;
+use Gamad\MoteurMatching\SchemaMatching;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreContrats\Magasin as ContratsMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
@@ -167,6 +169,12 @@ final class EtatFondation
                 ],
                 $production,
                 verifierPreuves: true,
+            ),
+            'matching' => $this->inspecterCible(
+                'MATCHING_REGISTRY_URL',
+                fn (): \PDO => MatchingMagasin::ouvrir(),
+                SchemaMatching::TABLES,
+                $production,
             ),
         ];
 
@@ -352,6 +360,7 @@ final class EtatFondation
             'EVENT_JOURNAL_URL' => 'database.connections.gamad_evenements.url',
             'SECRET_REGISTRY_URL' => 'database.connections.gamad_secrets.url',
             'PROOF_REGISTRY_URL' => 'database.connections.gamad_preuves.url',
+            'MATCHING_REGISTRY_URL' => 'database.connections.gamad_matching.url',
             default => null,
         };
         $valeurLaravel = $configuration === null ? null : config($configuration);
