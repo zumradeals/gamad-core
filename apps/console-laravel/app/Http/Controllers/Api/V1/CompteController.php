@@ -28,7 +28,7 @@ final class CompteController
             'nom' => ['required', 'string', 'min:2', 'max:256'],
             'type_identifiant' => ['required', 'string', 'in:EMAIL,TELEPHONE,USERNAME'],
             'identifiant' => ['required', 'string', 'max:256'],
-            'mot_de_passe' => ['required', 'string', 'min:12', 'max:4096'],
+            'mot_de_passe' => ['required', 'string', 'min:'.CreerCompteGamad::LONGUEUR_MINIMALE_MOT_DE_PASSE, 'max:4096'],
         ]);
 
         $produit = (string) $request->attributes->get('gamad_entite', '');
