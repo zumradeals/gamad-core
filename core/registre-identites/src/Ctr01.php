@@ -39,11 +39,20 @@ final class Ctr01
      * appelant existant n'est cassé par ce chantier. Un appelant qui doit
      * refléter la vérité de CAP-CORE-002 DOIT désormais construire `Ctr01`
      * avec ce quatrième argument.
+     *
+     * `$produits` est la connexion au magasin persistant de `CAP-CORE-011`
+     * (`Gamad\RegistreProduits\Magasin`). Lorsqu'elle est fournie,
+     * `produitReconnu()` reconnaît aussi tout produit dont le cycle de vie
+     * réel (`produit_cycle`) est `ACTIF` — pas seulement les produits figés
+     * dans l'index de baseline. Lorsqu'elle est absente, seule la
+     * reconnaissance historique par baseline s'applique : aucun appelant
+     * existant n'est cassé par ce chantier.
      */
     public function __construct(
         private \PDO $index,
         ?\PDO $registre = null,
         private ?\PDO $organisations = null,
+        private ?\PDO $produits = null,
     ) {
         $this->registre = $registre ?? $index;
         SchemaInscription::migrer($this->registre);
@@ -1044,7 +1053,19 @@ final class Ctr01
         return $i !== null && ($type === null || $i['type'] === $type);
     }
 
+    /**
+     * Deux sources indépendantes, jamais fusionnées en une seule table :
+     * la baseline historique (index reconstructible) et le cycle de vie réel
+     * gouverné par CAP-CORE-011. Aucune des deux ne prime sur l'autre — un
+     * produit est reconnu dès que l'une l'atteste.
+     */
     private function produitReconnu(string $reference): bool
+    {
+        return $this->produitReconnuParBaseline($reference)
+            || $this->produitReconnuParCapCore011($reference);
+    }
+
+    private function produitReconnuParBaseline(string $reference): bool
     {
         $produit = $this->resoudreIdentite($reference);
 
@@ -1052,6 +1073,31 @@ final class Ctr01
             && $produit['type'] === 'produit'
             && is_string($produit['etat'])
             && str_contains($produit['etat'], 'RECONNU');
+    }
+
+    /**
+     * CAP-CORE-011 (`Gamad\RegistreProduits`) reste l'unique source du cycle
+     * de vie réel d'un produit ; CAP-CORE-001 ne le recopie jamais dans son
+     * propre magasin. Cette lecture interroge directement `produit_cycle`,
+     * comme `resoudreLiensOrganisationsDepuisCapCore002()` interroge
+     * CAP-CORE-002 sans dupliquer ses tables. Seul l'état `ACTIF` reconnaît
+     * le producteur : `PREPARATION`, `SUSPENDU` et `RETIRE` sont refusés.
+     */
+    private function produitReconnuParCapCore011(string $reference): bool
+    {
+        if ($this->produits === null) {
+            return false;
+        }
+
+        $st = $this->produits->prepare(
+            'SELECT etat FROM produit_cycle
+             WHERE produit_reference = ?
+             ORDER BY date_effet DESC, id DESC LIMIT 1'
+        );
+        $st->execute([$reference]);
+        $etat = $st->fetchColumn();
+
+        return $etat === 'ACTIF';
     }
 
     /** @return array<string,mixed>|null */
