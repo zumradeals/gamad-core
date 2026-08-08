@@ -24,6 +24,7 @@ on:
       - 'apps/console-laravel/bootstrap/providers.php'
       - 'apps/console-laravel/tests/Integration/compte_gamad_p1.php'
       - 'apps/console-laravel/tests/Integration/configuration_canaux_console_p1.php'
+      - 'apps/console-laravel/tests/Integration/comptes_bootstrap_identite_produit_p1.php'
       - '.github/workflows/identity-resolution-tests.yml'
   push:
     branches:
@@ -51,6 +52,7 @@ on:
       - 'apps/console-laravel/bootstrap/providers.php'
       - 'apps/console-laravel/tests/Integration/compte_gamad_p1.php'
       - 'apps/console-laravel/tests/Integration/configuration_canaux_console_p1.php'
+      - 'apps/console-laravel/tests/Integration/comptes_bootstrap_identite_produit_p1.php'
       - '.github/workflows/identity-resolution-tests.yml'
 
 jobs:
@@ -88,6 +90,7 @@ jobs:
           php -l apps/console-laravel/routes/compte-gamad.php
           php -l apps/console-laravel/tests/Integration/compte_gamad_p1.php
           php -l apps/console-laravel/tests/Integration/configuration_canaux_console_p1.php
+          php -l apps/console-laravel/tests/Integration/comptes_bootstrap_identite_produit_p1.php
       - name: Exécuter la garde multi-identifiants
         run: php core/registre-identites/tests/identifiants_resolution_p3.php
       - name: Éprouver le renvoi des vérifications
@@ -111,3 +114,5 @@ jobs:
         run: php apps/console-laravel/tests/Integration/compte_gamad_p1.php
       - name: Éprouver la configuration chiffrée email et SMS depuis la console
         run: php apps/console-laravel/tests/Integration/configuration_canaux_console_p1.php
+      - name: Éprouver le bootstrap de délégation pour un produit inscrit via la console
+        run: php apps/console-laravel/tests/Integration/comptes_bootstrap_identite_produit_p1.php
