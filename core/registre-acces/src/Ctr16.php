@@ -65,15 +65,22 @@ final class Ctr16
      *
      * Le secret n'est jamais conservé : seule son empreinte l'est. La méthode
      * ne journalise rien et ne retourne rien qui en dérive.
+     *
+     * Le minimum reste 12 par défaut. Un appelant gouverné peut demander un
+     * seuil inférieur, sans jamais descendre sous 6 caractères.
      */
     public function inscrireAuthentificateur(
         string $entite,
         #[\SensitiveParameter] string $secret,
         string $type = 'mot_de_passe',
         string $assurance = 'AS1 — FACTEUR UNIQUE',
+        int $longueurMinimale = 12,
     ): string {
-        if (strlen($secret) < 12) {
-            throw new \InvalidArgumentException('Secret trop court : douze caractères au moins.');
+        if ($longueurMinimale < 6) {
+            throw new \InvalidArgumentException('Longueur minimale de secret invalide.');
+        }
+        if (strlen($secret) < $longueurMinimale) {
+            throw new \InvalidArgumentException("Secret trop court : {$longueurMinimale} caractères au moins.");
         }
 
         $reference = 'AUTHN-' . strtoupper(bin2hex(random_bytes(6)));
