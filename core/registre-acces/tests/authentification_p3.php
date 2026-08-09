@@ -83,6 +83,50 @@ $verifier(
     'une session expirée est invalide (INV-25)',
 );
 
+// --- Une session active glisse à chaque vérification réelle, mais jamais
+// au-delà du plafond absolu depuis son ouverture (INV-25 : une activité
+// continue ne rend jamais une session permanente).
+$secretGlissement = 'secret-glissement-non-institutionnel';
+$authnGlissement = $ctr16->inscrireAuthentificateur('ENTITE-GLISSEMENT', $secretGlissement);
+$sessionGlissement = $ctr16->etablirSession('ENTITE-GLISSEMENT', $secretGlissement);
+$referenceGlissement = (string) $sessionGlissement['session'];
+$empreinteGlissement = hash('sha256', $referenceGlissement);
+
+// Session presque à son plafond (30 jours) mais dont l'expiration courte
+// suggère une inactivité récente sur le point de basculer.
+$plafondDans1h = date('c', time() + 3600);
+$magasin->prepare(
+    'UPDATE session_ouverte SET ouverte_le = ?, expire_le = ? WHERE jeton_empreinte = ?'
+)->execute([
+    date('c', time() - (3600 * 24 * 30 - 3600)),
+    date('c', time() + 60),
+    $empreinteGlissement,
+]);
+
+$verificationReelle = $ctr16->verifierSession($referenceGlissement);
+$ligneApresGlissement = $magasin->prepare(
+    'SELECT expire_le FROM session_ouverte WHERE jeton_empreinte = ?'
+);
+$ligneApresGlissement->execute([$empreinteGlissement]);
+$expireApresGlissement = (string) $ligneApresGlissement->fetchColumn();
+
+$verifier(
+    ($verificationReelle['valide'] ?? false) === true
+        && $expireApresGlissement > date('c', time() + 60)
+        && $expireApresGlissement <= $plafondDans1h,
+    'une vérification réelle prolonge la session sans dépasser le plafond de 30 jours',
+);
+
+// Même en supposant une activité continue jusqu'après le plafond, la
+// session expire — le plafond absolu est infranchissable (INV-25).
+$apresPlafond = date('c', time() + 3600 * 2);
+$verificationApresPlafond = $ctr16->verifierSession($referenceGlissement, $apresPlafond);
+$verifier(
+    ($verificationApresPlafond['valide'] ?? true) === false
+        && $verificationApresPlafond['motif'] === 'session expirée',
+    'le plafond absolu de session tient même sous activité continue (INV-25)',
+);
+
 // --- M-21 : la révocation de l'authentificateur invalide la session ouverte.
 $verifier($ctr16->revoquerAuthentificateur($authn), "l'authentificateur se révoque");
 $apresRevocation = $ctr16->verifierSession($reference);
