@@ -265,6 +265,30 @@ $verifier(
     'le satellite consomme le jeton une fois et une seule',
 );
 
+// 5bis — le satellite peut revérifier, après coup, la session Core qui a
+// produit son jeton — sans jamais recevoir son jeton bearer.
+$referenceSessionLiee = (string) ($verification['corps']['acces']['session']['reference'] ?? '');
+$statutLie = $requete(
+    'POST',
+    "/api/v1/produits/{$DRIVE}/sessions/{$referenceSessionLiee}/verification",
+    null,
+    $sessionDrive,
+);
+$statutLieEtranger = $requete(
+    'POST',
+    "/api/v1/produits/{$WASPLEX}/sessions/{$referenceSessionLiee}/verification",
+    null,
+    $sessionWasplex,
+);
+$verifier(
+    str_starts_with($referenceSessionLiee, 'SINT-')
+        && $statutLie['statut'] === 200
+        && ($statutLie['corps']['session']['valide'] ?? null) === true
+        && $statutLieEtranger['statut'] === 401
+        && ($statutLieEtranger['corps']['motif'] ?? null) === 'SESSION_ETRANGERE',
+    'le satellite revérifie la session liée à son jeton, sans qu’un tiers ne le puisse',
+);
+
 // Borne centrale : un jeton GamaDrive n'ouvre pas Wasplex.
 $jetonSuivant = (string) ($repetition['corps']['acces']['jeton'] ?? '');
 $audienceEtrangere = $requete('POST', "/api/v1/produits/{$WASPLEX}/verification", [
@@ -323,6 +347,24 @@ $verifier(
             true,
         ),
     'la déconnexion globale ferme les jetons fédérés encore ouverts',
+);
+
+// La déconnexion globale ci-dessus a fermé la session Core de l'autorité —
+// la même qui avait produit le jeton vérifié en 5bis. Un satellite déjà
+// connecté avec sa propre session locale doit désormais détecter, à sa
+// prochaine revérification, que la session centrale qui l'a ouvert n'est
+// plus valide : c'est exactement le défaut SSO corrigé ici (déconnexion
+// DG Afrique → accès satellite qui doit cesser).
+$statutLieApresDeconnexion = $requete(
+    'POST',
+    "/api/v1/produits/{$DRIVE}/sessions/{$referenceSessionLiee}/verification",
+    null,
+    $sessionDrive,
+);
+$verifier(
+    $statutLieApresDeconnexion['statut'] === 401
+        && ($statutLieApresDeconnexion['corps']['motif'] ?? null) === 'SESSION_REVOQUEE',
+    'la déconnexion DG Afrique invalide la revérification de la session liée (correction SSO)',
 );
 
 // 8 — audit du parcours complet.

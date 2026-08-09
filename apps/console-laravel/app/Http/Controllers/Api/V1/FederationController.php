@@ -72,6 +72,25 @@ final class FederationController
         return response()->json($execution['corps'], $execution['statut']);
     }
 
+    public function verifierSession(
+        Request $request,
+        AccesSatellites $acces,
+        string $produit,
+        string $reference,
+    ): JsonResponse {
+        $execution = $acces->verifierSessionLiee(
+            $produit,
+            $reference,
+            (string) $request->attributes->get('gamad_entite'),
+            $request->attributes->get('gamad_correlation'),
+        );
+
+        return response()->json($execution['corps'], $execution['statut'], [
+            'Cache-Control' => 'no-store',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
     public function revoquer(Request $request, AccesSatellites $acces, string $produit): JsonResponse
     {
         $donnees = $request->validate([

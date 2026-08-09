@@ -312,6 +312,38 @@ $verifier(
     'la déconnexion globale ferme les jetons fédérés de la session',
 );
 
+// 9bis — un satellite peut revérifier, après coup, que la session Core qui a
+// produit son jeton (déjà consommé) est toujours valide — sans jamais
+// recevoir le jeton bearer de cette session (INV-24).
+$sessionLiee = $ouvrirSession($porteur);
+$ouvertureLiee = $federation->ouvrir($porteur, $DRIVE, $porteur, $dossier($sessionLiee));
+$verifieLiee = $federation->verifierJeton((string) $ouvertureLiee['jeton'], $DRIVE);
+$referenceSessionLiee = (string) ($verifieLiee['session']['reference'] ?? '');
+$verifier(
+    str_starts_with($referenceSessionLiee, 'SINT-')
+        && ($verifieLiee['session']['expire_le'] ?? null) !== null
+        && !str_contains($referenceSessionLiee, $sessionLiee),
+    'la vérification d’un jeton restitue une référence de session opaque, jamais son jeton bearer',
+);
+
+$statutValide = $federation->verifierSessionLiee($referenceSessionLiee, $DRIVE);
+$statutEtranger = $federation->verifierSessionLiee($referenceSessionLiee, $WASPLEX);
+$verifier(
+    ($statutValide['valide'] ?? null) === true
+        && ($statutValide['expire_le'] ?? null) !== null
+        && ($statutEtranger['valide'] ?? null) === false
+        && ($statutEtranger['motif'] ?? null) === 'SESSION_ETRANGERE',
+    'seul le satellite ayant reçu un jeton de cette session peut la revérifier',
+);
+
+$ctr16->revoquerSession($sessionLiee);
+$statutApresDeconnexion = $federation->verifierSessionLiee($referenceSessionLiee, $DRIVE);
+$verifier(
+    ($statutApresDeconnexion['valide'] ?? null) === false
+        && ($statutApresDeconnexion['motif'] ?? null) === 'SESSION_REVOQUEE',
+    'une session Core fermée après coup rend la revérification invalide (SESSION_REVOQUEE)',
+);
+
 // 10 — révocation d'un accès produit : le lien est clos, les jetons tombent,
 // l'identité demeure.
 $session = $ouvrirSession($porteur);
@@ -412,6 +444,7 @@ $casUsage = (string) file_get_contents(
 $verifier(
     str_contains($routesApi, "Route::post('/produits/{produit}/ouverture'")
         && str_contains($routesApi, "Route::post('/produits/{produit}/verification'")
+        && str_contains($routesApi, "Route::post('/produits/{produit}/sessions/{reference}/verification'")
         && str_contains($routesApi, "Route::post('/produits/{produit}/revocation'")
         && str_contains($routesApi, "Route::middleware('gamad.api')")
         && str_contains($casUsage, '->autoriser(')

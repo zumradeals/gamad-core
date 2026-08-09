@@ -214,6 +214,65 @@ final class AccesSatellites
     }
 
     /**
+     * Revérifie, après consommation du jeton fédéré, que la session Core qui
+     * l'a produit est toujours ouverte. Destinée à un appel espacé dans le
+     * temps par le satellite (pas à chaque requête) pour détecter une
+     * déconnexion centrale survenue après l'ouverture de sa propre session
+     * locale.
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
+    public function verifierSessionLiee(
+        string $produit,
+        string $referenceSession,
+        string $acteur,
+        ?string $correlation = null,
+    ): array {
+        if ($acteur !== $produit) {
+            return [
+                'statut' => 403,
+                'corps' => [
+                    'erreur' => 'APPELANT_INCOMPETENT',
+                    'message' => 'Une session Core n’est revérifiable que par le satellite qu’elle a ouvert.',
+                ],
+            ];
+        }
+
+        try {
+            $verdict = $this->federation()->verifierSessionLiee($referenceSession, $produit);
+            $preuve = $this->journal()->enregistrer([
+                'categorie' => 'FEDERATION',
+                'type' => 'VERIFICATION_SESSION_LIEE',
+                'acteur' => $acteur,
+                'action' => 'revérifier une session Core liée',
+                'ressource' => $produit,
+                'decision' => $verdict['valide'] === true ? 'ACCEPTEE' : 'REFUSEE',
+                'motif' => $verdict['motif'],
+                'correlation_id' => $correlation,
+                'donnees' => ['session_reference' => $referenceSession],
+            ]);
+        } catch (\Throwable) {
+            return $this->socleIndisponible();
+        }
+
+        if ($verdict['valide'] !== true) {
+            return [
+                'statut' => 401,
+                'corps' => [
+                    'erreur' => 'SESSION_LIEE_REFUSEE',
+                    'motif' => $verdict['motif'],
+                    'preuve' => $preuve,
+                ],
+            ];
+        }
+
+        return [
+            'statut' => 200,
+            'corps' => ['session' => ['valide' => true, 'expire_le' => $verdict['expire_le']], 'preuve' => $preuve],
+        ];
+    }
+
+    /**
      * @return array{statut:int,corps:array<string,mixed>}
      */
     public function revoquer(
