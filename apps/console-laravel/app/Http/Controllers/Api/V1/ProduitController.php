@@ -121,6 +121,7 @@ final class ProduitController
             'environnement' => ['required', 'string', 'in:' . implode(',', PolitiqueProduits::ENVIRONNEMENTS)],
             'api_base_url' => ['required', 'string', 'max:2048'],
             'health_url' => ['nullable', 'string', 'max:2048'],
+            'logout_url' => ['nullable', 'string', 'max:2048'],
             'audience_federation' => ['required', 'string', 'max:64'],
             'date_debut' => ['nullable', 'date_format:Y-m-d'],
         ]);

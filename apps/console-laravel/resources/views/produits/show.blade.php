@@ -178,6 +178,11 @@
                 <input class="input" id="health_url" name="health_url" maxlength="2048" autocomplete="off">
             </div>
             <div class="field">
+                <label for="logout_url">URL de déconnexion front-channel (facultative)</label>
+                <input class="input" id="logout_url" name="logout_url" maxlength="2048" autocomplete="off">
+                <p class="field-help">Le portail y fait naviguer le navigateur quand sa session centrale se ferme.</p>
+            </div>
+            <div class="field">
                 <label for="audience_federation">Audience de fédération</label>
                 <input class="input" id="audience_federation" name="audience_federation" maxlength="64" required
                        value="{{ $produit['reference'] }}" autocomplete="off">

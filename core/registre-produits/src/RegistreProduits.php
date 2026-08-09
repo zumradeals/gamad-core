@@ -479,6 +479,7 @@ final class RegistreProduits
         }
         $apiBaseUrl = trim((string) ($dossier['api_base_url'] ?? ''));
         $healthUrl = $this->nullable($dossier['health_url'] ?? null);
+        $logoutUrl = $this->nullable($dossier['logout_url'] ?? null);
         $audience = trim((string) ($dossier['audience_federation'] ?? ''));
         if ($apiBaseUrl === '' || $audience === '') {
             return $this->refus('DOSSIER_INCOMPLET', 'api_base_url et audience_federation sont obligatoires');
@@ -499,6 +500,14 @@ final class RegistreProduits
                     : 'health_url doit être une URL valide',
             );
         }
+        if ($logoutUrl !== null && !$this->urlValide($logoutUrl, $environnement === 'PRODUCTION')) {
+            return $this->refus(
+                'URL_INVALIDE',
+                $environnement === 'PRODUCTION'
+                    ? 'logout_url doit être une URL HTTPS en production'
+                    : 'logout_url doit être une URL valide',
+            );
+        }
 
         $audienceOccupee = $this->verifierAudience($audience);
         if ($audienceOccupee !== null && $audienceOccupee['produit'] !== $reference) {
@@ -517,7 +526,7 @@ final class RegistreProduits
         $preuve = (string) $dossier['preuve'];
 
         return $this->transaction(function () use (
-            $reference, $environnement, $apiBaseUrl, $healthUrl, $audience,
+            $reference, $environnement, $apiBaseUrl, $healthUrl, $logoutUrl, $audience,
             $date, $source, $producteur, $preuve,
         ): array {
             // Une URL modifiée clôt l'ancienne version active du même
@@ -536,11 +545,11 @@ final class RegistreProduits
             $maintenant = gmdate('c');
             $this->magasin->prepare(
                 'INSERT INTO produit_environnement
-                 (produit_reference,environnement,api_base_url,health_url,audience_federation,
+                 (produit_reference,environnement,api_base_url,health_url,logout_url,audience_federation,
                   actif,date_debut,date_fin,source_reference,producteur,preuve_reference,cree_le)
-                 VALUES(?,?,?,?,?,1,?,NULL,?,?,?,?)'
+                 VALUES(?,?,?,?,?,?,1,?,NULL,?,?,?,?)'
             )->execute([
-                $reference, $environnement, $apiBaseUrl, $healthUrl, $audience,
+                $reference, $environnement, $apiBaseUrl, $healthUrl, $logoutUrl, $audience,
                 $date, $source, $producteur, $preuve, $maintenant,
             ]);
             $id = (int) $this->magasin->lastInsertId();
@@ -781,6 +790,7 @@ final class RegistreProduits
             'environnement' => $e['environnement'],
             'api_base_url' => $e['api_base_url'],
             'health_url' => $e['health_url'],
+            'logout_url' => $e['logout_url'] ?? null,
             'audience_federation' => $e['audience_federation'],
             'actif' => (bool) $e['actif'],
             'date_debut' => $e['date_debut'],
