@@ -400,6 +400,38 @@ paths:
           description: L'appelant n'est pas le satellite destinataire.
         "503":
           description: Une dépendance requise est indisponible.
+  /produits/{produit}/sessions/{reference}/verification:
+    post:
+      tags: [Fédération]
+      operationId: verifierSessionLiee
+      summary: Revérifie que la session Core qui a ouvert un accès fédéré est toujours valide.
+      description: >-
+        Destiné à un appel espacé dans le temps par le satellite (pas à chaque
+        requête locale), pour détecter qu'une session Core s'est fermée après
+        l'ouverture de sa propre session locale. Ne restitue ni jeton fédéré
+        ni jeton bearer de session (INV-24) : seule la validité et l'échéance
+        sont rendues. Réservé au satellite qui a reçu au moins un jeton fédéré
+        de cette session.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Produit"
+        - name: reference
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 64
+          description: Référence opaque de session Core, reçue dans la réponse de `/verification`.
+      responses:
+        "200":
+          description: Session Core toujours valide ; échéance restituée.
+        "401":
+          description: Session étrangère, inconnue, expirée ou révoquée.
+        "403":
+          description: L'appelant n'est pas le satellite qui a reçu un jeton de cette session.
+        "503":
+          description: Une dépendance requise est indisponible.
   /produits/{produit}/revocation:
     post:
       tags: [Fédération]

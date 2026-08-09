@@ -56,6 +56,8 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
             ->middleware('throttle:20,1');
         Route::post('/produits/{produit}/verification', [FederationController::class, 'verifier'])
             ->middleware('throttle:60,1');
+        Route::post('/produits/{produit}/sessions/{reference}/verification', [FederationController::class, 'verifierSession'])
+            ->middleware('throttle:60,1');
         Route::post('/produits/{produit}/revocation', [FederationController::class, 'revoquer'])
             ->middleware('throttle:20,1');
 

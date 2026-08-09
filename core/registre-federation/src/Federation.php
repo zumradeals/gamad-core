@@ -378,7 +378,7 @@ final class Federation
             }
 
             $session = $this->magasinAcces->prepare(
-                'SELECT s.revoquee_le, s.expire_le, a.etat
+                'SELECT s.reference, s.revoquee_le, s.expire_le, a.etat
                  FROM session_ouverte s
                  JOIN authentificateur a ON a.reference = s.authentificateur_ref
                  WHERE s.jeton_empreinte = ?'
@@ -427,6 +427,15 @@ final class Federation
                 'relation_type' => $ligne['relation_type'],
                 'portees' => json_decode((string) $ligne['portees'], true, flags: JSON_THROW_ON_ERROR),
                 'assurance' => $ligne['niveau_assurance'],
+                // Référence opaque de la session Core (jamais son jeton bearer,
+                // INV-24) : permet au satellite de revérifier plus tard, via
+                // verifierSessionLiee(), que la session qui l'a ouvert est
+                // toujours valide — sans quoi il n'aurait aucun moyen de savoir
+                // qu'une déconnexion centrale a eu lieu après coup.
+                'session' => [
+                    'reference' => $ouverte['reference'],
+                    'expire_le' => $ouverte['expire_le'],
+                ],
                 'consomme_le' => $maintenant,
             ];
         } catch (\Throwable $e) {
@@ -435,6 +444,60 @@ final class Federation
             }
             throw $e;
         }
+    }
+
+    /**
+     * Revérifie, après coup, que la session Core qui a ouvert un accès
+     * fédéré est toujours valide — sans redonner ni le jeton fédéré (déjà
+     * consommé) ni le jeton bearer de la session (INV-24, jamais restitué).
+     *
+     * Bornée par le même principe d'audience que `verifierJeton` : une
+     * référence de session seule ne suffit pas à interroger une session qui
+     * n'a jamais concerné le satellite appelant. Un satellite doit avoir reçu
+     * au moins un jeton fédéré de cette session pour pouvoir la revérifier.
+     *
+     * @return array{valide:bool,motif:?string,expire_le:?string}
+     */
+    public function verifierSessionLiee(
+        string $referenceSession,
+        string $produitAppelant,
+        ?string $instant = null,
+    ): array {
+        $maintenant = $instant ?? date('c');
+
+        $lien = $this->magasinAcces->prepare(
+            'SELECT 1 FROM jeton_federe j
+             JOIN session_ouverte s ON s.jeton_empreinte = j.session_empreinte
+             WHERE s.reference = ? AND j.produit_reference = ? LIMIT 1'
+        );
+        $lien->execute([$referenceSession, $produitAppelant]);
+        if ($lien->fetchColumn() === false) {
+            return ['valide' => false, 'motif' => 'SESSION_ETRANGERE', 'expire_le' => null];
+        }
+
+        $st = $this->magasinAcces->prepare(
+            'SELECT s.expire_le, s.revoquee_le, a.etat
+             FROM session_ouverte s
+             JOIN authentificateur a ON a.reference = s.authentificateur_ref
+             WHERE s.reference = ?'
+        );
+        $st->execute([$referenceSession]);
+        $s = $st->fetch();
+
+        if ($s === false) {
+            return ['valide' => false, 'motif' => 'SESSION_INCONNUE', 'expire_le' => null];
+        }
+        if ($s['revoquee_le'] !== null) {
+            return ['valide' => false, 'motif' => 'SESSION_REVOQUEE', 'expire_le' => null];
+        }
+        if ($s['etat'] !== 'ACTIF') {
+            return ['valide' => false, 'motif' => 'AUTHENTIFICATEUR_REVOQUE', 'expire_le' => null];
+        }
+        if ($maintenant >= (string) $s['expire_le']) {
+            return ['valide' => false, 'motif' => 'SESSION_EXPIREE', 'expire_le' => (string) $s['expire_le']];
+        }
+
+        return ['valide' => true, 'motif' => null, 'expire_le' => (string) $s['expire_le']];
     }
 
     // ------------------------------------------------------------------
