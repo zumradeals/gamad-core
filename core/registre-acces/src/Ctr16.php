@@ -30,8 +30,20 @@ final class Ctr16
      */
     public const CAPACITE = 'CAP-CORE-005';
 
-    /** Durée d'une session, en secondes. Aucune session n'est permanente (INV-25). */
+    /**
+     * Durée d'inactivité tolérée avant expiration, en secondes. Une session
+     * active glisse : chaque vérification valide repousse `expire_le` de ce
+     * délai, jusqu'au plafond absolu ci-dessous.
+     */
     private const DUREE_SESSION = 3600 * 8;
+
+    /**
+     * Plafond absolu d'une session depuis son ouverture, en secondes.
+     * Aucune session n'est permanente (INV-25) : même utilisée sans
+     * interruption, elle expire au plus tard ici — un jeton volé reste donc
+     * toujours borné dans le temps.
+     */
+    private const PLAFOND_SESSION = 3600 * 24 * 30;
 
     private const MAX_PASSKEYS_PAR_ENTITE = 5;
 
@@ -663,7 +675,7 @@ final class Ctr16
         $instant = $aLaDate ?? $this->maintenant();
 
         $st = $this->magasin->prepare(
-            'SELECT s.entite_reference, s.niveau_assurance, s.expire_le, s.revoquee_le, a.etat
+            'SELECT s.entite_reference, s.niveau_assurance, s.ouverte_le, s.expire_le, s.revoquee_le, a.etat
              FROM session_ouverte s
              JOIN authentificateur a ON a.reference = s.authentificateur_ref
              WHERE s.jeton_empreinte = ?'
@@ -685,12 +697,38 @@ final class Ctr16
             return ['valide' => false, 'entite' => null, 'assurance' => null, 'motif' => 'session expirée'];
         }
 
+        // Glissement uniquement lors d'une vérification réelle (pas d'une
+        // vérification simulée à une date de test) : $aLaDate sert à éprouver
+        // l'expiration sans jamais faire dépendre l'écriture d'une horloge
+        // fictive.
+        if ($aLaDate === null) {
+            $this->glisserExpiration($session, (string) $s['ouverte_le'], (string) $s['expire_le']);
+        }
+
         return [
             'valide'    => true,
             'entite'    => $s['entite_reference'],
             'assurance' => $s['niveau_assurance'],
             'motif'     => null,
         ];
+    }
+
+    /**
+     * Repousse l'expiration d'une session active, sans jamais dépasser le
+     * plafond absolu depuis son ouverture ni faire reculer `expire_le`.
+     */
+    private function glisserExpiration(string $session, string $ouverteLe, string $expireLeActuel): void
+    {
+        $plafond = strtotime($ouverteLe) + self::PLAFOND_SESSION;
+        $nouvelleExpiration = date('c', min(time() + self::DUREE_SESSION, $plafond));
+
+        if ($nouvelleExpiration <= $expireLeActuel) {
+            return;
+        }
+
+        $this->magasin->prepare(
+            'UPDATE session_ouverte SET expire_le = ? WHERE jeton_empreinte = ?'
+        )->execute([$nouvelleExpiration, $this->empreinteSession($session)]);
     }
 
     public function revoquerSession(string $session): bool
