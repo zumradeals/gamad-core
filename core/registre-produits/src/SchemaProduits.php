@@ -91,6 +91,7 @@ final class SchemaProduits
                     CHECK (environnement IN ('DEVELOPPEMENT','RECETTE','PRODUCTION')),
                 api_base_url         TEXT NOT NULL,
                 health_url           TEXT,
+                logout_url           TEXT,
                 audience_federation  TEXT NOT NULL,
                 actif                INTEGER NOT NULL DEFAULT 1 CHECK (actif IN (0,1)),
                 date_debut           TEXT NOT NULL,
@@ -101,6 +102,12 @@ final class SchemaProduits
                 cree_le              TEXT NOT NULL
             )
         SQL);
+        // Migration additive : `logout_url` (canal front-channel,
+        // docs/chantiers/P001 §« Précision SSO — front-channel ») s'ajoute
+        // sans toucher un environnement déjà déclaré.
+        if (!self::colonnePresente($pdo, 'produit_environnement', 'logout_url')) {
+            $pdo->exec('ALTER TABLE produit_environnement ADD COLUMN logout_url TEXT');
+        }
         $pdo->exec(
             'CREATE INDEX IF NOT EXISTS produit_environnement_produit
              ON produit_environnement(produit_reference, environnement)'
@@ -135,5 +142,16 @@ final class SchemaProduits
     private static function driver(\PDO $pdo): string
     {
         return (string) $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+    }
+
+    private static function colonnePresente(\PDO $pdo, string $table, string $colonne): bool
+    {
+        try {
+            $pdo->query("SELECT {$colonne} FROM {$table} LIMIT 0");
+
+            return true;
+        } catch (\PDOException) {
+            return false;
+        }
     }
 }

@@ -343,6 +343,44 @@ $verifier(
     'une URL modifiée clôt l’ancienne version sans la supprimer',
 );
 
+// logout_url : canal front-channel (docs/chantiers/P001 côté GamaDrive),
+// optionnel comme health_url, même garde HTTPS en production.
+$refLogout = 'PRD-P3-' . strtoupper(bin2hex(random_bytes(4)));
+$identiteLogout = $ctr01->inscrireIdentite([
+    'canal' => 'CREATION_TECHNIQUE', 'type' => 'produit', 'libelle' => 'Logout P3',
+    'producteur' => PolitiqueInscription::AUTORITE_INSCRIPTION, 'politique' => 'POL-PRODUITS-P3',
+    'source' => 'garde CAP-CORE-011', 'preuve' => 'EVT-P3-IDN-' . strtoupper(bin2hex(random_bytes(4))),
+]);
+$registre->inscrireProduit($dossier([
+    'reference' => $refLogout, 'identite_reference' => (string) $identiteLogout['reference'],
+    'nom_canonique' => 'Logout P3', 'nom_affichage' => 'Logout P3',
+    'type_produit' => 'SATELLITE', 'proprietaire_reference' => $PROPRIETAIRE,
+]));
+$logoutHttpRefuse = $registre->declarerEnvironnement($refLogout, $dossier([
+    'environnement' => 'PRODUCTION',
+    'api_base_url' => 'https://logout.example/api',
+    'logout_url' => 'http://logout.example/federation/deconnexion-centrale',
+    'audience_federation' => $refLogout,
+]));
+$logoutAccepte = $registre->declarerEnvironnement($refLogout, $dossier([
+    'environnement' => 'PRODUCTION',
+    'api_base_url' => 'https://logout.example/api',
+    'logout_url' => 'https://logout.example/federation/deconnexion-centrale',
+    'audience_federation' => $refLogout,
+]));
+$logoutOmis = $registre->declarerEnvironnement($refLogout, $dossier([
+    'environnement' => 'RECETTE',
+    'api_base_url' => 'https://logout-recette.example/api',
+    'audience_federation' => $refLogout . '-RECETTE',
+]));
+$verifier(
+    ($logoutHttpRefuse['refus'] ?? null) === 'URL_INVALIDE'
+        && ($logoutAccepte['logout_url'] ?? null) === 'https://logout.example/federation/deconnexion-centrale'
+        && array_key_exists('logout_url', $logoutOmis)
+        && $logoutOmis['logout_url'] === null,
+    'logout_url est optionnelle, soumise à la même garde HTTPS en production que health_url',
+);
+
 // 14 — aucun secret dans le magasin des produits.
 $contenu = (string) file_get_contents($fichiers['produits']);
 $interdits = ['password', 'secret', 'mot_de_passe', 'private_key', 'clé_privée'];

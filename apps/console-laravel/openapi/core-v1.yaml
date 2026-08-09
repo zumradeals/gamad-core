@@ -720,6 +720,14 @@ paths:
                 health_url:
                   type: string
                   maxLength: 2048
+                logout_url:
+                  type: string
+                  maxLength: 2048
+                  description: >-
+                    Canal front-channel (docs/chantiers/P001 côté GamaDrive,
+                    §« Précision SSO — front-channel »). Un portail y fait
+                    naviguer le navigateur quand sa session centrale se
+                    ferme, avant de revenir à lui-même.
                 audience_federation:
                   type: string
                   maxLength: 64
