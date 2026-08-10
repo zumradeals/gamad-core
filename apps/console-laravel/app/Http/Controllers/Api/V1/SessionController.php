@@ -105,6 +105,24 @@ final class SessionController
         ]);
     }
 
+    /**
+     * Contrat minimal CAP-002 (DG Afrique) : restitue, pour la session bearer
+     * déjà vérifiée par le middleware `gamad.api`, l'échéance `expire_le`
+     * réellement attestée après glissement — sans ouvrir de nouvelle session,
+     * sans émettre de second jeton et sans jamais restituer le bearer lui-même.
+     */
+    public function current(Request $request): JsonResponse
+    {
+        return response()->json([
+            'entite' => $request->attributes->get('gamad_entite'),
+            'assurance' => $request->attributes->get('gamad_assurance'),
+            'expire_le' => $request->attributes->get('gamad_expire_le'),
+        ], 200, [
+            'Cache-Control' => 'no-store',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
     public function destroy(Request $request): JsonResponse
     {
         $reference = (string) $request->attributes->get('gamad_session', '');

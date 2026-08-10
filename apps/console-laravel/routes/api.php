@@ -40,6 +40,7 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         ->middleware('throttle:10,1');
 
     Route::middleware('gamad.api')->group(function (): void {
+        Route::get('/sessions/current', [SessionController::class, 'current']);
         Route::delete('/sessions/current', [SessionController::class, 'destroy']);
 
         Route::get('/identites', [Ctr01Controller::class, 'resoudreInventaire']);

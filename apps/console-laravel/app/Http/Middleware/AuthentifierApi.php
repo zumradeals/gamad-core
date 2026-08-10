@@ -85,6 +85,7 @@ final class AuthentifierApi
         $request->attributes->set('gamad_assurance', $verdict['assurance']);
         $request->attributes->set('gamad_session', $session);
         $request->attributes->set('gamad_correlation', $preuve['correlation_id']);
+        $request->attributes->set('gamad_expire_le', $verdict['expire_le'] ?? null);
 
         return $suivant($request);
     }
