@@ -9,7 +9,7 @@ La cible unique est le serveur actuel :
 Nginx HTTPS
 → /var/www/gamad-core/apps/console-laravel/public/index.php
 → PHP 8.3 FPM
-→ quatorze bases PostgreSQL locales dédiées
+→ quinze bases PostgreSQL locales dédiées
 ```
 
 L'ancien `nixpacks.toml`, qui décrivait un déploiement Railway abandonné, est
@@ -17,7 +17,7 @@ retiré du dépôt afin qu'il ne puisse plus être pris pour une cible active.
 
 ## Topologie minimale
 
-Quatorze bases PostgreSQL physiquement distinctes sont attendues :
+Quinze bases PostgreSQL physiquement distinctes sont attendues :
 
 | Cible | Variable applicative | Contenu |
 |---|---|---|
@@ -35,6 +35,7 @@ Quatorze bases PostgreSQL physiquement distinctes sont attendues :
 | evenements | `EVENT_JOURNAL_URL` | journal central des événements communs (CAP-CORE-014) |
 | secrets | `SECRET_REGISTRY_URL` | registre de gouvernance des secrets et clés (CAP-CORE-016) |
 | preuves | `PROOF_REGISTRY_URL` | registre des preuves d'intégrité (CAP-CORE-015) |
+| matching | `MATCHING_REGISTRY_URL` | moteur de Matching (CAP-CORE-021) |
 
 Laravel stocke aussi ses sessions web dans la cible `gamad_access` avec :
 
@@ -124,7 +125,7 @@ déploiement reste une action explicite sur ce serveur.
 
 ## Sauvegarde sans secret en ligne de commande
 
-Installer quatorze services dans `pg_service.conf`, avec mots de passe dans un
+Installer quinze services dans `pg_service.conf`, avec mots de passe dans un
 fichier `.pgpass` protégé, puis exporter uniquement leurs noms :
 
 ```text
@@ -142,6 +143,7 @@ GAMAD_JOURNAL_PGSERVICE=gamad_journal
 GAMAD_EVENEMENTS_PGSERVICE=gamad_evenements
 GAMAD_SECRETS_PGSERVICE=gamad_secrets
 GAMAD_PREUVES_PGSERVICE=gamad_preuves
+GAMAD_MATCHING_PGSERVICE=gamad_matching
 GAMAD_BACKUP_DIR=/var/backups/gamad-core/daily
 PGSERVICEFILE=/etc/gamad-core/pg_service.conf
 PGPASSFILE=/etc/gamad-core/pgpass
@@ -173,7 +175,7 @@ Exécuter :
 ops/core-foundation/backup.sh
 ```
 
-Chaque lot contient quatorze archives au format custom et un manifeste
+Chaque lot contient quinze archives au format custom et un manifeste
 `SHA256SUMS`.
 
 ## Import initial des magasins SQLite
@@ -199,8 +201,8 @@ la transaction. Il ne supprime ni ne renomme les fichiers SQLite sources.
 
 ## Exercice de restauration
 
-Ne jamais viser les bases de production. Préparer quatorze bases isolées et
-quatorze services `pg_service.conf` distincts, puis définir :
+Ne jamais viser les bases de production. Préparer quinze bases isolées et
+quinze services `pg_service.conf` distincts, puis définir :
 
 ```text
 GAMAD_RESTORE_SOURCE=/srv/backups/gamad-core/AAAAMMJJTHHMMSSZ
@@ -218,6 +220,7 @@ GAMAD_RESTORE_JOURNAL_PGSERVICE=drill_journal
 GAMAD_RESTORE_EVENEMENTS_PGSERVICE=drill_evenements
 GAMAD_RESTORE_SECRETS_PGSERVICE=drill_secrets
 GAMAD_RESTORE_PREUVES_PGSERVICE=drill_preuves
+GAMAD_RESTORE_MATCHING_PGSERVICE=drill_matching
 GAMAD_RESTORE_DRILL_CONFIRM=isolated-empty-databases
 ```
 
@@ -228,8 +231,8 @@ Lancer `ops/core-foundation/restore-drill.sh`. Le script vérifie les empreintes
 restaure en transaction et exécute une lecture minimale de chaque base. Le
 résultat et la durée doivent ensuite être inscrits au registre opérationnel.
 
-La CI exécute ce cycle complet sur vingt-huit bases PostgreSQL temporaires
-(quatorze sources et quatorze cibles isolées) via
+La CI exécute ce cycle complet sur trente bases PostgreSQL temporaires
+(quinze sources et quinze cibles isolées) via
 `apps/console-laravel/tests/Integration/postgresql_p0.sh`.
 
 ## Copie hors machine

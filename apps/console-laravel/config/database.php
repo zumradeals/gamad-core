@@ -275,6 +275,22 @@ return [
             'foreign_key_constraints' => true,
         ],
 
+        'gamad_matching' => [
+            'driver' => env('GAMAD_MATCHING_DRIVER', 'sqlite'),
+            'url' => env('MATCHING_REGISTRY_URL'),
+            'host' => env('GAMAD_MATCHING_HOST', '127.0.0.1'),
+            'port' => env('GAMAD_MATCHING_PORT', '5432'),
+            'database' => env('MATCHING_REGISTRY_PATH', database_path('gamad-matching.sqlite')),
+            'username' => env('GAMAD_MATCHING_USERNAME'),
+            'password' => env('GAMAD_MATCHING_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('GAMAD_MATCHING_SSLMODE', 'prefer'),
+            'foreign_key_constraints' => true,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

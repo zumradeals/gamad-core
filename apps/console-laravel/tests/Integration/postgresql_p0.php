@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
+use Gamad\MoteurMatching\Magasin as MatchingMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
@@ -50,13 +51,14 @@ $journalPdo = JournalMagasin::connecter();
 $evenementsPdo = EvenementsMagasin::connecter();
 $secretsPdo = SecretsMagasin::connecter();
 $preuvesPdo = PreuvesMagasin::connecter();
+$matchingPdo = MatchingMagasin::connecter();
 
 $verifier(
     array_unique(array_map(
         static fn (\PDO $pdo): string => (string) $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME),
-        [$index, $acces, $identites, $produits, $sources, $politiques, $contrats, $vocabulaire, $organisations, $realms, $journalPdo, $evenementsPdo, $secretsPdo, $preuvesPdo],
+        [$index, $acces, $identites, $produits, $sources, $politiques, $contrats, $vocabulaire, $organisations, $realms, $journalPdo, $evenementsPdo, $secretsPdo, $preuvesPdo, $matchingPdo],
     )) === ['pgsql'],
-    'les quatorze magasins utilisent réellement PostgreSQL',
+    'les quinze magasins utilisent réellement PostgreSQL',
 );
 
 $ctr16 = new Ctr16($acces);

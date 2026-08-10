@@ -44,6 +44,7 @@ declare -A connexions=(
     [evenements]="$(connexion "${GAMAD_RESTORE_EVENEMENTS_PGSERVICE:-}" "${GAMAD_RESTORE_EVENEMENTS_PGDATABASE:-}")"
     [secrets]="$(connexion "${GAMAD_RESTORE_SECRETS_PGSERVICE:-}" "${GAMAD_RESTORE_SECRETS_PGDATABASE:-}")"
     [preuves]="$(connexion "${GAMAD_RESTORE_PREUVES_PGSERVICE:-}" "${GAMAD_RESTORE_PREUVES_PGDATABASE:-}")"
+    [matching]="$(connexion "${GAMAD_RESTORE_MATCHING_PGSERVICE:-}" "${GAMAD_RESTORE_MATCHING_PGDATABASE:-}")"
 )
 
 # `pg_restore --clean` détruit ce qu'il trouve. La confirmation annonce des
@@ -68,6 +69,7 @@ declare -a production=(
     "${GAMAD_EVENEMENTS_PGDATABASE:-}"
     "${GAMAD_SECRETS_PGDATABASE:-}"
     "${GAMAD_PREUVES_PGDATABASE:-}"
+    "${GAMAD_MATCHING_PGDATABASE:-}"
     "${GAMAD_INDEX_PGSERVICE:-}"
     "${GAMAD_ACCESS_PGSERVICE:-}"
     "${GAMAD_IDENTITY_PGSERVICE:-}"
@@ -82,8 +84,9 @@ declare -a production=(
     "${GAMAD_EVENEMENTS_PGSERVICE:-}"
     "${GAMAD_SECRETS_PGSERVICE:-}"
     "${GAMAD_PREUVES_PGSERVICE:-}"
+    "${GAMAD_MATCHING_PGSERVICE:-}"
 )
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets preuves; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets preuves matching; do
     for interdite in "${production[@]}"; do
         [[ -z "$interdite" ]] && continue
         if [[ "${connexions[$cible]}" == *"=${interdite}" ]]; then
@@ -99,7 +102,7 @@ done
     sha256sum --check SHA256SUMS
 )
 
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets preuves; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets preuves matching; do
     pg_restore \
         --dbname="${connexions[$cible]}" \
         --clean \
@@ -153,5 +156,9 @@ psql "${connexions[preuves]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS preuves_empreintes FROM preuve_empreinte'
 psql "${connexions[preuves]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
     --command='SELECT count(*) AS preuves_signatures FROM preuve_signature'
+psql "${connexions[matching]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS demandes_matching FROM matching_demande'
+psql "${connexions[matching]}" --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --command='SELECT count(*) AS resultats_matching FROM matching_resultat'
 
-echo "Exercice de restauration terminé sur les quatorze cibles isolées."
+echo "Exercice de restauration terminé sur les quinze cibles isolées."

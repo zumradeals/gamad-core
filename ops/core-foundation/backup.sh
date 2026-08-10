@@ -46,13 +46,14 @@ declare -A connexions=(
     [evenements]="$(connexion "${GAMAD_EVENEMENTS_PGSERVICE:-}" "${GAMAD_EVENEMENTS_PGDATABASE:-}")"
     [secrets]="$(connexion "${GAMAD_SECRETS_PGSERVICE:-}" "${GAMAD_SECRETS_PGDATABASE:-}")"
     [preuves]="$(connexion "${GAMAD_PREUVES_PGSERVICE:-}" "${GAMAD_PREUVES_PGDATABASE:-}")"
+    [matching]="$(connexion "${GAMAD_MATCHING_PGSERVICE:-}" "${GAMAD_MATCHING_PGDATABASE:-}")"
 )
 
 horodatage="$(date -u +%Y%m%dT%H%M%SZ)"
 lot="${GAMAD_BACKUP_DIR%/}/${horodatage}"
 mkdir -p "$lot"
 
-for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets preuves; do
+for cible in index acces identites produits sources politiques contrats vocabulaire organisations realms journal evenements secrets preuves matching; do
     destination="${lot}/${cible}.dump"
     pg_dump \
         --dbname="${connexions[$cible]}" \
@@ -65,7 +66,7 @@ done
 
 (
     cd "$lot"
-    sha256sum index.dump acces.dump identites.dump produits.dump sources.dump politiques.dump contrats.dump vocabulaire.dump organisations.dump realms.dump journal.dump evenements.dump secrets.dump preuves.dump > SHA256SUMS
+    sha256sum index.dump acces.dump identites.dump produits.dump sources.dump politiques.dump contrats.dump vocabulaire.dump organisations.dump realms.dump journal.dump evenements.dump secrets.dump preuves.dump matching.dump > SHA256SUMS
 )
 
 echo "Sauvegarde créée : $lot"
