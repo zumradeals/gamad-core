@@ -147,6 +147,33 @@ paths:
         "503":
           description: Journal indisponible; la session A2 est révoquée.
   /sessions/current:
+    get:
+      tags: [Sessions]
+      operationId: lireSessionCourante
+      summary: >-
+        Échéance `expire_le` réellement attestée par le Core pour la session
+        bearer courante, après glissement (CAP-002 — DG Afrique).
+      description: >-
+        Ne crée aucune session, n'émet aucun second jeton et ne restitue
+        jamais le bearer. `expire_le` reflète le glissement de 8h
+        d'inactivité borné au plafond absolu de 30 jours depuis l'ouverture,
+        déjà appliqué par la vérification qui a authentifié cette requête.
+      security:
+        - bearerSession: []
+      responses:
+        "200":
+          description: Session bearer valide ; échéance attestée.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionCourante"
+        "401":
+          description: Session absente, invalide, expirée ou révoquée.
     delete:
       tags: [Sessions]
       operationId: fermerSession
@@ -4058,6 +4085,17 @@ components:
           format: date-time
         preuve:
           $ref: "#/components/schemas/Preuve"
+    SessionCourante:
+      type: object
+      required: [entite, assurance, expire_le]
+      properties:
+        entite:
+          type: string
+        assurance:
+          type: string
+        expire_le:
+          type: string
+          format: date-time
     CeremoniePasskey:
       type: object
       required: [options, ceremonie, expire_le]

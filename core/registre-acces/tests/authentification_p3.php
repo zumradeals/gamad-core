@@ -117,6 +117,33 @@ $verifier(
     'une vérification réelle prolonge la session sans dépasser le plafond de 30 jours',
 );
 
+// --- CAP-002 (DG Afrique) : verifierSession() restitue l'échéance
+// réellement attestée en base après glissement, pas une valeur recalculée
+// indépendamment côté appelant.
+$verifier(
+    ($verificationReelle['expire_le'] ?? null) === $expireApresGlissement,
+    'verifierSession() restitue expire_le égal à la valeur persistée après glissement',
+);
+
+// --- Une vérification simulée à une date de test (pas de glissement réel)
+// restitue l'expire_le tel qu'il était déjà en base, sans le modifier.
+$ligneAvantVerificationSimulee = $magasin->prepare(
+    'SELECT expire_le FROM session_ouverte WHERE jeton_empreinte = ?'
+);
+$ligneAvantVerificationSimulee->execute([$empreinteGlissement]);
+$expireAvantVerificationSimulee = (string) $ligneAvantVerificationSimulee->fetchColumn();
+$verificationSimulee = $ctr16->verifierSession($referenceGlissement, date('c', time() + 1));
+$ligneApresVerificationSimulee = $magasin->prepare(
+    'SELECT expire_le FROM session_ouverte WHERE jeton_empreinte = ?'
+);
+$ligneApresVerificationSimulee->execute([$empreinteGlissement]);
+$expireApresVerificationSimulee = (string) $ligneApresVerificationSimulee->fetchColumn();
+$verifier(
+    ($verificationSimulee['expire_le'] ?? null) === $expireAvantVerificationSimulee
+        && $expireApresVerificationSimulee === $expireAvantVerificationSimulee,
+    'une vérification simulée (test) restitue expire_le sans glisser la session',
+);
+
 // Même en supposant une activité continue jusqu'après le plafond, la
 // session expire — le plafond absolu est infranchissable (INV-25).
 $apresPlafond = date('c', time() + 3600 * 2);

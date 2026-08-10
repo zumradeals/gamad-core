@@ -133,6 +133,9 @@ jobs:
       - name: Exécuter l'intégration HTTP v1
         run: php apps/console-laravel/tests/Integration/api_v1_p1.php
 
+      - name: Éprouver GET /sessions/current (CAP-002 DG Afrique)
+        run: php apps/console-laravel/tests/Integration/sessions_current_p1.php
+
       - name: Éprouver le parcours fédéré GamaDrive
         run: php apps/console-laravel/tests/Integration/federation_v1_p1.php
 
