@@ -12,6 +12,7 @@ declare(strict_types=1);
 use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
+use Gamad\MoteurMatching\Magasin as MatchingMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreContrats\Magasin as ContratsMagasin;
@@ -47,6 +48,7 @@ $fichiers = [
     'evenements' => $temp . '-evenements.sqlite',
     'secrets' => $temp . '-secrets.sqlite',
     'preuves' => $temp . '-preuves.sqlite',
+    'matching' => $temp . '-matching.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -97,6 +99,8 @@ $environnement = [
     'SECRET_REGISTRY_PATH' => $fichiers['secrets'],
     'PROOF_REGISTRY_URL' => '',
     'PROOF_REGISTRY_PATH' => $fichiers['preuves'],
+    'MATCHING_REGISTRY_URL' => '',
+    'MATCHING_REGISTRY_PATH' => $fichiers['matching'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -125,6 +129,7 @@ RealmsMagasin::connecter();
 EvenementsMagasin::connecter();
 SecretsMagasin::connecter();
 PreuvesMagasin::connecter();
+MatchingMagasin::connecter();
 
 $app = require $application . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
