@@ -15,6 +15,7 @@ use App\Http\Controllers\IdentiteConsoleController;
 use App\Support\EtatFondation;
 use Gamad\JournalEvenements\Magasin as EvenementsMagasin;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
+use Gamad\MoteurMatching\Magasin as MatchingMagasin;
 use Gamad\RegistreAcces\Magasin as AccesMagasin;
 use Gamad\RegistreFederation\SchemaFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
@@ -50,6 +51,7 @@ $fichiers = [
     'evenements' => $temp.'-evenements.sqlite',
     'secrets' => $temp.'-secrets.sqlite',
     'preuves' => $temp.'-preuves.sqlite',
+    'matching' => $temp.'-matching.sqlite',
     'config' => $temp.'-config.php',
     'events' => $temp.'-events.php',
     'packages' => $temp.'-packages.php',
@@ -106,6 +108,8 @@ $environnement = [
     'SECRET_REGISTRY_PATH' => $fichiers['secrets'],
     'PROOF_REGISTRY_URL' => '',
     'PROOF_REGISTRY_PATH' => $fichiers['preuves'],
+    'MATCHING_REGISTRY_URL' => '',
+    'MATCHING_REGISTRY_PATH' => $fichiers['matching'],
 ];
 foreach ($environnement as $cle => $valeur) {
     putenv("{$cle}={$valeur}");
@@ -130,6 +134,7 @@ JournalMagasin::connecter();
 EvenementsMagasin::connecter();
 SecretsMagasin::connecter();
 PreuvesMagasin::connecter();
+MatchingMagasin::connecter();
 
 $app = require $application.'/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
