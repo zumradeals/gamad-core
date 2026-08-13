@@ -91,6 +91,25 @@ final class FederationController
         ]);
     }
 
+    public function organisations(
+        Request $request,
+        AccesSatellites $acces,
+        string $produit,
+        string $reference,
+    ): JsonResponse {
+        $execution = $acces->contexteOrganisations(
+            $reference,
+            $produit,
+            (string) $request->attributes->get('gamad_entite'),
+            $request->attributes->get('gamad_correlation'),
+        );
+
+        return response()->json($execution['corps'], $execution['statut'], [
+            'Cache-Control' => 'no-store',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
     public function revoquer(Request $request, AccesSatellites $acces, string $produit): JsonResponse
     {
         $donnees = $request->validate([

@@ -13,6 +13,8 @@ use Gamad\RegistreFederation\Federation;
 use Gamad\RegistreFederation\PolitiqueFederation;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
+use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
+use Gamad\RegistreOrganisations\RegistreOrganisations;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 
@@ -28,6 +30,111 @@ use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
  */
 final class AccesSatellites
 {
+    /**
+     * Projection organisationnelle minimale remise au satellite concerné.
+     *
+     * Elle ne contient ni données RH, ni rôles métier du satellite. Une
+     * affiliation DIRIGEANT reste descriptive : le consommateur ne doit pas
+     * la transformer en droit propriétaire sans mandat opposable distinct.
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
+    public function contexteOrganisations(
+        string $identite,
+        string $produit,
+        string $acteur,
+        ?string $correlation = null,
+    ): array {
+        if ($acteur !== $produit) {
+            return [
+                'statut' => 403,
+                'corps' => [
+                    'erreur' => 'APPELANT_INCOMPETENT',
+                    'message' => 'Le contexte organisationnel n’est lisible que par le satellite concerné.',
+                ],
+            ];
+        }
+
+        try {
+            $federation = $this->federation();
+            $accesProduit = array_values(array_filter(
+                $federation->resoudreAcces($identite),
+                static fn (array $acces): bool => ($acces['produit'] ?? null) === $produit
+                    && ($acces['active'] ?? false) === true,
+            ));
+            if ($accesProduit === []) {
+                return [
+                    'statut' => 403,
+                    'corps' => [
+                        'erreur' => 'ACCES_PRODUIT_INACTIF',
+                        'message' => 'Cette identité ne possède pas d’accès actif à ce satellite.',
+                    ],
+                ];
+            }
+
+            $registre = new RegistreOrganisations(
+                Db::connect(),
+                IdentiteMagasin::connecter(),
+                OrganisationsMagasin::connecter(),
+            );
+            $affiliations = $registre->resoudreAffiliationsIdentite($identite, ['etat' => 'ACTIVE']);
+            $organisations = [];
+            foreach ($affiliations as $affiliation) {
+                $organisation = $registre->resoudreOrganisation((string) $affiliation['organisation_reference']);
+                if ($organisation === null) {
+                    continue;
+                }
+                $revision = $organisation['revision'] ?? [];
+                $organisations[] = [
+                    'organisation_reference' => $organisation['reference'],
+                    'nom' => $revision['nom_commercial']
+                        ?? $revision['nom_court']
+                        ?? $revision['denomination_officielle']
+                        ?? $organisation['reference'],
+                    'etat' => $organisation['etat'],
+                    'affiliation_reference' => $affiliation['reference'],
+                    'affiliation_etat' => $affiliation['etat'],
+                    'affiliation_type' => $affiliation['type_affiliation_reference'],
+                    'niveau_assurance' => $affiliation['niveau_assurance_reference'],
+                    'proprietaire_designe' => ($organisation['proprietaire_reference'] ?? null) === $identite,
+                    'mandat_opposable' => false,
+                    'revision' => $organisation['modifie_le'],
+                ];
+            }
+
+            $version = hash('sha256', json_encode($organisations, JSON_THROW_ON_ERROR));
+            $preuve = $this->journal()->enregistrer([
+                'categorie' => 'FEDERATION',
+                'type' => 'LECTURE_CONTEXTE_ORGANISATIONNEL',
+                'acteur' => $acteur,
+                'action' => 'lire le contexte organisationnel fédéré',
+                'ressource' => $produit,
+                'decision' => 'ACCEPTEE',
+                'correlation_id' => $correlation,
+                'donnees' => [
+                    'identite' => $identite,
+                    'nombre_organisations' => count($organisations),
+                    'version' => $version,
+                ],
+            ]);
+        } catch (\Throwable) {
+            return $this->socleIndisponible();
+        }
+
+        return [
+            'statut' => 200,
+            'corps' => [
+                'contrat' => 'CTR-ORGANISATIONS-SATELLITES-V1',
+                'version_schema' => '1.0.0',
+                'identite_reference' => $identite,
+                'produit_reference' => $produit,
+                'version_contexte' => $version,
+                'organisations' => $organisations,
+                'preuve' => $preuve,
+            ],
+        ];
+    }
+
     /**
      * @param  array<string,mixed>  $options  relation_type, sujet_local_opaque, duree.
      * @return array{statut:int,corps:array<string,mixed>}

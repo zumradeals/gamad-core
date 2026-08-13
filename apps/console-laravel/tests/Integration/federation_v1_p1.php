@@ -35,6 +35,7 @@ $fichiers = [
     'acces' => $temp . '-acces.sqlite',
     'identites' => $temp . '-identites.sqlite',
     'journal' => $temp . '-journal.sqlite',
+    'organisations' => $temp . '-organisations.sqlite',
     'produits' => $temp . '-produits.sqlite',
     'sources' => $temp . '-sources.sqlite',
     'politiques' => $temp . '-politiques.sqlite',
@@ -68,6 +69,8 @@ $environnement = [
     'IDENTITY_REGISTRY_PATH' => $fichiers['identites'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
+    'ORGANIZATION_REGISTRY_URL' => '',
+    'ORGANIZATION_REGISTRY_PATH' => $fichiers['organisations'],
     'PRODUCT_REGISTRY_URL' => '',
     'PRODUCT_REGISTRY_PATH' => $fichiers['produits'],
     'SOURCE_REGISTRY_URL' => '',
@@ -123,6 +126,7 @@ foreach ($secrets as $entite => $secret) {
 
 $app = require $application . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:politiques:bootstrap');
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->call('core:organisations:bootstrap');
 $kernel = $app->make(Kernel::class);
 
 $echecs = 0;
@@ -199,6 +203,38 @@ $verifier(
     'le Compte GAMAD du porteur est résolu par CAP-CORE-001',
 );
 
+// Le Core reste la source canonique des organisations et affiliations. Le
+// satellite ne recevra ensuite qu'une projection minimale de ce contexte.
+$identiteOrganisation = $requete('POST', '/api/v1/identites', [
+    'canal' => 'AUTORITE',
+    'type' => 'organisation',
+    'libelle' => 'PME fédérée V1',
+], $sessionAutorite);
+$organisationInscrite = $requete('POST', '/api/v1/organisations', [
+    'identite_reference' => (string) ($identiteOrganisation['corps']['identite']['reference'] ?? ''),
+    'type_organisation_reference' => 'SOCIETE',
+    'proprietaire_reference' => $porteur,
+    'denomination_officielle' => 'PME fédérée V1',
+    'nom_court' => 'PME V1',
+    'classification_reference' => 'INTERNE',
+], $sessionAutorite);
+$organisationReference = (string) ($organisationInscrite['corps']['resultat']['reference'] ?? '');
+$requete('POST', "/api/v1/organisations/{$organisationReference}/activation", [], $sessionAutorite);
+$affiliation = $requete('POST', "/api/v1/organisations/{$organisationReference}/affiliations", [
+    'identite_reference' => $porteur,
+    'type_affiliation_reference' => 'DIRIGEANT',
+    'niveau_assurance_reference' => 'A2',
+    'classification_reference' => 'INTERNE',
+    'producteur_reference' => $organisationReference,
+], $sessionAutorite);
+$affiliationReference = (string) ($affiliation['corps']['resultat']['reference'] ?? '');
+$requete(
+    'POST',
+    "/api/v1/organisations/{$organisationReference}/affiliations/{$affiliationReference}/activation",
+    [],
+    $sessionAutorite,
+);
+
 // 3 — le Portail voit les satellites et l'état d'activation, rien de plus.
 $catalogue = $requete('GET', '/api/v1/produits', null, $sessionAutorite);
 $produits = array_column($catalogue['corps']['produits'] ?? [], null, 'reference');
@@ -263,6 +299,35 @@ $verifier(
         && $rejeu['statut'] === 401
         && ($rejeu['corps']['motif'] ?? null) === 'JETON_DEJA_CONSOMME',
     'le satellite consomme le jeton une fois et une seule',
+);
+
+// 5a — après la fédération, seul GamaDrive peut lire le contexte minimal de
+// cette identité, et uniquement tant que son accès produit est actif.
+$contexteOrganisations = $requete(
+    'GET',
+    "/api/v1/produits/{$DRIVE}/identites/{$porteur}/organisations",
+    null,
+    $sessionDrive,
+);
+$contexteParEtranger = $requete(
+    'GET',
+    "/api/v1/produits/{$DRIVE}/identites/{$porteur}/organisations",
+    null,
+    $sessionWasplex,
+);
+$projection = $contexteOrganisations['corps']['organisations'][0] ?? [];
+$verifier(
+    $contexteOrganisations['statut'] === 200
+        && ($contexteOrganisations['corps']['contrat'] ?? null) === 'CTR-ORGANISATIONS-SATELLITES-V1'
+        && ($contexteOrganisations['corps']['version_schema'] ?? null) === '1.0.0'
+        && ($projection['organisation_reference'] ?? null) === $organisationReference
+        && ($projection['nom'] ?? null) === 'PME V1'
+        && ($projection['affiliation_type'] ?? null) === 'DIRIGEANT'
+        && ($projection['proprietaire_designe'] ?? null) === true
+        && ($projection['mandat_opposable'] ?? null) === false
+        && !array_key_exists('classification_reference', $projection)
+        && $contexteParEtranger['statut'] === 403,
+    'GamaDrive reçoit le contexte organisationnel minimal, sans élévation automatique ni données internes',
 );
 
 // 5bis — le satellite peut revérifier, après coup, la session Core qui a

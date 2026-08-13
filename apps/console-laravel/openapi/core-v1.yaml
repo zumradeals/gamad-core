@@ -459,6 +459,41 @@ paths:
           description: L'appelant n'est pas le satellite qui a reçu un jeton de cette session.
         "503":
           description: Une dépendance requise est indisponible.
+  /produits/{produit}/identites/{reference}/organisations:
+    get:
+      tags: [Fédération]
+      operationId: obtenirContexteOrganisationnelSatellite
+      summary: Restitue au satellite le contexte organisationnel minimal d'une identité.
+      description: >-
+        Contrat CTR-ORGANISATIONS-SATELLITES-V1. Réservé au satellite
+        authentifié sous la même référence que `{produit}` et seulement pour
+        une identité disposant d'un accès actif à ce produit. La projection ne
+        contient ni données RH, ni classification interne, ni rôle métier du
+        satellite. Une affiliation dirigeante ne vaut jamais mandat opposable.
+      security:
+        - bearerSession: []
+      parameters:
+        - $ref: "#/components/parameters/Produit"
+        - name: reference
+          in: path
+          required: true
+          description: Référence canonique de l'identité reçue lors de la vérification fédérée.
+          schema:
+            type: string
+            maxLength: 64
+      responses:
+        "200":
+          description: Projection versionnée des organisations et affiliations actives.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContexteOrganisationnelSatellite"
+        "401":
+          description: Session satellite absente ou invalide.
+        "403":
+          description: Appelant étranger ou accès produit inactif pour l'identité.
+        "503":
+          description: Une dépendance requise est indisponible ; aucune projection partielle n'est rendue.
   /produits/{produit}/revocation:
     post:
       tags: [Fédération]
@@ -4037,6 +4072,41 @@ components:
         type: string
         maxLength: 64
   schemas:
+    ContexteOrganisationnelSatellite:
+      type: object
+      required: [contrat, version_schema, identite_reference, produit_reference, version_contexte, organisations, preuve]
+      properties:
+        contrat:
+          const: CTR-ORGANISATIONS-SATELLITES-V1
+        version_schema:
+          const: 1.0.0
+        identite_reference:
+          type: string
+        produit_reference:
+          type: string
+        version_contexte:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        organisations:
+          type: array
+          items:
+            type: object
+            required: [organisation_reference, nom, etat, affiliation_reference, affiliation_etat, affiliation_type, niveau_assurance, proprietaire_designe, mandat_opposable, revision]
+            properties:
+              organisation_reference: { type: string }
+              nom: { type: string }
+              etat: { type: string, enum: [PREPARATION, ACTIVE, SUSPENDUE, DISSOUTE, RETIREE] }
+              affiliation_reference: { type: string }
+              affiliation_etat: { const: ACTIVE }
+              affiliation_type: { type: string }
+              niveau_assurance: { type: string }
+              proprietaire_designe: { type: boolean }
+              mandat_opposable:
+                type: boolean
+                description: Toujours faux dans v1 ; exige une attestation de mandat distincte.
+              revision: { type: string, format: date-time }
+        preuve:
+          $ref: "#/components/schemas/Preuve"
     Vie:
       type: object
       required: [statut, service, version_api, observe_le]
