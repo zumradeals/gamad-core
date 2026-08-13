@@ -385,12 +385,16 @@ $apresRevocation = $requete('POST', "/api/v1/produits/{$DRIVE}/verification", [
     'jeton' => (string) ($avantRevocation['corps']['acces']['jeton'] ?? ''),
 ], $sessionDrive);
 $identiteApres = $requete('GET', "/api/v1/identites/{$porteur}", null, $sessionAutorite);
+$revocationValide = $revocation['statut'] === 200
+    && ($revocation['corps']['revocation']['relation_etat'] ?? null) === 'CLOSE'
+    && $apresRevocation['statut'] === 401
+    && ($apresRevocation['corps']['motif'] ?? null) === 'JETON_REVOQUE'
+    && ($identiteApres['corps']['etat'] ?? null) === 'ACTIVE';
+if (!$revocationValide) {
+    fwrite(STDERR, json_encode(compact('revocation', 'apresRevocation', 'identiteApres'), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n");
+}
 $verifier(
-    $revocation['statut'] === 200
-        && ($revocation['corps']['revocation']['relation_etat'] ?? null) === 'CLOSE'
-        && $apresRevocation['statut'] === 401
-        && ($apresRevocation['corps']['motif'] ?? null) === 'JETON_REVOQUE'
-        && ($identiteApres['corps']['etat'] ?? null) === 'ACTIVE',
+    $revocationValide,
     'la révocation ferme l’accès et les jetons sans supprimer l’identité GAMAD',
 );
 
@@ -402,15 +406,19 @@ $deconnexion = $requete('DELETE', '/api/v1/sessions/current', null, $sessionAuto
 $apresDeconnexion = $requete('POST', "/api/v1/produits/{$DRIVE}/verification", [
     'jeton' => (string) ($reprise['corps']['acces']['jeton'] ?? ''),
 ], $sessionDrive);
+$deconnexionValide = $deconnexion['statut'] === 200
+    && ($deconnexion['corps']['jetons_federes_fermes'] ?? 0) >= 1
+    && $apresDeconnexion['statut'] === 401
+    && in_array(
+        $apresDeconnexion['corps']['motif'] ?? null,
+        ['JETON_REVOQUE', 'SESSION_CORE_FERMEE'],
+        true,
+    );
+if (!$deconnexionValide) {
+    fwrite(STDERR, json_encode(compact('reprise', 'deconnexion', 'apresDeconnexion'), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n");
+}
 $verifier(
-    $deconnexion['statut'] === 200
-        && ($deconnexion['corps']['jetons_federes_fermes'] ?? 0) >= 1
-        && $apresDeconnexion['statut'] === 401
-        && in_array(
-            $apresDeconnexion['corps']['motif'] ?? null,
-            ['JETON_REVOQUE', 'SESSION_CORE_FERMEE'],
-            true,
-        ),
+    $deconnexionValide,
     'la déconnexion globale ferme les jetons fédérés encore ouverts',
 );
 
