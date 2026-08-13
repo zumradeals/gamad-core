@@ -141,8 +141,13 @@ $requete = static function (
     string $uri,
     ?array $json = null,
     ?string $jeton = null,
+    string $adresse = '127.0.0.1',
 ) use ($kernel): array {
-    $serveur = ['HTTP_ACCEPT' => 'application/json', 'CONTENT_TYPE' => 'application/json'];
+    $serveur = [
+        'HTTP_ACCEPT' => 'application/json',
+        'CONTENT_TYPE' => 'application/json',
+        'REMOTE_ADDR' => $adresse,
+    ];
     if ($jeton !== null) {
         $serveur['HTTP_AUTHORIZATION'] = 'Bearer ' . $jeton;
     }
@@ -209,7 +214,7 @@ $identiteOrganisation = $requete('POST', '/api/v1/identites', [
     'canal' => 'AUTORITE',
     'type' => 'organisation',
     'libelle' => 'PME fédérée V1',
-], $sessionAutorite);
+], $sessionAutorite, '127.0.0.2');
 $organisationInscrite = $requete('POST', '/api/v1/organisations', [
     'identite_reference' => (string) ($identiteOrganisation['corps']['identite']['reference'] ?? ''),
     'type_organisation_reference' => 'SOCIETE',
@@ -217,22 +222,23 @@ $organisationInscrite = $requete('POST', '/api/v1/organisations', [
     'denomination_officielle' => 'PME fédérée V1',
     'nom_court' => 'PME V1',
     'classification_reference' => 'INTERNE',
-], $sessionAutorite);
+], $sessionAutorite, '127.0.0.2');
 $organisationReference = (string) ($organisationInscrite['corps']['resultat']['reference'] ?? '');
-$requete('POST', "/api/v1/organisations/{$organisationReference}/activation", [], $sessionAutorite);
+$requete('POST', "/api/v1/organisations/{$organisationReference}/activation", [], $sessionAutorite, '127.0.0.2');
 $affiliation = $requete('POST', "/api/v1/organisations/{$organisationReference}/affiliations", [
     'identite_reference' => $porteur,
     'type_affiliation_reference' => 'DIRIGEANT',
     'niveau_assurance_reference' => 'A2',
     'classification_reference' => 'INTERNE',
     'producteur_reference' => $organisationReference,
-], $sessionAutorite);
+], $sessionAutorite, '127.0.0.2');
 $affiliationReference = (string) ($affiliation['corps']['resultat']['reference'] ?? '');
 $requete(
     'POST',
     "/api/v1/organisations/{$organisationReference}/affiliations/{$affiliationReference}/activation",
     [],
     $sessionAutorite,
+    '127.0.0.2',
 );
 
 // 3 — le Portail voit les satellites et l'état d'activation, rien de plus.
@@ -308,12 +314,14 @@ $contexteOrganisations = $requete(
     "/api/v1/produits/{$DRIVE}/identites/{$porteur}/organisations",
     null,
     $sessionDrive,
+    '127.0.0.3',
 );
 $contexteParEtranger = $requete(
     'GET',
     "/api/v1/produits/{$DRIVE}/identites/{$porteur}/organisations",
     null,
     $sessionWasplex,
+    '127.0.0.4',
 );
 $projection = $contexteOrganisations['corps']['organisations'][0] ?? [];
 $verifier(
