@@ -130,3 +130,75 @@ Ces 63 épreuves ne couvrent pas littéralement chacun des soixante points numé
 - `organisation_mandat_projection` : table créée, jamais alimentée (facultative selon la fiche §11.11).
 - Aucune donnée réelle à bootstrapper au moment de ce chantier : zéro identité de type `organisation` dans l'index baseline, donc zéro organisation et zéro relation historique migrée en exploitation réelle. Le mécanisme de reprise et de migration est codé et testé avec des données construites, pas exercé sur un jeu de données réel faute d'en exister un.
 - Le déplacement d'unité n'historise pas une table de révision de rattachement dédiée (section 5).
+
+## 18. CORE-ORG-DELEGATION-001 — délégation de création aux produits reconnus
+
+Un produit reconnu (CAP-CORE-011) peut être délégué, de façon explicite,
+révocable et auditable, à inscrire une identité de type `organisation`
+(CAP-CORE-001, canal `PRODUIT_RECONNU`) puis la fiche organisationnelle
+correspondante (`ACTION_INSCRIRE` seulement). Le satellite ne devient jamais
+souverain sur le registre : il demande, le Core valide, déduplique, crée et
+retourne la référence canonique.
+
+**Aucun système d'autorisation nouveau.** La délégation réutilise
+exclusivement `Ctr03` (CAP-CORE-004) et le registre gouverné des politiques
+(CAP-CORE-007), via deux politiques dédiées et minimales —
+`POL-DELEGATION-IDENTITES-SATELLITES-V1` et
+`POL-DELEGATION-ORGANISATIONS-SATELLITES-V1` — jamais
+`POL-ORGANISATIONS-V1` ni `POL-INSCRIPTION-IDENTITES-V1` : `activerVersion()`
+remplace intégralement la version active précédente d'une même politique
+(§9 ; `RegistrePolitiques::activerVersion()`), donc toucher une politique
+partagée par vingt actions aurait risqué d'altérer des règles déjà
+réservées à `AUT-GAMAD-001`. Deux politiques distinctes n'interfèrent
+jamais entre elles.
+
+**Portée strictement bornée.** Chaque règle nomme un seul produit
+(`sujet_reference`), jamais une classe (`SATELLITE`). Aucune autre action du
+registre des organisations n'est jamais accordée par cette délégation : ni
+modifier, ni activer, ni suspendre, ni dissoudre, ni retirer.
+
+**Contrôle défensif — `AccesOrganisations::produitDelegueInactif()`.** Même
+si une règle `Ctr03` reste active, un produit délégué qui n'est pas `ACTIF`
+au sens de CAP-CORE-011 (`PREPARATION`, `SUSPENDU`, `RETIRE`) est refusé
+immédiatement — la suspension d'un produit ferme sa délégation sans qu'une
+nouvelle version de politique soit nécessaire. Symétriquement,
+`InscrireIdentite::executer()` construit désormais `Ctr01` avec son
+quatrième argument (`ProduitsMagasin::connecter()`), pour que
+`Ctr01::produitReconnu()` consulte l'état réel de CAP-CORE-011, pas
+seulement l'index de baseline. **`federation_autorisee` (CAP-CORE-022)
+n'intervient jamais dans ce contrôle** : fédération et délégation de
+création d'organisation sont deux autorités distinctes.
+
+**CREATE vs ATTACH.** La seule clé de rapprochement est `identite_reference`
+(déjà unique) — aucun algorithme de rapprochement flou. CREATE : le produit
+délégué inscrit une nouvelle identité puis sa fiche. ATTACH V1 :
+`GET /api/v1/organisations/resolution/{identite}`
+(`AccesOrganisations::resoudreParIdentite()`) — une pure lecture, jamais
+soumise à `Ctr03`, qui ne mute jamais `proprietaire_reference` ni aucune
+affiliation. Retrouver une organisation existante ne rend son demandeur ni
+propriétaire, ni dirigeant, ni représentant.
+
+**Procédure d'admission, générique et rejouable** —
+`php artisan core:organisations:accorder-delegation-satellite {produit}`
+(`AccorderDelegationOrganisationCommand`) : accorde à la référence de
+produit donnée exactement les deux actions ci-dessus, en conservant
+fidèlement les règles déjà actives de chaque politique dédiée (chaque
+nouvelle version les reprend toutes, puis ajoute la nouvelle). Idempotente :
+rejouer la commande pour un produit déjà délégué ne crée ni version ni
+règle supplémentaire. La même commande, avec une autre référence, admet
+G-POS ou tout autre produit reconnu — sans code ni condition propres à ce
+produit. Révocation : suspendre ou retirer le produit (CAP-CORE-011) ferme
+l'usage immédiatement (contrôle défensif ci-dessus) ; retirer la
+*permission* elle-même, si un jour nécessaire au-delà de la suspension du
+produit, suit la même procédure gouvernée CAP-CORE-007 qu'une politique
+technique (nouvelle version omettant la règle, ou version explicitement
+`REFUSE` pour ce sujet — INV-30).
+
+**Tests** — `apps/console-laravel/tests/Integration/organisations_delegation_satellite_p1.php` :
+produit délégué actif + permission → création ; produit actif sans
+permission → 403 ; produit délégué suspendu → refus immédiat malgré la
+règle active ; produit délégué non fédérable → la délégation fonctionne
+quand même ; rejeu de la création → 409, aucun doublon ; admission d'un
+second produit → le premier reste délégué ; résolution ATTACH → lecture
+seule, sans rôle ni propriété implicite ; suspension après création →
+organisations déjà créées intactes ; journalisation chaînée, refus compris.

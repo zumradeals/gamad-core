@@ -157,6 +157,9 @@ jobs:
       - name: Éprouver la compatibilité CTR-01 / CAP-CORE-002
         run: php apps/console-laravel/tests/Integration/organisations_ctr01_compat_p1.php
 
+      - name: Éprouver la délégation de création aux satellites (CORE-ORG-DELEGATION-001)
+        run: php apps/console-laravel/tests/Integration/organisations_delegation_satellite_p1.php
+
       - name: Éprouver le registre des realms
         run: php apps/console-laravel/tests/Integration/realms_v1_p1.php
 

@@ -12,6 +12,7 @@ use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreNormes\Db;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
 
 /**
  * Cas d'usage partagé par l'API et la console web.
@@ -84,7 +85,12 @@ final class InscrireIdentite
         }
 
         try {
-            $resultat = (new Ctr01($index, IdentiteMagasin::connecter()))->inscrireIdentite([
+            // 4e argument (CAP-CORE-011) : sans lui, `produitReconnu()` ne
+            // reconnaît que les produits figés dans l'index de baseline —
+            // jamais un produit inscrit après le seed (ex. PRD-GAMAD-005) —
+            // et le canal PRODUIT_RECONNU resterait fermé à tout produit
+            // vivant (CORE-ORG-DELEGATION-001, Phase A §1/§3/§5).
+            $resultat = (new Ctr01($index, IdentiteMagasin::connecter(), null, ProduitsMagasin::connecter()))->inscrireIdentite([
                 'canal' => $donnees['canal'],
                 'type' => $donnees['type'],
                 'libelle' => $donnees['libelle'],

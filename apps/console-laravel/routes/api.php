@@ -242,6 +242,9 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
         Route::get('/organisations', [OrganisationController::class, 'index']);
         Route::post('/organisations', [OrganisationController::class, 'store'])
             ->middleware('throttle:20,1');
+        // Résolution ATTACH (CORE-ORG-DELEGATION-001) : déclarée avant
+        // `/organisations/{reference}` pour ne jamais être avalée par lui.
+        Route::get('/organisations/resolution/{identite}', [OrganisationController::class, 'resoudreParIdentite']);
         Route::get('/organisations/{reference}', [OrganisationController::class, 'show']);
         Route::patch('/organisations/{reference}', [OrganisationController::class, 'update'])
             ->middleware('throttle:20,1');

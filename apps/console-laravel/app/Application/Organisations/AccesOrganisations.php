@@ -16,6 +16,8 @@ use Gamad\RegistreOrganisations\Magasin as OrganisationsMagasin;
 use Gamad\RegistreOrganisations\PolitiqueOrganisations;
 use Gamad\RegistreOrganisations\RegistreOrganisations;
 use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
+use Gamad\RegistreProduits\Magasin as ProduitsMagasin;
+use Gamad\RegistreProduits\RegistreProduits;
 
 /**
  * Cas d'usage du registre des organisations (CAP-CORE-002).
@@ -25,6 +27,15 @@ use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
  * décision permise et prouvée atteint l'écriture. `Ctr03` évalue
  * `POL-ORGANISATIONS-V1` en lisant le registre des politiques
  * (CAP-CORE-007), pas ce module.
+ *
+ * CORE-ORG-DELEGATION-001 : un produit reconnu peut être délégué, par une
+ * politique dédiée et minimale (jamais `POL-ORGANISATIONS-V1`), à `inscrire`
+ * une organisation seulement — jamais `modifier`, `activer`, `suspendre`,
+ * `dissoudre` ni `retirer`. `produitDelegueInactif()` ferme immédiatement
+ * cette délégation si le produit n'est pas `ACTIF` (CAP-CORE-011), même si
+ * la règle CTR-03 reste active. `resoudreParIdentite()` sert l'ATTACH : une
+ * lecture pure, jamais soumise à CTR-03, qui ne mute jamais la propriété ni
+ * une affiliation.
  */
 final class AccesOrganisations
 {
@@ -61,6 +72,33 @@ final class AccesOrganisations
         }
 
         return ['statut' => 200, 'corps' => ['organisation' => $organisation, 'historique' => $historique, 'identifiants' => $identifiants]];
+    }
+
+    /**
+     * Résolution ATTACH (CORE-ORG-DELEGATION-001) : retrouver la fiche
+     * organisationnelle déjà canonisée pour une identité CAP-CORE-001
+     * précise. Pure lecture, jamais soumise à CTR-03 — l'unicité de
+     * `identite_reference` est la seule clé de rapprochement, déjà garantie
+     * par le registre (`RegistreOrganisations::inscrireOrganisation()`
+     * refuse `IDENTITE_DEJA_LIEE`) ; aucun rapprochement flou. Ne mute
+     * jamais `proprietaire_reference` ni aucune affiliation : un satellite
+     * qui résout une organisation existante n'en devient ni propriétaire, ni
+     * dirigeant, ni représentant.
+     *
+     * @return array{statut:int,corps:array<string,mixed>}
+     */
+    public function resoudreParIdentite(string $identite, string $acteur): array
+    {
+        try {
+            $organisation = $this->registre()->resoudreOrganisationParIdentite($identite);
+        } catch (\Throwable) {
+            return $this->socleIndisponible();
+        }
+        if ($organisation === null || !$this->visible($organisation, $acteur)) {
+            return ['statut' => 404, 'corps' => ['erreur' => 'ORGANISATION_INTROUVABLE']];
+        }
+
+        return ['statut' => 200, 'corps' => ['organisation' => $organisation]];
     }
 
     /** @return array{statut:int,corps:array<string,mixed>} */
@@ -378,6 +416,8 @@ final class AccesOrganisations
         try {
             $registre = $this->registre();
             $decision = (new Ctr03(PolitiquesMagasin::connecter()))->autoriser($acteur, $action, $ressource);
+            $produitSuspendu = $this->produitDelegueInactif($acteur);
+            $permis = $decision['decision'] === 'PERMIS' && !$produitSuspendu;
             $journal = $this->journal();
             $preuve = $journal->enregistrer([
                 'categorie' => 'ORGANISATIONS',
@@ -385,8 +425,10 @@ final class AccesOrganisations
                 'acteur' => $acteur,
                 'action' => $action,
                 'ressource' => $ressource,
-                'decision' => $decision['decision'] === 'PERMIS' ? 'PERMIS' : 'REFUSE',
-                'motif' => $decision['motif'],
+                'decision' => $permis ? 'PERMIS' : 'REFUSE',
+                'motif' => $produitSuspendu
+                    ? "produit `{$acteur}` non ACTIF au sens de CAP-CORE-011 : délégation fermée immédiatement"
+                    : $decision['motif'],
                 'correlation_id' => $correlation,
                 'donnees' => ['politique' => $decision['politique']],
             ]);
@@ -394,7 +436,7 @@ final class AccesOrganisations
             return $this->socleIndisponible();
         }
 
-        if ($decision['decision'] !== 'PERMIS') {
+        if (!$permis) {
             $this->tracer($journal, [
                 'categorie' => 'ORGANISATIONS', 'type' => 'OPERATION_ORGANISATION_REFUSEE',
                 'acteur' => $acteur, 'action' => $action, 'ressource' => $ressource,
@@ -483,6 +525,28 @@ final class AccesOrganisations
         }
 
         return new RegistreOrganisations($index, $registreIdentites, OrganisationsMagasin::connecter(), $ctr01, $ctr02);
+    }
+
+    /**
+     * Contrôle défensif CORE-ORG-DELEGATION-001 : un produit délégué
+     * (CAP-CORE-011) n'agit jamais sur ce registre hors de l'état ACTIF,
+     * même si une règle CTR-03 le permet encore — la suspension ou le
+     * retrait d'un produit ferme ainsi la délégation immédiatement, sans
+     * attendre une nouvelle version de politique (Phase A §5, §12, §13).
+     * Ne s'applique jamais à `AUT-GAMAD-001` ni à aucun autre acteur qui
+     * n'est pas lui-même inscrit comme produit — `resoudreProduit()` rend
+     * alors `null` et le contrôle ne s'applique pas. N'utilise jamais
+     * `federation_autorisee` (CAP-CORE-022) : la fédération et cette
+     * délégation sont deux autorités distinctes.
+     */
+    private function produitDelegueInactif(string $acteur): bool
+    {
+        $index = Db::connect();
+        $registreIdentites = IdentiteMagasin::connecter();
+        $produits = new RegistreProduits($index, $registreIdentites, ProduitsMagasin::connecter());
+        $produit = $produits->resoudreProduit($acteur);
+
+        return $produit !== null && $produit['etat'] !== 'ACTIF';
     }
 
     private function journal(): Journal

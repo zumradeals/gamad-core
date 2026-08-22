@@ -33,6 +33,19 @@ final class OrganisationController
         return response()->json($execution['corps'], $execution['statut']);
     }
 
+    /**
+     * ATTACH (CORE-ORG-DELEGATION-001) : résout la fiche organisationnelle
+     * déjà canonisée pour une identité CAP-CORE-001 précise — pure lecture,
+     * jamais de création ni de mutation de propriété, dirigeant,
+     * représentant ou affiliation.
+     */
+    public function resoudreParIdentite(Request $request, AccesOrganisations $acces, string $identite): JsonResponse
+    {
+        $execution = $acces->resoudreParIdentite($identite, (string) $request->attributes->get('gamad_entite'));
+
+        return response()->json($execution['corps'], $execution['statut']);
+    }
+
     public function structure(Request $request, AccesOrganisations $acces, string $reference): JsonResponse
     {
         $execution = $acces->resoudreStructure($reference, (string) $request->attributes->get('gamad_entite'));
