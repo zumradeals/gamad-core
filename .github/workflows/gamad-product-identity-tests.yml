@@ -1,0 +1,38 @@
+name: GAMAD — identité produit 005
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  produit-gamad-005:
+    name: PRD-GAMAD-005 reste stable et devient GAMAD
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_sqlite
+
+      - name: Installer le monolithe Laravel
+        working-directory: apps/console-laravel
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Vérifier la syntaxe de la migration
+        run: php -l apps/console-laravel/app/Console/Commands/NormaliserProduitGamadCommand.php
+
+      - name: Éprouver le renommage gouverné et son idempotence
+        run: php apps/console-laravel/tests/Integration/gamad_product_005_rename_p1.php
