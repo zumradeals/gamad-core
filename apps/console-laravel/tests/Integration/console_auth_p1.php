@@ -112,7 +112,7 @@ $verdict = is_string($referenceSession)
     ? $ctr->verifierSession($referenceSession)
     : ['valide' => false];
 $cible = parse_url($reponse->getTargetUrl(), PHP_URL_PATH);
-$connexionValide = ($cible === null || $cible === '/')
+$connexionValide = ($cible === '/mon-acces')
     && is_string($referenceSession)
     && ($verdict['valide'] ?? false) === true;
 if (!$connexionValide) {
