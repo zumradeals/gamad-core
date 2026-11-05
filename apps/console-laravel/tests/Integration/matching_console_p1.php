@@ -127,9 +127,9 @@ $registre->enregistrerSignal([
     'sujet_type' => 'PERSONNE', 'sujet_reference' => 'CAND-CONSOLE-A', 'signal_code' => 'CRT-REGION', 'valeur_type' => 'TEXTE',
     'valeur_normalisee' => 'ABJ', 'source_reference' => 'SRC-TEST', 'finalite_reference' => 'Épreuve de console',
     'realm_reference' => 'RLM-GAMAD-001', 'contrat_reference' => 'CTR-MAT-03', 'contrat_version' => '1',
-    'observation_le' => '2026-08-01T00:00:00Z', 'valide_jusqua' => '2027-08-01T00:00:00Z', 'classification' => 'INTERNE',
+    'observation_le' => gmdate('Y-m-d\TH:i:s\Z', time() - 86400), 'valide_jusqua' => gmdate('Y-m-d\TH:i:s\Z', time() + 31536000), 'classification' => 'INTERNE',
 ]);
-$registre->executer($demande['reference'], [], $acteur, '2026-08-15T00:00:00Z');
+$registre->executer($demande['reference'], [], $acteur, gmdate('Y-m-d\TH:i:s\Z'));
 
 $controleur = $app->make(MatchingConsoleController::class);
 $acces = $app->make(AccesMatching::class);
