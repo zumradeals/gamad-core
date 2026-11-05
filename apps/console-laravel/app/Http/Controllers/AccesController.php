@@ -130,7 +130,7 @@ final class AccesController
         $request->session()->regenerate();
         $request->session()->put('gamad_session', $session['session']);
 
-        return redirect()->intended('/');
+        return redirect()->intended('/mon-acces');
     }
 
     public function deconnecter(Request $request): RedirectResponse
