@@ -95,7 +95,7 @@ final class AccorderAccesConsoleCommand extends Command
                 'jeu_reference' => 'R01-CONSOLE-SIMULATION',
                 'cas' => [
                     ['sujet' => $acteur, 'action' => self::ACTION, 'attendu' => 'PERMIS'],
-                    ['sujet' => 'IDN-PER-INCONNUE', 'action' => self::ACTION, 'attendu' => 'REFUSÉ'],
+                    ['sujet' => 'IDN-PER-INCONNUE', 'action' => self::ACTION, 'attendu' => 'REFUSE'],
                 ],
             ] + $meta('R01-CONSOLE-SIMULATION'));
             if (isset($simulation['refus']) || ($simulation['resultat'] ?? null) !== 'REUSSIE') {
