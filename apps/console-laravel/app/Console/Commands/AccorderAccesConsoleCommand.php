@@ -48,7 +48,7 @@ final class AccorderAccesConsoleCommand extends Command
                 $regles = $active['regles'] ?? [];
                 if (count($regles) === 1
                     && $regles[0]['effet'] === 'PERMET'
-                    && $regles[0]['action_reference'] === 'consulter-la-console'
+                    && $regles[0]['action_reference'] === self::ACTION
                     && $regles[0]['sujet_reference'] === $acteur) {
                     $this->info('R01 : autorisation déjà active, aucune mutation.');
                     return self::SUCCESS;
