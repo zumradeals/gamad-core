@@ -97,6 +97,17 @@ $pdo->prepare('INSERT INTO politique_version_cycle
  VALUES (?,?,?,?,?,?)')->execute([$id, 'SUSPENDUE', $maintenant, 'AUT-GAMAD-001', 'TEST-R01', $maintenant]);
 $verifier($essai('AUT-GAMAD-001') === 403, 'politique suspendue : refus');
 
+$commande = file_get_contents($application.'/app/Console/Commands/AccorderAccesConsoleCommand.php');
+$verifier(
+    str_contains($commande, "core:console:accorder-acces-administratif")
+        && str_contains($commande, "'sujet_reference' => $acteur")
+        && str_contains($commande, "'action_reference' => self::ACTION")
+        && str_contains($commande, "'attendu' => 'REFUSÉ'")
+        && str_contains($commande, "->simulerVersion(")
+        && str_contains($commande, "->activerVersion("),
+    'admission administrative explicite, cible unique et simulation avant activation',
+);
+
 $routes = file_get_contents($application.'/routes/web.php');
 $verifier(
     str_contains($routes, "Route::middleware(['gamad.session', 'gamad.console'])")
