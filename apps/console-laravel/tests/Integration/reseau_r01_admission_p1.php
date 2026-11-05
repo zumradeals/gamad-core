@@ -66,6 +66,7 @@ $compter = static function () use ($pdo): array {
 
 $verifier($ctr->autoriser('AUT-GAMAD-001', 'consulter la console')['decision'] === 'REFUSÉ', 'absence de politique : refus initial');
 $premier = $console->call('core:console:accorder-acces-administratif');
+if ($premier !== 0) echo '[DIAGNOSTIC] '.trim($console->output()).PHP_EOL;
 $verifier($premier === 0, 'commande : activation réussie');
 $verifier($ctr->autoriser('AUT-GAMAD-001', 'consulter la console')['decision'] === 'PERMIS', 'autorité explicitement autorisée');
 $verifier($ctr->autoriser('IDN-PER-INCONNUE', 'consulter la console')['decision'] === 'REFUSÉ', 'identité ordinaire refusée');
