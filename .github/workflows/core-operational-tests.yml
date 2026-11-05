@@ -229,6 +229,12 @@ jobs:
       - name: Éprouver la console des moyens d'accès
         run: php apps/console-laravel/tests/Integration/acces_console_p1.php
 
+      - name: Éprouver les frontières d'accès R01 (mandat et politique)
+        run: php apps/console-laravel/tests/Integration/reseau_r01_console_p1.php
+
+      - name: Éprouver l'admission administrative R01 sur registres isolés
+        run: php apps/console-laravel/tests/Integration/reseau_r01_admission_p1.php
+
       - name: Éprouver l'authentification console
         run: php apps/console-laravel/tests/Integration/console_auth_p1.php
 

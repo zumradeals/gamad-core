@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'throttle' => \App\Http\Middleware\GamadThrottleRequests::class,
             'gamad.session' => \App\Http\Middleware\ExigerSession::class,
+            'gamad.console' => \App\Http\Middleware\ExigerAccesConsole::class,
             'gamad.api' => \App\Http\Middleware\AuthentifierApi::class,
             'gamad.https' => \App\Http\Middleware\ExigerHttpsEnProduction::class,
         ]);

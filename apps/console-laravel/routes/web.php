@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Route;
  * Core. La seule écriture web est l'inscription gouvernée d'une identité ;
  * elle partage le même cas d'usage que l'API v1.
  */
-Route::middleware('gamad.session')->group(function (): void {
+Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     Route::get('/', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');
     Route::get('/normes/{reference}', [Ctr04Controller::class, 'resoudreNorme'])->name('ctr04.resoudre-norme');
     Route::get('/sources/{reference}', [Ctr04Controller::class, 'resoudreSource'])->name('ctr04.resoudre-source');
@@ -491,6 +491,10 @@ Route::middleware('gamad.session')->group(function (): void {
         ->where('version', '[0-9]+\.[0-9]+\.[0-9]+')->middleware('throttle:20,1')
         ->name('console.vocabulaires.versions.retirer');
 
+});
+
+// Gestion personnelle des moyens d'accès : session requise, pas de mandat administratif.
+Route::middleware('gamad.session')->group(function (): void {
     // CAP-CORE-005 — moyens d'accès personnels. Le sujet vient de la session ;
     // on ne gère jamais l'accès d'autrui.
     Route::get('/mon-acces', [AccesConsoleController::class, 'index'])
@@ -505,6 +509,10 @@ Route::middleware('gamad.session')->group(function (): void {
         ->middleware('throttle:10,1')
         ->name('console.acces.retirer');
 
+});
+
+// Le reste de la console demeure strictement administratif.
+Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     // CAP-CORE-019 — continuité. La console ne lance rien : elle écrit des
     // réglages et dépose des demandes qu'une unité systemd sert.
     Route::get('/continuite', [ContinuiteConsoleController::class, 'index'])
