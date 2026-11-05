@@ -6,7 +6,27 @@ racine="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 application="$racine/apps/console-laravel"
 temp="$(mktemp -d /tmp/gamad-postgresql-p0.XXXXXX)"
 port="$((55000 + RANDOM % 5000))"
-postgres_bin="/usr/lib/postgresql/16/bin"
+# Localiser les binaires serveur réellement installés sur le runner.
+# Ne pas supposer PostgreSQL 16 : les images CI évoluent.
+postgres_bin=""
+if command -v pg_config >/dev/null 2>&1; then
+    candidat="$(pg_config --bindir 2>/dev/null || true)"
+    if [[ -x "$candidat/initdb" && -x "$candidat/pg_ctl" && -x "$candidat/createdb" ]]; then
+        postgres_bin="$candidat"
+    fi
+fi
+if [[ -z "$postgres_bin" ]]; then
+    for candidat in /usr/lib/postgresql/*/bin; do
+        if [[ -x "$candidat/initdb" && -x "$candidat/pg_ctl" && -x "$candidat/createdb" ]]; then
+            postgres_bin="$candidat"
+        fi
+    done
+fi
+if [[ -z "$postgres_bin" ]]; then
+    echo "PostgreSQL serveur introuvable (initdb, pg_ctl, createdb). Installer les binaires serveur sur le runner." >&2
+    exit 2
+fi
+echo "PostgreSQL CI : $("$postgres_bin/pg_ctl" --version)"
 
 nettoyer() {
     "$postgres_bin/pg_ctl" -D "$temp/data" -m fast -w stop >/dev/null 2>&1 || true
