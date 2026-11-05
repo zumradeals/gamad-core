@@ -509,6 +509,10 @@ Route::middleware('gamad.session')->group(function (): void {
         ->middleware('throttle:10,1')
         ->name('console.acces.retirer');
 
+});
+
+// Le reste de la console demeure strictement administratif.
+Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     // CAP-CORE-019 — continuité. La console ne lance rien : elle écrit des
     // réglages et dépose des demandes qu'une unité systemd sert.
     Route::get('/continuite', [ContinuiteConsoleController::class, 'index'])
