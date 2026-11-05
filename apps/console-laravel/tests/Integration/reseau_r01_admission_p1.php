@@ -77,7 +77,7 @@ $verifier($second === 0 && $compter() === $avant, 'seconde exécution idempotent
 $verifier($avant === [1,1,1], 'politique, version et règle uniques');
 
 $id = (int) $pdo->query("SELECT id FROM politique_version WHERE politique_reference = 'POL-ACCES-CONSOLE-ADMIN-V1'")->fetchColumn();
-$maintenant = gmdate('Y-m-d H:i:s');
+$maintenant = gmdate('Y-m-d');
 $pdo->prepare('INSERT INTO politique_version_cycle (politique_version_id,etat,date_effet,acteur_reference,preuve_reference,cree_le) VALUES (?,?,?,?,?,?)')
     ->execute([$id, 'SUSPENDUE', $maintenant, 'AUT-GAMAD-001', 'R01-TEST-SUSPENSION', $maintenant]);
 $verifier($ctr->autoriser('AUT-GAMAD-001', 'consulter la console')['decision'] === 'REFUSÉ', 'suspension : retrait immédiat de la permission');
