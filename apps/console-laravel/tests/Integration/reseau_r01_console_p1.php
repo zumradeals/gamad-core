@@ -87,14 +87,14 @@ $pdo->prepare('INSERT INTO regle_politique
     'Permission fictive limitee au test', $maintenant,
 ]);
 $pdo->prepare('INSERT INTO politique_version_cycle
- (politique_version_id,etat,date_effet,acteur_reference,preuve_reference)
- VALUES (?,?,?,?,?)')->execute([$id, 'ACTIVE', $maintenant, 'AUT-GAMAD-001', 'TEST-R01']);
+ (politique_version_id,etat,date_effet,acteur_reference,preuve_reference,cree_le)
+ VALUES (?,?,?,?,?,?)')->execute([$id, 'ACTIVE', $maintenant, 'AUT-GAMAD-001', 'TEST-R01', $maintenant]);
 
 $verifier($essai('AUT-GAMAD-001') === 200, 'mandat actif et politique explicite : autorise');
 $verifier($essai('IDN-PER-INCONNUE') === 403, 'politique autorisant autrui : aucun mandat, refus');
 $pdo->prepare('INSERT INTO politique_version_cycle
- (politique_version_id,etat,date_effet,acteur_reference,preuve_reference)
- VALUES (?,?,?,?,?)')->execute([$id, 'SUSPENDUE', gmdate('Y-m-d H:i:s', time()+1), 'AUT-GAMAD-001', 'TEST-R01']);
+ (politique_version_id,etat,date_effet,acteur_reference,preuve_reference,cree_le)
+ VALUES (?,?,?,?,?,?)')->execute([$id, 'SUSPENDUE', gmdate('Y-m-d H:i:s', time()+1), 'AUT-GAMAD-001', 'TEST-R01', $maintenant]);
 $verifier($essai('AUT-GAMAD-001') === 403, 'politique suspendue : refus');
 
 $routes = file_get_contents($application.'/routes/web.php');
