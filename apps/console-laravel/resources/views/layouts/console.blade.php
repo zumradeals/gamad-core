@@ -45,6 +45,7 @@
                @if(request()->routeIs('reseau.moderation*')) aria-current="page" @endif>
                 Modération du Réseau
             </a>
+            <a class="nav__link" href="{{ route('entreprises.revue') }}">Vérification des entreprises</a>
 
             <span class="nav__label">Organisation de GAMAD</span>
             <a class="nav__link"

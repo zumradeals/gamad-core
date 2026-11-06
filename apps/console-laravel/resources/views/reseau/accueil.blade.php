@@ -17,6 +17,8 @@
                 <a href="{{ route('reseau.aide') }}">Aide</a>
                 <a href="{{ route('projets.index') }}">Projets</a>
                 <a href="{{ route('zumras.index') }}">ZUMRA</a>
+                <a href="{{ route('entreprises.index') }}">Entreprises</a>
+                <a href="{{ route('opportunites.index') }}">Opportunités</a>
             </nav>
             <a class="bouton" href="{{ route('acces.formulaire') }}">Se connecter</a>
         </div>

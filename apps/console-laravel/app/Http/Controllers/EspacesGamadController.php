@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Application\Reseau\EspacesGamad;
+use App\Application\Reseau\MembresEspacesGamad;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -87,6 +88,44 @@ final class EspacesGamadController
         $espaces->publierVitrine($this->sujet($request), $reference, $donnees['action'] === 'publier' ? $donnees['vitrine'] : null);
 
         return redirect()->route('projets.show', $reference);
+    }
+
+    public function adhesion(Request $request, MembresEspacesGamad $membres, string $reference): RedirectResponse
+    {
+        $donnees = $request->validate(['action' => ['required', 'in:rejoindre,quitter']]);
+        $membres->adhesion($this->sujet($request), $reference, $donnees['action'] === 'rejoindre');
+
+        return redirect()->route('zumras.show', $reference);
+    }
+
+    public function inviter(Request $request, MembresEspacesGamad $membres, string $reference): RedirectResponse
+    {
+        $donnees = $request->validate(['profil' => ['required', 'regex:/^[a-f0-9]{24}$/D']]);
+        $membres->inviter($this->sujet($request), $reference, $donnees['profil']);
+
+        return redirect()->route('projets.show', $reference);
+    }
+
+    public function membreZumra(Request $request, MembresEspacesGamad $membres, string $reference): RedirectResponse
+    {
+        $donnees = $request->validate([
+            'cible' => ['required', 'string', 'max:64'],
+            'action' => ['required', 'in:accepter,refuser,retirer'],
+        ]);
+        $membres->decider($this->sujet($request), $reference, $donnees['cible'], true, $donnees['action']);
+
+        return redirect()->route('zumras.show', $reference);
+    }
+
+    public function membreProjet(Request $request, MembresEspacesGamad $membres, string $reference): RedirectResponse
+    {
+        $donnees = $request->validate([
+            'cible' => ['nullable', 'string', 'max:64'],
+            'action' => ['required', 'in:accepter,refuser,retirer'],
+        ]);
+        $membres->decider($this->sujet($request), $reference, $donnees['cible'] ?? null, false, $donnees['action']);
+
+        return redirect()->route('projets.index');
     }
 
     private function sujet(Request $request): string

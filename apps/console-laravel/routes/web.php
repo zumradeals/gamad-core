@@ -14,6 +14,7 @@ use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
 use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
+use App\Http\Controllers\EntreprisesGamadController;
 use App\Http\Controllers\EspacesGamadController;
 use App\Http\Controllers\EvenementConsoleController;
 use App\Http\Controllers\IdentiteConsoleController;
@@ -45,6 +46,12 @@ Route::get('/personnes', [AnnuaireGamadController::class, 'index'])->name('perso
 Route::get('/personnes/{reference}', [AnnuaireGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('personnes.show');
 
+Route::get('/entreprises', [EntreprisesGamadController::class, 'index'])->name('entreprises.index');
+Route::get('/entreprises/{reference}', [EntreprisesGamadController::class, 'fiche'])
+    ->where('reference', '[a-f0-9]{24}')->name('entreprises.show');
+Route::get('/opportunites', [EntreprisesGamadController::class, 'opportunites'])->name('opportunites.index');
+Route::get('/opportunites/{reference}', [EntreprisesGamadController::class, 'opportunite'])
+    ->where('reference', '[a-f0-9]{24}')->name('opportunites.show');
 Route::get('/zumra', [EspacesGamadController::class, 'zumras'])->name('zumras.index');
 Route::get('/zumra/{reference}', [EspacesGamadController::class, 'zumra'])
     ->where('reference', '[a-f0-9]{24}')->name('zumras.show');
@@ -54,6 +61,15 @@ Route::get('/projets/{reference}', [EspacesGamadController::class, 'projet'])
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
 Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
+    Route::get('/entreprises/creer', [EntreprisesGamadController::class, 'formulaire'])->name('entreprises.create');
+    Route::post('/entreprises', [EntreprisesGamadController::class, 'soumettre'])
+        ->middleware('throttle:5,1,entreprise-')->name('entreprises.store');
+    Route::post('/entreprises/{reference}/opportunites', [EntreprisesGamadController::class, 'publier'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:10,1,opportunite-')->name('opportunites.store');
+    Route::post('/opportunites/{reference}/candidatures', [EntreprisesGamadController::class, 'candidater'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,candidature-')->name('opportunites.candidater');
+    Route::post('/opportunites/{reference}/cloture', [EntreprisesGamadController::class, 'cloturer'])
+        ->where('reference', '[a-f0-9]{24}')->name('opportunites.cloturer');
     Route::get('/zumra/nouvelle', [EspacesGamadController::class, 'nouvelleZumra'])->name('zumras.create');
     Route::post('/zumra', [EspacesGamadController::class, 'creerZumra'])
         ->middleware('throttle:10,1,zumra-')->name('zumras.store');
@@ -64,6 +80,14 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
         ->where(['reference' => '[a-f0-9]{24}', 'projet' => '[a-f0-9]{24}'])->name('zumras.accueil');
     Route::post('/projets/{reference}/vitrine', [EspacesGamadController::class, 'vitrine'])
         ->where('reference', '[a-f0-9]{24}')->name('projets.vitrine');
+    Route::post('/zumra/{reference}/adhesion', [EspacesGamadController::class, 'adhesion'])
+        ->where('reference', '[a-f0-9]{24}')->name('zumras.adhesion');
+    Route::post('/zumra/{reference}/membres', [EspacesGamadController::class, 'membreZumra'])
+        ->where('reference', '[a-f0-9]{24}')->name('zumras.membres');
+    Route::post('/projets/{reference}/invitations', [EspacesGamadController::class, 'inviter'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,invitation-projet-')->name('projets.inviter');
+    Route::post('/projets/{reference}/equipe', [EspacesGamadController::class, 'membreProjet'])
+        ->where('reference', '[a-f0-9]{24}')->name('projets.equipe');
     Route::get('/mon-profil/blocages', [BlocagesGamadController::class, 'index'])->name('blocages.index');
     Route::match(['POST', 'DELETE'], '/mon-profil/blocages/{reference}', [BlocagesGamadController::class, 'modifier'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,blocage-')->name('blocages.modifier');
@@ -90,6 +114,11 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
 });
 
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
+    Route::get('/console/entreprises', [EntreprisesGamadController::class, 'revue'])->name('entreprises.revue');
+    Route::get('/console/entreprises/{reference}/justificatif', [EntreprisesGamadController::class, 'justificatif'])
+        ->where('reference', '[a-f0-9]{24}')->name('entreprises.justificatif');
+    Route::post('/console/entreprises/{reference}', [EntreprisesGamadController::class, 'decider'])
+        ->where('reference', '[a-f0-9]{24}')->name('entreprises.decider');
     Route::get('/console/moderation-reseau', [InteractionsGamadController::class, 'moderation'])->name('reseau.moderation');
     Route::post('/console/moderation-reseau/{reference}', [InteractionsGamadController::class, 'traiter'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,moderation-reseau-')->name('reseau.moderation.traiter');

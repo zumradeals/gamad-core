@@ -27,6 +27,17 @@
         @case('zumra')
             <h1>{{ $zumra['nom'] }}</h1>
             <p class="texte-reseau">{{ $zumra['presentation'] }}</p>
+            @if ($connecte && !$responsable)
+                <form method="post" action="{{ route('zumras.adhesion', $zumra['reference']) }}">
+                    @csrf
+                    @if ($adhesion)
+                        <p>{{ $adhesion === 'accepted' ? 'Membre de la ZUMRA' : 'Adhésion en attente' }}</p>
+                        <button class="bouton" name="action" value="quitter">Quitter ou retirer la demande</button>
+                    @else
+                        <button class="bouton" name="action" value="rejoindre">Demander à rejoindre</button>
+                    @endif
+                </form>
+            @endif
             @if ($responsable)
                 <section aria-labelledby="accueils">
                     <h2 id="accueils">Demandes d’accueil</h2>
@@ -41,6 +52,20 @@
                         <p>Aucune demande en attente.</p>
                     @endforelse
                 </section>
+                <h2>Adhésions</h2>
+                @foreach ($membres as $membre)
+                    <form class="barre" method="post" action="{{ route('zumras.membres', $zumra['reference']) }}">
+                        @csrf
+                        <input type="hidden" name="cible" value="{{ $membre['membre_reference'] }}">
+                        <strong>{{ $membre['nom'] }}</strong>
+                        @if ($membre['etat'] === 'pending')
+                            <button class="bouton" name="action" value="accepter">Accepter l’adhésion</button>
+                            <button class="bouton" name="action" value="refuser">Refuser</button>
+                        @else
+                            <button class="bouton" name="action" value="retirer">Retirer le membre</button>
+                        @endif
+                    </form>
+                @endforeach
             @endif
             @break
         @case('projets')
@@ -60,7 +85,7 @@
                 <p>Accueil par la ZUMRA
                     {{ ['en_attente' => 'En attente', 'accepte' => 'Accepté', 'refuse' => 'Refusé'][$projet['accueil']] }}
                 </p>
-                @if ($projet['accueil'] === 'accepte')
+                @if ($projet['porteur'] && $projet['accueil'] === 'accepte')
                     <form class="formulaire-reseau" method="post" action="{{ route('projets.vitrine', $projet['reference']) }}">
                         @csrf
                         <label for="vitrine">Présentation publique</label>
@@ -71,6 +96,30 @@
                         @endif
                     </form>
                 @endif
+                @if ($projet['porteur'])
+                    <h2>Équipe du projet</h2>
+                    <form class="formulaire-reseau" method="post" action="{{ route('projets.inviter', $projet['reference']) }}">
+                        @csrf
+                        <label for="profil">Référence publique du profil à inviter</label>
+                        <input id="profil" name="profil" maxlength="24" required>
+                        <button class="bouton">Inviter</button>
+                    </form>
+                    @foreach ($projet['equipe'] as $membre)
+                        <form class="barre" method="post" action="{{ route('projets.equipe', $projet['reference']) }}">
+                            @csrf
+                            <input type="hidden" name="cible" value="{{ $membre['membre_reference'] }}">
+                            <span>{{ $membre['nom'] }} · {{ $membre['etat'] === 'pending' ? 'Invitation en attente' : 'Membre' }}</span>
+                            <button class="bouton" name="action" value="retirer">Retirer</button>
+                        </form>
+                    @endforeach
+                @endif
+            @elseif ($projet['invitation'] ?? false)
+                <p>Vous êtes invité à rejoindre ce projet.</p>
+                <form method="post" action="{{ route('projets.equipe', $projet['reference']) }}">
+                    @csrf
+                    <button class="bouton" name="action" value="accepter">Accepter</button>
+                    <button class="bouton" name="action" value="refuser">Refuser</button>
+                </form>
             @else
                 <p class="texte-reseau">{{ $projet['vitrine'] }}</p>
             @endif

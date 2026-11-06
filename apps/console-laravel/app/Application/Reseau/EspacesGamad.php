@@ -12,7 +12,7 @@ use PDO;
 
 final class EspacesGamad
 {
-    public function __construct(private MembreGamad $membres)
+    public function __construct(private MembreGamad $membres, private BlocagesGamad $blocages)
     {
     }
 
@@ -57,7 +57,12 @@ final class EspacesGamad
             $demandes = $requete->fetchAll();
         }
 
-        return ['zumra' => $zumra, 'responsable' => $responsable, 'demandes' => $demandes];
+        $adhesion = $registre->prepare('SELECT etat FROM adhesion_zumra_gamad WHERE espace_reference = ? AND membre_reference = ?');
+        $adhesion->execute([$reference, $sujet]);
+
+        return ['zumra' => $zumra, 'responsable' => $responsable, 'demandes' => $demandes,
+            'connecte' => $sujet !== null, 'adhesion' => $adhesion->fetchColumn(),
+            'membres' => $responsable ? MembresEspacesGamad::liste($registre, $reference, true) : []];
     }
 
     public function projets(?string $session): array
@@ -67,13 +72,16 @@ final class EspacesGamad
         $requete = $registre->prepare(
             "SELECT reference, titre, porteur_reference, zumra_reference FROM projet_gamad
              WHERE porteur_reference = ? OR (accueil = 'accepte' AND vitrine IS NOT NULL)
+             OR EXISTS (SELECT 1 FROM equipe_projet_gamad eq WHERE eq.espace_reference = projet_gamad.reference AND eq.membre_reference = ?)
              ORDER BY titre, reference LIMIT 100"
         );
-        $requete->execute([$sujet]);
+        $requete->execute([$sujet, $sujet]);
+        $exclus = $this->blocages->exclus($registre, $sujet === '' ? null : $sujet);
 
         return array_values(array_filter($requete->fetchAll(), fn (array $projet): bool =>
             $projet['porteur_reference'] === $sujet
-            || ($this->chercherZumra($registre, $projet['zumra_reference']) !== null
+            || (!isset($exclus[$projet['porteur_reference']])
+                && $this->chercherZumra($registre, $projet['zumra_reference']) !== null
                 && $this->membres->lire($projet['porteur_reference'], $registre) !== null)));
     }
 
@@ -84,12 +92,15 @@ final class EspacesGamad
         $zumra = $this->chercherZumra($registre, $zumraReference);
         abort_if($zumra === null, 404);
         $reference = bin2hex(random_bytes(12));
+        $adhesion = $registre->prepare("SELECT 1 FROM adhesion_zumra_gamad WHERE espace_reference = ? AND membre_reference = ? AND etat = 'accepted'");
+        $adhesion->execute([$zumraReference, $sujet]);
+        $accueil = $sujet === $zumra['fondateur_reference'] || $adhesion->fetchColumn() !== false ? 'accepte' : 'en_attente';
         $registre->prepare(
             'INSERT INTO projet_gamad (reference, porteur_reference, zumra_reference, titre, dossier, accueil)
              VALUES (?, ?, ?, ?, ?, ?)'
         )->execute([
             $reference, $sujet, $zumraReference, $this->texte($titre, 'titre'), $this->texte($dossier, 'dossier'),
-            $sujet === $zumra['fondateur_reference'] ? 'accepte' : 'en_attente',
+            $accueil,
         ]);
 
         return $reference;
@@ -107,7 +118,20 @@ final class EspacesGamad
 
         $sujet = $this->membres->depuisSession($session, $registre)['identite_reference'] ?? null;
         if ($sujet === $projet['porteur_reference']) {
-            return $projet + ['prive' => true];
+            return $projet + ['prive' => true, 'porteur' => true,
+                'equipe' => MembresEspacesGamad::liste($registre, $reference, false)];
+        }
+        $equipe = $registre->prepare('SELECT etat FROM equipe_projet_gamad WHERE espace_reference = ? AND membre_reference = ?');
+        $equipe->execute([$reference, $sujet]);
+        $etat = $equipe->fetchColumn();
+        if (isset($this->blocages->exclus($registre, $sujet)[$projet['porteur_reference']])) {
+            return null;
+        }
+        if ($etat === 'accepted') {
+            return $projet + ['prive' => true, 'porteur' => false];
+        }
+        if ($etat === 'pending') {
+            return ['reference' => $reference, 'titre' => $projet['titre'], 'invitation' => true, 'prive' => false];
         }
         if ($projet['accueil'] !== 'accepte' || $projet['vitrine'] === null
             || $this->chercherZumra($registre, $projet['zumra_reference']) === null) {

@@ -121,10 +121,11 @@ $requete = static function (
     ?array $json = null,
     ?string $jeton = null,
     array $cookies = [],
+    array $fichiersRequete = [],
 ) use ($kernel): array {
     $serveur = [
         'HTTP_ACCEPT' => 'application/json',
-        'CONTENT_TYPE' => 'application/json',
+        'CONTENT_TYPE' => $fichiersRequete === [] ? 'application/json' : 'multipart/form-data',
     ];
     if ($jeton !== null) {
         $serveur['HTTP_AUTHORIZATION'] = 'Bearer ' . $jeton;
@@ -132,11 +133,11 @@ $requete = static function (
     $request = Request::create(
         $uri,
         $methode,
-        [],
+        $fichiersRequete === [] ? [] : ($json ?? []),
         $cookies,
-        [],
+        $fichiersRequete,
         $serveur,
-        $json === null ? null : json_encode($json, JSON_THROW_ON_ERROR),
+        $json === null || $fichiersRequete !== [] ? null : json_encode($json, JSON_THROW_ON_ERROR),
     );
     $app = app();
     if ($app->resolved('session')) {
@@ -599,6 +600,70 @@ $verifier(
 );
 $requete('POST', $uriProjet.'/vitrine', ['action' => 'retirer'], cookies: $secondCookies);
 $verifier($requete('GET', $uriProjet)['statut'] === 404, 'le retrait ferme immédiatement la vitrine');
+$adhesion = $requete('POST', $uriZumra.'/adhesion', ['action' => 'rejoindre'], cookies: $secondCookies);
+$acceptationAdhesion = $requete('POST', $uriZumra.'/membres', [
+    'action' => 'accepter', 'cible' => $referenceTel,
+], cookies: $premierCookies);
+$verifier(
+    $adhesion['statut'] === 302 && $acceptationAdhesion['statut'] === 302
+        && str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Membre de la ZUMRA'),
+    'la demande d’adhésion devient effective après décision du fondateur',
+);
+$invitationProjet = $requete('POST', $uriProjet.'/invitations', ['profil' => $fichePublique], cookies: $secondCookies);
+$avantEquipe = $requete('GET', $uriProjet, cookies: $premierCookies);
+$acceptationEquipe = $requete('POST', $uriProjet.'/equipe', ['action' => 'accepter'], cookies: $premierCookies);
+$apresEquipe = $requete('GET', $uriProjet, cookies: $premierCookies);
+$retraitEquipe = $requete('POST', $uriProjet.'/equipe', ['action' => 'retirer', 'cible' => $reference], cookies: $secondCookies);
+$verifier(
+    $invitationProjet['statut'] === 302 && str_contains($avantEquipe['html'], 'Vous êtes invité')
+        && !str_contains($avantEquipe['html'], 'Dossier réservé au porteur.')
+        && $acceptationEquipe['statut'] === 302 && str_contains($apresEquipe['html'], 'Dossier réservé au porteur.')
+        && $retraitEquipe['statut'] === 302 && $requete('GET', $uriProjet, cookies: $premierCookies)['statut'] === 404,
+    'seul un collaborateur qui a accepté son invitation accède au dossier et le retrait ferme cet accès',
+);
+$cheminRccm = tempnam(sys_get_temp_dir(), 'gamad-rccm-');
+file_put_contents($cheminRccm, "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n%%EOF");
+try {
+    $dossierEntreprise = $requete('POST', '/entreprises', [
+        'nom' => 'Entreprise de qualification', 'pays' => 'CI', 'immatriculation' => 'CI TEST 001', 'secteur' => 'Rénovation',
+    ], cookies: $premierCookies, fichiersRequete: [
+        'rccm' => new \Illuminate\Http\UploadedFile($cheminRccm, 'rccm.pdf', 'application/pdf', null, true),
+    ]);
+} finally {
+    unlink($cheminRccm);
+}
+$uriEntreprise = parse_url($dossierEntreprise['location'] ?? '', PHP_URL_PATH) ?: '/entreprise-manquante';
+$uriRevue = '/console/entreprises/'.basename($uriEntreprise);
+$offre = ['titre' => 'Mission de qualification', 'description' => 'Une mission ouverte aux membres.'];
+$interdite = $requete('POST', $uriEntreprise.'/opportunites', $offre, cookies: $premierCookies);
+$verifier(
+    $dossierEntreprise['statut'] === 302 && $requete('GET', $uriEntreprise)['statut'] === 404
+        && $interdite['statut'] === 404
+        && $requete('GET', $uriRevue.'/justificatif', cookies: $secondCookies)['statut'] === 403
+        && str_starts_with($requete('GET', $uriRevue.'/justificatif', cookies: $admin['cookies'])['html'], '%PDF-'),
+    'le justificatif est réservé à la console et une entreprise non vérifiée ne publie pas',
+);
+$verificationEntreprise = $requete('POST', $uriRevue, ['action' => 'verified'], cookies: $admin['cookies']);
+$publicationOffre = $requete('POST', $uriEntreprise.'/opportunites', $offre, cookies: $premierCookies);
+$uriOffre = parse_url($publicationOffre['location'] ?? '', PHP_URL_PATH) ?: '/opportunite-manquante';
+$candidature = ['message' => 'Candidature privée de qualification.'];
+$envoiCandidature = $requete('POST', $uriOffre.'/candidatures', $candidature, cookies: $secondCookies);
+$verifier(
+    $verificationEntreprise['statut'] === 302 && $publicationOffre['statut'] === 302
+        && $requete('GET', $uriOffre)['statut'] === 200 && $envoiCandidature['statut'] === 302
+        && !str_contains($requete('GET', $uriOffre)['html'], $candidature['message'])
+        && str_contains($requete('GET', $uriOffre, cookies: $premierCookies)['html'], $candidature['message']),
+    'une entreprise vérifiée publie et la candidature reste privée',
+);
+$requete('POST', $uriOffre.'/cloture', cookies: $premierCookies);
+$verifier(
+    $requete('POST', $uriOffre.'/candidatures', $candidature, cookies: $secondCookies)['statut'] === 409
+        && str_contains($requete('GET', $uriOffre)['html'], 'Clôturée'),
+    'la clôture maintient la fiche visible et ferme les candidatures',
+);
+$requete('POST', $uriRevue, ['action' => 'suspended'], cookies: $admin['cookies']);
+$verifier($requete('GET', $uriEntreprise)['statut'] === 404 && $requete('GET', $uriOffre)['statut'] === 404,
+    'la suspension Core de l’entreprise retire ses opportunités publiques');
 $cycle = $registreIdentites->prepare(
     'INSERT INTO evenement_cycle_identite
      (identite_reference, evenement_type, etat_avant, etat_apres, source, preuve_reference,

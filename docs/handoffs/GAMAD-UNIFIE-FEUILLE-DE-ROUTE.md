@@ -42,4 +42,8 @@ Les membres peuvent signaler une publication ou un commentaire visible d’une a
 
 Un membre Core vérifié peut créer une ZUMRA ou un projet. Le projet est privé pour son porteur. Une ZUMRA reçoit la demande d’accueil et son fondateur peut la traiter sans lire le dossier. Après acceptation, le porteur peut publier puis retirer une présentation distincte et publique. Les vitrines restent séparées des dossiers, y compris lors d’un accès direct à leur adresse.
 
-Les équipes, adhésions, étapes, contributions et responsabilités déléguées des espaces source, ainsi que les entreprises, opportunités et écrans spécialisés, restent à intégrer.
+Le fondateur traite les adhésions. Le porteur invite, puis seul l’invité accepte l’accès au dossier. Le porteur peut retirer l’accès. Une adhésion acceptée autorise l’accueil immédiat d’un nouveau projet au sein de cette ZUMRA.
+
+L’entreprise soumet un justificatif RCCM réservé aux autorités admises dans la console Core. Après vérification, son propriétaire peut publier et clôturer une opportunité. Une candidature textuelle reste lisible par le candidat et par le propriétaire. La suspension retire l’entreprise et ses opportunités des écrans publics.
+
+La parité des espaces métier reste à vérifier et à compléter avec les écrans source, dont les étapes et contributions de projet, les rôles délégués et modes d’adhésion des ZUMRA, les dossiers d’entreprise complémentaires et les modes avancés de gestion des opportunités.
