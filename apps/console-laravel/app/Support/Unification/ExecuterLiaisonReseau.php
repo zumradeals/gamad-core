@@ -17,8 +17,8 @@ final class ExecuterLiaisonReseau
     public static function executer(Request $request, CompteReseauUnifie $compte): void
     {
         // La qualification précède toute écriture. LierCompteIdentite effectue
-        // ensuite ses propres contrôles d'admissibilité sous verrous SQL.
-        // Un registre sur une autre connexion PDO est refusé, jamais simulé.
+        // ensuite l'admissibilité dans le registre Core souverain distinct.
+        // Seule l'insertion de liaison est transactionnelle localement.
         $verdict = VerifierContexteLiaison::verifier(
             $request,
             $compte->identiteReference,
@@ -49,9 +49,8 @@ final class ExecuterLiaisonReseau
                 throw new DomainException('Liaison refusée : identité Core inactive');
             }
 
-            // La transaction englobante appartient au même stockage canonique.
-            // L'insertion et les verrous de LierCompteIdentite sont imbriqués
-            // sur cette connexion, jamais sur le PDO du registre secondaire.
+            // Les verrous et contraintes uniques concernent la base Réseau.
+            // Aucune atomicité distribuée n'est revendiquée avec le Core.
             LierCompteIdentite::executer($compte, true);
         }, 1);
     }
