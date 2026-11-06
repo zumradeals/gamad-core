@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ isset($publication) ? 'Publication' : 'Fil' }} — GAMAD</title>
     <link rel="stylesheet" href="{{ asset('css/reseau-accueil.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/reseau-fil.css') }}">
 </head>
 <body class="reseau-fil">
     <header class="bandeau">
@@ -71,39 +72,51 @@
                 @endforelse
             </section>
         @else
+            <p class="fil-surtitre">GAMAD Réseau</p>
             <h1>{{ $vueBesoins ? 'Besoins des membres' : 'Fil GAMAD' }}</h1>
             <nav class="navigation-fil" aria-label="Vues du fil">
                 <a href="{{ route('fil') }}" @unless ($vueBesoins) aria-current="page" @endunless>Publications</a>
                 <a href="{{ route('fil', ['type' => 'need']) }}" @if ($vueBesoins) aria-current="page" @endif>Besoins</a>
             </nav>
-            <form id="publier" method="post" action="{{ route('publications.store') }}" class="formulaire-reseau">
-                @csrf
-                <label for="type">Type de publication</label>
-                <select id="type" name="type">
-                    @foreach ($types as $valeur => $libelle)
-                        <option value="{{ $valeur }}" @selected(old('type', $typeInitial) === $valeur)>{{ $libelle }}</option>
-                    @endforeach
-                </select>
-                <label for="visibilite">Visibilité</label>
-                <select id="visibilite" name="visibilite">
-                    <option value="members">Membres vérifiés</option>
-                    <option value="public" @selected(old('visibilite') === 'public')>Public</option>
-                </select>
-                <label for="contenu">Votre publication</label>
-                <textarea name="contenu" id="contenu" maxlength="500" rows="4" required>{{ old('contenu') }}</textarea>
-                <button class="bouton accent" type="submit">Publier</button>
-            </form>
-            @forelse ($publications as $entree)
-                <article class="section">
-                    <h2><a href="{{ route('publications.show', $entree['reference']) }}">{{ $types[$entree['type']] }}</a></h2>
-                    <strong>{{ $entree['auteur'] }}</strong>
-                    <p class="texte-reseau">{{ $entree['contenu'] }}</p>
-                </article>
-            @empty
-                <p>Aucune publication visible sur cette page.</p>
-            @endforelse
-            @if ($page > 1)<a href="{{ route('fil', ['page' => $page - 1, 'type' => $vueBesoins ? 'need' : null]) }}">Page précédente</a>@endif
-            @if ($page_suivante)<a href="{{ route('fil', ['page' => $page + 1, 'type' => $vueBesoins ? 'need' : null]) }}">Page suivante</a>@endif
+            <div class="fil-grille">
+                <section class="fil-composer fil-carte" aria-label="Publier">
+                    <form id="publier" method="post" action="{{ route('publications.store') }}" class="formulaire-reseau">
+                        @csrf
+                        <h2>{{ $vueBesoins ? 'Publier un besoin' : 'Créer une publication' }}</h2>
+                        <label for="type">Type de publication</label>
+                        <select id="type" name="type">
+                            @foreach ($types as $valeur => $libelle)
+                                <option value="{{ $valeur }}" @selected(old('type', $typeInitial) === $valeur)>{{ $libelle }}</option>
+                            @endforeach
+                        </select>
+                        <label for="visibilite">Visibilité</label>
+                        <select id="visibilite" name="visibilite">
+                            <option value="members">Membres vérifiés</option>
+                            <option value="public" @selected(old('visibilite') === 'public')>Public</option>
+                        </select>
+                        <label for="contenu">Votre publication</label>
+                        <textarea name="contenu" id="contenu" maxlength="500" rows="4" required>{{ old('contenu') }}</textarea>
+                        <button class="bouton accent" type="submit">Publier</button>
+                    </form>
+                </section>
+                <section class="fil-liste" aria-label="{{ $vueBesoins ? 'Liste des besoins' : 'Liste des publications' }}">
+                    @forelse ($publications as $entree)
+                        <article class="fil-carte">
+                            <h2><a href="{{ route('publications.show', $entree['reference']) }}">{{ $types[$entree['type']] }}</a></h2>
+                            <strong>{{ $entree['auteur'] }}</strong>
+                            <p class="texte-reseau">{{ $entree['contenu'] }}</p>
+                        </article>
+                    @empty
+                        <div class="fil-carte fil-vide">
+                            <h2>{{ $vueBesoins ? 'Aucun besoin à afficher' : 'Aucune publication à afficher' }}</h2>
+                            <p>{{ $vueBesoins ? 'Les besoins que vous pouvez consulter apparaîtront ici.' : 'Les publications que vous pouvez consulter apparaîtront ici.' }}</p>
+                            <a class="bouton" href="#publier">{{ $vueBesoins ? 'Publier un besoin' : 'Créer une publication' }}</a>
+                        </div>
+                    @endforelse
+                    @if ($page > 1)<a href="{{ route('fil', ['page' => $page - 1, 'type' => $vueBesoins ? 'need' : null]) }}">Page précédente</a>@endif
+                    @if ($page_suivante)<a href="{{ route('fil', ['page' => $page + 1, 'type' => $vueBesoins ? 'need' : null]) }}">Page suivante</a>@endif
+                </section>
+            </div>
         @endisset
     </main>
 </body>
