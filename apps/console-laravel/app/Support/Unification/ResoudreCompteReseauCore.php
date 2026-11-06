@@ -50,20 +50,34 @@ final class ResoudreCompteReseauCore
 
             // L'inscription est immuable : seul le journal de cycle dit si
             // l'identité est encore utilisable. Absence d'événement = refus.
-            $dernierCycle = DB::table('evenement_cycle_identite')
-                ->where('identite_reference', $identite)
-                ->whereNotIn('evenement_type', ['RATTACHEMENT_PRODUIT', 'RETRAIT_PRODUIT'])
-                ->orderByDesc('date_effet')
-                ->orderByDesc('id')
-                ->value('etat_apres');
-
-            if (! in_array($dernierCycle, ['ACTIVE', 'VERIFIEE'], true)) {
+            if (! self::identiteActive($identite)) {
                 return null;
             }
 
             return CompteReseauUnifie::creer((string) $lien->user_id, $lien->identite_reference);
         } catch (Throwable) {
             return null;
+        }
+    }
+
+    /**
+     * Lecture du journal canonique, pas du fait d'inscription immuable.
+     * Un événement futur ne peut pas activer ou révoquer prématurément.
+     */
+    public static function identiteActive(string $reference): bool
+    {
+        try {
+            $etat = DB::table('evenement_cycle_identite')
+                ->where('identite_reference', $reference)
+                ->whereNotIn('evenement_type', ['RATTACHEMENT_PRODUIT', 'RETRAIT_PRODUIT'])
+                ->where('date_effet', '<=', now()->toIso8601String())
+                ->orderByDesc('date_effet')
+                ->orderByDesc('id')
+                ->value('etat_apres');
+
+            return in_array($etat, ['ACTIVE', 'VERIFIEE'], true);
+        } catch (Throwable) {
+            return false;
         }
     }
 }
