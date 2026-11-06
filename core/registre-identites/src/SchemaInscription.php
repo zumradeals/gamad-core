@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 26;
+    public const VERSION = 31;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -22,6 +22,13 @@ final class SchemaInscription
         'identite_inscrite',
         'profil_compte_gamad',
         'fiche_annuaire_gamad',
+        'details_annuaire_gamad',
+        'domaine_annuaire_gamad',
+        'experience_profil_gamad',
+        'preuve_experience_profil_gamad',
+        'attestation_realisation_gamad',
+        'suspension_attestation_gamad',
+        'evenement_moderation_attestation_gamad',
         'publication_gamad',
         'favori_publication_gamad',
         'classement_besoin_gamad',
@@ -122,8 +129,45 @@ final class SchemaInscription
             )
         SQL);
 
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS details_annuaire_gamad (
+                identite_reference TEXT PRIMARY KEY REFERENCES fiche_annuaire_gamad(identite_reference) ON DELETE CASCADE,
+                titre VARCHAR(100),
+                introduction VARCHAR(1200),
+                territoire TEXT
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS domaine_annuaire_gamad (
+                identite_reference TEXT NOT NULL REFERENCES fiche_annuaire_gamad(identite_reference) ON DELETE CASCADE,
+                domaine TEXT NOT NULL,
+                PRIMARY KEY (identite_reference, domaine)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS experience_profil_gamad (
+                reference TEXT PRIMARY KEY,
+                identite_reference TEXT NOT NULL REFERENCES fiche_annuaire_gamad(identite_reference) ON DELETE CASCADE,
+                titre VARCHAR(100) NOT NULL,
+                type TEXT NOT NULL CHECK (type IN ('personal', 'professional', 'volunteer', 'learning')),
+                periode VARCHAR(80) NOT NULL,
+                description VARCHAR(500) NOT NULL,
+                cree_le TEXT NOT NULL
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS experience_profil_gamad_identite ON experience_profil_gamad(identite_reference, cree_le, reference)');
+
         self::migrerPublications($pdo);
         $pdo->exec('CREATE INDEX IF NOT EXISTS publication_gamad_fil ON publication_gamad(cree_le, reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS preuve_experience_profil_gamad (
+                experience_reference TEXT PRIMARY KEY REFERENCES experience_profil_gamad(reference) ON DELETE CASCADE,
+                publication_reference TEXT NOT NULL REFERENCES publication_gamad(reference) ON DELETE CASCADE
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS favori_publication_gamad (
@@ -242,6 +286,44 @@ final class SchemaInscription
             )
         SQL);
         $pdo->exec('CREATE INDEX IF NOT EXISTS relation_personnes_gamad_seconde ON relation_personnes_gamad(seconde_reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS attestation_realisation_gamad (
+                reference TEXT PRIMARY KEY,
+                publication_reference TEXT NOT NULL REFERENCES publication_gamad(reference) ON DELETE CASCADE,
+                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                attestant_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                affirmation VARCHAR(280) NOT NULL,
+                realise_le TEXT NOT NULL,
+                etat TEXT NOT NULL CHECK (etat IN ('pending', 'confirmed', 'declined', 'withdrawn')),
+                role TEXT CHECK (role IN ('client', 'colleague', 'witness')),
+                assurance_evenement BIGINT,
+                revision INTEGER NOT NULL CHECK (revision > 0),
+                modifie_le BIGINT NOT NULL,
+                UNIQUE (publication_reference, attestant_reference),
+                CHECK (auteur_reference <> attestant_reference)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS suspension_attestation_gamad (
+                attestation_reference TEXT PRIMARY KEY REFERENCES attestation_realisation_gamad(reference) ON DELETE CASCADE,
+                motif VARCHAR(500) NOT NULL,
+                recours VARCHAR(500),
+                recours_clos INTEGER NOT NULL DEFAULT 0 CHECK (recours_clos IN (0, 1))
+            )
+        SQL);
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS evenement_moderation_attestation_gamad (
+                attestation_reference TEXT NOT NULL REFERENCES attestation_realisation_gamad(reference) ON DELETE CASCADE,
+                revision INTEGER NOT NULL,
+                acteur_reference TEXT NOT NULL,
+                action TEXT NOT NULL CHECK (action IN ('revoquer', 'contester', 'reexaminer', 'rejeter')),
+                motif VARCHAR(500) NOT NULL,
+                cree_le TEXT NOT NULL,
+                PRIMARY KEY (attestation_reference, revision)
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS message_reseau_gamad (

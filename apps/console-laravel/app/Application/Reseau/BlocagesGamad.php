@@ -90,10 +90,17 @@ final class BlocagesGamad
                  OR (auteur_reference = ? AND cible_reference = ?)'
             )->execute([$sujet, $cible, $cible, $sujet]);
 
-            return $registre->prepare(
+            $registre->prepare(
                 "UPDATE relation_personnes_gamad SET etat = 'removed', note = NULL, revision = revision + 1, modifie_le = ?
                  WHERE premiere_reference = ? AND seconde_reference = ? AND etat IN ('pending', 'accepted')"
             )->execute([time(), ...$paire]);
+
+            return $registre->prepare(
+                "UPDATE attestation_realisation_gamad SET etat = 'withdrawn', role = NULL, assurance_evenement = NULL,
+                     revision = revision + 1, modifie_le = ?
+                 WHERE etat IN ('pending', 'confirmed') AND
+                     ((auteur_reference = ? AND attestant_reference = ?) OR (auteur_reference = ? AND attestant_reference = ?))"
+            )->execute([time(), $sujet, $cible, $cible, $sujet]);
         });
     }
 }

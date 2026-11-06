@@ -335,6 +335,8 @@ $profilEfface = $requete('GET', '/reseau/mon-compte', cookies: $cookies)['corps'
 $verifier(array_key_exists('bio', $profilEfface) && $profilEfface['bio'] === null, 'la présentation peut être effacée');
 $requete('PATCH', '/mon-profil', [
     'bio' => 'Profil pour annuaire', 'visibilite' => 'members', 'apportees' => "Électricité\nElectricite",
+    'titre' => 'Technicien solaire', 'introduction' => 'Installation et dépannage.',
+    'territoire' => 'ci-bouake', 'domaines' => ['artisanat', 'construction-et-industries'],
     'recherchees' => 'Rénovation',
 ], cookies: $cookies);
 $fichePublique = $registreIdentites->query('SELECT reference_publique FROM fiche_annuaire_gamad')->fetchColumn();
@@ -360,6 +362,37 @@ $verifier($requete('GET', $uriFiche)['statut'] === 404, 'rendre la fiche privée
 $requete('PATCH', '/mon-profil', [
     'bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité',
 ], cookies: $cookies);
+$experience = ['titre' => 'Chantier solaire déclaré', 'type' => 'professional', 'periode' => '2025', 'description' => 'Installation de panneaux.'];
+$creationExperience = $requete('POST', '/mon-profil/experiences', $experience, cookies: $cookies);
+$referenceExperience = $registreIdentites->query('SELECT reference FROM experience_profil_gamad')->fetchColumn();
+$uriExperience = '/mon-profil/experiences/'.$referenceExperience;
+$verifier(
+    $creationExperience['statut'] === 302 && is_string($referenceExperience)
+        && str_contains($requete('GET', $uriFiche)['html'], 'Chantier solaire déclaré')
+        && $requete('PATCH', $uriExperience, array_replace($experience, ['titre' => 'Installation solaire déclarée']), cookies: $cookies)['statut'] === 302
+        && str_contains($requete('GET', $uriFiche)['html'], 'Installation solaire déclarée')
+        && !str_contains($requete('GET', '/personnes')['html'], 'Installation solaire déclarée'),
+    'le membre ajoute et modifie une expérience qui apparaît uniquement dans sa fiche',
+);
+$annuaireFiltre = '/personnes?territoire=ci-bouake&domaine=artisanat&competence=apportees&q=electricite';
+$ficheStructuree = $requete('GET', $uriFiche);
+$verifier(
+    str_contains($requete('GET', $annuaireFiltre)['html'], 'Technicien solaire')
+        && str_contains($ficheStructuree['html'], 'Installation et dépannage.')
+        && str_contains($ficheStructuree['html'], 'Bouaké')
+        && !str_contains($requete('GET', str_replace('ci-bouake', 'ci-abidjan', $annuaireFiltre))['html'], 'Technicien solaire')
+        && !str_contains($requete('GET', str_replace('apportees', 'recherchees', $annuaireFiltre))['html'], 'Technicien solaire'),
+    'le profil structuré est consultable et les trois filtres d’annuaire se combinent',
+);
+$requete('PATCH', '/mon-profil', ['bio' => 'Profil pour annuaire', 'visibilite' => 'members', 'apportees' => 'Électricité'], cookies: $cookies);
+$verifier(
+    !str_contains($requete('GET', $annuaireFiltre)['html'], 'Technicien solaire')
+        && str_contains($requete('GET', $annuaireFiltre, cookies: $cookies)['html'], 'Technicien solaire')
+        && $requete('GET', $uriFiche)['statut'] === 404
+        && str_contains($requete('GET', $uriFiche, cookies: $cookies)['html'], 'Installation solaire déclarée'),
+    'les filtres respectent l’audience du profil et une ancienne mise à jour conserve les détails structurés',
+);
+$requete('PATCH', '/mon-profil', ['bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité'], cookies: $cookies);
 $verifier($requete('GET', '/fil')['statut'] === 302, 'le fil exige une session Core');
 $privee = $requete('POST', '/fil', [
     'type' => 'knowledge', 'visibilite' => 'members', 'contenu' => 'Une expérience réservée aux membres.',
@@ -401,6 +434,19 @@ $verifier(
         && $lectureOffre['statut'] === 200 && str_contains($lectureOffre['html'], 'Je propose mon aide')
         && str_contains($requete('GET', '/fil', cookies: $cookies)['html'], $uriOffre),
     'le fil et la fiche prennent en charge souhait d’apprendre et offre d’aide avec leur audience',
+);
+$realisationPreuve = $requete('POST', '/fil', [
+    'type' => 'personal_work', 'visibilite' => 'members', 'contenu' => 'Réalisation jointe à mon expérience.',
+], cookies: $cookies);
+$uriRealisationPreuve = parse_url($realisationPreuve['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$uriPreuveExperience = $uriExperience.'/preuve';
+$verifier(
+    $realisationPreuve['statut'] === 302
+        && $requete('PUT', $uriPreuveExperience, ['publication' => basename($uriOffre)], cookies: $cookies)['statut'] === 404
+        && $requete('PUT', $uriPreuveExperience, ['publication' => basename($uriRealisationPreuve)], cookies: $cookies)['statut'] === 302
+        && !str_contains($requete('GET', $uriFiche)['html'], $uriRealisationPreuve)
+        && str_contains($requete('GET', $uriFiche, cookies: $cookies)['html'], $uriRealisationPreuve),
+    'la preuve est une réalisation personnelle et suit sa propre audience dans le profil',
 );
 $visiteurCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Visiteur']);
 $membreCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Merci pour ce partage.'], cookies: $cookies);
@@ -686,6 +732,16 @@ $verifier(
         && in_array('message_reponse', array_column($requete('GET', '/notifications/donnees', cookies: $premierCookies)['corps'], 'type'), true),
     'seule la réponse acceptée ouvre une conversation privée et les notifications sont contextualisées',
 );
+$verifier(
+    $requete('PUT', $uriPreuveExperience, ['publication' => basename($uriRealisationPreuve)], cookies: $secondCookies)['statut'] === 404
+        && $requete('DELETE', $uriPreuveExperience, cookies: $secondCookies)['statut'] === 404
+        && $requete('DELETE', $uriPreuveExperience, cookies: $premierCookies)['statut'] === 302
+        && !str_contains($requete('GET', $uriFiche, cookies: $secondCookies)['html'], $uriRealisationPreuve)
+        && $requete('DELETE', $uriExperience, cookies: $secondCookies)['statut'] === 404
+        && $requete('DELETE', $uriExperience, cookies: $premierCookies)['statut'] === 302
+        && !str_contains($requete('GET', $uriFiche)['html'], 'Installation solaire déclarée'),
+    'seul le propriétaire peut retirer une expérience',
+);
 $referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
 $referenceSecond->execute([$referenceTel]);
 $uriSecond = '/personnes/'.$referenceSecond->fetchColumn();
@@ -723,6 +779,31 @@ $verifier(
         && str_contains($etatRelation['html'], 'En relation'),
     'une demande est unique par paire, seul le destinataire l’accepte et une décision périmée est refusée',
 );
+$uriAttestations = $uriRealisationPreuve.'/attestations';
+$demandeAttestation = ['profil' => basename($uriSecond), 'affirmation' => 'J’ai participé à cette installation.', 'realise_le' => '2025-05-01'];
+$attestantFaible = $requete('POST', $uriAttestations, $demandeAttestation, cookies: $premierCookies);
+$ctr01->inscrireEvenementAssurance($referenceTel, 'A2', 'TEST-ATTEST-A2', 'TEST');
+$attestation = $requete('POST', $uriAttestations, $demandeAttestation, cookies: $premierCookies);
+$uriDecisionAttestation = '/mon-profil/attestations/'.($attestation['corps']['reference'] ?? '');
+$decisionAttestation = ['action' => 'confirmer', 'revision' => 1, 'role' => 'colleague', 'consentement' => true];
+$verifier(
+    $attestantFaible['statut'] === 403 && $attestation['statut'] === 201
+        && ($requete('GET', '/mon-profil/attestations', cookies: $secondCookies)['corps'][0]['etat'] ?? null) === 'pending'
+        && $requete('PATCH', $uriDecisionAttestation, $decisionAttestation, cookies: $premierCookies)['statut'] === 404
+        && $requete('PATCH', $uriDecisionAttestation, array_diff_key($decisionAttestation, ['consentement' => true]), cookies: $secondCookies)['statut'] === 302
+        && $requete('PATCH', $uriDecisionAttestation, $decisionAttestation, cookies: $secondCookies)['statut'] === 204
+        && $requete('PATCH', $uriDecisionAttestation, $decisionAttestation, cookies: $secondCookies)['statut'] === 409
+        && $requete('GET', $uriAttestations)['statut'] === 404
+        && ($requete('GET', $uriAttestations, cookies: $premierCookies)['corps'][0]['role'] ?? null) === 'colleague',
+    'l’attestation exige une relation acceptée, l’assurance Core et le consentement explicite du tiers',
+);
+$ctr01->inscrireEvenementAssurance($referenceTel, 'A2', 'TEST-ATTEST-A2-REVISE', 'TEST');
+$verifier(
+    $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === []
+        && $requete('PATCH', $uriDecisionAttestation, array_replace($decisionAttestation, ['revision' => 2]), cookies: $secondCookies)['statut'] === 204
+        && count($requete('GET', $uriAttestations, cookies: $premierCookies)['corps']) === 1,
+    'une révision d’assurance suspend l’affichage jusqu’au renouvellement du consentement',
+);
 $conversation = '/conversations/'.$fichePublique;
 $conversationInverse = '/conversations/'.basename($uriSecond);
 $envoi = $requete('POST', $conversation, ['texte' => 'Message privé de test'], cookies: $secondCookies);
@@ -757,6 +838,33 @@ $admission = $console->call('core:console:accorder-acces-administratif');
 $secretModeration = 'Secret-moderation-GAMAD-2026';
 $ctr16->inscrireAuthentificateur($autorite, $secretModeration);
 $admin = $requete('POST', '/connexion', ['entite' => $autorite, 'secret' => $secretModeration]);
+$fileAttestations = '/console/moderation-attestations';
+$uriModerationAttestation = $fileAttestations.'/'.basename($uriDecisionAttestation);
+$revocationAttestation = ['action' => 'revoquer', 'revision' => 3, 'motif' => 'Vérification complémentaire nécessaire.'];
+$verifier(
+    $requete('GET', $fileAttestations, cookies: $premierCookies)['statut'] === 403
+        && $requete('PATCH', $uriModerationAttestation, $revocationAttestation, cookies: $premierCookies)['statut'] === 403
+        && $requete('PATCH', $uriModerationAttestation, $revocationAttestation, cookies: $admin['cookies'])['statut'] === 204
+        && $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === []
+        && ($requete('GET', '/mon-profil/attestations', cookies: $secondCookies)['corps'][0]['etat'] ?? null) === 'revoked',
+    'la révocation relève de la console et retire immédiatement l’attestation de la publication',
+);
+$reexamenAttestation = ['action' => 'reexaminer', 'revision' => 4, 'motif' => 'Le recours justifie un réexamen.'];
+$recoursAttestation = ['revision' => 4, 'motif' => 'Je demande de revoir la décision.'];
+$verifier(
+    $requete('PATCH', $uriModerationAttestation, $reexamenAttestation, cookies: $admin['cookies'])['statut'] === 409
+        && $requete('POST', $uriDecisionAttestation.'/recours', $recoursAttestation, cookies: $admin['cookies'])['statut'] === 404
+        && $requete('POST', $uriDecisionAttestation.'/recours', $recoursAttestation, cookies: $secondCookies)['statut'] === 204
+        && ($requete('GET', $fileAttestations, cookies: $admin['cookies'])['corps'][0]['recours'] ?? null) === $recoursAttestation['motif']
+        && $requete('PATCH', $uriModerationAttestation, array_replace($reexamenAttestation, ['revision' => 5]), cookies: $admin['cookies'])['statut'] === 204
+        && $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === []
+        && $requete('PATCH', $uriDecisionAttestation, array_replace($decisionAttestation, ['revision' => 6]), cookies: $secondCookies)['statut'] === 204
+        && count($requete('GET', $uriAttestations, cookies: $premierCookies)['corps']) === 1
+        && $requete('PATCH', $uriDecisionAttestation, ['action' => 'retirer', 'revision' => 7], cookies: $premierCookies)['statut'] === 204
+        && $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === []
+        && $registreIdentites->query('SELECT COUNT(*) FROM evenement_moderation_attestation_gamad')->fetchColumn() === 3,
+    'le recours d’un participant ouvre un réexamen journalisé et exige un nouveau consentement avant publication',
+);
 $ecranModeration = $requete('GET', '/console/moderation-reseau', cookies: $admin['cookies']);
 $decision = $requete('POST', $uriDecision, ['action' => 'masquer'], cookies: $admin['cookies']);
 $verifier(

@@ -20,9 +20,6 @@
             <div class="field">
                 <label for="bio">Ma présentation</label>
                 <textarea class="input" id="bio" name="bio" maxlength="{{ $bioMax }}" rows="5">{{ old('bio', $compte['bio']) }}</textarea>
-                @error('bio')
-                    <p class="form-error" role="alert">{{ $message }}</p>
-                @enderror
             </div>
             <div class="field">
                 <label for="visibilite">Visibilité du profil</label>
@@ -40,13 +37,82 @@
                 <label for="recherchees">Ce que je veux apprendre (une compétence par ligne)</label>
                 <textarea class="input" id="recherchees" name="recherchees" rows="4">{{ old('recherchees', $fiche['competences_recherchees'] ?? '') }}</textarea>
             </div>
-            @error('competences')<p class="form-error" role="alert">{{ $message }}</p>@enderror
+            <div class="field">
+                <label for="titre">Titre de profil</label>
+                <input class="input" id="titre" name="titre" maxlength="100" value="{{ old('titre', $fiche['titre'] ?? '') }}">
+            </div>
+            <div class="field">
+                <label for="introduction">Introduction</label>
+                <textarea class="input" id="introduction" name="introduction" maxlength="1200" rows="4">{{ old('introduction', $fiche['introduction'] ?? '') }}</textarea>
+            </div>
+            <div class="field">
+                <label for="territoire">Localité</label>
+                <select class="input" id="territoire" name="territoire">
+                    <option value="">Non renseignée</option>
+                    @foreach ($territoires as $code => $libelle)
+                        <option value="{{ $code }}" @selected(old('territoire', $fiche['territoire'] ?? null) === $code)>{{ $libelle }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <fieldset>
+                <legend>Domaines d’action (trois maximum)</legend>
+                <input type="hidden" name="domaines_present" value="1">
+                @foreach ($domaines as $code => $libelle)
+                    <label><input type="checkbox" name="domaines[]" value="{{ $code }}" @checked(in_array($code, (array) old('domaines', old('domaines_present') ? [] : ($fiche['domaines'] ?? [])), true))> {{ $libelle }}</label>
+                @endforeach
+            </fieldset>
+            @foreach ($errors->all() as $erreur)
+                <p class="form-error" role="alert">{{ $erreur }}</p>
+            @endforeach
             <button class="button button--primary" type="submit">Enregistrer</button>
             <a href="{{ route('console.acces.index') }}">Mes moyens d’accès</a>
             <a href="{{ route('fil') }}">Ouvrir le fil GAMAD</a>
             <a href="{{ route('blocages.index') }}">Personnes bloquées</a>
             <a href="{{ route('relations.index') }}">Mes relations</a>
         </form>
+        @if ($fiche !== [])
+            <section aria-labelledby="experiences">
+                <h2 id="experiences">Mes expériences déclarées</h2>
+                @foreach ($fiche['experiences'] as $experience)
+                    <details @if (old('experience_formulaire') === $experience['reference']) open @endif>
+                        <summary>{{ $experience['titre'] }}</summary>
+                        @include('acces.experience-profil', ['experience' => $experience])
+                        @if ($realisations !== [])
+                            <form method="post" action="{{ route('compte.profil.experiences.preuve.lier', $experience['reference']) }}">
+                                @csrf
+                                @method('PUT')
+                                <label for="preuve-{{ $experience['reference'] }}">Réalisation personnelle à joindre</label>
+                                <select class="input" id="preuve-{{ $experience['reference'] }}" name="publication" required>
+                                    <option value="">Choisir une réalisation</option>
+                                    @foreach ($realisations as $realisation)
+                                        <option value="{{ $realisation['reference'] }}" @selected($experience['preuve'] === $realisation['reference'])>{{ \Illuminate\Support\Str::limit($realisation['contenu'], 100) }}</option>
+                                    @endforeach
+                                </select>
+                                <button class="button" type="submit">Joindre la réalisation</button>
+                            </form>
+                        @endif
+                        @if ($experience['preuve_liee'])
+                            <form method="post" action="{{ route('compte.profil.experiences.preuve.retirer', $experience['reference']) }}">
+                                @csrf
+                                @method('DELETE')
+                                <button class="button" type="submit">Retirer la réalisation jointe</button>
+                            </form>
+                        @endif
+                        <form method="post" action="{{ route('compte.profil.experiences.retirer', $experience['reference']) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button class="button" type="submit">Retirer l’expérience</button>
+                        </form>
+                    </details>
+                @endforeach
+                @if (count($fiche['experiences']) < 10)
+                    <details @if (old('experience_formulaire') === 'nouvelle') open @endif>
+                        <summary>Ajouter une expérience</summary>
+                        @include('acces.experience-profil', ['experience' => null])
+                    </details>
+                @endif
+            </section>
+        @endif
     </section>
 </main>
 </body>

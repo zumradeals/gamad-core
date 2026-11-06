@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccesConsoleController;
 use App\Http\Controllers\AccesController;
+use App\Http\Controllers\AttestationsRealisationController;
 use App\Http\Controllers\AdministrationReseauGamadController;
 use App\Http\Controllers\AnnuaireGamadController;
 use App\Http\Controllers\BlocagesGamadController;
@@ -71,6 +72,8 @@ Route::get('/besoins/{reference}', [ContenusGamadController::class, 'besoin'])
     ->where('reference', '[a-f0-9]{24}')->name('besoins.show');
 Route::get('/publications/{reference}/commentaires', [ContenusGamadController::class, 'commentaires'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.commentaires.index');
+Route::get('/publications/{reference}/attestations', [AttestationsRealisationController::class, 'publiques'])
+    ->where('reference', '[a-f0-9]{24}')->name('publications.attestations.index');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
 Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): void {
@@ -134,6 +137,13 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::get('/notifications', [InteractionsGamadController::class, 'notifications'])->name('notifications');
     Route::post('/notifications/{reference}/lire', [InteractionsGamadController::class, 'lireNotification'])
         ->where('reference', '[a-f0-9]{24}')->name('notifications.lire');
+    Route::get('/mon-profil/attestations', [AttestationsRealisationController::class, 'index'])->name('compte.attestations.index');
+    Route::post('/publications/{reference}/attestations', [AttestationsRealisationController::class, 'demander'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:5,60,attestation-demande-')->name('publications.attestations.demander');
+    Route::post('/mon-profil/attestations/{reference}/recours', [AttestationsRealisationController::class, 'contester'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:10,1,attestation-recours-')->name('compte.attestations.recours');
+    Route::patch('/mon-profil/attestations/{reference}', [AttestationsRealisationController::class, 'decider'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,attestation-decision-')->name('compte.attestations.decider');
     Route::get('/mon-profil/favoris-publications', [ContenusGamadController::class, 'favoris'])->name('publications.favoris');
     Route::put('/publications/{reference}/favori', [ContenusGamadController::class, 'ajouterFavori'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,favori-')->name('publications.favori.ajouter');
@@ -198,6 +208,9 @@ Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
         ->where(['reference' => '[a-f0-9]{24}', 'type' => 'rccm|dfe|idu'])->name('entreprises.justificatif');
     Route::post('/console/entreprises/{reference}', [EntreprisesGamadController::class, 'decider'])
         ->where('reference', '[a-f0-9]{24}')->name('entreprises.decider');
+    Route::get('/console/moderation-attestations', [AttestationsRealisationController::class, 'moderation'])->name('reseau.attestations.moderation');
+    Route::patch('/console/moderation-attestations/{reference}', [AttestationsRealisationController::class, 'moderer'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,attestation-moderation-')->name('reseau.attestations.moderer');
     Route::get('/console/moderation-reseau', [InteractionsGamadController::class, 'moderation'])->name('reseau.moderation');
     Route::post('/console/moderation-reseau/{reference}', [InteractionsGamadController::class, 'traiter'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,moderation-reseau-')->name('reseau.moderation.traiter');
@@ -685,6 +698,16 @@ Route::middleware('gamad.session')->group(function (): void {
 Route::middleware('gamad.session:reseau')->group(function (): void {
     Route::get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])->name('reseau.compte.core');
     Route::get('/mon-profil', [ProfilCompteGamadController::class, 'montrer'])->name('compte.profil');
+    Route::post('/mon-profil/experiences', [ProfilCompteGamadController::class, 'enregistrerExperience'])
+        ->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.ajouter');
+    Route::patch('/mon-profil/experiences/{reference}', [ProfilCompteGamadController::class, 'enregistrerExperience'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.modifier');
+    Route::delete('/mon-profil/experiences/{reference}', [ProfilCompteGamadController::class, 'retirerExperience'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.retirer');
+    Route::put('/mon-profil/experiences/{reference}/preuve', [ProfilCompteGamadController::class, 'lierPreuveExperience'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.preuve.lier');
+    Route::delete('/mon-profil/experiences/{reference}/preuve', [ProfilCompteGamadController::class, 'retirerPreuveExperience'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.preuve.retirer');
     Route::patch('/mon-profil', [ProfilCompteGamadController::class, 'modifier'])
         ->middleware('throttle:20,1,profil-')->name('compte.profil.modifier');
 });

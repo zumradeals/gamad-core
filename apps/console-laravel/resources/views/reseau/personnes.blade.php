@@ -19,7 +19,27 @@
             <h1>Découvrir les personnes</h1>
             <form action="{{ route('personnes.index') }}" role="search">
                 <label for="q">Rechercher un nom ou une compétence</label>
-                <input id="q" name="q" type="search" value="{{ $recherche }}" maxlength="100">
+                <input id="q" name="q" type="search" value="{{ $filtres['q'] ?? '' }}" maxlength="100">
+                <label for="territoire">Localité</label>
+                <select id="territoire" name="territoire">
+                    <option value="">Toutes</option>
+                    @foreach ($territoires as $code => $libelle)
+                        <option value="{{ $code }}" @selected(($filtres['territoire'] ?? null) === $code)>{{ $libelle }}</option>
+                    @endforeach
+                </select>
+                <label for="domaine">Domaine</label>
+                <select id="domaine" name="domaine">
+                    <option value="">Tous</option>
+                    @foreach ($domaines as $code => $libelle)
+                        <option value="{{ $code }}" @selected(($filtres['domaine'] ?? null) === $code)>{{ $libelle }}</option>
+                    @endforeach
+                </select>
+                <label for="competence">Type de compétence</label>
+                <select id="competence" name="competence">
+                    <option value="">Toutes</option>
+                    <option value="apportees" @selected(($filtres['competence'] ?? null) === 'apportees')>Peut apporter</option>
+                    <option value="recherchees" @selected(($filtres['competence'] ?? null) === 'recherchees')>Veut apprendre</option>
+                </select>
                 <button type="submit">Rechercher</button>
             </form>
         @endunless
@@ -30,9 +50,28 @@
                 @else
                     <h2><a href="{{ route('personnes.show', $profil['reference_publique']) }}">{{ $profil['nom'] }}</a></h2>
                 @endif
+                @if ($profil['titre'])<p>{{ $profil['titre'] }}</p>@endif
+                @if (isset($territoires[$profil['territoire']]))<p>{{ $territoires[$profil['territoire']] }}</p>@endif
+                @foreach ($profil['domaines'] as $code)
+                    @if (isset($domaines[$code]))<span>{{ $domaines[$code] }}</span>@endif
+                @endforeach
+                @if (($fiche ?? false) && $profil['introduction'])<p>{{ $profil['introduction'] }}</p>@endif
                 @if ($profil['bio'])<p>{{ $profil['bio'] }}</p>@endif
                 @if ($profil['apportees'])<p><strong>Peut apporter</strong> {{ implode(', ', $profil['apportees']) }}</p>@endif
                 @if ($profil['recherchees'])<p><strong>Veut apprendre</strong> {{ implode(', ', $profil['recherchees']) }}</p>@endif
+                @if (($fiche ?? false) && $profil['experiences'] !== [])
+                    <section aria-labelledby="experiences-declarees">
+                        <h2 id="experiences-declarees">Expériences déclarées</h2>
+                        @foreach ($profil['experiences'] as $experience)
+                            <h3>{{ $experience['titre'] }}</h3>
+                            <p>{{ $typesExperience[$experience['type']] }} @if ($experience['periode'] !== '') · {{ $experience['periode'] }} @endif</p>
+                            @if ($experience['description'] !== '')<p class="texte-reseau">{{ $experience['description'] }}</p>@endif
+                            @if ($experience['preuve'])
+                                <p><a href="{{ route('publications.show', $experience['preuve']) }}">Voir la réalisation jointe</a></p>
+                            @endif
+                        @endforeach
+                    </section>
+                @endif
                 @if (($fiche ?? false) && $profil['peut_bloquer'])
                     <form method="post" class="formulaire-reseau" action="{{ route('relations.demander', $profil['reference_publique']) }}">
                         @csrf
