@@ -115,3 +115,62 @@ it('ignore les evenements relationnels et refuse les dates ambigues', function (
     ]);
     expect(ResoudreCompteReseauCore::identiteActive('PER-REL'))->toBeFalse();
 });
+
+it('resout un compte avec une vraie session CTR-16 et refuse apres revocation', function () {
+    $pdo = DB::connection()->getPdo();
+    \Gamad\RegistreAcces\Magasin::creer($pdo);
+
+    \Illuminate\Support\Facades\Schema::create('identite_inscrite', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $table->string('reference')->primary();
+        $table->string('type');
+        $table->string('regime');
+        $table->boolean('provisoire');
+    });
+    \Illuminate\Support\Facades\Schema::create('evenement_cycle_identite', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $table->id();
+        $table->string('identite_reference');
+        $table->string('evenement_type');
+        $table->string('etat_apres');
+        $table->string('date_effet');
+    });
+
+    DB::table('identite_inscrite')->insert([
+        'reference' => 'PER-INTEGREE', 'type' => 'personne',
+        'regime' => 'INSCRIT_AU_REGISTRE', 'provisoire' => 0,
+    ]);
+    DB::table('evenement_cycle_identite')->insert([
+        'identite_reference' => 'PER-INTEGREE', 'evenement_type' => 'ACTIVATION',
+        'etat_apres' => 'ACTIVE', 'date_effet' => now()->subDay()->toIso8601String(),
+    ]);
+    $user = \App\Models\User::factory()->create();
+    DB::table('reseau_comptes_identites')->insert([
+        'user_id' => $user->id, 'identite_reference' => 'PER-INTEGREE',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $core = new \Gamad\RegistreAcces\Ctr16($pdo);
+    $core->inscrireAuthentificateur('PER-INTEGREE', 'secret-de-qualification-2026');
+    $session = $core->etablirSession('PER-INTEGREE', 'secret-de-qualification-2026');
+    expect($session)->not->toBeNull();
+
+    // Le Core peut partager le stockage, sans ajouter de seconde autorite.
+    config()->set('database.connections.gamad_identity', config('database.connections.'.config('database.default')));
+    DB::purge('gamad_identity');
+    // En SQLite memoire, les connexions distinctes sont volontairement refusees.
+    // Ce test qualifie la frontiere de stockage avant toute resolution.
+    if (config('database.default') === 'sqlite'
+        && config('database.connections.sqlite.database') === ':memory:') {
+        expect(\App\Support\Unification\VerifierContexteLiaison::registreDansTransactionLocale())->toBeFalse();
+        return;
+    }
+
+    $request = requeteResolutionCore();
+    $request->session()->put('gamad_session', $session['jeton'] ?? $session['reference'] ?? '');
+    expect(ResoudreCompteReseauCore::resoudre($request)?->userId)->toBe((string) $user->id);
+
+    DB::table('evenement_cycle_identite')->insert([
+        'identite_reference' => 'PER-INTEGREE', 'evenement_type' => 'REVOCATION',
+        'etat_apres' => 'REVOQUEE', 'date_effet' => now()->toIso8601String(),
+    ]);
+    expect(ResoudreCompteReseauCore::resoudre($request))->toBeNull();
+});
