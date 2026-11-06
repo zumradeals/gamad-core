@@ -24,6 +24,23 @@
                     <p class="form-error" role="alert">{{ $message }}</p>
                 @enderror
             </div>
+            <div class="field">
+                <label for="visibilite">Visibilité du profil</label>
+                <select class="input" id="visibilite" name="visibilite">
+                    @foreach (['prive' => 'Privé', 'members' => 'Membres avec e-mail vérifié', 'public' => 'Public'] as $valeur => $libelle)
+                        <option value="{{ $valeur }}" @selected(old('visibilite', $fiche['visibilite'] ?? 'prive') === $valeur)>{{ $libelle }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="field">
+                <label for="apportees">Ce que je peux apporter (une compétence par ligne)</label>
+                <textarea class="input" id="apportees" name="apportees" rows="4">{{ old('apportees', $fiche['competences_apportees'] ?? '') }}</textarea>
+            </div>
+            <div class="field">
+                <label for="recherchees">Ce que je veux apprendre (une compétence par ligne)</label>
+                <textarea class="input" id="recherchees" name="recherchees" rows="4">{{ old('recherchees', $fiche['competences_recherchees'] ?? '') }}</textarea>
+            </div>
+            @error('competences')<p class="form-error" role="alert">{{ $message }}</p>@enderror
             <button class="button button--primary" type="submit">Enregistrer</button>
             <a href="{{ route('console.acces.index') }}">Mes moyens d’accès</a>
         </form>

@@ -138,6 +138,10 @@ $requete = static function (
         $serveur,
         $json === null ? null : json_encode($json, JSON_THROW_ON_ERROR),
     );
+    $app = app();
+    if ($app->resolved('session')) {
+        $app['session']->driver()->flush();
+    }
     $response = $kernel->handle($request);
     $corps = json_decode((string) $response->getContent(), true);
     $resultat = [
@@ -314,6 +318,33 @@ $verifier(
 $requete('PATCH', '/mon-profil', ['bio' => ''], cookies: $cookies);
 $profilEfface = $requete('GET', '/reseau/mon-compte', cookies: $cookies)['corps']['compte'];
 $verifier(array_key_exists('bio', $profilEfface) && $profilEfface['bio'] === null, 'la présentation peut être effacée');
+$requete('PATCH', '/mon-profil', [
+    'bio' => 'Profil pour annuaire', 'visibilite' => 'members', 'apportees' => "Électricité\nElectricite",
+    'recherchees' => 'Rénovation',
+], cookies: $cookies);
+$fichePublique = $registreIdentites->query('SELECT reference_publique FROM fiche_annuaire_gamad')->fetchColumn();
+$uriFiche = '/personnes/'.$fichePublique;
+$visiteur = $requete('GET', $uriFiche);
+$membre = $requete('GET', '/personnes?q=electricite', cookies: $cookies);
+$verifier(
+    is_string($fichePublique) && $visiteur['statut'] === 404
+        && $membre['statut'] === 200 && str_contains($membre['html'], $uriFiche),
+    'la fiche membres est invisible au public et la recherche normalise les accents',
+);
+$requete('PATCH', '/mon-profil', [
+    'bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité',
+], cookies: $cookies);
+$fiche = $requete('GET', $uriFiche);
+$verifier(
+    $fiche['statut'] === 200 && str_contains($fiche['html'], 'Profil pour annuaire')
+        && !str_contains($fiche['html'], $reference) && !str_contains($fiche['html'], $email),
+    'la publication révèle la présentation et les compétences sans identifiant canonique ni coordonnées',
+);
+$requete('PATCH', '/mon-profil', ['bio' => null, 'visibilite' => 'prive'], cookies: $cookies);
+$verifier($requete('GET', $uriFiche)['statut'] === 404, 'rendre la fiche privée ferme aussi son URL directe');
+$requete('PATCH', '/mon-profil', [
+    'bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité',
+], cookies: $cookies);
 $jetonWeb = $app['session']->driver()->get('gamad_session');
 if (is_string($jetonWeb)) {
     $ctr16->revoquerSession($jetonWeb);
@@ -407,6 +438,8 @@ $verifier(
     $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies'])['statut'] === 403,
     'la révocation effective de l’identité ferme l’accès même avec une session CTR-16 encore valide',
 );
+
+$verifier($requete('GET', $uriFiche)['statut'] === 404, 'la révocation de la personne retire sa fiche publique');
 
 $migrations = $application . '/database/migrations/';
 (require $migrations . '0001_01_01_000000_create_users_table.php')->up();

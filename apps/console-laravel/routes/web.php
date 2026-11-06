@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccesConsoleController;
 use App\Http\Controllers\AccesController;
+use App\Http\Controllers\AnnuaireGamadController;
 use App\Http\Controllers\CompteReseauCoreController;
 use App\Http\Controllers\ProfilCompteGamadController;
 use App\Http\Controllers\ContinuiteConsoleController;
@@ -35,6 +36,9 @@ use Illuminate\Support\Facades\Route;
  */
 Route::view('/', 'reseau.accueil')->name('reseau.accueil');
 Route::view('/aide', 'reseau.aide')->name('reseau.aide');
+Route::get('/personnes', [AnnuaireGamadController::class, 'index'])->name('personnes.index');
+Route::get('/personnes/{reference}', [AnnuaireGamadController::class, 'montrer'])
+    ->where('reference', '[a-f0-9]{24}')->name('personnes.show');
 
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     Route::get('/console', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');
@@ -522,7 +526,7 @@ Route::middleware('gamad.session')->group(function (): void {
     Route::get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])->name('reseau.compte.core');
     Route::get('/mon-profil', [ProfilCompteGamadController::class, 'montrer'])->name('compte.profil');
     Route::patch('/mon-profil', [ProfilCompteGamadController::class, 'modifier'])
-        ->middleware('throttle:20,1')->name('compte.profil.modifier');
+        ->middleware('throttle:20,1,profil-')->name('compte.profil.modifier');
 });
 
 // Le reste de la console demeure strictement administratif.
