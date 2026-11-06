@@ -65,3 +65,30 @@ it('ne remplace jamais une liaison déjà enregistrée', function () {
     expect(fn () => LierCompteIdentite::executer($compte, true))->toThrow(QueryException::class);
     expect(DB::table('reseau_comptes_identites')->count())->toBe(1);
 });
+
+it('annule la liaison si la transaction externe echoue apres insertion', function () {
+    $compte = comptePourLiaison('liaison-rollback@example.invalid');
+
+    expect(function () use ($compte): void {
+        DB::transaction(function () use ($compte): void {
+            LierCompteIdentite::executer($compte, true);
+            throw new DomainException('Annulation de la transaction externe');
+        });
+    })->toThrow(DomainException::class);
+
+    expect(DB::table('reseau_comptes_identites')->where('user_id', $compte->userId)->exists())
+        ->toBeFalse();
+});
+
+it('ne laisse aucune association lors du conflit de reference canonique', function () {
+    $premier = comptePourLiaison('liaison-unique-a@example.invalid');
+    $second = comptePourLiaison('liaison-unique-b@example.invalid');
+
+    LierCompteIdentite::executer($premier, true);
+    expect(fn () => LierCompteIdentite::executer($second, true))
+        ->toThrow(QueryException::class);
+
+    expect(DB::table('reseau_comptes_identites')->count())->toBe(1);
+    expect(DB::table('reseau_comptes_identites')->where('user_id', $second->userId)->exists())
+        ->toBeFalse();
+});
