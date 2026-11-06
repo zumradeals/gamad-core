@@ -6,7 +6,7 @@
     <title>{{ isset($publication) ? 'Publication' : 'Fil' }} — GAMAD</title>
     <link rel="stylesheet" href="{{ asset('css/reseau-accueil.css') }}">
 </head>
-<body>
+<body class="reseau-fil">
     <header class="bandeau">
         <div class="conteneur barre">
             <a class="marque" href="{{ route('reseau.accueil') }}">GAMAD</a>
@@ -68,7 +68,11 @@
                 @endforelse
             </section>
         @else
-            <h1>Fil GAMAD</h1>
+            <h1>{{ $vueBesoins ? 'Besoins des membres' : 'Fil GAMAD' }}</h1>
+            <nav class="navigation-fil" aria-label="Vues du fil">
+                <a href="{{ route('fil') }}" @unless ($vueBesoins) aria-current="page" @endunless>Publications</a>
+                <a href="{{ route('fil', ['type' => 'need']) }}" @if ($vueBesoins) aria-current="page" @endif>Besoins</a>
+            </nav>
             <form id="publier" method="post" action="{{ route('publications.store') }}" class="formulaire-reseau">
                 @csrf
                 <label for="type">Type de publication</label>
@@ -95,8 +99,8 @@
             @empty
                 <p>Aucune publication visible sur cette page.</p>
             @endforelse
-            @if ($page > 1)<a href="{{ route('fil', ['page' => $page - 1]) }}">Page précédente</a>@endif
-            @if ($page_suivante)<a href="{{ route('fil', ['page' => $page + 1]) }}">Page suivante</a>@endif
+            @if ($page > 1)<a href="{{ route('fil', ['page' => $page - 1, 'type' => $vueBesoins ? 'need' : null]) }}">Page précédente</a>@endif
+            @if ($page_suivante)<a href="{{ route('fil', ['page' => $page + 1, 'type' => $vueBesoins ? 'need' : null]) }}">Page suivante</a>@endif
         @endisset
     </main>
 </body>

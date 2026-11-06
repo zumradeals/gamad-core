@@ -20,17 +20,25 @@ final class ContenusGamadController
 {
     public function fil(Request $request, ContenusGamad $contenus): Response
     {
+        $types = ContenusGamad::TYPES + [ContenusGamad::TYPE_BESOIN => 'J’ai besoin d’aide'];
         $filtres = $request->validate([
             'page' => ['nullable', 'integer', 'min:1', 'max:100000'],
-            'type' => ['nullable', Rule::in(array_keys(ContenusGamad::TYPES))],
+            'type' => ['nullable', Rule::in(array_keys($types))],
         ]);
         $page = (int) ($filtres['page'] ?? 1);
         $fil = $contenus->fil($this->sujet($request), $page);
         abort_if($fil === null, 403);
 
+        $besoins = ($filtres['type'] ?? null) === ContenusGamad::TYPE_BESOIN;
+        if ($besoins) {
+            $catalogue = $contenus->besoins($request->session()->get('gamad_session'), 'tous', '', $page, null, null, 'personne');
+            $fil = ['publications' => $catalogue['besoins'], 'page_suivante' => $catalogue['page_suivante']];
+        }
+
         return response()->view('reseau.contenus', $fil + [
             'page' => $page,
-            'types' => ContenusGamad::TYPES,
+            'types' => $types,
+            'vueBesoins' => $besoins,
             'typeInitial' => $filtres['type'] ?? null,
         ])
             ->header('Cache-Control', 'private, no-store');
@@ -52,11 +60,14 @@ final class ContenusGamadController
     public function publier(Request $request, ContenusGamad $contenus): RedirectResponse
     {
         $donnees = $request->validate([
-            'type' => ['required', Rule::in(array_keys(ContenusGamad::TYPES))],
+            'type' => ['required', Rule::in([...array_keys(ContenusGamad::TYPES), ContenusGamad::TYPE_BESOIN])],
             'visibilite' => ['required', 'in:public,members'],
             'contenu' => ['required', 'string', 'max:500'],
         ]);
-        $reference = $contenus->publier($this->sujet($request), $donnees['type'], $donnees['visibilite'], $donnees['contenu']);
+        $sujet = $this->sujet($request);
+        $reference = $donnees['type'] === ContenusGamad::TYPE_BESOIN
+            ? $contenus->publierBesoin($sujet, $donnees['visibilite'], $donnees['contenu'], null, null, null, null)
+            : $contenus->publier($sujet, $donnees['type'], $donnees['visibilite'], $donnees['contenu']);
         abort_if($reference === null, 403);
 
         return redirect()->route('publications.show', $reference);
