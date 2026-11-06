@@ -43,6 +43,9 @@ final class ExecuterLiaisonReseau
                 throw new DomainException('Liaison refusée : qualification expirée');
             }
 
+            // La transaction englobante appartient au même stockage canonique.
+            // L'insertion et les verrous de LierCompteIdentite sont imbriqués
+            // sur cette connexion, jamais sur le PDO du registre secondaire.
             LierCompteIdentite::executer($compte, true);
         }, 1);
     }
