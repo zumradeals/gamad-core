@@ -70,3 +70,48 @@ it('accepte un cycle actif et refuse une revocation posterieure', function () {
     ]);
     expect(ResoudreCompteReseauCore::identiteActive('PER-001'))->toBeFalse();
 });
+
+it('compare les instants reels malgre des fuseaux differents', function () {
+    \Illuminate\Support\Facades\Schema::create('evenement_cycle_identite', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $table->id();
+        $table->string('identite_reference');
+        $table->string('evenement_type');
+        $table->string('etat_apres');
+        $table->string('date_effet');
+    });
+
+    $activation = now('UTC')->subDays(2)->setTimezone('Pacific/Honolulu')->toIso8601String();
+    $revocation = now('UTC')->subDay()->setTimezone('Pacific/Kiritimati')->toIso8601String();
+    DB::table('evenement_cycle_identite')->insert([
+        ['identite_reference' => 'PER-FUSEAU', 'evenement_type' => 'ACTIVATION',
+            'etat_apres' => 'ACTIVE', 'date_effet' => $activation],
+        ['identite_reference' => 'PER-FUSEAU', 'evenement_type' => 'REVOCATION',
+            'etat_apres' => 'REVOQUEE', 'date_effet' => $revocation],
+    ]);
+
+    expect(ResoudreCompteReseauCore::identiteActive('PER-FUSEAU'))->toBeFalse();
+});
+
+it('ignore les evenements relationnels et refuse les dates ambigues', function () {
+    \Illuminate\Support\Facades\Schema::create('evenement_cycle_identite', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $table->id();
+        $table->string('identite_reference');
+        $table->string('evenement_type');
+        $table->string('etat_apres');
+        $table->string('date_effet');
+    });
+
+    DB::table('evenement_cycle_identite')->insert([
+        ['identite_reference' => 'PER-REL', 'evenement_type' => 'ACTIVATION',
+            'etat_apres' => 'ACTIVE', 'date_effet' => now()->subDays(2)->toIso8601String()],
+        ['identite_reference' => 'PER-REL', 'evenement_type' => 'RETRAIT_ORGANISATION',
+            'etat_apres' => 'REVOQUEE', 'date_effet' => now()->subDay()->toIso8601String()],
+    ]);
+    expect(ResoudreCompteReseauCore::identiteActive('PER-REL'))->toBeTrue();
+
+    DB::table('evenement_cycle_identite')->insert([
+        'identite_reference' => 'PER-REL', 'evenement_type' => 'REVOCATION',
+        'etat_apres' => 'REVOQUEE', 'date_effet' => '2026-11-06 12:00:00',
+    ]);
+    expect(ResoudreCompteReseauCore::identiteActive('PER-REL'))->toBeFalse();
+});
