@@ -83,20 +83,47 @@ final class VerifierContexteLiaison
     }
 
     /**
-     * Une transaction Laravel ne couvre pas deux connexions PDO distinctes.
-     * Ce contrôle est volontairement conservateur : même serveur/base
-     * PostgreSQL ne signifie pas même transaction.
+     * La transaction s'exécute exclusivement sur la connexion applicative.
+     * Le registre Core doit désigner le même stockage canonique ; deux PDO
+     * distincts vers ce stockage ne constituent pas deux transactions ici.
+     * En cas de configuration ambiguë, la liaison reste interdite.
      */
     public static function registreDansTransactionLocale(): bool
     {
         try {
             $application = DB::connection();
             $registre = DB::connection('gamad_identity');
+            $configApplication = $application->getConfig();
+            $configRegistre = $registre->getConfig();
 
-            if ($application->getPdo() !== $registre->getPdo()) {
+            if (($configApplication['driver'] ?? null) !== ($configRegistre['driver'] ?? null)) {
                 return false;
             }
 
+            $urlApplication = $configApplication['url'] ?? null;
+            $urlRegistre = $configRegistre['url'] ?? null;
+
+            if ($urlApplication || $urlRegistre) {
+                if (! is_string($urlApplication) || ! is_string($urlRegistre)
+                    || $urlApplication !== $urlRegistre) {
+                    return false;
+                }
+            } elseif (($configApplication['driver'] ?? null) === 'sqlite') {
+                if (($configApplication['database'] ?? null) !== ($configRegistre['database'] ?? null)) {
+                    return false;
+                }
+            } elseif (($configApplication['driver'] ?? null) === 'pgsql') {
+                foreach (['host', 'port', 'database', 'username', 'search_path'] as $cle) {
+                    if (($configApplication[$cle] ?? null) !== ($configRegistre[$cle] ?? null)) {
+                        return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+
+            // Toutes les lectures et écritures de la liaison utilisent
+            // exclusivement la connexion applicative, y compris identite_inscrite.
             return $application->getSchemaBuilder()->hasTable('users')
                 && $application->getSchemaBuilder()->hasTable('reseau_comptes_identites')
                 && $application->getSchemaBuilder()->hasTable('identite_inscrite');
