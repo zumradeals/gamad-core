@@ -700,6 +700,7 @@ Route::middleware('gamad.session')->group(function (): void {
 // Acces Réseau : session Core requise, sans privilege de console.
 Route::middleware('gamad.session:reseau')->group(function (): void {
     Route::get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])->name('reseau.compte.core');
+    Route::get('/espace', [ProfilCompteGamadController::class, 'espace'])->name('reseau.espace');
     Route::get('/mon-profil', [ProfilCompteGamadController::class, 'montrer'])->name('compte.profil');
     Route::post('/mon-profil/experiences', [ProfilCompteGamadController::class, 'enregistrerExperience'])
         ->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.ajouter');
