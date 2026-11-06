@@ -43,6 +43,12 @@ final class ExecuterLiaisonReseau
                 throw new DomainException('Liaison refusée : qualification expirée');
             }
 
+            // Une inscription historique ne suffit pas : le cycle Core doit
+            // confirmer une identité active au moment de l'écriture.
+            if (! ResoudreCompteReseauCore::identiteActive($compte->identiteReference)) {
+                throw new DomainException('Liaison refusée : identité Core inactive');
+            }
+
             // La transaction englobante appartient au même stockage canonique.
             // L'insertion et les verrous de LierCompteIdentite sont imbriqués
             // sur cette connexion, jamais sur le PDO du registre secondaire.
