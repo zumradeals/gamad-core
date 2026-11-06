@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Application\Reseau\ContactsGamad;
+use App\Application\Reseau\ReferentielBesoinsGamad;
 use Gamad\RegistreIdentites\Magasin;
 use Illuminate\Http\Response;
 
@@ -34,5 +35,13 @@ final class AdministrationReseauGamadController
         ];
 
         return response()->view('reseau.administration', compact('rubriques'))->header('Cache-Control', 'private, no-store');
+    }
+
+    public function parametres(): Response
+    {
+        return response()->view('reseau.parametres', [
+            'domaines' => ReferentielBesoinsGamad::DOMAINES,
+            'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
+        ])->header('Cache-Control', 'private, no-store');
     }
 }

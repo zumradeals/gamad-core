@@ -1230,6 +1230,17 @@ $verifier(
         && !str_contains($administrationReseau['html'], $messageContact['message']),
     'le tableau Réseau est réservé à la console, relie les trois files et ne présente que les compteurs',
 );
+$uriParametresReseau = '/console/reseau/parametres';
+$parametresReseau = $requete('GET', $uriParametresReseau, cookies: $admin['cookies']);
+$verifier(
+    str_contains($administrationReseau['html'], $uriParametresReseau)
+        && $requete('GET', $uriParametresReseau)['statut'] === 302
+        && $requete('GET', $uriParametresReseau, cookies: $secondCookies)['statut'] === 403
+        && $parametresReseau['statut'] === 200
+        && str_contains($parametresReseau['html'], '/continuite')
+        && str_contains($parametresReseau['html'], 'Artisanat'),
+    'les paramètres du Réseau sont accessibles depuis la console aux seules personnes habilitées',
+);
 $contactConsole = $requete('GET', $uriContact, cookies: $admin['cookies']);
 $verifier(
     $contactPublic['statut'] === 200 && $contactRobot['statut'] === 302 && $contactEnvoye['statut'] === 302

@@ -42,7 +42,7 @@
             </a>
 
             <a class="nav__link" href="{{ route('reseau.administration') }}"
-               @if(request()->routeIs('reseau.administration', 'reseau.moderation*', 'reseau.contact.console', 'entreprises.revue')) aria-current="page" @endif>
+               @if(request()->routeIs('reseau.administration', 'reseau.parametres', 'reseau.moderation*', 'reseau.contact.console', 'entreprises.revue')) aria-current="page" @endif>
                 Administration du Réseau
             </a>
 
