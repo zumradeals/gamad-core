@@ -32,8 +32,10 @@ use Illuminate\Support\Facades\Route;
  * Core. La seule écriture web est l'inscription gouvernée d'une identité ;
  * elle partage le même cas d'usage que l'API v1.
  */
+Route::view('/', 'reseau.accueil')->name('reseau.accueil');
+
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
-    Route::get('/', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');
+    Route::get('/console', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');
     Route::get('/normes/{reference}', [Ctr04Controller::class, 'resoudreNorme'])->name('ctr04.resoudre-norme');
     Route::get('/sources/{reference}', [Ctr04Controller::class, 'resoudreSource'])->name('ctr04.resoudre-source');
     Route::get('/capacites/{reference}', [Ctr04Controller::class, 'resoudreCapacite'])->name('ctr04.resoudre-capacite');
