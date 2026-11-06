@@ -609,6 +609,44 @@ $verifier(
         && str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Membre de la ZUMRA'),
     'la demande d’adhésion devient effective après décision du fondateur',
 );
+$delegation = $requete('POST', $uriZumra.'/responsabilites', [
+    'cible' => $referenceTel, 'action' => 'nommer',
+], cookies: $premierCookies);
+$interdictionDeleguer = $requete('POST', $uriZumra.'/responsabilites', [
+    'cible' => $referenceTel, 'action' => 'revoquer',
+], cookies: $secondCookies);
+$delegue = $requete('GET', $uriZumra, cookies: $secondCookies);
+$retraitDelegation = $requete('POST', $uriZumra.'/responsabilites', [
+    'cible' => $referenceTel, 'action' => 'revoquer',
+], cookies: $premierCookies);
+$verifier(
+    $delegation['statut'] === 302 && $interdictionDeleguer['statut'] === 404
+        && str_contains($delegue['html'], 'Demandes d’accueil')
+        && $retraitDelegation['statut'] === 302
+        && !str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Demandes d’accueil'),
+    'seul le fondateur délègue les droits de gestion et le retrait prend effet immédiatement',
+);
+$uriEtapes = $uriProjet.'/etapes';
+$premiereEtape = $requete('POST', $uriEtapes, ['titre' => 'Préparation confidentielle'], cookies: $secondCookies);
+$deuxiemeEtape = $requete('POST', $uriEtapes, ['titre' => 'Validation confidentielle'], cookies: $secondCookies);
+$referenceEtape = $registreIdentites->prepare('SELECT reference FROM etape_projet_gamad WHERE projet_reference = ? AND position = 2');
+$referenceEtape->execute([basename($uriProjet)]);
+$uriEtape = $uriEtapes.'/'.$referenceEtape->fetchColumn();
+$referenceEtape->closeCursor();
+$deplacementEtape = $requete('POST', $uriEtape, ['action' => 'monter'], cookies: $secondCookies);
+$renommageEtape = $requete('POST', $uriEtape, [
+    'action' => 'enregistrer', 'titre' => 'Vérification confidentielle', 'etat' => 'done',
+], cookies: $secondCookies);
+$etapesPrivees = $requete('GET', $uriProjet, cookies: $secondCookies);
+$verifier(
+    $premiereEtape['statut'] === 302 && $deuxiemeEtape['statut'] === 302
+        && $deplacementEtape['statut'] === 302 && $renommageEtape['statut'] === 302
+        && str_contains($etapesPrivees['html'], 'Vérification confidentielle')
+        && strpos($etapesPrivees['html'], 'Vérification confidentielle') < strpos($etapesPrivees['html'], 'Préparation confidentielle')
+        && $requete('POST', $uriEtape, ['action' => 'retirer'], cookies: $premierCookies)['statut'] === 404
+        && $requete('GET', $uriProjet)['statut'] === 404,
+    'le porteur ordonne ses étapes, change leur état et garde leurs titres privés',
+);
 $invitationProjet = $requete('POST', $uriProjet.'/invitations', ['profil' => $fichePublique], cookies: $secondCookies);
 $avantEquipe = $requete('GET', $uriProjet, cookies: $premierCookies);
 $acceptationEquipe = $requete('POST', $uriProjet.'/equipe', ['action' => 'accepter'], cookies: $premierCookies);
@@ -621,6 +659,45 @@ $verifier(
         && $retraitEquipe['statut'] === 302 && $requete('GET', $uriProjet, cookies: $premierCookies)['statut'] === 404,
     'seul un collaborateur qui a accepté son invitation accède au dossier et le retrait ferme cet accès',
 );
+$suppressionEtape = $requete('POST', $uriEtape, ['action' => 'retirer'], cookies: $secondCookies);
+$verifier(
+    $suppressionEtape['statut'] === 302
+        && !str_contains($requete('GET', $uriProjet, cookies: $secondCookies)['html'], 'Vérification confidentielle'),
+    'le porteur peut retirer une étape',
+);
+$uriMode = $uriZumra.'/mode-adhesion';
+$modeNonAutorise = $requete('POST', $uriMode, ['mode' => 'open'], cookies: $secondCookies);
+$modeOuvert = $requete('POST', $uriMode, ['mode' => 'open'], cookies: $premierCookies);
+$requete('POST', $uriZumra.'/adhesion', ['action' => 'quitter'], cookies: $secondCookies);
+$adhesionOuverte = $requete('POST', $uriZumra.'/adhesion', ['action' => 'rejoindre'], cookies: $secondCookies);
+$verifier(
+    $modeNonAutorise['statut'] === 404 && $modeOuvert['statut'] === 302 && $adhesionOuverte['statut'] === 302
+        && str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Membre de la ZUMRA'),
+    'un responsable règle le mode et une adhésion ouverte devient effective immédiatement',
+);
+$uriParticipation = $uriProjet.'/participations';
+$proposition = ['action' => 'proposer', 'message' => 'Je peux aider à préparer le chantier.'];
+$projetSansVitrine = $requete('POST', $uriParticipation, $proposition, cookies: $premierCookies);
+$requete('POST', $uriProjet.'/vitrine', [
+    'action' => 'publier', 'vitrine' => 'Projet ouvert aux propositions.',
+], cookies: $secondCookies);
+$demandeParticipation = $requete('POST', $uriParticipation, $proposition, cookies: $premierCookies);
+$porteurVoit = $requete('GET', $uriProjet, cookies: $secondCookies);
+$publicNeVoitPas = $requete('GET', $uriProjet);
+$retraitParticipation = $requete('POST', $uriParticipation, ['action' => 'retirer'], cookies: $premierCookies);
+$nouvelleParticipation = $requete('POST', $uriParticipation, $proposition, cookies: $premierCookies);
+$autoDecision = $requete('POST', $uriParticipation, ['action' => 'accepter', 'cible' => $reference], cookies: $premierCookies);
+$decisionParticipation = $requete('POST', $uriParticipation, ['action' => 'accepter', 'cible' => $reference], cookies: $secondCookies);
+$collaborateurVoit = $requete('GET', $uriProjet, cookies: $premierCookies);
+$verifier(
+    $projetSansVitrine['statut'] === 404 && $demandeParticipation['statut'] === 302
+        && str_contains($porteurVoit['html'], $proposition['message'])
+        && !str_contains($publicNeVoitPas['html'], $proposition['message'])
+        && $retraitParticipation['statut'] === 302 && $nouvelleParticipation['statut'] === 302
+        && $autoDecision['statut'] === 404 && $decisionParticipation['statut'] === 302
+        && str_contains($collaborateurVoit['html'], 'Dossier réservé au porteur.'),
+    'une proposition privée depuis la vitrine peut être retirée, resoumise et acceptée seulement par le porteur',
+);
 $cheminRccm = tempnam(sys_get_temp_dir(), 'gamad-rccm-');
 file_put_contents($cheminRccm, "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n%%EOF");
 try {
@@ -628,6 +705,7 @@ try {
         'nom' => 'Entreprise de qualification', 'pays' => 'CI', 'immatriculation' => 'CI TEST 001', 'secteur' => 'Rénovation',
     ], cookies: $premierCookies, fichiersRequete: [
         'rccm' => new \Illuminate\Http\UploadedFile($cheminRccm, 'rccm.pdf', 'application/pdf', null, true),
+        'dfe' => new \Illuminate\Http\UploadedFile($cheminRccm, 'dfe.pdf', 'application/pdf', null, true),
     ]);
 } finally {
     unlink($cheminRccm);
@@ -643,7 +721,34 @@ $verifier(
         && str_starts_with($requete('GET', $uriRevue.'/justificatif', cookies: $admin['cookies'])['html'], '%PDF-'),
     'le justificatif est réservé à la console et une entreprise non vérifiée ne publie pas',
 );
-$verificationEntreprise = $requete('POST', $uriRevue, ['action' => 'verified'], cookies: $admin['cookies']);
+$dfePrivee = $requete('GET', $uriRevue.'/justificatif/dfe', cookies: $secondCookies);
+$dfeConsole = $requete('GET', $uriRevue.'/justificatif/dfe', cookies: $admin['cookies']);
+$decisionRefus = $requete('POST', $uriRevue, ['action' => 'declined', 'revision' => 0], cookies: $admin['cookies']);
+$dossierRefuse = $requete('GET', $uriEntreprise, cookies: $premierCookies);
+$cheminCorrection = tempnam(sys_get_temp_dir(), 'gamad-rccm-correction-');
+$correction = "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n% Correction\n%%EOF";
+file_put_contents($cheminCorrection, $correction);
+try {
+    $fichiersCorrection = [
+        'rccm' => new \Illuminate\Http\UploadedFile($cheminCorrection, 'rccm.pdf', 'application/pdf', null, true),
+        'idu' => new \Illuminate\Http\UploadedFile($cheminCorrection, 'idu.pdf', 'application/pdf', null, true),
+    ];
+    $renvoiTiers = $requete('POST', $uriEntreprise.'/resoumettre', cookies: $secondCookies, fichiersRequete: $fichiersCorrection);
+    $renvoiProprietaire = $requete('POST', $uriEntreprise.'/resoumettre', cookies: $premierCookies, fichiersRequete: $fichiersCorrection);
+} finally {
+    unlink($cheminCorrection);
+}
+$verifier(
+    $dfePrivee['statut'] === 403 && str_starts_with($dfeConsole['html'], '%PDF-')
+        && $decisionRefus['statut'] === 302 && str_contains($dossierRefuse['html'], 'Soumettre à nouveau')
+        && $renvoiTiers['statut'] === 404 && $renvoiProprietaire['statut'] === 302
+        && $requete('GET', $uriRevue.'/justificatif', cookies: $admin['cookies'])['html'] === $correction
+        && $requete('GET', $uriRevue.'/justificatif/idu', cookies: $admin['cookies'])['html'] === $correction,
+    'les pièces complémentaires sont privées et seul le propriétaire peut corriger un dossier refusé',
+);
+$decisionPerimee = $requete('POST', $uriRevue, ['action' => 'verified', 'revision' => 0], cookies: $admin['cookies']);
+$verifier($decisionPerimee['statut'] === 409, 'une décision sur un ancien dossier est refusée après correction');
+$verificationEntreprise = $requete('POST', $uriRevue, ['action' => 'verified', 'revision' => 1], cookies: $admin['cookies']);
 $publicationOffre = $requete('POST', $uriEntreprise.'/opportunites', $offre, cookies: $premierCookies);
 $uriOffre = parse_url($publicationOffre['location'] ?? '', PHP_URL_PATH) ?: '/opportunite-manquante';
 $candidature = ['message' => 'Candidature privée de qualification.'];
@@ -661,9 +766,44 @@ $verifier(
         && str_contains($requete('GET', $uriOffre)['html'], 'Clôturée'),
     'la clôture maintient la fiche visible et ferme les candidatures',
 );
-$requete('POST', $uriRevue, ['action' => 'suspended'], cookies: $admin['cookies']);
+$requete('POST', $uriRevue, ['action' => 'suspended', 'revision' => 1], cookies: $admin['cookies']);
 $verifier($requete('GET', $uriEntreprise)['statut'] === 404 && $requete('GET', $uriOffre)['statut'] === 404,
     'la suspension Core de l’entreprise retire ses opportunités publiques');
+$messageContact = ['nom' => 'Contact de test', 'email' => 'contact-test@example.test', 'sujet' => 'account',
+    'message' => 'Message privé destiné à la console Core.'];
+$contactPublic = $requete('GET', '/contact');
+$contactRobot = $requete('POST', '/contact', $messageContact + ['website' => 'robot']);
+$contactEnvoye = $requete('POST', '/contact', $messageContact);
+$contactStocke = $registreIdentites->query('SELECT reference FROM contact_reseau_gamad');
+$referencesContact = $contactStocke->fetchAll(PDO::FETCH_COLUMN);
+$uriContact = '/console/contact/'.($referencesContact[0] ?? 'manquant');
+$contactInterdit = $requete('GET', $uriContact, cookies: $secondCookies);
+$administrationReseau = $requete('GET', '/console/reseau', cookies: $admin['cookies']);
+$verifier(
+    $requete('GET', '/console/reseau')['statut'] === 302
+        && $requete('GET', '/console/reseau', cookies: $secondCookies)['statut'] === 403
+        && $administrationReseau['statut'] === 200
+        && str_contains($administrationReseau['html'], '/console/moderation-reseau')
+        && str_contains($administrationReseau['html'], '/console/entreprises')
+        && str_contains($administrationReseau['html'], '/console/contact')
+        && str_contains($administrationReseau['html'], '1 en attente')
+        && !str_contains($administrationReseau['html'], $messageContact['message']),
+    'le tableau Réseau est réservé à la console, relie les trois files et ne présente que les compteurs',
+);
+$contactConsole = $requete('GET', $uriContact, cookies: $admin['cookies']);
+$verifier(
+    $contactPublic['statut'] === 200 && $contactRobot['statut'] === 302 && $contactEnvoye['statut'] === 302
+        && count($referencesContact) === 1 && $contactInterdit['statut'] === 403
+        && $contactConsole['statut'] === 200 && str_contains($contactConsole['html'], $messageContact['message']),
+    'le contact est public, le piège écarte le robot et seule la console lit le message',
+);
+$requete('POST', $uriContact, ['action' => 'traiter'], cookies: $admin['cookies']);
+$statutContact = $registreIdentites->query('SELECT etat FROM contact_reseau_gamad')->fetchColumn();
+$requete('POST', $uriContact, ['action' => 'supprimer'], cookies: $admin['cookies']);
+$verifier(
+    $statutContact === 'handled' && $requete('GET', $uriContact, cookies: $admin['cookies'])['statut'] === 404,
+    'la console traite puis supprime le message',
+);
 $cycle = $registreIdentites->prepare(
     'INSERT INTO evenement_cycle_identite
      (identite_reference, evenement_type, etat_avant, etat_apres, source, preuve_reference,

@@ -46,4 +46,26 @@ Le fondateur traite les adhésions. Le porteur invite, puis seul l’invité acc
 
 L’entreprise soumet un justificatif RCCM réservé aux autorités admises dans la console Core. Après vérification, son propriétaire peut publier et clôturer une opportunité. Une candidature textuelle reste lisible par le candidat et par le propriétaire. La suspension retire l’entreprise et ses opportunités des écrans publics.
 
-La parité des espaces métier reste à vérifier et à compléter avec les écrans source, dont les étapes et contributions de projet, les rôles délégués et modes d’adhésion des ZUMRA, les dossiers d’entreprise complémentaires et les modes avancés de gestion des opportunités.
+Le porteur peut créer, réordonner et modifier les étapes de son projet. Les collaborateurs acceptés peuvent les consulter dans le dossier privé. Le fondateur d’une ZUMRA peut déléguer le traitement des adhésions et des demandes d’accueil à un membre accepté. Le retrait de l’adhésion ou de la délégation supprime ces droits.
+
+Les responsables d’une ZUMRA peuvent choisir une adhésion ouverte ou sur validation. Le mode sur validation demeure le défaut des ZUMRA existantes. Un membre peut proposer son aide depuis une vitrine publiée, puis retirer sa demande en attente. Seul le porteur peut accepter ou refuser. L’acceptation ouvre le dossier au nouveau collaborateur.
+
+La parité des espaces métier reste à compléter avec les écrans source, dont le suivi des contributions et leurs notifications, les dossiers d’entreprise complémentaires et les modes avancés de gestion des opportunités.
+
+## Écrans publics et premiers parcours
+
+Le [registre des routes et gabarits source](GAMAD-UNIFIE-INVENTAIRE-ECRANS.md) conserve les écarts par écran.
+
+| Périmètre | Parcours présents dans Core | Écarts avec la source |
+| --- | --- | --- |
+| Entrée publique et compte | Accueil, aide, Contact, inscription, vérification et renvoi du code, connexion | Accueil et aide repris en partie, textes publics selon leur état d’adoption, parcours de récupération source |
+| Profil et contenus | Profil personnel, annuaire et fiche, fil, publication textuelle, commentaire simple | Photo, territoires et domaines, Carrefour Besoins, écrans Agir, types et pièces jointes restants, édition et réponses aux commentaires |
+| Interactions | Relations, blocage, conversation entre membres en relation, notifications internes et modération des contenus | Mon espace complet, enregistrements, attestations et écrans spécialisés de modération |
+
+Les écrans présents sont servis par les routes du Core. La présence d’une route ou une CI verte ne vaut pas parité avec l’écran et les parcours du dépôt source.
+
+## Pièces du dossier d’entreprise
+
+Le dossier accepte le RCCM et, en complément, la DFE et l’IDU. La console seule télécharge les justificatifs. Après un refus, le propriétaire peut soumettre à nouveau les pièces corrigées. Une ancienne décision de console ne peut pas s’appliquer à la version resoumise.
+
+Le formulaire Contact est accessible sans compte. Les messages sont consultables et traitables depuis la console Core. Les lectures et les actions sont journalisées sans recopier le contenu ni l’adresse e-mail. La purge des messages de plus de douze mois s’exécute lors de l’envoi ou de la consultation.

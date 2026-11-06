@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Application\Reseau\EspacesGamad;
+use App\Application\Reseau\EtapesProjetGamad;
 use App\Application\Reseau\MembresEspacesGamad;
+use App\Application\Reseau\ParticipationsGamad;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -35,7 +37,7 @@ final class EspacesGamadController
         $projet = $espaces->projet($reference, $request->session()->get('gamad_session'));
         abort_if($projet === null, 404);
 
-        return $this->page('projet', compact('projet'));
+        return $this->page('projet', compact('projet') + ['etatsEtape' => EtapesProjetGamad::ETATS]);
     }
 
     public function nouveauProjet(EspacesGamad $espaces): Response
@@ -126,6 +128,48 @@ final class EspacesGamadController
         $membres->decider($this->sujet($request), $reference, $donnees['cible'] ?? null, false, $donnees['action']);
 
         return redirect()->route('projets.index');
+    }
+
+    public function deleguer(Request $request, MembresEspacesGamad $membres, string $reference): RedirectResponse
+    {
+        $donnees = $request->validate(['cible' => ['required', 'string', 'max:64'], 'action' => ['required', 'in:nommer,revoquer']]);
+        $membres->deleguer($this->sujet($request), $reference, $donnees['cible'], $donnees['action'] === 'nommer');
+
+        return redirect()->route('zumras.show', $reference);
+    }
+
+    public function etape(Request $request, EtapesProjetGamad $etapes, string $reference, ?string $etape = null): RedirectResponse
+    {
+        $donnees = $etape === null
+            ? $request->validate(['titre' => ['required', 'string', 'max:80']])
+            : $request->validate([
+                'action' => ['required', 'in:enregistrer,monter,descendre,retirer'],
+                'titre' => ['required_if:action,enregistrer', 'nullable', 'string', 'max:80'],
+                'etat' => ['required_if:action,enregistrer', 'nullable', 'in:todo,in_progress,done'],
+            ]);
+        $etapes->modifier($this->sujet($request), $reference, $etape, $donnees);
+
+        return redirect()->route('projets.show', $reference);
+    }
+
+    public function modeAdhesion(Request $request, MembresEspacesGamad $membres, string $reference): RedirectResponse
+    {
+        $donnees = $request->validate(['mode' => ['required', 'in:open,approval']]);
+        $membres->configurerAdhesion($this->sujet($request), $reference, $donnees['mode']);
+
+        return redirect()->route('zumras.show', $reference);
+    }
+
+    public function participation(Request $request, ParticipationsGamad $participations, string $reference): RedirectResponse
+    {
+        $donnees = $request->validate([
+            'action' => ['required', 'in:proposer,retirer,accepter,refuser'],
+            'cible' => ['required_if:action,accepter,refuser', 'nullable', 'string', 'max:64'],
+            'message' => ['nullable', 'string', 'max:280'],
+        ]);
+        $participations->agir($this->sujet($request), $reference, $donnees['action'], $donnees['cible'] ?? null, $donnees['message'] ?? null);
+
+        return redirect()->route('projets.show', $reference);
     }
 
     private function sujet(Request $request): string

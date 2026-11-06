@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 10;
+    public const VERSION = 14;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -32,10 +32,17 @@ final class SchemaInscription
         'masquage_reseau_gamad',
         'zumra_gamad',
         'projet_gamad',
+        'etape_projet_gamad',
         'entreprise_gamad',
+        'document_entreprise_gamad',
+        'revision_entreprise_gamad',
         'opportunite_gamad',
         'candidature_gamad',
         'adhesion_zumra_gamad',
+        'responsabilite_zumra_gamad',
+        'configuration_zumra_gamad',
+        'participation_projet_gamad',
+        'contact_reseau_gamad',
         'equipe_projet_gamad',
         'identifiant_resolution',
         'evenement_cycle_identite',
@@ -280,6 +287,73 @@ final class SchemaInscription
                 PRIMARY KEY (espace_reference, membre_reference)
             )
         SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS etape_projet_gamad (
+                reference TEXT PRIMARY KEY,
+                projet_reference TEXT NOT NULL REFERENCES projet_gamad(reference) ON DELETE CASCADE,
+                titre VARCHAR(80) NOT NULL,
+                etat TEXT NOT NULL CHECK (etat IN ('todo', 'in_progress', 'done')),
+                position INTEGER NOT NULL CHECK (position >= 0),
+                UNIQUE (projet_reference, position)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS responsabilite_zumra_gamad (
+                espace_reference TEXT NOT NULL,
+                membre_reference TEXT NOT NULL,
+                PRIMARY KEY (espace_reference, membre_reference),
+                FOREIGN KEY (espace_reference, membre_reference)
+                    REFERENCES adhesion_zumra_gamad(espace_reference, membre_reference) ON DELETE CASCADE
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS configuration_zumra_gamad (
+                zumra_reference TEXT PRIMARY KEY REFERENCES zumra_gamad(reference) ON DELETE CASCADE,
+                mode_adhesion TEXT NOT NULL CHECK (mode_adhesion IN ('open', 'approval'))
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS participation_projet_gamad (
+                projet_reference TEXT NOT NULL REFERENCES projet_gamad(reference) ON DELETE CASCADE,
+                candidat_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                message VARCHAR(280),
+                etat TEXT NOT NULL CHECK (etat IN ('pending', 'accepted', 'declined', 'withdrawn')),
+                PRIMARY KEY (projet_reference, candidat_reference)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS document_entreprise_gamad (
+                entreprise_reference TEXT NOT NULL REFERENCES entreprise_gamad(reference) ON DELETE CASCADE,
+                type_document TEXT NOT NULL CHECK (type_document IN ('dfe', 'idu')),
+                contenu TEXT NOT NULL,
+                PRIMARY KEY (entreprise_reference, type_document)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS revision_entreprise_gamad (
+                entreprise_reference TEXT PRIMARY KEY REFERENCES entreprise_gamad(reference) ON DELETE CASCADE,
+                revision INTEGER NOT NULL CHECK (revision > 0)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS contact_reseau_gamad (
+                reference TEXT PRIMARY KEY,
+                nom VARCHAR(80) NOT NULL,
+                email VARCHAR(254) NOT NULL,
+                sujet TEXT NOT NULL CHECK (sujet IN ('general', 'account', 'problem', 'partnership', 'other')),
+                message VARCHAR(2000) NOT NULL,
+                etat TEXT NOT NULL CHECK (etat IN ('new', 'read', 'handled')),
+                cree_le TEXT NOT NULL
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS contact_reseau_gamad_date ON contact_reseau_gamad(cree_le)');
 
         // Identifiants humains de résolution. La valeur brute (email, téléphone,
         // username...) n'est pas conservée : seule son empreinte normalisée sert

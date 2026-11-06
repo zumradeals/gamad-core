@@ -37,8 +37,7 @@
                 <input id="immatriculation" name="immatriculation" maxlength="100" value="{{ old('immatriculation') }}" required>
                 <label for="secteur">Secteur</label>
                 <input id="secteur" name="secteur" maxlength="120" value="{{ old('secteur') }}" required>
-                <label for="rccm">Justificatif RCCM (PDF, JPEG ou PNG)</label>
-                <input id="rccm" name="rccm" type="file" accept=".pdf,.jpg,.jpeg,.png" required>
+                @include('reseau.documents-entreprise')
                 <button class="bouton accent">Soumettre pour vérification</button>
             </form>
             @break
@@ -48,9 +47,12 @@
                 <article class="section">
                     <h2>{{ $entree['nom'] }}</h2>
                     <p>{{ $entree['pays'] }} · {{ $entree['immatriculation'] }} · {{ $entree['secteur'] }}</p>
-                    <a href="{{ route('entreprises.justificatif', $entree['reference']) }}">Télécharger le justificatif</a>
+                    <a href="{{ route('entreprises.justificatif', $entree['reference']) }}">Télécharger le RCCM</a>
+                    @if ($entree['dfe'])<a href="{{ route('entreprises.justificatif', [$entree['reference'], 'dfe']) }}">Télécharger la DFE</a>@endif
+                    @if ($entree['idu'])<a href="{{ route('entreprises.justificatif', [$entree['reference'], 'idu']) }}">Télécharger l’IDU</a>@endif
                     <form method="post" action="{{ route('entreprises.decider', $entree['reference']) }}">
                         @csrf
+                        <input type="hidden" name="revision" value="{{ $entree['revision'] }}">
                         @if ($entree['etat'] === 'pending')
                             <button class="bouton" name="action" value="verified">Vérifier</button>
                             <button class="bouton" name="action" value="declined">Refuser</button>
@@ -68,6 +70,13 @@
             <p>{{ $entreprise['secteur'] }}</p>
             @if ($gestion)
                 <p>{{ ['pending' => 'Vérification en attente', 'verified' => 'Entreprise vérifiée', 'declined' => 'Vérification refusée', 'suspended' => 'Entreprise suspendue'][$entreprise['etat']] }}</p>
+                @if ($entreprise['etat'] === 'declined')
+                    <form class="formulaire-reseau" method="post" enctype="multipart/form-data" action="{{ route('entreprises.resoumettre', $entreprise['reference']) }}">
+                        @csrf
+                        @include('reseau.documents-entreprise')
+                        <button class="bouton accent">Soumettre à nouveau</button>
+                    </form>
+                @endif
                 @if ($entreprise['etat'] === 'verified')
                     <form class="formulaire-reseau" method="post" action="{{ route('opportunites.store', $entreprise['reference']) }}">
                         @csrf

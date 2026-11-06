@@ -41,11 +41,10 @@
                 Vue d’ensemble
             </a>
 
-            <a class="nav__link" href="{{ route('reseau.moderation') }}"
-               @if(request()->routeIs('reseau.moderation*')) aria-current="page" @endif>
-                Modération du Réseau
+            <a class="nav__link" href="{{ route('reseau.administration') }}"
+               @if(request()->routeIs('reseau.administration', 'reseau.moderation*', 'reseau.contact.console', 'entreprises.revue')) aria-current="page" @endif>
+                Administration du Réseau
             </a>
-            <a class="nav__link" href="{{ route('entreprises.revue') }}">Vérification des entreprises</a>
 
             <span class="nav__label">Organisation de GAMAD</span>
             <a class="nav__link"
