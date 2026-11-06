@@ -70,7 +70,7 @@ final class ResoudreCompteReseauCore
             $etat = DB::table('evenement_cycle_identite')
                 ->where('identite_reference', $reference)
                 ->whereNotIn('evenement_type', ['RATTACHEMENT_PRODUIT', 'RETRAIT_PRODUIT'])
-                ->where('date_effet', '<=', now()->toIso8601String())
+                ->where('date_effet', '<=', now('UTC')->toIso8601String())
                 ->orderByDesc('date_effet')
                 ->orderByDesc('id')
                 ->value('etat_apres');
