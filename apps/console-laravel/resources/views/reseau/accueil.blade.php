@@ -26,7 +26,8 @@
                 <p class="etiquette">Le réseau social d’action</p>
                 <h1 id="accroche">Des personnes qui inspirent. <span>De nouvelles possibilités.</span></h1>
                 <p>Sur GAMAD, découvrez des personnes, apprenez de leurs expériences, créez des liens et avancez à votre rythme.</p>
-                <a class="bouton accent" href="#comment">Découvrir GAMAD</a>
+                <a class="bouton accent" href="{{ route('inscription.formulaire') }}">Créer un compte</a>
+                <a class="bouton" href="#comment">Découvrir GAMAD</a>
             </div>
             <figure>
                 <img src="{{ asset('images/gamad-accueil-hero.webp') }}" alt="Quatre personnes échangent autour d’un ordinateur." width="510" height="280" fetchpriority="high">

@@ -271,6 +271,83 @@ $verifier(
         . $reponseActif['statut'] . ' — ' . json_encode($reponseActif['corps'], JSON_UNESCAPED_UNICODE) . ')',
 );
 
+// Le même Core traite le formulaire public, la livraison et la reconnexion.
+set_exception_handler(static function (Throwable $exception): never {
+    fwrite(STDERR, (string) $exception . PHP_EOL);
+    exit(1);
+});
+$web = static function (string $methode, string $uri, array $formulaire = [], array $cookies = []) use ($kernel, $app): array {
+    $app['session']->driver()->flush();
+    $requete = Request::create($uri, $methode, $formulaire, $cookies);
+    $reponse = $kernel->handle($requete);
+    foreach ($reponse->headers->getCookies() as $cookie) {
+        $cookies[$cookie->getName()] = $cookie->getValue();
+    }
+    $kernel->terminate($requete, $reponse);
+
+    return [$reponse, $cookies];
+};
+[$accueil] = $web('GET', '/');
+[$formulaire] = $web('GET', '/inscription');
+$verifier(
+    $accueil->getStatusCode() === 200 && str_contains((string) $accueil->getContent(), '/inscription')
+        && $formulaire->getStatusCode() === 200,
+    'l’accueil public ouvre le formulaire d’inscription',
+);
+$emailWeb = 'inscription.web@example.test';
+$secretWeb = 'Compte-GAMAD-web-2026!';
+[$creationWeb, $cookiesWeb] = $web('POST', '/inscription', [
+    'nom' => 'Personne inscrite depuis le navigateur',
+    'identifiant' => $emailWeb,
+    'mot_de_passe' => $secretWeb,
+    'mot_de_passe_confirmation' => $secretWeb,
+    'producteur' => 'PRD-CHOISI-PAR-LE-CLIENT',
+]);
+[$pageCode, $cookiesWeb] = $web('GET', '/inscription/verification', cookies: $cookiesWeb);
+$verifier(
+    $creationWeb->getStatusCode() === 302 && $pageCode->getStatusCode() === 200,
+    'le formulaire ouvre une vérification liée à la session du navigateur',
+);
+$transport = \Illuminate\Support\Facades\Mail::mailer('array')->getSymfonyTransport();
+$message = $transport->messages()->last()?->getOriginalMessage();
+preg_match('/est : ([0-9]{6})/', $message?->getTextBody() ?? '', $codeLivre);
+$codeInitial = $codeLivre[1] ?? '';
+$attenteWeb = $app['session']->driver()->get('gamad_inscription_en_attente', []);
+$verifier(
+    $codeInitial !== '' && !str_contains((string) $pageCode->getContent(), $codeInitial)
+        && isset($attenteWeb['verification_reference']),
+    'le code est envoyé par e-mail sans être affiché par la page',
+);
+[$sansSession] = $web('POST', '/inscription/verification', ['code' => $codeInitial]);
+$verifier(
+    str_ends_with((string) $sansSession->headers->get('Location'), '/inscription'),
+    'un autre navigateur ne peut pas consommer le défi',
+);
+$registreIdentites->prepare('UPDATE verification_identifiant SET cree_le = ? WHERE reference = ?')
+    ->execute([gmdate('c', time() - 61), $attenteWeb['verification_reference'] ?? '']);
+$nombreAvant = $transport->messages()->count();
+[, $cookiesWeb] = $web('POST', '/inscription/verification/renvoi', ['destination' => $emailWeb], $cookiesWeb);
+$message = $transport->messages()->last()?->getOriginalMessage();
+preg_match('/est : ([0-9]{6})/', $message?->getTextBody() ?? '', $codeRelivre);
+$verifier($transport->messages()->count() === $nombreAvant + 1, 'le renvoi Core livre un nouveau code');
+[$validationWeb, $cookiesWeb] = $web('POST', '/inscription/verification', [
+    'code' => $codeRelivre[1] ?? '',
+], $cookiesWeb);
+$verifier(
+    str_ends_with((string) $validationWeb->headers->get('Location'), '/connexion'),
+    'le code reçu ouvre le parcours de connexion',
+);
+[$connexionWeb, $cookiesWeb] = $web('POST', '/connexion', [
+    'entite' => $emailWeb, 'mode' => 'identifiant', 'secret' => $secretWeb,
+], $cookiesWeb);
+[$profilWeb] = $web('GET', '/mon-profil', cookies: $cookiesWeb);
+$verifier(
+    str_ends_with((string) $connexionWeb->headers->get('Location'), '/mon-profil')
+        && $profilWeb->getStatusCode() === 200
+        && str_contains((string) $profilWeb->getContent(), 'Personne inscrite depuis le navigateur'),
+    'le nouveau compte Core se connecte et ouvre son profil',
+);
+
 $suspension = $registreProduits->suspendreProduit('PRD-GAMAD-005', [
     'politique' => 'POL-PRODUITS-V1',
     'producteur' => 'AUT-GAMAD-001',

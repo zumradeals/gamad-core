@@ -29,6 +29,10 @@
             <h2>Se connecter à GAMAD</h2>
             <p class="auth-form__intro">Utilisez le moyen de connexion associé à votre compte.</p>
 
+            @if (session('inscription_statut'))
+                <p role="status">{{ session('inscription_statut') }}</p>
+            @endif
+
             @if ($errors->any())
                 <div class="form-error auth-error" role="alert">{{ $errors->first() }}</div>
             @endif

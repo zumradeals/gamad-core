@@ -21,3 +21,7 @@ Le propriétaire a confirmé une installation neuve sans données historiques à
 4. Vérifier le rendu et les actions dans le navigateur, l’accès public et privé, les refus attendus et la révocation. Comparer les écrans et parcours avec l’inventaire source et vérifier la CI sur le commit de livraison.
 
 La PR peut être construite en plusieurs commits vérifiables. Le transfert est terminé lorsque tous les écrans et leurs opérations fonctionnent dans `gamad-core` avec le même compte Core et la même base. Le déploiement fait l’objet d’une décision séparée.
+
+## Inscription publique
+
+Le formulaire web utilise le produit GAMAD existant `PRD-GAMAD-005`. Sur installation neuve, ce produit doit être inscrit et activé dans le registre Core, la politique d’inscription doit être initialisée par `core:comptes:bootstrap` et le canal e-mail du Core doit être configuré. Le formulaire suit la règle historique de Réseau de huit caractères minimum. Le code et son renvoi passent par les mêmes opérations Core que l’API. Le défi en cours est lié à la session du navigateur qui a ouvert l’inscription.

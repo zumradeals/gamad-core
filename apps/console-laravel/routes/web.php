@@ -13,6 +13,7 @@ use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
 use App\Http\Controllers\EvenementConsoleController;
 use App\Http\Controllers\IdentiteConsoleController;
+use App\Http\Controllers\InscriptionGamadController;
 use App\Http\Controllers\OrganisationConsoleController;
 use App\Http\Controllers\RealmConsoleController;
 use App\Http\Controllers\PasskeyController;
@@ -547,7 +548,19 @@ Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     Route::get('/index/diagnostic', [Ctr04Controller::class, 'diagnostiquerIndex'])->name('ctr04.diagnostiquer-index');
 });
 
-// Accès : la seule porte ouverte sans session (CAP-CORE-005).
+// Inscription personnelle. Le navigateur ne choisit ni le produit ni le sujet du défi.
+Route::middleware('gamad.https')->group(function (): void {
+    Route::get('/inscription', [InscriptionGamadController::class, 'formulaire'])->name('inscription.formulaire');
+    Route::post('/inscription', [InscriptionGamadController::class, 'inscrire'])
+        ->middleware('throttle:5,1')->name('inscription.creer');
+    Route::get('/inscription/verification', [InscriptionGamadController::class, 'verification'])->name('inscription.verification');
+    Route::post('/inscription/verification', [InscriptionGamadController::class, 'verifier'])
+        ->middleware('throttle:10,1')->name('inscription.verifier');
+    Route::post('/inscription/verification/renvoi', [InscriptionGamadController::class, 'renvoyer'])
+        ->middleware('throttle:5,1')->name('inscription.renvoyer');
+});
+
+// Accès au compte et à la console (CAP-CORE-005).
 Route::get('/connexion', [AccesController::class, 'formulaire'])->name('acces.formulaire');
 Route::post('/connexion', [AccesController::class, 'connecter'])
     ->middleware('throttle:10,1')
