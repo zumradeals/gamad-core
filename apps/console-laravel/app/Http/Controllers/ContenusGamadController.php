@@ -41,7 +41,7 @@ final class ContenusGamadController
         $fiche = $contenus->publication($reference, $request->session()->get('gamad_session'));
         abort_if($fiche === null, 404);
 
-        $fiche['commentaires'] = array_filter($fiche['commentaires'], static fn (array $commentaire): bool => $commentaire['parent_reference'] === null);
+        $fiche['commentaires'] = array_filter($fiche['commentaires'], static fn (array $commentaire): bool => $commentaire['parent_reference'] === null && $commentaire['retire_le'] === null);
 
         return response()->view('reseau.contenus', $fiche + ['types' => ContenusGamad::TYPES + [ContenusGamad::TYPE_BESOIN => 'J’ai besoin'], 'motifs' => ModerationGamad::MOTIFS])
             ->header('Cache-Control', 'private, no-store');
@@ -83,6 +83,13 @@ final class ContenusGamadController
     {
         $donnees = $request->validate(['contenu' => ['required', 'string', 'max:500']]);
         $contenus->modifierCommentaire($this->sujet($request), $reference, $commentaire, $donnees['contenu']);
+
+        return response()->noContent();
+    }
+
+    public function retirerCommentaire(Request $request, ContenusGamad $contenus, string $reference, string $commentaire): Response
+    {
+        $contenus->retirerCommentaire($this->sujet($request), $reference, $commentaire);
 
         return response()->noContent();
     }

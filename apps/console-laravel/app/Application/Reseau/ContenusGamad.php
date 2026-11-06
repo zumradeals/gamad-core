@@ -57,10 +57,11 @@ final class ContenusGamad
         }
 
         $requete = $registre->prepare(
-            "SELECT c.*, r.parent_reference, parent.auteur_reference AS auteur_parent
+            "SELECT c.*, r.parent_reference, parent.auteur_reference AS auteur_parent, retrait.retire_le
              FROM commentaire_gamad c
              LEFT JOIN reponse_commentaire_gamad r ON r.reponse_reference = c.reference
              LEFT JOIN commentaire_gamad parent ON parent.reference = r.parent_reference
+             LEFT JOIN retrait_commentaire_gamad retrait ON retrait.commentaire_reference = c.reference
              WHERE c.publication_reference = ?
                AND NOT EXISTS (
                    SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'commentaire'
@@ -77,6 +78,9 @@ final class ContenusGamad
                 continue;
             }
             unset($commentaire['auteur_parent']);
+            if ($commentaire['retire_le'] !== null) {
+                $commentaire['contenu'] = null;
+            }
             $commentaires[] = $commentaire;
             if (count($commentaires) === 50) {
                 break;
@@ -266,6 +270,7 @@ final class ContenusGamad
                     "SELECT c.auteur_reference FROM commentaire_gamad c
                      WHERE c.reference = ? AND c.publication_reference = ?
                        AND NOT EXISTS (SELECT 1 FROM reponse_commentaire_gamad r WHERE r.reponse_reference = c.reference)
+                       AND NOT EXISTS (SELECT 1 FROM retrait_commentaire_gamad retrait WHERE retrait.commentaire_reference = c.reference)
                        AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'commentaire' AND m.cible_reference = c.reference)"
                 );
                 $requete->execute([$parent, $publication]);
@@ -294,14 +299,37 @@ final class ContenusGamad
         abort_if($this->membres->lire($sujet, $registre) === null, 403);
         abort_if($this->lirePublication($registre, $publication, $sujet, $this->blocages->exclus($registre, $sujet)) === null, 404);
 
-        $requete = $registre->prepare(
-            "UPDATE commentaire_gamad SET contenu = ?
-             WHERE reference = ? AND publication_reference = ? AND auteur_reference = ?
-               AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'commentaire' AND cible_reference = ?)
-               AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'publication' AND cible_reference = ?)"
-        );
-        $requete->execute([$this->texte($contenu), $commentaire, $publication, $sujet, $commentaire, $publication]);
-        abort_if($requete->rowCount() === 0, 404);
+        PaireGamad::verrouiller($registre, 'commentaire', $publication, function () use ($registre, $sujet, $publication, $commentaire, $contenu): void {
+            $requete = $registre->prepare(
+                "UPDATE commentaire_gamad SET contenu = ?
+                 WHERE reference = ? AND publication_reference = ? AND auteur_reference = ?
+                   AND NOT EXISTS (SELECT 1 FROM retrait_commentaire_gamad WHERE commentaire_reference = ?)
+                   AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'commentaire' AND cible_reference = ?)
+                   AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'publication' AND cible_reference = ?)"
+            );
+            $requete->execute([$this->texte($contenu), $commentaire, $publication, $sujet, $commentaire, $commentaire, $publication]);
+            abort_if($requete->rowCount() === 0, 404);
+        });
+    }
+
+    public function retirerCommentaire(string $sujet, string $publication, string $commentaire): void
+    {
+        $registre = Magasin::ouvrir();
+        abort_if($this->membres->lire($sujet, $registre) === null, 403);
+        abort_if($this->lirePublication($registre, $publication, $sujet, $this->blocages->exclus($registre, $sujet)) === null, 404);
+
+        PaireGamad::verrouiller($registre, 'commentaire', $publication, function () use ($registre, $sujet, $publication, $commentaire): void {
+            $requete = $registre->prepare(
+                'INSERT INTO retrait_commentaire_gamad (commentaire_reference, retire_le)
+                 SELECT reference, ? FROM commentaire_gamad
+                 WHERE reference = ? AND publication_reference = ? AND auteur_reference = ?
+                 ON CONFLICT (commentaire_reference) DO NOTHING'
+            );
+            $requete->execute([gmdate('c'), $commentaire, $publication, $sujet]);
+            abort_if($requete->rowCount() === 0, 404);
+            $registre->prepare('UPDATE commentaire_gamad SET contenu = ? WHERE reference = ?')
+                ->execute(['Commentaire retiré.', $commentaire]);
+        });
     }
 
     public function favoris(string $sujet): array
