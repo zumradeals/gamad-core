@@ -36,3 +36,53 @@ summary { cursor: pointer; font-weight: 700; }
 .formulaire-reseau textarea, .formulaire-reseau select { font: inherit; }
 .formulaire-reseau .bouton { justify-self: start; }
 .texte-reseau { white-space: pre-wrap; overflow-wrap: anywhere; }
+.formulaire-reseau input {
+    font: inherit;
+    padding: .65rem .8rem;
+    border: 1px solid #bac8d3;
+    border-radius: .65rem;
+}
+
+.reseau-public { background: #f3f1eb; }
+.reseau-public .conteneur { width: min(1192px, calc(100% - 2rem)); }
+.reseau-public .barre { min-height: 3rem; }
+.reseau-public .barre nav a { text-decoration: none; }
+.reseau-public .barre nav a:hover { text-decoration: underline; }
+.reseau-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.reseau-public .bouton { cursor: pointer; font: inherit; font-weight: 700; color: inherit; }
+.reseau-public .accent { background: #f2c200; border-color: #f2c200; }
+.reseau-public .hero { grid-template-columns: 5fr 7fr; }
+.reseau-public .hero figure { position: relative; padding-bottom: 1.5rem; }
+.reseau-public .hero figcaption { position: relative; width: fit-content; max-width: 85%; margin: -1.3rem .8rem 0 auto; box-shadow: 0 .5rem 1rem #0e2a3f18; }
+.reseau-public .section { padding-block: clamp(1.7rem, 4vw, 3rem); }
+.reseau-public .etapes article { text-align: center; }
+.reseau-public .confiance { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.reseau-public .confiance ul { display: grid; gap: .75rem; margin: 0; }
+.reseau-invitation { text-align: center; }
+.reseau-recherche { background: white; padding-block: 1.4rem; }
+.reseau-recherche form { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .65rem; }
+.reseau-recherche label { font-weight: 700; }
+.reseau-recherche input { min-width: 0; border: 1px solid #d4cec2; border-radius: .65rem; padding: .65rem .85rem; background: #f3f1eb; font: inherit; }
+.reseau-acces { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .85fr) minmax(20rem, 1fr); align-items: stretch; padding-block: clamp(1.25rem, 4vw, 3rem); }
+.reseau-acces-intro { align-self: center; padding-right: 1.25rem; }
+.reseau-acces-intro ul { list-style: none; padding: 0; display: grid; gap: .75rem; }
+.reseau-acces-intro li strong { display: block; }
+.reseau-portrait { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.reseau-carte { background: white; padding: clamp(1rem, 3vw, 2rem); border: 1px solid #dfdbd1; border-radius: 1.1rem; box-shadow: 0 .5rem 1rem #0e2a3f18; }
+.reseau-acces-titre { margin-block: .35em; font-size: clamp(2rem, 5vw, 3.65rem); font-weight: 800; line-height: 1.08; }
+.reseau-acces-titre span { display: block; color: #8a5100; }
+.reseau-carte h1 { margin-top: 0; font-size: clamp(1.5rem, 2.4vw, 2.1rem); }
+.reseau-carte label { font-weight: 700; display: block; }
+.reseau-carte input { box-sizing: border-box; width: 100%; }
+.reseau-carte .field { display: grid; gap: .3rem; }
+.reseau-public .reseau-valider { background: #0e2a3f; color: white; border-color: #0e2a3f; justify-self: stretch; justify-content: center; }
+@media (max-width: 850px) {
+    .reseau-acces { grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .reseau-acces-intro { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+    .reseau-public .hero, .reseau-public .confiance, .reseau-acces { grid-template-columns: 1fr; }
+    .reseau-recherche form { grid-template-columns: minmax(0, 1fr) auto; }
+    .reseau-recherche label { grid-column: 1 / -1; }
+    .reseau-acces-intro, .reseau-portrait { display: none; }
+}

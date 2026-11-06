@@ -276,15 +276,20 @@ $verifier(
 );
 
 // Le navigateur utilise la même personne canonique et la vraie session CTR-16.
-$verifier($requete('GET', '/reseau/mon-compte')['statut'] === 302, 'Réseau exige une session Core');
-$connexionWeb = $requete('POST', '/connexion', [
+$invitationConnexion = $requete('GET', '/reseau/mon-compte');
+$verifier(
+    $invitationConnexion['statut'] === 302
+        && str_ends_with($invitationConnexion['location'] ?? '', '/reseau/connexion'),
+    'Réseau exige une session Core et présente sa propre connexion',
+);
+$connexionWeb = $requete('POST', '/reseau/connexion', [
     'entite' => 'personne.test+satellite@example.test',
-    'mode' => 'identifiant',
     'secret' => $motDePasse,
-]);
+], cookies: $invitationConnexion['cookies']);
 $compteReseau = $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies']);
 $verifier(
     $connexionWeb['statut'] === 302
+        && str_ends_with($connexionWeb['location'] ?? '', '/reseau/mon-compte')
         && $compteReseau['statut'] === 200
         && ($compteReseau['corps']['compte'] ?? null) === [
             'identite_reference' => $reference,
@@ -294,6 +299,14 @@ $verifier(
     'Réseau lit directement le compte et son nom Core avec la session du navigateur',
 );
 $cookies = $connexionWeb['cookies'];
+$agir = $requete('GET', '/agir', cookies: $cookies);
+$formulaireSavoir = $requete('GET', '/fil?type=knowledge', cookies: $cookies);
+$verifier(
+    $agir['statut'] === 200 && str_contains($agir['html'], '/fil?type=knowledge#publier')
+        && $formulaireSavoir['statut'] === 200
+        && str_contains($formulaireSavoir['html'], 'value="knowledge" selected'),
+    'Agir ouvre le formulaire de publication avec le type choisi dans la session Core',
+);
 $profil = $requete('GET', '/mon-profil', cookies: $cookies);
 $verifier(
     $profil['statut'] === 200 && str_contains($profil['html'], 'Ma présentation'),
@@ -468,6 +481,17 @@ $premierCookies = $connexionWeb['cookies'];
 $requete('PATCH', '/mon-profil', [
     'bio' => 'Deuxième profil', 'visibilite' => 'public', 'apportees' => 'Rénovation',
 ], cookies: $secondCookies);
+$commentaires = $registreIdentites->prepare('SELECT reference FROM commentaire_gamad WHERE publication_reference = ?');
+$commentaires->execute([basename($uriPublication)]);
+$uriModificationCommentaire = $uriPublication.'/commentaires/'.$commentaires->fetchColumn();
+$commentaires->closeCursor();
+$verifier(
+    $requete('PATCH', $uriModificationCommentaire, ['contenu' => 'Modification par un tiers'], cookies: $secondCookies)['statut'] === 404
+        && $requete('PATCH', $uriPrivee.'/commentaires/'.basename($uriModificationCommentaire), ['contenu' => 'Mauvaise publication'], cookies: $premierCookies)['statut'] === 404
+        && $requete('PATCH', $uriModificationCommentaire, ['contenu' => 'Commentaire corrigé.'], cookies: $premierCookies)['statut'] === 204
+        && str_contains($requete('GET', $uriPublication)['html'], 'Commentaire corrigé.'),
+    'seul l’auteur Core peut corriger son commentaire sur la publication correspondante',
+);
 $besoinPrive = $requete('POST', '/besoins', [
     'visibilite' => 'members', 'contenu' => 'Besoin réservé aux membres.',
 ], cookies: $premierCookies);
@@ -533,6 +557,11 @@ $contenuModeration = $requete('POST', '/fil', [
     'type' => 'share', 'visibilite' => 'public', 'contenu' => 'Contenu de test à modérer.',
 ], cookies: $premierCookies);
 $uriModeration = parse_url($contenuModeration['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$requete('POST', $uriModeration.'/commentaires', ['contenu' => 'Commentaire avant masquage.'], cookies: $premierCookies);
+$commentaireModere = $registreIdentites->prepare('SELECT reference FROM commentaire_gamad WHERE publication_reference = ?');
+$commentaireModere->execute([basename($uriModeration)]);
+$uriCommentaireModere = $uriModeration.'/commentaires/'.$commentaireModere->fetchColumn();
+$commentaireModere->closeCursor();
 $signalement = $requete('POST', $uriModeration.'/signalements', ['motif' => 'spam'], cookies: $secondCookies);
 $signalements = $registreIdentites->query('SELECT reference FROM signalement_reseau_gamad');
 $uriDecision = '/console/moderation-reseau/'.$signalements->fetchColumn();
@@ -549,6 +578,10 @@ $verifier(
         && $admission === 0 && str_contains($ecranModeration['html'], 'Contenu de test à modérer.')
         && $decision['statut'] === 302 && $requete('GET', $uriModeration)['statut'] === 404,
     'seule la console Core traite le signalement et le masquage retire l’URL publique',
+);
+$verifier(
+    $requete('PATCH', $uriCommentaireModere, ['contenu' => 'Modification après masquage'], cookies: $premierCookies)['statut'] === 404,
+    'le masquage d’une publication ferme aussi la modification des commentaires',
 );
 $avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
 $blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
@@ -601,6 +634,14 @@ $verifier(
         && $requete('GET', $uriProjet)['statut'] === 404,
     'le fondateur voit la demande d’accueil mais le dossier reste privé, même par URL directe',
 );
+$modificationProjet = ['titre' => 'Projet corrigé', 'dossier' => 'Dossier privé corrigé.'];
+$verifier(
+    $requete('PATCH', $uriProjet, $modificationProjet, cookies: $premierCookies)['statut'] === 404
+        && $requete('PATCH', $uriProjet, $modificationProjet, cookies: $secondCookies)['statut'] === 204
+        && str_contains($requete('GET', $uriProjet, cookies: $secondCookies)['html'], 'Dossier privé corrigé.')
+        && !str_contains($requete('GET', $uriZumra, cookies: $premierCookies)['html'], 'Dossier privé corrigé.'),
+    'seul le porteur Core peut modifier le dossier et la confidentialité demeure',
+);
 $publicationPrematuree = $requete('POST', $uriProjet.'/vitrine', [
     'action' => 'publier', 'vitrine' => 'Résumé public distinct.',
 ], cookies: $secondCookies);
@@ -619,6 +660,7 @@ $verifier(
         && $publication['statut'] === 302 && $vitrine['statut'] === 200
         && str_contains($vitrine['html'], 'Résumé public distinct.')
         && !str_contains($vitrine['html'], 'Dossier réservé au porteur.')
+        && !str_contains($vitrine['html'], 'Dossier privé corrigé.')
         && str_contains($requete('GET', '/projets')['html'], $uriProjet),
     'la vitrine devient publique seulement après accueil accepté et publication par le porteur',
 );
@@ -678,8 +720,8 @@ $apresEquipe = $requete('GET', $uriProjet, cookies: $premierCookies);
 $retraitEquipe = $requete('POST', $uriProjet.'/equipe', ['action' => 'retirer', 'cible' => $reference], cookies: $secondCookies);
 $verifier(
     $invitationProjet['statut'] === 302 && str_contains($avantEquipe['html'], 'Vous êtes invité')
-        && !str_contains($avantEquipe['html'], 'Dossier réservé au porteur.')
-        && $acceptationEquipe['statut'] === 302 && str_contains($apresEquipe['html'], 'Dossier réservé au porteur.')
+        && !str_contains($avantEquipe['html'], 'Dossier privé corrigé.')
+        && $acceptationEquipe['statut'] === 302 && str_contains($apresEquipe['html'], 'Dossier privé corrigé.')
         && $retraitEquipe['statut'] === 302 && $requete('GET', $uriProjet, cookies: $premierCookies)['statut'] === 404,
     'seul un collaborateur qui a accepté son invitation accède au dossier et le retrait ferme cet accès',
 );
@@ -719,7 +761,7 @@ $verifier(
         && !str_contains($publicNeVoitPas['html'], $proposition['message'])
         && $retraitParticipation['statut'] === 302 && $nouvelleParticipation['statut'] === 302
         && $autoDecision['statut'] === 404 && $decisionParticipation['statut'] === 302
-        && str_contains($collaborateurVoit['html'], 'Dossier réservé au porteur.'),
+        && str_contains($collaborateurVoit['html'], 'Dossier privé corrigé.'),
     'une proposition privée depuis la vitrine peut être retirée, resoumise et acceptée seulement par le porteur',
 );
 $cheminRccm = tempnam(sys_get_temp_dir(), 'gamad-rccm-');

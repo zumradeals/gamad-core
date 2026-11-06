@@ -32,6 +32,19 @@ final class AccesController
 
     public function connecter(Request $request): RedirectResponse
     {
+        return $this->ouvrirSession($request, reseau: false);
+    }
+
+    public function connecterReseau(Request $request): RedirectResponse
+    {
+        $request->merge(['mode' => 'identifiant']);
+
+        return $this->ouvrirSession($request, reseau: true);
+    }
+
+    private function ouvrirSession(Request $request, bool $reseau): RedirectResponse
+    {
+        $retour = $reseau ? redirect()->route('reseau.connexion') : back();
         $donnees = $request->validate([
             'entite' => ['required', 'string', 'max:'.($request->input('mode') === 'identifiant' ? 256 : 64)],
             'mode' => ['nullable', 'in:identifiant,reference'],
@@ -56,7 +69,7 @@ final class AccesController
                     $correlation,
                 );
 
-                return back()
+                return $retour
                     ->withInput($saisie)
                     ->withErrors([
                         'entite' => "Trop de tentatives. Réessayez dans {$attente} seconde(s).",
@@ -66,7 +79,7 @@ final class AccesController
 
             RateLimiter::hit($cleLimite, 60);
         } catch (\Throwable) {
-            return back()
+            return $retour
                 ->withInput($saisie)
                 ->withErrors([
                     'entite' => 'Connexion temporairement indisponible. Réessayez dans un instant.',
@@ -98,7 +111,7 @@ final class AccesController
                 // Les deux magasins sont indisponibles : l'accès reste fermé.
             }
 
-            return back()
+            return $retour
                 ->withInput($saisie)
                 ->withErrors([
                     'entite' => 'Connexion temporairement indisponible. Réessayez dans un instant.',
@@ -120,7 +133,7 @@ final class AccesController
                 $ctr->revoquerSession((string) $session['session']);
             }
 
-            return back()
+            return $retour
                 ->withInput($saisie)
                 ->withErrors([
                     'entite' => 'Connexion temporairement indisponible. Aucune session sans preuve d’audit.',
@@ -129,7 +142,7 @@ final class AccesController
 
         if ($session === null) {
             // Aucune distinction entre entité inconnue et secret erroné.
-            return back()
+            return $retour
                 ->withInput($saisie)
                 ->withErrors(['entite' => 'Identifiant ou secret refusé.']);
         }
@@ -141,6 +154,12 @@ final class AccesController
         }
         $request->session()->regenerate();
         $request->session()->put('gamad_session', $session['session']);
+
+        if ($reseau) {
+            $destination = $request->session()->pull('reseau.url.intended');
+
+            return $destination === null ? redirect()->route('fil') : redirect()->to($destination);
+        }
 
         return redirect()->intended('/mon-acces');
     }

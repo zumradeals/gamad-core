@@ -12,14 +12,14 @@ Le registre ci-dessous couvre les déclarations HTTP de `routes/web.php`, les é
 
 | Méthode et chemin source | Nom source | Équivalent Core | État ou écart |
 | --- | --- | --- | --- |
-| [`GET /`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L99) | `home` | `VIEW /` | Partiel · Sections dynamiques, recherche et navigation source à comparer |
+| [`GET /`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L99) | `home` | `VIEW /` | Partiel · Composition publique et recherche par nom ou compétence reprises, facettes et sélections dynamiques à reprendre |
 | [`GET /aide`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L102) | `aide` | `VIEW /aide` | Partiel · Contenu source partiellement repris |
 | [`GET /contact`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L103) | `contact` | `GET /contact` | Disponible · Formulaire public et traitement Core disponibles |
 | [`POST /contact`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L104) | `contact.store` | `POST /contact` | Disponible · Envoi public et protections testés |
 | [`GET /lieux/recherche`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L105) | `lieux.search` | — | À reprendre |
 | [`GET /charte`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L106) | `charte` | — | À reprendre |
 | [`GET /mentions-legales`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L107) | `mentions` | — | À reprendre |
-| [`VIEW /decouvrir`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L111) | `decouvrir` | — | À reprendre |
+| [`VIEW /decouvrir`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L111) | `decouvrir` | `VIEW /decouvrir` | Partiel · Accès aux annuaires et catalogues repris, Carrefour Besoins à reprendre |
 | [`GET /besoins`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L112) | `besoins.index` | — | À reprendre |
 | [`GET /personnes`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L113) | `personnes.index` | `GET /personnes` | Partiel · Recherche et visibilité disponibles, filtres territoriaux à reprendre |
 | [`GET /personnes/{profile:public_id}`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L114) | `personnes.show` | `GET /personnes/{reference}` | Partiel · Fiche disponible, photo et blocs source à reprendre |
@@ -98,7 +98,7 @@ Le registre ci-dessous couvre les déclarations HTTP de `routes/web.php`, les é
 | [`GET /projets/{project}/modifier`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L224) | `projets.edit` | — | À reprendre |
 | [`GET /projets/{project}/publier/{slug}`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L225) | `projets.publier` | — | À reprendre |
 | [`GET /fil`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L226) | `fil` | `GET /fil` | Partiel · Fil textuel disponible, filtres, pièces jointes et types restants |
-| [`VIEW /agir`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L227) | `agir` | — | À reprendre |
+| [`VIEW /agir`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L227) | `agir` | `VIEW /agir` | Partiel · Accès aux trois types de publication disponibles, actions spécialisées à reprendre |
 | [`GET /agir/{slug}`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L228) | `agir.publier` | — | À reprendre |
 | [`GET /publications/{publication}/signaler`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L229) | `publications.signaler` | `POST /publications/{reference}/signalements/{commentaire?}` | Partiel · Action intégrée à la fiche, écran dédié à reprendre |
 | [`GET /moderation`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L230) | `moderation` | `GET /console/moderation-reseau` | Partiel · Signalements et décisions de contenu, règles avancées à reprendre |
@@ -142,8 +142,8 @@ Le registre ci-dessous couvre les déclarations HTTP de `routes/web.php`, les é
 
 | Écran source | Équivalent Core | État |
 | --- | --- | --- |
-| Connexion | `/connexion` | Disponible · compte Core, identifiant vérifié |
-| Inscription | `/inscription` | Disponible · parcours e-mail Core |
+| Connexion | `/reseau/connexion` | Écran Réseau avec portrait source · identifiant vérifié, authentification et session Core · retour vers la page demandée ou le fil |
+| Inscription | `/inscription` | Disponible · présentation Réseau et parcours e-mail Core |
 | Vérification de l’e-mail | `/inscription/verification` | Disponible · vérification et renvoi |
 | Mot de passe oublié | — | À reprendre |
 | Réinitialisation du mot de passe | — | À reprendre |

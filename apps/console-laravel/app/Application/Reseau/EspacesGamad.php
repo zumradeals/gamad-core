@@ -113,6 +113,17 @@ final class EspacesGamad
         return $reference;
     }
 
+    public function modifierProjet(string $sujet, string $reference, string $titre, string $dossier): void
+    {
+        $registre = Magasin::ouvrir();
+        $this->exigerMembre($registre, $sujet);
+        $requete = $registre->prepare(
+            'UPDATE projet_gamad SET titre = ?, dossier = ? WHERE reference = ? AND porteur_reference = ?'
+        );
+        $requete->execute([$this->texte($titre, 'titre'), $this->texte($dossier, 'dossier'), $reference, $sujet]);
+        abort_if($requete->rowCount() === 0, 404);
+    }
+
     public function projet(string $reference, ?string $session): ?array
     {
         $registre = Magasin::ouvrir();

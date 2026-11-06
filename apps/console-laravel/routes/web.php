@@ -43,6 +43,7 @@ use Illuminate\Support\Facades\Route;
  * elle partage le même cas d'usage que l'API v1.
  */
 Route::view('/', 'reseau.accueil')->name('reseau.accueil');
+Route::view('/decouvrir', 'reseau.decouvrir')->name('reseau.decouvrir');
 Route::view('/aide', 'reseau.aide')->name('reseau.aide');
 Route::get('/contact', [ContactGamadController::class, 'formulaire'])
     ->middleware('gamad.https')->name('reseau.contact');
@@ -68,7 +69,7 @@ Route::get('/besoins/{reference}', [ContenusGamadController::class, 'besoin'])
     ->where('reference', '[a-f0-9]{24}')->name('besoins.show');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
-Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
+Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): void {
     Route::get('/entreprises/creer', [EntreprisesGamadController::class, 'formulaire'])->name('entreprises.create');
     Route::post('/entreprises', [EntreprisesGamadController::class, 'soumettre'])
         ->middleware('throttle:5,1,entreprise-')->name('entreprises.store');
@@ -83,6 +84,8 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
     Route::get('/zumra/nouvelle', [EspacesGamadController::class, 'nouvelleZumra'])->name('zumras.create');
     Route::post('/zumra', [EspacesGamadController::class, 'creerZumra'])
         ->middleware('throttle:10,1,zumra-')->name('zumras.store');
+    Route::patch('/projets/{reference}', [EspacesGamadController::class, 'modifierProjet'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,projet-modification-')->name('projets.modifier');
     Route::get('/projets/nouveau', [EspacesGamadController::class, 'nouveauProjet'])->name('projets.create');
     Route::post('/projets', [EspacesGamadController::class, 'creerProjet'])
         ->middleware('throttle:10,1,projet-')->name('projets.store');
@@ -125,6 +128,7 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
     Route::post('/publications/{reference}/signalements/{commentaire?}', [InteractionsGamadController::class, 'signaler'])
         ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
         ->middleware('throttle:10,1,signalement-')->name('publications.signaler');
+    Route::view('/agir', 'reseau.agir')->name('reseau.agir');
     Route::post('/besoins', [ContenusGamadController::class, 'publierBesoin'])
         ->middleware('throttle:10,1,besoin-')->name('besoins.store');
     Route::patch('/besoins/{reference}/etat', [ContenusGamadController::class, 'terminerBesoin'])
@@ -132,6 +136,9 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
     Route::post('/fil', [ContenusGamadController::class, 'publier'])
         ->middleware('throttle:10,1,publication-')->name('publications.store');
+    Route::patch('/publications/{reference}/commentaires/{commentaire}', [ContenusGamadController::class, 'modifierCommentaire'])
+        ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
+        ->middleware('throttle:30,60,commentaire-modification-')->name('publications.commentaires.modifier');
     Route::post('/publications/{reference}/commentaires', [ContenusGamadController::class, 'commenter'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,60,commentaire-')->name('publications.commenter');
 });
@@ -632,7 +639,7 @@ Route::middleware('gamad.session')->group(function (): void {
 });
 
 // Acces Réseau : session Core requise, sans privilege de console.
-Route::middleware('gamad.session')->group(function (): void {
+Route::middleware('gamad.session:reseau')->group(function (): void {
     Route::get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])->name('reseau.compte.core');
     Route::get('/mon-profil', [ProfilCompteGamadController::class, 'montrer'])->name('compte.profil');
     Route::patch('/mon-profil', [ProfilCompteGamadController::class, 'modifier'])
@@ -672,6 +679,12 @@ Route::middleware('gamad.https')->group(function (): void {
         ->middleware('throttle:10,1')->name('inscription.verifier');
     Route::post('/inscription/verification/renvoi', [InscriptionGamadController::class, 'renvoyer'])
         ->middleware('throttle:5,1')->name('inscription.renvoyer');
+});
+
+Route::middleware('gamad.https')->group(function (): void {
+    Route::view('/reseau/connexion', 'reseau.connexion')->name('reseau.connexion');
+    Route::post('/reseau/connexion', [AccesController::class, 'connecterReseau'])
+        ->middleware('throttle:10,1')->name('reseau.connecter');
 });
 
 // Accès au compte et à la console (CAP-CORE-005).

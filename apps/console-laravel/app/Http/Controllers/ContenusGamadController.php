@@ -16,11 +16,19 @@ final class ContenusGamadController
 {
     public function fil(Request $request, ContenusGamad $contenus): Response
     {
-        $page = (int) ($request->validate(['page' => ['nullable', 'integer', 'min:1', 'max:100000']])['page'] ?? 1);
+        $filtres = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'type' => ['nullable', Rule::in(array_keys(ContenusGamad::TYPES))],
+        ]);
+        $page = (int) ($filtres['page'] ?? 1);
         $fil = $contenus->fil($this->sujet($request), $page);
         abort_if($fil === null, 403);
 
-        return response()->view('reseau.contenus', $fil + ['page' => $page, 'types' => ContenusGamad::TYPES])
+        return response()->view('reseau.contenus', $fil + [
+            'page' => $page,
+            'types' => ContenusGamad::TYPES,
+            'typeInitial' => $filtres['type'] ?? null,
+        ])
             ->header('Cache-Control', 'private, no-store');
     }
 
@@ -52,6 +60,14 @@ final class ContenusGamadController
         abort_unless($contenus->commenter($this->sujet($request), $reference, $donnees['contenu']), 404);
 
         return redirect()->route('publications.show', $reference);
+    }
+
+    public function modifierCommentaire(Request $request, ContenusGamad $contenus, string $reference, string $commentaire): Response
+    {
+        $donnees = $request->validate(['contenu' => ['required', 'string', 'max:500']]);
+        $contenus->modifierCommentaire($this->sujet($request), $reference, $commentaire, $donnees['contenu']);
+
+        return response()->noContent();
     }
 
     public function besoin(Request $request, ContenusGamad $contenus, string $reference): JsonResponse

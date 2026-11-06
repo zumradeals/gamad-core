@@ -4,12 +4,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Créer un compte — GAMAD</title>
-    <link rel="stylesheet" href="{{ asset('css/gamad-core.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/reseau-accueil.css') }}">
 </head>
-<body class="auth-page">
-<main class="auth-shell">
-    <section class="auth-form-panel">
-        <form class="auth-form" action="{{ route('inscription.creer') }}" method="post">
+<body class="reseau-public">
+@include('reseau.navigation-publique')
+<main class="conteneur reseau-acces">
+    <section class="reseau-acces-intro">
+        <p class="etiquette">Le réseau social d’action</p>
+        <p class="reseau-acces-titre">Rejoignez <span>GAMAD.</span></p>
+        <p>Découvrez des personnes, partagez vos savoirs et développez vos projets.</p>
+    </section>
+    <img class="reseau-portrait" src="{{ asset('images/gamad-connexion-portrait.webp') }}" alt="" width="388" height="532">
+    <section class="reseau-carte">
+        <form class="formulaire-reseau" action="{{ route('inscription.creer') }}" method="post">
             @csrf
             <h1>Créer un compte GAMAD</h1>
             @if ($errors->any())<p class="form-error" role="alert">{{ $errors->first() }}</p>@endif
@@ -29,10 +36,11 @@
                 <label for="mot_de_passe_confirmation">Confirmer le mot de passe</label>
                 <input class="input" id="mot_de_passe_confirmation" name="mot_de_passe_confirmation" type="password" autocomplete="new-password" required minlength="8">
             </div>
-            <button class="button button--primary" type="submit">Créer mon compte</button>
-            <a href="{{ route('acces.formulaire') }}">J’ai déjà un compte</a>
+            <button class="bouton reseau-valider" type="submit">Créer mon compte</button>
+            <a href="{{ route('reseau.connexion') }}">J’ai déjà un compte</a>
         </form>
     </section>
 </main>
+@include('reseau.pied-public')
 </body>
 </html>
