@@ -116,7 +116,7 @@ it('ignore les evenements relationnels et refuse les dates ambigues', function (
     expect(ResoudreCompteReseauCore::identiteActive('PER-REL'))->toBeFalse();
 });
 
-it('resout un compte avec une vraie session CTR-16 et refuse apres revocation', function () {
+it('qualifie la session CTR-16 et refuse une resolution si le stockage Core est distinct', function () {
     $pdo = DB::connection()->getPdo();
     \Gamad\RegistreAcces\Magasin::creer($pdo);
 
@@ -165,7 +165,7 @@ it('resout un compte avec une vraie session CTR-16 et refuse apres revocation', 
     }
 
     $request = requeteResolutionCore();
-    $request->session()->put('gamad_session', $session['jeton'] ?? $session['reference'] ?? '');
+    $request->session()->put('gamad_session', $session['session']);
     expect(ResoudreCompteReseauCore::resoudre($request)?->userId)->toBe((string) $user->id);
 
     DB::table('evenement_cycle_identite')->insert([
