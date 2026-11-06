@@ -31,3 +31,9 @@ Le formulaire web utilise le produit GAMAD existant `PRD-GAMAD-005`. Sur install
 Le fil authentifié et les fiches de publication utilisent le compte Core à e-mail vérifié. Le transfert couvre les publications personnelles textuelles « Je partage », « Je partage un savoir » et « Ma réalisation », les audiences public et membres, et les commentaires simples. Les références d’auteur sont des références Core. Une révocation retire l’auteur et ses contenus des lectures Réseau.
 
 Restent à intégrer dans ce domaine les photos de profil, les territoires, les domaines, les pièces jointes, les autres types de publication et leurs actions, l’édition et les réponses aux commentaires, ainsi que la modération.
+
+## Interactions entre membres
+
+Une relation acceptée ouvre une conversation textuelle entre les deux comptes Core. Le retrait de la relation, le blocage ou la révocation ferme l’accès à la conversation. Les demandes de relation, acceptations et nouveaux messages produisent des notifications internes au même moment que leur écriture.
+
+Les membres peuvent signaler une publication ou un commentaire visible d’une autre personne. L’admission administrative du Core protège le classement et le masquage dans la console. La décision conserve l’auteur et la date du traitement. Ce parcours couvre les signalements de contenu, tandis que les écrans spécialisés de modération des personnes, des organisations et des espaces restent à reprendre avec les fonctionnalités correspondantes.

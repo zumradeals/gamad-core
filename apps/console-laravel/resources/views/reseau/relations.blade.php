@@ -11,6 +11,7 @@
         <nav aria-label="Réseau">
             <a href="{{ route('compte.profil') }}">Mon profil</a>
             <a href="{{ route('personnes.index') }}">Annuaire</a>
+            <a href="{{ route('notifications') }}">Notifications</a>
         </nav>
         <h1>Mes relations</h1>
         @forelse ($relations as $relation)
@@ -18,6 +19,7 @@
                 <h2>{{ $relation['nom'] }}</h2>
                 @if ($relation['etat'] === 'accepted')
                     <p>En relation</p>
+                    <a href="{{ route('conversations.show', $relation['reference_publique']) }}">Ouvrir la conversation</a>
                     @php($actions = ['remove' => 'Retirer la relation'])
                 @elseif ($relation['expediteur_reference'] === $sujet)
                     <p>Demande envoyée</p>

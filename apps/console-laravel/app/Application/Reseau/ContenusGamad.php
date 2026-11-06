@@ -30,7 +30,7 @@ final class ContenusGamad
         }
 
         $requete = $registre->prepare(
-            'SELECT * FROM publication_gamad ORDER BY cree_le DESC, reference DESC LIMIT 21 OFFSET ?'
+            "SELECT p.* FROM publication_gamad p WHERE NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference) ORDER BY cree_le DESC, reference DESC LIMIT 21 OFFSET ?"
         );
         $requete->bindValue(1, ($page - 1) * 20, PDO::PARAM_INT);
         $requete->execute();
@@ -53,7 +53,7 @@ final class ContenusGamad
         }
 
         $requete = $registre->prepare(
-            'SELECT * FROM commentaire_gamad WHERE publication_reference = ? ORDER BY cree_le DESC, reference DESC LIMIT 50'
+            "SELECT c.* FROM commentaire_gamad c WHERE publication_reference = ? AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'commentaire' AND m.cible_reference = c.reference) ORDER BY cree_le DESC, reference DESC LIMIT 50"
         );
         $requete->execute([$reference]);
 
@@ -94,7 +94,7 @@ final class ContenusGamad
 
     private function lirePublication(PDO $registre, string $reference, bool $membre, array $exclus): ?array
     {
-        $requete = $registre->prepare('SELECT * FROM publication_gamad WHERE reference = ?');
+        $requete = $registre->prepare("SELECT p.* FROM publication_gamad p WHERE p.reference = ? AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)");
         $requete->execute([$reference]);
         $publication = $requete->fetch(PDO::FETCH_ASSOC);
         if ($publication === false || (!$membre && $publication['visibilite'] !== 'public')) {

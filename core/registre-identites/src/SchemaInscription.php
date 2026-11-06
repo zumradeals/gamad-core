@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 7;
+    public const VERSION = 8;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -26,6 +26,10 @@ final class SchemaInscription
         'commentaire_gamad',
         'blocage_gamad',
         'relation_personnes_gamad',
+        'message_reseau_gamad',
+        'notification_reseau_gamad',
+        'signalement_reseau_gamad',
+        'masquage_reseau_gamad',
         'identifiant_resolution',
         'evenement_cycle_identite',
         'evenement_assurance_identite',
@@ -141,6 +145,57 @@ final class SchemaInscription
             )
         SQL);
         $pdo->exec('CREATE INDEX IF NOT EXISTS relation_personnes_gamad_seconde ON relation_personnes_gamad(seconde_reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS message_reseau_gamad (
+                reference TEXT PRIMARY KEY,
+                premiere_reference TEXT NOT NULL,
+                seconde_reference TEXT NOT NULL,
+                auteur_reference TEXT NOT NULL,
+                texte VARCHAR(1000) NOT NULL CHECK (length(texte) BETWEEN 1 AND 1000),
+                cree_le TEXT NOT NULL,
+                FOREIGN KEY (premiere_reference, seconde_reference)
+                    REFERENCES relation_personnes_gamad(premiere_reference, seconde_reference) ON DELETE CASCADE,
+                CHECK (auteur_reference IN (premiere_reference, seconde_reference))
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS message_reseau_gamad_paire ON message_reseau_gamad(premiere_reference, seconde_reference, cree_le, reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS notification_reseau_gamad (
+                reference TEXT PRIMARY KEY,
+                destinataire_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                type TEXT NOT NULL CHECK (type IN ('demande', 'acceptation', 'message')),
+                cree_le TEXT NOT NULL,
+                lue_le TEXT
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS notification_reseau_gamad_destinataire ON notification_reseau_gamad(destinataire_reference, cree_le, reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS signalement_reseau_gamad (
+                reference TEXT PRIMARY KEY,
+                categorie TEXT NOT NULL CHECK (categorie IN ('publication', 'commentaire')),
+                cible_reference TEXT NOT NULL,
+                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                motif TEXT NOT NULL CHECK (motif IN ('offensive', 'scam', 'misinformation', 'spam', 'privacy', 'other')),
+                etat TEXT NOT NULL CHECK (etat IN ('ouvert', 'masque', 'classe')),
+                cree_le TEXT NOT NULL,
+                decision_par TEXT,
+                decision_le TEXT,
+                UNIQUE (categorie, cible_reference, auteur_reference)
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS signalement_reseau_gamad_etat ON signalement_reseau_gamad(etat, cree_le)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS masquage_reseau_gamad (
+                categorie TEXT NOT NULL CHECK (categorie IN ('publication', 'commentaire')),
+                cible_reference TEXT NOT NULL,
+                PRIMARY KEY (categorie, cible_reference)
+            )
+        SQL);
 
         // Identifiants humains de résolution. La valeur brute (email, téléphone,
         // username...) n'est pas conservée : seule son empreinte normalisée sert

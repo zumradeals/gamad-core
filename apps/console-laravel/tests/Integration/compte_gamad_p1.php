@@ -488,6 +488,43 @@ $verifier(
         && str_contains($etatRelation['html'], 'En relation'),
     'une demande est unique par paire, seul le destinataire l’accepte et une décision périmée est refusée',
 );
+$conversation = '/conversations/'.$fichePublique;
+$conversationInverse = '/conversations/'.basename($uriSecond);
+$envoi = $requete('POST', $conversation, ['texte' => 'Message privé de test'], cookies: $secondCookies);
+$lecture = $requete('GET', $conversationInverse, cookies: $premierCookies);
+$notifications = $requete('GET', '/notifications', cookies: $premierCookies);
+$notice = $registreIdentites->prepare("SELECT reference FROM notification_reseau_gamad WHERE destinataire_reference = ? AND type = 'message'");
+$notice->execute([$reference]);
+$noticeUri = '/notifications/'.$notice->fetchColumn().'/lire';
+$notice->closeCursor();
+$verifier(
+    $envoi['statut'] === 302 && str_contains($lecture['html'], 'Message privé de test')
+        && str_contains($notifications['html'], 'vous a envoyé un message')
+        && $requete('POST', $noticeUri, cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', $noticeUri, cookies: $premierCookies)['statut'] === 302,
+    'les deux membres lisent la conversation et seule la destination peut lire sa notification',
+);
+$contenuModeration = $requete('POST', '/fil', [
+    'type' => 'share', 'visibilite' => 'public', 'contenu' => 'Contenu de test à modérer.',
+], cookies: $premierCookies);
+$uriModeration = parse_url($contenuModeration['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$signalement = $requete('POST', $uriModeration.'/signalements', ['motif' => 'spam'], cookies: $secondCookies);
+$signalements = $registreIdentites->query('SELECT reference FROM signalement_reseau_gamad');
+$uriDecision = '/console/moderation-reseau/'.$signalements->fetchColumn();
+$signalements->closeCursor();
+$nonAdmin = $requete('POST', $uriDecision, ['action' => 'masquer'], cookies: $secondCookies);
+$admission = $console->call('core:console:accorder-acces-administratif');
+$secretModeration = 'Secret-moderation-GAMAD-2026';
+$ctr16->inscrireAuthentificateur($autorite, $secretModeration);
+$admin = $requete('POST', '/connexion', ['entite' => $autorite, 'secret' => $secretModeration]);
+$ecranModeration = $requete('GET', '/console/moderation-reseau', cookies: $admin['cookies']);
+$decision = $requete('POST', $uriDecision, ['action' => 'masquer'], cookies: $admin['cookies']);
+$verifier(
+    $signalement['statut'] === 302 && $nonAdmin['statut'] === 403
+        && $admission === 0 && str_contains($ecranModeration['html'], 'Contenu de test à modérer.')
+        && $decision['statut'] === 302 && $requete('GET', $uriModeration)['statut'] === 404,
+    'seule la console Core traite le signalement et le masquage retire l’URL publique',
+);
 $avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
 $blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
 $listeBlocages = $requete('GET', '/mon-profil/blocages', cookies: $secondCookies);
@@ -501,6 +538,11 @@ $verifier(
         && $requete('GET', $uriSecond, cookies: $premierCookies)['statut'] === 404
         && $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Bloqué'], cookies: $secondCookies)['statut'] === 404,
     'le blocage exclut réciproquement les profils et ferme le fil, les URL directes et les commentaires concernés',
+);
+$verifier(
+    $requete('GET', $conversation, cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', $conversationInverse, ['texte' => 'Bloqué'], cookies: $premierCookies)['statut'] === 404,
+    'le blocage ferme la lecture et l’écriture de la conversation',
 );
 $requete('DELETE', $uriBlocage, cookies: $secondCookies);
 $verifier(

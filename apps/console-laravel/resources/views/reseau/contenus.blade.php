@@ -23,6 +23,8 @@
             <h1>{{ $types[$publication['type']] }}</h1>
             <p><strong>{{ $publication['auteur'] }}</strong></p>
             <p class="texte-reseau">{{ $publication['contenu'] }}</p>
+            @if (session('signalement_envoye'))<p role="status">Signalement transmis.</p>@endif
+            @if ($peut_commenter)@include('reseau.signalement')@endif
             <section aria-labelledby="commentaires">
                 <h2 id="commentaires">Commentaires</h2>
                 @if ($peut_commenter)
@@ -34,7 +36,10 @@
                     </form>
                 @endif
                 @forelse ($commentaires as $commentaire)
-                    <article><strong>{{ $commentaire['auteur'] }}</strong><p class="texte-reseau">{{ $commentaire['contenu'] }}</p></article>
+                    <article>
+                        <strong>{{ $commentaire['auteur'] }}</strong><p class="texte-reseau">{{ $commentaire['contenu'] }}</p>
+                        @if ($peut_commenter)@include('reseau.signalement', ['cibleCommentaire' => $commentaire['reference']])@endif
+                    </article>
                 @empty
                     <p>Aucun commentaire.</p>
                 @endforelse

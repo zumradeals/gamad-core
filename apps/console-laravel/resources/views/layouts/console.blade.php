@@ -41,6 +41,11 @@
                 Vue d’ensemble
             </a>
 
+            <a class="nav__link" href="{{ route('reseau.moderation') }}"
+               @if(request()->routeIs('reseau.moderation*')) aria-current="page" @endif>
+                Modération du Réseau
+            </a>
+
             <span class="nav__label">Organisation de GAMAD</span>
             <a class="nav__link"
                href="{{ route('console.identites.index') }}"

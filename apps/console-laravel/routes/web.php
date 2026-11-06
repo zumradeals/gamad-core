@@ -17,6 +17,7 @@ use App\Http\Controllers\Ctr04Controller;
 use App\Http\Controllers\EvenementConsoleController;
 use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\InscriptionGamadController;
+use App\Http\Controllers\InteractionsGamadController;
 use App\Http\Controllers\OrganisationConsoleController;
 use App\Http\Controllers\RealmConsoleController;
 use App\Http\Controllers\RelationsGamadController;
@@ -54,6 +55,16 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,demande-relation-')->name('relations.demander');
     Route::patch('/relations/{reference}', [RelationsGamadController::class, 'decider'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,decision-relation-')->name('relations.decider');
+    Route::get('/conversations/{reference}', [InteractionsGamadController::class, 'conversation'])
+        ->where('reference', '[a-f0-9]{24}')->name('conversations.show');
+    Route::post('/conversations/{reference}', [InteractionsGamadController::class, 'envoyer'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,messagerie-')->name('conversations.envoyer');
+    Route::get('/notifications', [InteractionsGamadController::class, 'notifications'])->name('notifications');
+    Route::post('/notifications/{reference}/lire', [InteractionsGamadController::class, 'lireNotification'])
+        ->where('reference', '[a-f0-9]{24}')->name('notifications.lire');
+    Route::post('/publications/{reference}/signalements/{commentaire?}', [InteractionsGamadController::class, 'signaler'])
+        ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
+        ->middleware('throttle:10,1,signalement-')->name('publications.signaler');
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
     Route::post('/fil', [ContenusGamadController::class, 'publier'])
         ->middleware('throttle:10,1,publication-')->name('publications.store');
@@ -62,6 +73,9 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
 });
 
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
+    Route::get('/console/moderation-reseau', [InteractionsGamadController::class, 'moderation'])->name('reseau.moderation');
+    Route::post('/console/moderation-reseau/{reference}', [InteractionsGamadController::class, 'traiter'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,moderation-reseau-')->name('reseau.moderation.traiter');
     Route::get('/console', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');
     Route::get('/normes/{reference}', [Ctr04Controller::class, 'resoudreNorme'])->name('ctr04.resoudre-norme');
     Route::get('/sources/{reference}', [Ctr04Controller::class, 'resoudreSource'])->name('ctr04.resoudre-source');

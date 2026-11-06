@@ -74,6 +74,7 @@ final class RelationsGamad
             );
             $requete->execute([...$paire, $sujet, $note, time(), time() - 7 * 86400]);
             abort_if($requete->rowCount() === 0, 409, 'Une demande existe déjà ou a été traitée récemment.');
+            NotificationsGamad::ajouter($registre, $fiche['identite_reference'], $sujet, 'demande');
         });
         RateLimiter::hit($limite, 86400);
     }
@@ -109,6 +110,9 @@ final class RelationsGamad
                 'UPDATE relation_personnes_gamad SET etat = ?, note = NULL, revision = revision + 1, modifie_le = ?
                  WHERE premiere_reference = ? AND seconde_reference = ?'
             )->execute([$etat, time(), ...$paire]);
+            if ($etat === 'accepted') {
+                NotificationsGamad::ajouter($registre, $fiche['identite_reference'], $sujet, 'acceptation');
+            }
         });
     }
 

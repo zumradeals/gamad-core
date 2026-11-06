@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Application\Reseau\ContenusGamad;
+use App\Application\Reseau\ModerationGamad;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -27,7 +28,7 @@ final class ContenusGamadController
         $fiche = $contenus->publication($reference, $request->session()->get('gamad_session'));
         abort_if($fiche === null, 404);
 
-        return response()->view('reseau.contenus', $fiche + ['types' => ContenusGamad::TYPES])
+        return response()->view('reseau.contenus', $fiche + ['types' => ContenusGamad::TYPES, 'motifs' => ModerationGamad::MOTIFS])
             ->header('Cache-Control', 'private, no-store');
     }
 
