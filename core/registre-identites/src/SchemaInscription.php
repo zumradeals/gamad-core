@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 17;
+    public const VERSION = 18;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -30,6 +30,7 @@ final class SchemaInscription
         'relation_personnes_gamad',
         'message_reseau_gamad',
         'notification_reseau_gamad',
+        'contexte_notification_aide_gamad',
         'signalement_reseau_gamad',
         'masquage_reseau_gamad',
         'zumra_gamad',
@@ -201,6 +202,13 @@ final class SchemaInscription
             )
         SQL);
         $pdo->exec('CREATE INDEX IF NOT EXISTS notification_reseau_gamad_destinataire ON notification_reseau_gamad(destinataire_reference, cree_le, reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS contexte_notification_aide_gamad (
+                notification_reference TEXT PRIMARY KEY REFERENCES notification_reseau_gamad(reference) ON DELETE CASCADE,
+                proposition_reference TEXT NOT NULL
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS signalement_reseau_gamad (

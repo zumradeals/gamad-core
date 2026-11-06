@@ -8,6 +8,7 @@ use App\Application\Reseau\ContenusGamad;
 use App\Application\Reseau\ConversationAideGamad;
 use App\Application\Reseau\ModerationGamad;
 use App\Application\Reseau\PropositionsAideGamad;
+use App\Support\Normalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -70,6 +71,24 @@ final class ContenusGamadController
         $contenus->modifierCommentaire($this->sujet($request), $reference, $commentaire, $donnees['contenu']);
 
         return response()->noContent();
+    }
+
+    public function besoins(Request $request, ContenusGamad $contenus): JsonResponse
+    {
+        $filtres = $request->validate([
+            'etat' => ['nullable', 'in:open,in_progress,resolved,closed,tous'],
+            'q' => ['nullable', 'string', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:10000'],
+        ]);
+        $page = (int) ($filtres['page'] ?? 1);
+        $besoins = $contenus->besoins(
+            $request->session()->get('gamad_session'),
+            $filtres['etat'] ?? 'open',
+            Normalizer::key($filtres['q'] ?? ''),
+            $page,
+        );
+
+        return response()->json($besoins + ['page' => $page])->header('Cache-Control', 'private, no-store');
     }
 
     public function besoin(Request $request, ContenusGamad $contenus, string $reference): JsonResponse

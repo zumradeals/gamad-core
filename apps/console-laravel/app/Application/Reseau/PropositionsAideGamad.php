@@ -62,6 +62,8 @@ final class PropositionsAideGamad
             $requete->closeCursor();
             abort_unless(is_string($reference), 409);
 
+            NotificationsGamad::ajouter($registre, $publication['auteur_reference'], $sujet, 'demande', $reference);
+
             return $reference;
         });
     }
@@ -100,6 +102,7 @@ final class PropositionsAideGamad
             if ($etat === 'accepted') {
                 $registre->prepare("UPDATE publication_gamad SET etat_besoin = 'in_progress' WHERE reference = ? AND etat_besoin = 'open'")
                     ->execute([$besoin]);
+                NotificationsGamad::ajouter($registre, $proposant, $sujet, 'acceptation', $reference);
             }
         });
     }

@@ -65,6 +65,7 @@ Route::get('/zumra/{reference}', [EspacesGamadController::class, 'zumra'])
 Route::get('/projets', [EspacesGamadController::class, 'projets'])->name('projets.index');
 Route::get('/projets/{reference}', [EspacesGamadController::class, 'projet'])
     ->where('reference', '[a-f0-9]{24}')->name('projets.show');
+Route::get('/besoins', [ContenusGamadController::class, 'besoins'])->name('besoins.index');
 Route::get('/besoins/{reference}', [ContenusGamadController::class, 'besoin'])
     ->where('reference', '[a-f0-9]{24}')->name('besoins.show');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
@@ -122,6 +123,8 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
         ->where('reference', '[a-f0-9]{24}')->name('conversations.show');
     Route::post('/conversations/{reference}', [InteractionsGamadController::class, 'envoyer'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,messagerie-')->name('conversations.envoyer');
+    Route::get('/notifications/donnees', [InteractionsGamadController::class, 'notificationsDonnees'])
+        ->name('notifications.donnees');
     Route::get('/notifications', [InteractionsGamadController::class, 'notifications'])->name('notifications');
     Route::post('/notifications/{reference}/lire', [InteractionsGamadController::class, 'lireNotification'])
         ->where('reference', '[a-f0-9]{24}')->name('notifications.lire');

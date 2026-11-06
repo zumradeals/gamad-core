@@ -559,6 +559,36 @@ $verifier(
         && (int) $registreIdentites->query('SELECT COUNT(*) FROM relation_personnes_gamad')->fetchColumn() === 0,
     'la conversation naît avec l’acceptation et reste propre à la proposition, sans créer de relation',
 );
+$cataloguePublic = $requete('GET', '/besoins?etat=tous');
+$catalogueMembre = $requete('GET', '/besoins?etat=closed&q=RESERVE', cookies: $secondCookies);
+$catalogueEnCours = $requete('GET', '/besoins?etat=in_progress&q=PROPOSITION');
+$verifier(
+    $cataloguePublic['statut'] === 200
+        && !in_array(basename($uriBesoinPrive), array_column($cataloguePublic['corps']['besoins'], 'reference'), true)
+        && ($catalogueMembre['corps']['besoins'][0]['reference'] ?? null) === basename($uriBesoinPrive)
+        && ($catalogueEnCours['corps']['besoins'][0]['reference'] ?? null) === basename($uriBesoinAide)
+        && ($requete('GET', '/besoins')['corps']['besoins'] ?? null) === []
+        && ($requete('GET', '/besoins?etat=tous&page=2')['corps']['besoins'] ?? null) === [],
+    'le catalogue filtre les besoins par état et par texte et respecte la visibilité avant pagination',
+);
+$notificationsAide = $requete('GET', '/notifications/donnees', cookies: $premierCookies)['corps'];
+$notificationsProposant = $requete('GET', '/notifications/donnees', cookies: $secondCookies)['corps'];
+$typesAide = array_column($notificationsAide, 'type');
+$typesProposant = array_column($notificationsProposant, 'type');
+$acceptationAide = array_values(array_filter($notificationsProposant, static fn (array $notice): bool => $notice['type'] === 'aide_acceptee'))[0] ?? [];
+$lectureNoticeAide = '/notifications/'.($acceptationAide['reference'] ?? '').'/lire';
+$verifier(
+    count(array_keys($typesAide, 'aide_proposee', true)) === 1
+        && count(array_keys($typesAide, 'message_aide', true)) === 1
+        && !in_array('aide_acceptee', $typesAide, true)
+        && count(array_keys($typesProposant, 'aide_acceptee', true)) === 1
+        && ($acceptationAide['proposition_reference'] ?? null) === basename($uriNouvelleAide)
+        && ($acceptationAide['besoin_reference'] ?? null) === basename($uriBesoinAide)
+        && !isset($acceptationAide['auteur_reference'])
+        && $requete('POST', $lectureNoticeAide, cookies: $premierCookies)['statut'] === 404
+        && $requete('POST', $lectureNoticeAide, cookies: $secondCookies)['statut'] === 302,
+    'les notifications d’aide sont privées, contextualisées et sans doublon après un retrait et une nouvelle proposition',
+);
 $referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
 $referenceSecond->execute([$referenceTel]);
 $uriSecond = '/personnes/'.$referenceSecond->fetchColumn();

@@ -50,6 +50,7 @@ final class ConversationAideGamad
                 'INSERT INTO message_aide_gamad (reference, proposition_reference, auteur_reference, texte, cree_le)
                  VALUES (?, ?, ?, ?, ?)'
             )->execute([bin2hex(random_bytes(12)), $proposition, $sujet, $texte, gmdate('c')]);
+            NotificationsGamad::ajouter($registre, $cible, $sujet, 'message', $proposition);
         });
     }
 

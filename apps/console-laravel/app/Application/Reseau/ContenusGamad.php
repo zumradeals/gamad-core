@@ -81,6 +81,46 @@ final class ContenusGamad
         return $reference;
     }
 
+    public function besoins(?string $session, string $etat, string $recherche, int $page): array
+    {
+        $registre = Magasin::ouvrir();
+        $membre = $this->membres->depuisSession($session, $registre);
+        $exclus = $this->blocages->exclus($registre, $membre['identite_reference'] ?? null);
+        $requete = $registre->prepare(
+            "SELECT p.* FROM publication_gamad p
+             WHERE p.type = 'need' AND (p.etat_besoin = ? OR ? = 'tous')
+               AND (p.visibilite = 'public' OR ? = 1)
+               AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)
+             ORDER BY p.cree_le DESC, p.reference DESC"
+        );
+        $requete->bindValue(1, $etat);
+        $requete->bindValue(2, $etat);
+        $requete->bindValue(3, $membre === null ? 0 : 1, PDO::PARAM_INT);
+        $requete->execute();
+        $correspondances = (static function () use ($requete, $recherche): \Generator {
+            foreach ($requete as $ligne) {
+                if ($recherche === '' || str_contains(Normalizer::key($ligne['contenu']), $recherche)) {
+                    yield $ligne;
+                }
+            }
+        })();
+
+        $besoins = [];
+        $ignorer = ($page - 1) * 20;
+        foreach ($this->parcourirAffichables($correspondances, $registre, $exclus) as $besoin) {
+            if ($ignorer > 0) {
+                --$ignorer;
+                continue;
+            }
+            if (count($besoins) === 20) {
+                return ['besoins' => $besoins, 'page_suivante' => true];
+            }
+            $besoins[] = $besoin;
+        }
+
+        return ['besoins' => $besoins, 'page_suivante' => false];
+    }
+
     public function besoin(string $reference, ?string $session): ?array
     {
         $registre = Magasin::ouvrir();
@@ -150,7 +190,11 @@ final class ContenusGamad
 
     private function affichables(array $lignes, PDO $registre, array $exclus): array
     {
-        $resultat = [];
+        return iterator_to_array($this->parcourirAffichables($lignes, $registre, $exclus), false);
+    }
+
+    private function parcourirAffichables(iterable $lignes, PDO $registre, array $exclus): \Generator
+    {
         $auteurs = [];
         foreach ($lignes as $ligne) {
             $reference = $ligne['auteur_reference'];
@@ -162,11 +206,9 @@ final class ContenusGamad
             }
             if ($auteurs[$reference] !== null) {
                 unset($ligne['auteur_reference']);
-                $resultat[] = $ligne + ['auteur' => $auteurs[$reference]['nom']];
+                yield $ligne + ['auteur' => $auteurs[$reference]['nom']];
             }
         }
-
-        return $resultat;
     }
 
     private function texte(string $contenu): string
