@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Route;
  * elle partage le même cas d'usage que l'API v1.
  */
 Route::view('/', 'reseau.accueil')->name('reseau.accueil');
+Route::view('/aide', 'reseau.aide')->name('reseau.aide');
 
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     Route::get('/console', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');

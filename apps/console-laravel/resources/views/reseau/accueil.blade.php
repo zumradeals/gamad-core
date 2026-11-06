@@ -14,6 +14,7 @@
             <nav aria-label="Navigation principale">
                 <a href="#comment">Comment ça marche</a>
                 <a href="#confiance">À propos</a>
+                <a href="{{ route('reseau.aide') }}">Aide</a>
             </nav>
             <a class="bouton" href="{{ route('acces.formulaire') }}">Se connecter</a>
         </div>

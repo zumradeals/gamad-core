@@ -216,6 +216,14 @@ $connexionAvant = $requete('POST', '/api/v1/sessions', [
 ]);
 $verifier($connexionAvant['statut'] === 401, 'un email NON_VERIFIE ne peut pas ouvrir de session');
 
+$avantWeb = $requete('POST', '/connexion', [
+    'entite' => $email, 'mode' => 'identifiant', 'secret' => $motDePasse,
+]);
+$verifier(
+    $requete('GET', '/reseau/mon-compte', cookies: $avantWeb['cookies'])['statut'] === 302,
+    'le navigateur refuse aussi la connexion par e-mail non vérifié',
+);
+
 // La garde interne ouvre un nouveau défi afin d'éprouver l'endpoint de validation
 // sans réintroduire le code dans la réponse HTTP faite au satellite.
 $defiInterne = $resolution->demarrerVerification($rid, [
@@ -263,7 +271,11 @@ $verifier(
 
 // Le navigateur utilise la même personne canonique et la vraie session CTR-16.
 $verifier($requete('GET', '/reseau/mon-compte')['statut'] === 302, 'Réseau exige une session Core');
-$connexionWeb = $requete('POST', '/connexion', ['entite' => $reference, 'secret' => $motDePasse]);
+$connexionWeb = $requete('POST', '/connexion', [
+    'entite' => 'personne.test+satellite@example.test',
+    'mode' => 'identifiant',
+    'secret' => $motDePasse,
+]);
 $compteReseau = $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies']);
 $verifier(
     $connexionWeb['statut'] === 302

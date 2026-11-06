@@ -120,6 +120,13 @@ $verifier(
         && str_contains($public['corps'], route('acces.formulaire')),
     'l’accueil Réseau est public et mène à la connexion Core',
 );
+$aide = $requete('GET', '/aide');
+$verifier(
+    $aide['statut'] === 200
+        && str_contains($public['corps'], route('reseau.aide'))
+        && str_contains($aide['corps'], 'Comment me connecter ?'),
+    'l’aide Réseau est publique et accessible depuis l’accueil',
+);
 $verifier(
     $requete('GET', '/console')['statut'] === 302,
     'la console reste inaccessible sans session Core',
