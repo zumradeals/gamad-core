@@ -16,6 +16,8 @@ final class ContenusGamad
         'share' => 'Je partage',
         'knowledge' => 'Je partage un savoir',
         'personal_work' => 'Ma réalisation',
+        'learning_wish' => 'Je veux apprendre',
+        'offer' => 'Je propose mon aide',
     ];
 
     public const TYPE_BESOIN = 'need';

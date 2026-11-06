@@ -385,6 +385,23 @@ $verifier(
         && !str_contains($fichePublication['html'], $reference),
     'le fil et la fiche lisent le même contenu Core, échappent le HTML et utilisent l’auteur de la session',
 );
+$souhait = $requete('POST', '/fil', [
+    'type' => 'learning_wish', 'visibilite' => 'members', 'contenu' => 'Apprendre à installer des panneaux solaires.',
+], cookies: $cookies);
+$offre = $requete('POST', '/fil', [
+    'type' => 'offer', 'visibilite' => 'public', 'contenu' => 'Proposer un accompagnement en électricité.',
+], cookies: $cookies);
+$uriSouhait = parse_url($souhait['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$uriOffre = parse_url($offre['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$lectureOffre = $requete('GET', $uriOffre);
+$verifier(
+    $souhait['statut'] === 302 && $offre['statut'] === 302
+        && $requete('GET', $uriSouhait)['statut'] === 404
+        && str_contains($requete('GET', $uriSouhait, cookies: $cookies)['html'], 'Je veux apprendre')
+        && $lectureOffre['statut'] === 200 && str_contains($lectureOffre['html'], 'Je propose mon aide')
+        && str_contains($requete('GET', '/fil', cookies: $cookies)['html'], $uriOffre),
+    'le fil et la fiche prennent en charge souhait d’apprendre et offre d’aide avec leur audience',
+);
 $visiteurCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Visiteur']);
 $membreCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Merci pour ce partage.'], cookies: $cookies);
 $ficheCommentee = $requete('GET', $uriPublication);
