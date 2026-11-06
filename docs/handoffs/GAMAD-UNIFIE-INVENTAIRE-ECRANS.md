@@ -12,7 +12,7 @@ Le registre ci-dessous couvre les déclarations HTTP de `routes/web.php`, les é
 
 | Méthode et chemin source | Nom source | Équivalent Core | État ou écart |
 | --- | --- | --- | --- |
-| [`GET /`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L99) | `home` | `VIEW /` | Partiel · Sections dynamiques, recherche et navigation source à comparer |
+| [`GET /`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L99) | `home` | `VIEW /` | Partiel · Composition publique et recherche par nom ou compétence reprises, facettes et sélections dynamiques à reprendre |
 | [`GET /aide`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L102) | `aide` | `VIEW /aide` | Partiel · Contenu source partiellement repris |
 | [`GET /contact`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L103) | `contact` | `GET /contact` | Disponible · Formulaire public et traitement Core disponibles |
 | [`POST /contact`](https://github.com/zumradeals/gamad/blob/83d1a1df1496f322a5e718996c9420120d021ec0/routes/web.php#L104) | `contact.store` | `POST /contact` | Disponible · Envoi public et protections testés |
@@ -142,8 +142,8 @@ Le registre ci-dessous couvre les déclarations HTTP de `routes/web.php`, les é
 
 | Écran source | Équivalent Core | État |
 | --- | --- | --- |
-| Connexion | `/reseau/connexion` | Écran Réseau · identifiant vérifié, authentification et session Core · retour vers la page demandée ou le fil |
-| Inscription | `/inscription` | Disponible · parcours e-mail Core |
+| Connexion | `/reseau/connexion` | Écran Réseau avec portrait source · identifiant vérifié, authentification et session Core · retour vers la page demandée ou le fil |
+| Inscription | `/inscription` | Disponible · présentation Réseau et parcours e-mail Core |
 | Vérification de l’e-mail | `/inscription/verification` | Disponible · vérification et renvoi |
 | Mot de passe oublié | — | À reprendre |
 | Réinitialisation du mot de passe | — | À reprendre |
