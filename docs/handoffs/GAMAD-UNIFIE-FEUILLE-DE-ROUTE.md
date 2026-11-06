@@ -25,3 +25,9 @@ La PR peut être construite en plusieurs commits vérifiables. Le transfert est 
 ## Inscription publique
 
 Le formulaire web utilise le produit GAMAD existant `PRD-GAMAD-005`. Sur installation neuve, ce produit doit être inscrit et activé dans le registre Core, la politique d’inscription doit être initialisée par `core:comptes:bootstrap` et le canal e-mail du Core doit être configuré. Le formulaire suit la règle historique de Réseau de huit caractères minimum. Le code et son renvoi passent par les mêmes opérations Core que l’API. Le défi en cours est lié à la session du navigateur qui a ouvert l’inscription.
+
+## Premiers contenus Réseau
+
+Le fil authentifié et les fiches de publication utilisent le compte Core à e-mail vérifié. Le transfert couvre les publications personnelles textuelles « Je partage », « Je partage un savoir » et « Ma réalisation », les audiences public et membres, et les commentaires simples. Les références d’auteur sont des références Core. Une révocation retire l’auteur et ses contenus des lectures Réseau.
+
+Restent à intégrer dans ce domaine les photos de profil, les territoires, les domaines, les pièces jointes, les autres types de publication et leurs actions, l’édition et les réponses aux commentaires, ainsi que la modération.

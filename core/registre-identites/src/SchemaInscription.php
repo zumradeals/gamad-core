@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 4;
+    public const VERSION = 5;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -22,6 +22,8 @@ final class SchemaInscription
         'identite_inscrite',
         'profil_compte_gamad',
         'fiche_annuaire_gamad',
+        'publication_gamad',
+        'commentaire_gamad',
         'identifiant_resolution',
         'evenement_cycle_identite',
         'evenement_assurance_identite',
@@ -88,6 +90,29 @@ final class SchemaInscription
                 competences_recherchees TEXT NOT NULL
             )
         SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS publication_gamad (
+                reference TEXT PRIMARY KEY,
+                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                type TEXT NOT NULL CHECK (type IN ('share', 'knowledge', 'personal_work')),
+                visibilite TEXT NOT NULL CHECK (visibilite IN ('public', 'members')),
+                contenu VARCHAR(500) NOT NULL CHECK (length(contenu) BETWEEN 1 AND 500),
+                cree_le TEXT NOT NULL
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS publication_gamad_fil ON publication_gamad(cree_le, reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS commentaire_gamad (
+                reference TEXT PRIMARY KEY,
+                publication_reference TEXT NOT NULL REFERENCES publication_gamad(reference) ON DELETE CASCADE,
+                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                contenu VARCHAR(500) NOT NULL CHECK (length(contenu) BETWEEN 1 AND 500),
+                cree_le TEXT NOT NULL
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS commentaire_gamad_publication ON commentaire_gamad(publication_reference, cree_le, reference)');
 
         // Identifiants humains de résolution. La valeur brute (email, téléphone,
         // username...) n'est pas conservée : seule son empreinte normalisée sert

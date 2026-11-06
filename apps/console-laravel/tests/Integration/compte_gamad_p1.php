@@ -146,6 +146,7 @@ $requete = static function (
     $corps = json_decode((string) $response->getContent(), true);
     $resultat = [
         'statut' => $response->getStatusCode(),
+        'location' => $response->headers->get('Location'),
         'html' => (string) $response->getContent(),
         'cookies' => array_column(array_map(
             static fn ($cookie): array => [$cookie->getName(), $cookie->getValue()],
@@ -345,6 +346,41 @@ $verifier($requete('GET', $uriFiche)['statut'] === 404, 'rendre la fiche privée
 $requete('PATCH', '/mon-profil', [
     'bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité',
 ], cookies: $cookies);
+$verifier($requete('GET', '/fil')['statut'] === 302, 'le fil exige une session Core');
+$privee = $requete('POST', '/fil', [
+    'type' => 'knowledge', 'visibilite' => 'members', 'contenu' => 'Une expérience réservée aux membres.',
+], cookies: $cookies);
+$uriPrivee = parse_url($privee['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$verifier(
+    $privee['statut'] === 302 && $requete('GET', $uriPrivee)['statut'] === 404
+        && $requete('GET', $uriPrivee, cookies: $cookies)['statut'] === 200,
+    'une publication réservée reste inaccessible au visiteur, même par son URL directe',
+);
+$publique = $requete('POST', '/fil', [
+    'type' => 'share', 'visibilite' => 'public', 'contenu' => 'Bonjour <script>GAMAD</script>.',
+    'auteur_reference' => $autorite,
+], cookies: $cookies);
+$uriPublication = parse_url($publique['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$fil = $requete('GET', '/fil', cookies: $cookies);
+$fichePublication = $requete('GET', $uriPublication);
+$verifier(
+    $fil['statut'] === 200 && str_contains($fil['html'], $uriPublication)
+        && $fichePublication['statut'] === 200
+        && str_contains($fichePublication['html'], '&lt;script&gt;GAMAD&lt;/script&gt;')
+        && str_contains($fichePublication['html'], 'Personne Compte GAMAD')
+        && !str_contains($fichePublication['html'], $reference),
+    'le fil et la fiche lisent le même contenu Core, échappent le HTML et utilisent l’auteur de la session',
+);
+$visiteurCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Visiteur']);
+$membreCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Merci pour ce partage.'], cookies: $cookies);
+$ficheCommentee = $requete('GET', $uriPublication);
+$verifier(
+    $visiteurCommentaire['statut'] === 302 && str_ends_with($visiteurCommentaire['location'] ?? '', '/connexion')
+        && $membreCommentaire['statut'] === 302
+        && str_contains($ficheCommentee['html'], 'Merci pour ce partage.'),
+    'seule la session Core d’un membre vérifié permet de commenter',
+);
+$requete('GET', '/fil', cookies: $cookies);
 $jetonWeb = $app['session']->driver()->get('gamad_session');
 if (is_string($jetonWeb)) {
     $ctr16->revoquerSession($jetonWeb);
@@ -440,6 +476,8 @@ $verifier(
 );
 
 $verifier($requete('GET', $uriFiche)['statut'] === 404, 'la révocation de la personne retire sa fiche publique');
+
+$verifier($requete('GET', $uriPublication)['statut'] === 404, 'la révocation Core retire la publication publique');
 
 $migrations = $application . '/database/migrations/';
 (require $migrations . '0001_01_01_000000_create_users_table.php')->up();

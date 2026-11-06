@@ -43,6 +43,7 @@
             @error('competences')<p class="form-error" role="alert">{{ $message }}</p>@enderror
             <button class="button button--primary" type="submit">Enregistrer</button>
             <a href="{{ route('console.acces.index') }}">Mes moyens d’accès</a>
+            <a href="{{ route('fil') }}">Ouvrir le fil GAMAD</a>
         </form>
     </section>
 </main>

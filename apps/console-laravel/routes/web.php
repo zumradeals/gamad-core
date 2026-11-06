@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\AccesConsoleController;
 use App\Http\Controllers\AccesController;
 use App\Http\Controllers\AnnuaireGamadController;
+use App\Http\Controllers\ContenusGamadController;
 use App\Http\Controllers\CompteReseauCoreController;
 use App\Http\Controllers\ProfilCompteGamadController;
 use App\Http\Controllers\ContinuiteConsoleController;
@@ -39,6 +40,16 @@ Route::view('/aide', 'reseau.aide')->name('reseau.aide');
 Route::get('/personnes', [AnnuaireGamadController::class, 'index'])->name('personnes.index');
 Route::get('/personnes/{reference}', [AnnuaireGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('personnes.show');
+
+Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
+    ->where('reference', '[a-f0-9]{24}')->name('publications.show');
+Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
+    Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
+    Route::post('/fil', [ContenusGamadController::class, 'publier'])
+        ->middleware('throttle:10,1,publication-')->name('publications.store');
+    Route::post('/publications/{reference}/commentaires', [ContenusGamadController::class, 'commenter'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,60,commentaire-')->name('publications.commenter');
+});
 
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     Route::get('/console', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');
