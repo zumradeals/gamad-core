@@ -34,7 +34,7 @@ it('ne cree jamais de liaison lors de la resolution', function () {
 });
 
 it('refuse une identite sans journal de cycle', function () {
-    expect(ResoudreCompteReseauCore::identiteActive('PER-ABSENT'))->toBeFalse();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-ABSENT', DB::connection()->getPdo()))->toBeFalse();
 });
 
 it('accepte un cycle actif et refuse une revocation posterieure', function () {
@@ -52,7 +52,7 @@ it('accepte un cycle actif et refuse une revocation posterieure', function () {
         'etat_apres' => 'ACTIVE',
         'date_effet' => now()->subDays(2)->toIso8601String(),
     ]);
-    expect(ResoudreCompteReseauCore::identiteActive('PER-001'))->toBeTrue();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-001', DB::connection()->getPdo()))->toBeTrue();
 
     DB::table('evenement_cycle_identite')->insert([
         'identite_reference' => 'PER-001',
@@ -60,7 +60,7 @@ it('accepte un cycle actif et refuse une revocation posterieure', function () {
         'etat_apres' => 'REVOQUEE',
         'date_effet' => now()->subDay()->toIso8601String(),
     ]);
-    expect(ResoudreCompteReseauCore::identiteActive('PER-001'))->toBeFalse();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-001', DB::connection()->getPdo()))->toBeFalse();
 
     DB::table('evenement_cycle_identite')->insert([
         'identite_reference' => 'PER-001',
@@ -68,7 +68,7 @@ it('accepte un cycle actif et refuse une revocation posterieure', function () {
         'etat_apres' => 'ACTIVE',
         'date_effet' => now()->addDay()->toIso8601String(),
     ]);
-    expect(ResoudreCompteReseauCore::identiteActive('PER-001'))->toBeFalse();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-001', DB::connection()->getPdo()))->toBeFalse();
 });
 
 it('compare les instants reels malgre des fuseaux differents', function () {
@@ -89,7 +89,7 @@ it('compare les instants reels malgre des fuseaux differents', function () {
             'etat_apres' => 'REVOQUEE', 'date_effet' => $revocation],
     ]);
 
-    expect(ResoudreCompteReseauCore::identiteActive('PER-FUSEAU'))->toBeFalse();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-FUSEAU', DB::connection()->getPdo()))->toBeFalse();
 });
 
 it('ignore les evenements relationnels et refuse les dates ambigues', function () {
@@ -107,13 +107,13 @@ it('ignore les evenements relationnels et refuse les dates ambigues', function (
         ['identite_reference' => 'PER-REL', 'evenement_type' => 'RETRAIT_ORGANISATION',
             'etat_apres' => 'REVOQUEE', 'date_effet' => now()->subDay()->toIso8601String()],
     ]);
-    expect(ResoudreCompteReseauCore::identiteActive('PER-REL'))->toBeTrue();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-REL', DB::connection()->getPdo()))->toBeTrue();
 
     DB::table('evenement_cycle_identite')->insert([
         'identite_reference' => 'PER-REL', 'evenement_type' => 'REVOCATION',
         'etat_apres' => 'REVOQUEE', 'date_effet' => '2026-11-06 12:00:00',
     ]);
-    expect(ResoudreCompteReseauCore::identiteActive('PER-REL'))->toBeFalse();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-REL', DB::connection()->getPdo()))->toBeFalse();
 });
 
 it('qualifie la session CTR-16 et refuse une resolution si le stockage Core est distinct', function () {
@@ -187,17 +187,17 @@ it('accepte les dates civiles CTR-01 et refuse une revocation future', function 
         'identite_reference' => 'PER-CIVILE', 'evenement_type' => 'ACTIVATION',
         'etat_apres' => 'ACTIVE', 'date_effet' => now('UTC')->subDay()->format('Y-m-d'),
     ]);
-    expect(ResoudreCompteReseauCore::identiteActive('PER-CIVILE'))->toBeTrue();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-CIVILE', DB::connection()->getPdo()))->toBeTrue();
 
     DB::table('evenement_cycle_identite')->insert([
         'identite_reference' => 'PER-CIVILE', 'evenement_type' => 'REVOCATION',
         'etat_apres' => 'REVOQUEE', 'date_effet' => now('UTC')->addDay()->format('Y-m-d'),
     ]);
-    expect(ResoudreCompteReseauCore::identiteActive('PER-CIVILE'))->toBeTrue();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-CIVILE', DB::connection()->getPdo()))->toBeTrue();
 
     DB::table('evenement_cycle_identite')->insert([
         'identite_reference' => 'PER-CIVILE', 'evenement_type' => 'REVOCATION',
         'etat_apres' => 'REVOQUEE', 'date_effet' => now('UTC')->format('Y-m-d'),
     ]);
-    expect(ResoudreCompteReseauCore::identiteActive('PER-CIVILE'))->toBeFalse();
+    expect(ResoudreCompteReseauCore::identiteActive('PER-CIVILE', DB::connection()->getPdo()))->toBeFalse();
 });
