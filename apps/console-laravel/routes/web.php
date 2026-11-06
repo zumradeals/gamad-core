@@ -66,6 +66,7 @@ Route::get('/projets', [EspacesGamadController::class, 'projets'])->name('projet
 Route::get('/projets/{reference}', [EspacesGamadController::class, 'projet'])
     ->where('reference', '[a-f0-9]{24}')->name('projets.show');
 Route::get('/besoins', [ContenusGamadController::class, 'besoins'])->name('besoins.index');
+Route::get('/besoins/referentiels', [ContenusGamadController::class, 'referentielsBesoins'])->name('besoins.referentiels');
 Route::get('/besoins/{reference}', [ContenusGamadController::class, 'besoin'])
     ->where('reference', '[a-f0-9]{24}')->name('besoins.show');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])

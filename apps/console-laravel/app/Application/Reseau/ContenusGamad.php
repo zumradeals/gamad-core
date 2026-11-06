@@ -73,6 +73,35 @@ final class ContenusGamad
             return null;
         }
 
+        return $this->insererPublication($registre, $sujet, $type, $visibilite, $contenu);
+    }
+
+    public function publierBesoin(string $sujet, string $visibilite, string $contenu, ?string $domaine, ?string $territoire): ?string
+    {
+        $registre = Magasin::ouvrir();
+        if ($this->membres->lire($sujet, $registre) === null) {
+            return null;
+        }
+
+        $registre->beginTransaction();
+        try {
+            $reference = $this->insererPublication($registre, $sujet, self::TYPE_BESOIN, $visibilite, $contenu);
+            if ($domaine !== null || $territoire !== null) {
+                $registre->prepare(
+                    'INSERT INTO classement_besoin_gamad (besoin_reference, domaine, territoire) VALUES (?, ?, ?)'
+                )->execute([$reference, $domaine, $territoire]);
+            }
+            $registre->commit();
+
+            return $reference;
+        } catch (\Throwable $exception) {
+            $registre->rollBack();
+            throw $exception;
+        }
+    }
+
+    private function insererPublication(PDO $registre, string $sujet, string $type, string $visibilite, string $contenu): string
+    {
         $reference = bin2hex(random_bytes(12));
         $registre->prepare(
             'INSERT INTO publication_gamad (reference, auteur_reference, type, visibilite, contenu, cree_le, etat_besoin) VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -81,22 +110,22 @@ final class ContenusGamad
         return $reference;
     }
 
-    public function besoins(?string $session, string $etat, string $recherche, int $page): array
+    public function besoins(?string $session, string $etat, string $recherche, int $page, ?string $domaine, ?string $territoire): array
     {
         $registre = Magasin::ouvrir();
         $membre = $this->membres->depuisSession($session, $registre);
         $exclus = $this->blocages->exclus($registre, $membre['identite_reference'] ?? null);
         $requete = $registre->prepare(
-            "SELECT p.* FROM publication_gamad p
-             WHERE p.type = 'need' AND (p.etat_besoin = ? OR ? = 'tous')
-               AND (p.visibilite = 'public' OR ? = 1)
+            "SELECT p.*, c.domaine, c.territoire FROM publication_gamad p
+             LEFT JOIN classement_besoin_gamad c ON c.besoin_reference = p.reference
+             WHERE (CAST(? AS TEXT) IS NULL OR c.domaine = ?)
+               AND (CAST(? AS TEXT) IS NULL OR c.territoire = ?)
+               AND p.type = 'need' AND (p.etat_besoin = ? OR ? = 'tous')
+               AND (p.visibilite = 'public' OR CAST(? AS INTEGER) = 1)
                AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)
              ORDER BY p.cree_le DESC, p.reference DESC"
         );
-        $requete->bindValue(1, $etat);
-        $requete->bindValue(2, $etat);
-        $requete->bindValue(3, $membre === null ? 0 : 1, PDO::PARAM_INT);
-        $requete->execute();
+        $requete->execute([$domaine, $domaine, $territoire, $territoire, $etat, $etat, $membre === null ? 0 : 1]);
         $correspondances = (static function () use ($requete, $recherche): \Generator {
             foreach ($requete as $ligne) {
                 if ($recherche === '' || str_contains(Normalizer::key($ligne['contenu']), $recherche)) {
@@ -178,7 +207,7 @@ final class ContenusGamad
 
     private function lirePublication(PDO $registre, string $reference, bool $membre, array $exclus): ?array
     {
-        $requete = $registre->prepare("SELECT p.* FROM publication_gamad p WHERE p.reference = ? AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)");
+        $requete = $registre->prepare("SELECT p.*, c.domaine, c.territoire FROM publication_gamad p LEFT JOIN classement_besoin_gamad c ON c.besoin_reference = p.reference WHERE p.reference = ? AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)");
         $requete->execute([$reference]);
         $publication = $requete->fetch(PDO::FETCH_ASSOC);
         if ($publication === false || (!$membre && $publication['visibilite'] !== 'public')) {

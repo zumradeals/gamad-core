@@ -8,6 +8,7 @@ use App\Application\Reseau\ContenusGamad;
 use App\Application\Reseau\ConversationAideGamad;
 use App\Application\Reseau\ModerationGamad;
 use App\Application\Reseau\PropositionsAideGamad;
+use App\Application\Reseau\ReferentielBesoinsGamad;
 use App\Support\Normalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -79,6 +80,8 @@ final class ContenusGamadController
             'etat' => ['nullable', 'in:open,in_progress,resolved,closed,tous'],
             'q' => ['nullable', 'string', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            'domaine' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::DOMAINES))],
+            'territoire' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::TERRITOIRES))],
         ]);
         $page = (int) ($filtres['page'] ?? 1);
         $besoins = $contenus->besoins(
@@ -86,9 +89,19 @@ final class ContenusGamadController
             $filtres['etat'] ?? 'open',
             Normalizer::key($filtres['q'] ?? ''),
             $page,
+            $filtres['domaine'] ?? null,
+            $filtres['territoire'] ?? null,
         );
 
         return response()->json($besoins + ['page' => $page])->header('Cache-Control', 'private, no-store');
+    }
+
+    public function referentielsBesoins(): JsonResponse
+    {
+        return response()->json([
+            'domaines' => ReferentielBesoinsGamad::DOMAINES,
+            'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
+        ]);
     }
 
     public function besoin(Request $request, ContenusGamad $contenus, string $reference): JsonResponse
@@ -104,8 +117,16 @@ final class ContenusGamadController
         $donnees = $request->validate([
             'visibilite' => ['required', 'in:public,members'],
             'contenu' => ['required', 'string', 'max:500'],
+            'domaine' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::DOMAINES))],
+            'territoire' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::TERRITOIRES))],
         ]);
-        $reference = $contenus->publier($this->sujet($request), ContenusGamad::TYPE_BESOIN, $donnees['visibilite'], $donnees['contenu']);
+        $reference = $contenus->publierBesoin(
+            $this->sujet($request),
+            $donnees['visibilite'],
+            $donnees['contenu'],
+            $donnees['domaine'] ?? null,
+            $donnees['territoire'] ?? null,
+        );
         abort_if($reference === null, 403);
 
         return response()->json(['reference' => $reference, 'etat_besoin' => 'open'], 201)

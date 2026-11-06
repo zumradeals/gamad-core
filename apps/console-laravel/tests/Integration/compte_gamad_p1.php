@@ -494,6 +494,7 @@ $verifier(
 );
 $besoinPrive = $requete('POST', '/besoins', [
     'visibilite' => 'members', 'contenu' => 'Besoin réservé aux membres.',
+    'domaine' => 'artisanat', 'territoire' => 'ci-bouake',
 ], cookies: $premierCookies);
 $uriBesoinPrive = '/besoins/'.($besoinPrive['corps']['reference'] ?? '');
 $besoinPublic = $requete('POST', '/besoins', [
@@ -518,6 +519,7 @@ $verifier(
 );
 $besoinAide = $requete('POST', '/besoins', [
     'visibilite' => 'public', 'contenu' => 'Besoin avec une proposition d’aide.',
+    'domaine' => 'artisanat', 'territoire' => 'ci-abidjan',
 ], cookies: $premierCookies);
 $uriBesoinAide = '/besoins/'.($besoinAide['corps']['reference'] ?? '');
 $uriPropositions = $uriBesoinAide.'/propositions';
@@ -570,6 +572,19 @@ $verifier(
         && ($requete('GET', '/besoins')['corps']['besoins'] ?? null) === []
         && ($requete('GET', '/besoins?etat=tous&page=2')['corps']['besoins'] ?? null) === [],
     'le catalogue filtre les besoins par état et par texte et respecte la visibilité avant pagination',
+);
+$referentielsBesoins = $requete('GET', '/besoins/referentiels');
+$catalogueClasse = $requete('GET', '/besoins?etat=tous&domaine=artisanat&territoire=ci-abidjan');
+$verifier(
+    ($referentielsBesoins['corps']['domaines']['artisanat'] ?? null) === 'Artisanat'
+        && ($referentielsBesoins['corps']['territoires']['ci-bouake'] ?? null) === 'Bouaké'
+        && array_column($catalogueClasse['corps']['besoins'] ?? [], 'reference') === [basename($uriBesoinAide)]
+        && ($requete('GET', $uriBesoinAide)['corps']['territoire'] ?? null) === 'ci-abidjan'
+        && ($requete('GET', '/besoins?etat=tous&domaine=artisanat&territoire=ci-bouake')['corps']['besoins'] ?? null) === []
+        && ($requete('GET', '/besoins?etat=tous&domaine=artisanat&territoire=ci-bouake', cookies: $secondCookies)['corps']['besoins'][0]['reference'] ?? null) === basename($uriBesoinPrive)
+        && $requete('GET', '/besoins?domaine=inconnu')['statut'] === 302
+        && $requete('POST', '/besoins', ['visibilite' => 'public', 'contenu' => 'Invalide', 'territoire' => 'inconnu'], cookies: $premierCookies)['statut'] === 302,
+    'le classement territorial et sectoriel utilise des codes de référence et conserve la visibilité',
 );
 $notificationsAide = $requete('GET', '/notifications/donnees', cookies: $premierCookies)['corps'];
 $notificationsProposant = $requete('GET', '/notifications/donnees', cookies: $secondCookies)['corps'];
