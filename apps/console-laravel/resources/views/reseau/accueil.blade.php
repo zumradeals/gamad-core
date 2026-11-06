@@ -7,24 +7,8 @@
     <title>GAMAD — Le réseau social d’action</title>
     <link rel="stylesheet" href="{{ asset('css/reseau-accueil.css') }}">
 </head>
-<body>
-    <header class="bandeau">
-        <div class="conteneur barre">
-            <a class="marque" href="{{ route('reseau.accueil') }}" aria-current="page">GAMAD</a>
-            <nav aria-label="Navigation principale">
-                <a href="{{ route('reseau.decouvrir') }}">Découvrir</a>
-                <a href="#comment">Comment ça marche</a>
-                <a href="#confiance">À propos</a>
-                <a href="{{ route('reseau.aide') }}">Aide</a>
-                <a href="{{ route('reseau.contact') }}">Contact</a>
-                <a href="{{ route('projets.index') }}">Projets</a>
-                <a href="{{ route('zumras.index') }}">ZUMRA</a>
-                <a href="{{ route('entreprises.index') }}">Entreprises</a>
-                <a href="{{ route('opportunites.index') }}">Opportunités</a>
-            </nav>
-            <a class="bouton" href="{{ route('reseau.connexion') }}">Se connecter</a>
-        </div>
-    </header>
+<body class="reseau-public">
+    @include('reseau.navigation-publique')
 
     <main>
         <section class="conteneur hero" aria-labelledby="accroche">
@@ -32,8 +16,10 @@
                 <p class="etiquette">Le réseau social d’action</p>
                 <h1 id="accroche">Des personnes qui inspirent. <span>De nouvelles possibilités.</span></h1>
                 <p>Sur GAMAD, découvrez des personnes, apprenez de leurs expériences, créez des liens et avancez à votre rythme.</p>
-                <a class="bouton accent" href="{{ route('inscription.formulaire') }}">Créer un compte</a>
-                <a class="bouton" href="{{ route('personnes.index') }}">Découvrir les personnes</a>
+                <div class="reseau-actions">
+                    <a class="bouton accent" href="{{ route('personnes.index') }}">Découvrir les personnes</a>
+                    <a class="bouton" href="{{ route('inscription.formulaire') }}">Créer un compte</a>
+                </div>
             </div>
             <figure>
                 <img src="{{ asset('images/gamad-accueil-hero.webp') }}" alt="Quatre personnes échangent autour d’un ordinateur." width="510" height="280" fetchpriority="high">
@@ -42,6 +28,14 @@
                     <span>Un savoir partagé, un besoin exprimé, une relation qui commence.</span>
                 </figcaption>
             </figure>
+        </section>
+
+        <section class="reseau-recherche">
+            <form class="conteneur" method="get" action="{{ route('personnes.index') }}">
+                <label for="recherche-personnes">Que souhaitez-vous découvrir ?</label>
+                <input id="recherche-personnes" name="q" type="search" maxlength="100" placeholder="Un nom ou une compétence">
+                <button class="bouton accent" type="submit">Rechercher</button>
+            </form>
         </section>
 
         <section class="conteneur section" id="comment" aria-labelledby="comment-titre">
@@ -56,10 +50,23 @@
 
         <section class="conteneur section" id="confiance" aria-labelledby="confiance-titre">
             <div class="confiance">
-                <h2 id="confiance-titre">Des relations qui se construisent avec confiance.</h2>
-                <p>Vous choisissez ce que vous partagez, qui vous suivez et les personnes avec qui vous échangez.</p>
+                <div>
+                    <h2 id="confiance-titre">Des relations qui se construisent avec confiance.</h2>
+                    <p>Vous choisissez ce que vous partagez, qui vous suivez et les personnes avec qui vous échangez.</p>
+                </div>
+                <ul>
+                    <li><strong>Votre parcours vous appartient.</strong> Partagez les compétences et expériences que vous souhaitez rendre visibles.</li>
+                    <li><strong>Vous choisissez votre visibilité.</strong> Gérez la visibilité de votre fiche dans l’annuaire.</li>
+                    <li><strong>L’action reste un choix.</strong> Découvrez les communautés et participez à votre rythme.</li>
+                </ul>
             </div>
         </section>
+        <section class="conteneur section reseau-invitation">
+            <h2>Votre place existe déjà sur GAMAD.</h2>
+            <p>Commencez par découvrir. La suite viendra naturellement.</p>
+            <a class="bouton accent" href="{{ route('inscription.formulaire') }}">Créer un compte</a>
+        </section>
     </main>
+    @include('reseau.pied-public')
 </body>
 </html>
