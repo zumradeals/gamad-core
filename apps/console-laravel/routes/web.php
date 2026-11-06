@@ -14,6 +14,7 @@ use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
 use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
+use App\Http\Controllers\EspacesGamadController;
 use App\Http\Controllers\EvenementConsoleController;
 use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\InscriptionGamadController;
@@ -44,9 +45,25 @@ Route::get('/personnes', [AnnuaireGamadController::class, 'index'])->name('perso
 Route::get('/personnes/{reference}', [AnnuaireGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('personnes.show');
 
+Route::get('/zumra', [EspacesGamadController::class, 'zumras'])->name('zumras.index');
+Route::get('/zumra/{reference}', [EspacesGamadController::class, 'zumra'])
+    ->where('reference', '[a-f0-9]{24}')->name('zumras.show');
+Route::get('/projets', [EspacesGamadController::class, 'projets'])->name('projets.index');
+Route::get('/projets/{reference}', [EspacesGamadController::class, 'projet'])
+    ->where('reference', '[a-f0-9]{24}')->name('projets.show');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
 Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
+    Route::get('/zumra/nouvelle', [EspacesGamadController::class, 'nouvelleZumra'])->name('zumras.create');
+    Route::post('/zumra', [EspacesGamadController::class, 'creerZumra'])
+        ->middleware('throttle:10,1,zumra-')->name('zumras.store');
+    Route::get('/projets/nouveau', [EspacesGamadController::class, 'nouveauProjet'])->name('projets.create');
+    Route::post('/projets', [EspacesGamadController::class, 'creerProjet'])
+        ->middleware('throttle:10,1,projet-')->name('projets.store');
+    Route::post('/zumra/{reference}/accueil/{projet}', [EspacesGamadController::class, 'accueil'])
+        ->where(['reference' => '[a-f0-9]{24}', 'projet' => '[a-f0-9]{24}'])->name('zumras.accueil');
+    Route::post('/projets/{reference}/vitrine', [EspacesGamadController::class, 'vitrine'])
+        ->where('reference', '[a-f0-9]{24}')->name('projets.vitrine');
     Route::get('/mon-profil/blocages', [BlocagesGamadController::class, 'index'])->name('blocages.index');
     Route::match(['POST', 'DELETE'], '/mon-profil/blocages/{reference}', [BlocagesGamadController::class, 'modifier'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,blocage-')->name('blocages.modifier');

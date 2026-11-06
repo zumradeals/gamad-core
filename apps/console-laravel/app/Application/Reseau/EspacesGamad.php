@@ -1,0 +1,169 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Reseau;
+
+use App\Application\Comptes\MembreGamad;
+use App\Support\Normalizer;
+use Gamad\RegistreIdentites\Magasin;
+use Illuminate\Validation\ValidationException;
+use PDO;
+
+final class EspacesGamad
+{
+    public function __construct(private MembreGamad $membres)
+    {
+    }
+
+    public function zumras(): array
+    {
+        $registre = Magasin::ouvrir();
+
+        return array_values(array_filter(
+            $registre->query('SELECT * FROM zumra_gamad ORDER BY nom, reference LIMIT 100')->fetchAll(),
+            fn (array $zumra): bool => $this->membres->lire($zumra['fondateur_reference'], $registre) !== null,
+        ));
+    }
+
+    public function creerZumra(string $sujet, string $nom, string $presentation): string
+    {
+        $registre = Magasin::ouvrir();
+        $this->exigerMembre($registre, $sujet);
+        $reference = bin2hex(random_bytes(12));
+        $registre->prepare('INSERT INTO zumra_gamad (reference, fondateur_reference, nom, presentation) VALUES (?, ?, ?, ?)')
+            ->execute([$reference, $sujet, $this->texte($nom, 'nom'), $this->texte($presentation, 'presentation')]);
+
+        return $reference;
+    }
+
+    public function zumra(string $reference, ?string $session): ?array
+    {
+        $registre = Magasin::ouvrir();
+        $zumra = $this->chercherZumra($registre, $reference);
+        if ($zumra === null) {
+            return null;
+        }
+
+        $sujet = $this->membres->depuisSession($session, $registre)['identite_reference'] ?? null;
+        $responsable = $sujet === $zumra['fondateur_reference'];
+        $demandes = [];
+        if ($responsable) {
+            // Le responsable reçoit uniquement le titre et la demande, sans accès au dossier.
+            $requete = $registre->prepare(
+                "SELECT reference, titre FROM projet_gamad WHERE zumra_reference = ? AND accueil = 'en_attente' ORDER BY titre"
+            );
+            $requete->execute([$reference]);
+            $demandes = $requete->fetchAll();
+        }
+
+        return ['zumra' => $zumra, 'responsable' => $responsable, 'demandes' => $demandes];
+    }
+
+    public function projets(?string $session): array
+    {
+        $registre = Magasin::ouvrir();
+        $sujet = $this->membres->depuisSession($session, $registre)['identite_reference'] ?? '';
+        $requete = $registre->prepare(
+            "SELECT reference, titre, porteur_reference, zumra_reference FROM projet_gamad
+             WHERE porteur_reference = ? OR (accueil = 'accepte' AND vitrine IS NOT NULL)
+             ORDER BY titre, reference LIMIT 100"
+        );
+        $requete->execute([$sujet]);
+
+        return array_values(array_filter($requete->fetchAll(), fn (array $projet): bool =>
+            $projet['porteur_reference'] === $sujet
+            || ($this->chercherZumra($registre, $projet['zumra_reference']) !== null
+                && $this->membres->lire($projet['porteur_reference'], $registre) !== null)));
+    }
+
+    public function creerProjet(string $sujet, string $zumraReference, string $titre, string $dossier): string
+    {
+        $registre = Magasin::ouvrir();
+        $this->exigerMembre($registre, $sujet);
+        $zumra = $this->chercherZumra($registre, $zumraReference);
+        abort_if($zumra === null, 404);
+        $reference = bin2hex(random_bytes(12));
+        $registre->prepare(
+            'INSERT INTO projet_gamad (reference, porteur_reference, zumra_reference, titre, dossier, accueil)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $reference, $sujet, $zumraReference, $this->texte($titre, 'titre'), $this->texte($dossier, 'dossier'),
+            $sujet === $zumra['fondateur_reference'] ? 'accepte' : 'en_attente',
+        ]);
+
+        return $reference;
+    }
+
+    public function projet(string $reference, ?string $session): ?array
+    {
+        $registre = Magasin::ouvrir();
+        $requete = $registre->prepare('SELECT * FROM projet_gamad WHERE reference = ?');
+        $requete->execute([$reference]);
+        $projet = $requete->fetch();
+        if ($projet === false || $this->membres->lire($projet['porteur_reference'], $registre) === null) {
+            return null;
+        }
+
+        $sujet = $this->membres->depuisSession($session, $registre)['identite_reference'] ?? null;
+        if ($sujet === $projet['porteur_reference']) {
+            return $projet + ['prive' => true];
+        }
+        if ($projet['accueil'] !== 'accepte' || $projet['vitrine'] === null
+            || $this->chercherZumra($registre, $projet['zumra_reference']) === null) {
+            return null;
+        }
+
+        return ['reference' => $reference, 'titre' => $projet['titre'], 'vitrine' => $projet['vitrine'], 'prive' => false];
+    }
+
+    public function deciderAccueil(string $sujet, string $zumra, string $projet, bool $accepter): void
+    {
+        $registre = Magasin::ouvrir();
+        $this->exigerMembre($registre, $sujet);
+        $fiche = $this->chercherZumra($registre, $zumra);
+        abort_unless($fiche !== null && $sujet === $fiche['fondateur_reference'], 404);
+
+        $requete = $registre->prepare(
+            "UPDATE projet_gamad SET accueil = ? WHERE reference = ? AND zumra_reference = ? AND accueil = 'en_attente'"
+        );
+        $requete->execute([$accepter ? 'accepte' : 'refuse', $projet, $zumra]);
+        abort_if($requete->rowCount() === 0, 409);
+    }
+
+    public function publierVitrine(string $sujet, string $reference, ?string $vitrine): void
+    {
+        $registre = Magasin::ouvrir();
+        $this->exigerMembre($registre, $sujet);
+        $vitrine = $vitrine === null ? null : $this->texte($vitrine, 'vitrine');
+        $requete = $registre->prepare(
+            "UPDATE projet_gamad SET vitrine = ? WHERE reference = ? AND porteur_reference = ? AND accueil = 'accepte'"
+        );
+        $requete->execute([$vitrine, $reference, $sujet]);
+        abort_if($requete->rowCount() === 0, 404);
+    }
+
+    private function chercherZumra(PDO $registre, string $reference): ?array
+    {
+        $requete = $registre->prepare('SELECT * FROM zumra_gamad WHERE reference = ?');
+        $requete->execute([$reference]);
+        $zumra = $requete->fetch();
+
+        return $zumra !== false && $this->membres->lire($zumra['fondateur_reference'], $registre) !== null ? $zumra : null;
+    }
+
+    private function exigerMembre(PDO $registre, string $sujet): void
+    {
+        abort_if($this->membres->lire($sujet, $registre) === null, 403);
+    }
+
+    private function texte(string $saisie, string $champ): string
+    {
+        $texte = Normalizer::multiline($saisie);
+        if ($texte === '') {
+            throw ValidationException::withMessages([$champ => 'Saisissez un texte.']);
+        }
+
+        return $texte;
+    }
+}

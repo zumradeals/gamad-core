@@ -556,6 +556,49 @@ $verifier(
     !str_contains($relationRetiree['html'], 'En relation') && $nouvelleDemande['statut'] === 409,
     'le blocage retire la relation et le déblocage ne la rétablit pas',
 );
+$creationZumra = $requete('POST', '/zumra', [
+    'nom' => 'ZUMRA de qualification', 'presentation' => 'Communauté de test ouverte.',
+], cookies: $premierCookies);
+$uriZumra = parse_url($creationZumra['location'] ?? '', PHP_URL_PATH) ?: '/zumra-manquante';
+$creationProjet = $requete('POST', '/projets', [
+    'zumra' => basename($uriZumra), 'titre' => 'Projet de qualification', 'dossier' => 'Dossier réservé au porteur.',
+], cookies: $secondCookies);
+$uriProjet = parse_url($creationProjet['location'] ?? '', PHP_URL_PATH) ?: '/projet-manquant';
+$accueilProjet = $uriZumra.'/accueil/'.basename($uriProjet);
+$demandeAccueil = $requete('GET', $uriZumra, cookies: $premierCookies);
+$projetPrive = $requete('GET', $uriProjet, cookies: $secondCookies);
+$verifier(
+    $creationZumra['statut'] === 302 && $requete('GET', $uriZumra)['statut'] === 200
+        && $creationProjet['statut'] === 302 && str_contains($projetPrive['html'], 'Dossier réservé au porteur.')
+        && str_contains($demandeAccueil['html'], 'Projet de qualification')
+        && !str_contains($demandeAccueil['html'], 'Dossier réservé au porteur.')
+        && $requete('GET', $uriProjet, cookies: $premierCookies)['statut'] === 404
+        && $requete('GET', $uriProjet)['statut'] === 404,
+    'le fondateur voit la demande d’accueil mais le dossier reste privé, même par URL directe',
+);
+$publicationPrematuree = $requete('POST', $uriProjet.'/vitrine', [
+    'action' => 'publier', 'vitrine' => 'Résumé public distinct.',
+], cookies: $secondCookies);
+$autoAccueil = $requete('POST', $accueilProjet, ['decision' => 'accepter'], cookies: $secondCookies);
+$accueilAccepte = $requete('POST', $accueilProjet, ['decision' => 'accepter'], cookies: $premierCookies);
+$publicationTiers = $requete('POST', $uriProjet.'/vitrine', [
+    'action' => 'publier', 'vitrine' => 'Résumé public distinct.',
+], cookies: $premierCookies);
+$publication = $requete('POST', $uriProjet.'/vitrine', [
+    'action' => 'publier', 'vitrine' => 'Résumé public distinct.',
+], cookies: $secondCookies);
+$vitrine = $requete('GET', $uriProjet);
+$verifier(
+    $publicationPrematuree['statut'] === 404 && $autoAccueil['statut'] === 404
+        && $accueilAccepte['statut'] === 302 && $publicationTiers['statut'] === 404
+        && $publication['statut'] === 302 && $vitrine['statut'] === 200
+        && str_contains($vitrine['html'], 'Résumé public distinct.')
+        && !str_contains($vitrine['html'], 'Dossier réservé au porteur.')
+        && str_contains($requete('GET', '/projets')['html'], $uriProjet),
+    'la vitrine devient publique seulement après accueil accepté et publication par le porteur',
+);
+$requete('POST', $uriProjet.'/vitrine', ['action' => 'retirer'], cookies: $secondCookies);
+$verifier($requete('GET', $uriProjet)['statut'] === 404, 'le retrait ferme immédiatement la vitrine');
 $cycle = $registreIdentites->prepare(
     'INSERT INTO evenement_cycle_identite
      (identite_reference, evenement_type, etat_avant, etat_apres, source, preuve_reference,

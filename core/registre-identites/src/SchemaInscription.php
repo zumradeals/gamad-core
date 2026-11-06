@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 8;
+    public const VERSION = 9;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -30,6 +30,8 @@ final class SchemaInscription
         'notification_reseau_gamad',
         'signalement_reseau_gamad',
         'masquage_reseau_gamad',
+        'zumra_gamad',
+        'projet_gamad',
         'identifiant_resolution',
         'evenement_cycle_identite',
         'evenement_assurance_identite',
@@ -196,6 +198,28 @@ final class SchemaInscription
                 PRIMARY KEY (categorie, cible_reference)
             )
         SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS zumra_gamad (
+                reference TEXT PRIMARY KEY,
+                fondateur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                nom VARCHAR(100) NOT NULL,
+                presentation VARCHAR(500) NOT NULL
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS projet_gamad (
+                reference TEXT PRIMARY KEY,
+                porteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                zumra_reference TEXT NOT NULL REFERENCES zumra_gamad(reference),
+                titre VARCHAR(120) NOT NULL,
+                dossier TEXT NOT NULL,
+                accueil TEXT NOT NULL CHECK (accueil IN ('en_attente', 'accepte', 'refuse')),
+                vitrine VARCHAR(500)
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS projet_gamad_zumra ON projet_gamad(zumra_reference, accueil)');
 
         // Identifiants humains de résolution. La valeur brute (email, téléphone,
         // username...) n'est pas conservée : seule son empreinte normalisée sert

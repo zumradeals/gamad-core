@@ -15,6 +15,8 @@
                 <a href="#comment">Comment ça marche</a>
                 <a href="#confiance">À propos</a>
                 <a href="{{ route('reseau.aide') }}">Aide</a>
+                <a href="{{ route('projets.index') }}">Projets</a>
+                <a href="{{ route('zumras.index') }}">ZUMRA</a>
             </nav>
             <a class="bouton" href="{{ route('acces.formulaire') }}">Se connecter</a>
         </div>

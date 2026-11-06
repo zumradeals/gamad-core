@@ -37,3 +37,9 @@ Restent à intégrer dans ce domaine les photos de profil, les territoires, les 
 Une relation acceptée ouvre une conversation textuelle entre les deux comptes Core. Le retrait de la relation, le blocage ou la révocation ferme l’accès à la conversation. Les demandes de relation, acceptations et nouveaux messages produisent des notifications internes au même moment que leur écriture.
 
 Les membres peuvent signaler une publication ou un commentaire visible d’une autre personne. L’admission administrative du Core protège le classement et le masquage dans la console. La décision conserve l’auteur et la date du traitement. Ce parcours couvre les signalements de contenu, tandis que les écrans spécialisés de modération des personnes, des organisations et des espaces restent à reprendre avec les fonctionnalités correspondantes.
+
+## Premiers espaces métier
+
+Un membre Core vérifié peut créer une ZUMRA ou un projet. Le projet est privé pour son porteur. Une ZUMRA reçoit la demande d’accueil et son fondateur peut la traiter sans lire le dossier. Après acceptation, le porteur peut publier puis retirer une présentation distincte et publique. Les vitrines restent séparées des dossiers, y compris lors d’un accès direct à leur adresse.
+
+Les équipes, adhésions, étapes, contributions et responsabilités déléguées des espaces source, ainsi que les entreprises, opportunités et écrans spécialisés, restent à intégrer.
