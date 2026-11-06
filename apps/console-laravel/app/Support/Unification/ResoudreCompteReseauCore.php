@@ -33,6 +33,20 @@ final class ResoudreCompteReseauCore
                 return null;
             }
 
+            return self::resoudreLiaisonActive($identite);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Seconde moitié du parcours : référence déjà vérifiée par CTR-16.
+     * Ne jamais appeler depuis une entrée HTTP sans validation Core.
+     */
+    public static function resoudreLiaisonActive(string $identite): ?CompteReseauUnifie
+    {
+        try {
             if (! VerifierContexteLiaison::registreDansTransactionLocale()) {
                 return null;
             }
