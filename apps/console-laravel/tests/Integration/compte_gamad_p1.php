@@ -102,6 +102,10 @@ $console = $app->make(\Illuminate\Contracts\Console\Kernel::class);
 $console->call('core:politiques:bootstrap');
 $console->call('core:produits:bootstrap');
 $kernel = $app->make(Kernel::class);
+set_exception_handler(static function (Throwable $exception): never {
+    fwrite(STDERR, (string) $exception . PHP_EOL);
+    exit(1);
+});
 
 $echecs = 0;
 $verifier = static function (bool $ok, string $libelle) use (&$echecs): void {
@@ -117,10 +121,11 @@ $requete = static function (
     ?array $json = null,
     ?string $jeton = null,
     array $cookies = [],
+    array $fichiersRequete = [],
 ) use ($kernel): array {
     $serveur = [
         'HTTP_ACCEPT' => 'application/json',
-        'CONTENT_TYPE' => 'application/json',
+        'CONTENT_TYPE' => $fichiersRequete === [] ? 'application/json' : 'multipart/form-data',
     ];
     if ($jeton !== null) {
         $serveur['HTTP_AUTHORIZATION'] = 'Bearer ' . $jeton;
@@ -128,16 +133,22 @@ $requete = static function (
     $request = Request::create(
         $uri,
         $methode,
-        [],
+        $fichiersRequete === [] ? [] : ($json ?? []),
         $cookies,
-        [],
+        $fichiersRequete,
         $serveur,
-        $json === null ? null : json_encode($json, JSON_THROW_ON_ERROR),
+        $json === null || $fichiersRequete !== [] ? null : json_encode($json, JSON_THROW_ON_ERROR),
     );
+    $app = app();
+    if ($app->resolved('session')) {
+        $app['session']->driver()->flush();
+    }
     $response = $kernel->handle($request);
     $corps = json_decode((string) $response->getContent(), true);
     $resultat = [
         'statut' => $response->getStatusCode(),
+        'location' => $response->headers->get('Location'),
+        'html' => (string) $response->getContent(),
         'cookies' => array_column(array_map(
             static fn ($cookie): array => [$cookie->getName(), $cookie->getValue()],
             $response->headers->getCookies(),
@@ -211,6 +222,14 @@ $connexionAvant = $requete('POST', '/api/v1/sessions', [
 ]);
 $verifier($connexionAvant['statut'] === 401, 'un email NON_VERIFIE ne peut pas ouvrir de session');
 
+$avantWeb = $requete('POST', '/connexion', [
+    'entite' => $email, 'mode' => 'identifiant', 'secret' => $motDePasse,
+]);
+$verifier(
+    $requete('GET', '/reseau/mon-compte', cookies: $avantWeb['cookies'])['statut'] === 302,
+    'le navigateur refuse aussi la connexion par e-mail non vérifié',
+);
+
 // La garde interne ouvre un nouveau défi afin d'éprouver l'endpoint de validation
 // sans réintroduire le code dans la réponse HTTP faite au satellite.
 $defiInterne = $resolution->demarrerVerification($rid, [
@@ -258,7 +277,11 @@ $verifier(
 
 // Le navigateur utilise la même personne canonique et la vraie session CTR-16.
 $verifier($requete('GET', '/reseau/mon-compte')['statut'] === 302, 'Réseau exige une session Core');
-$connexionWeb = $requete('POST', '/connexion', ['entite' => $reference, 'secret' => $motDePasse]);
+$connexionWeb = $requete('POST', '/connexion', [
+    'entite' => 'personne.test+satellite@example.test',
+    'mode' => 'identifiant',
+    'secret' => $motDePasse,
+]);
 $compteReseau = $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies']);
 $verifier(
     $connexionWeb['statut'] === 302
@@ -266,9 +289,99 @@ $verifier(
         && ($compteReseau['corps']['compte'] ?? null) === [
             'identite_reference' => $reference,
             'nom' => 'Personne Compte GAMAD',
+            'bio' => null,
         ],
     'Réseau lit directement le compte et son nom Core avec la session du navigateur',
 );
+$cookies = $connexionWeb['cookies'];
+$profil = $requete('GET', '/mon-profil', cookies: $cookies);
+$verifier(
+    $profil['statut'] === 200 && str_contains($profil['html'], 'Ma présentation'),
+    'le formulaire du profil Core est accessible avec la même session',
+);
+$modifierProfil = $requete('PATCH', '/mon-profil', [
+    'bio' => 'Je partage mon expérience en rénovation.',
+    'identite_reference' => $autorite,
+], cookies: $cookies);
+$verifier(
+    $modifierProfil['statut'] === 302
+        && ($requete('GET', '/reseau/mon-compte', cookies: $cookies)['corps']['compte']['bio'] ?? null)
+            === 'Je partage mon expérience en rénovation.'
+        && $registreIdentites->query('SELECT COUNT(*) FROM profil_compte_gamad')->fetchColumn() === 1,
+    'l’écriture Core alimente Réseau et ignore le sujet fourni par le client',
+);
+$profilLong = $requete('PATCH', '/mon-profil', ['bio' => str_repeat('é', 281)], cookies: $cookies);
+$verifier(
+    $profilLong['statut'] === 302
+        && ($requete('GET', '/reseau/mon-compte', cookies: $cookies)['corps']['compte']['bio'] ?? null)
+            === 'Je partage mon expérience en rénovation.',
+    'la limite historique de 280 caractères est appliquée',
+);
+$requete('PATCH', '/mon-profil', ['bio' => ''], cookies: $cookies);
+$profilEfface = $requete('GET', '/reseau/mon-compte', cookies: $cookies)['corps']['compte'];
+$verifier(array_key_exists('bio', $profilEfface) && $profilEfface['bio'] === null, 'la présentation peut être effacée');
+$requete('PATCH', '/mon-profil', [
+    'bio' => 'Profil pour annuaire', 'visibilite' => 'members', 'apportees' => "Électricité\nElectricite",
+    'recherchees' => 'Rénovation',
+], cookies: $cookies);
+$fichePublique = $registreIdentites->query('SELECT reference_publique FROM fiche_annuaire_gamad')->fetchColumn();
+$uriFiche = '/personnes/'.$fichePublique;
+$visiteur = $requete('GET', $uriFiche);
+$membre = $requete('GET', '/personnes?q=electricite', cookies: $cookies);
+$verifier(
+    is_string($fichePublique) && $visiteur['statut'] === 404
+        && $membre['statut'] === 200 && str_contains($membre['html'], $uriFiche),
+    'la fiche membres est invisible au public et la recherche normalise les accents',
+);
+$requete('PATCH', '/mon-profil', [
+    'bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité',
+], cookies: $cookies);
+$fiche = $requete('GET', $uriFiche);
+$verifier(
+    $fiche['statut'] === 200 && str_contains($fiche['html'], 'Profil pour annuaire')
+        && !str_contains($fiche['html'], $reference) && !str_contains($fiche['html'], $email),
+    'la publication révèle la présentation et les compétences sans identifiant canonique ni coordonnées',
+);
+$requete('PATCH', '/mon-profil', ['bio' => null, 'visibilite' => 'prive'], cookies: $cookies);
+$verifier($requete('GET', $uriFiche)['statut'] === 404, 'rendre la fiche privée ferme aussi son URL directe');
+$requete('PATCH', '/mon-profil', [
+    'bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité',
+], cookies: $cookies);
+$verifier($requete('GET', '/fil')['statut'] === 302, 'le fil exige une session Core');
+$privee = $requete('POST', '/fil', [
+    'type' => 'knowledge', 'visibilite' => 'members', 'contenu' => 'Une expérience réservée aux membres.',
+], cookies: $cookies);
+$uriPrivee = parse_url($privee['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$verifier(
+    $privee['statut'] === 302 && $requete('GET', $uriPrivee)['statut'] === 404
+        && $requete('GET', $uriPrivee, cookies: $cookies)['statut'] === 200,
+    'une publication réservée reste inaccessible au visiteur, même par son URL directe',
+);
+$publique = $requete('POST', '/fil', [
+    'type' => 'share', 'visibilite' => 'public', 'contenu' => 'Bonjour <script>GAMAD</script>.',
+    'auteur_reference' => $autorite,
+], cookies: $cookies);
+$uriPublication = parse_url($publique['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$fil = $requete('GET', '/fil', cookies: $cookies);
+$fichePublication = $requete('GET', $uriPublication);
+$verifier(
+    $fil['statut'] === 200 && str_contains($fil['html'], $uriPublication)
+        && $fichePublication['statut'] === 200
+        && str_contains($fichePublication['html'], '&lt;script&gt;GAMAD&lt;/script&gt;')
+        && str_contains($fichePublication['html'], 'Personne Compte GAMAD')
+        && !str_contains($fichePublication['html'], $reference),
+    'le fil et la fiche lisent le même contenu Core, échappent le HTML et utilisent l’auteur de la session',
+);
+$visiteurCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Visiteur']);
+$membreCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Merci pour ce partage.'], cookies: $cookies);
+$ficheCommentee = $requete('GET', $uriPublication);
+$verifier(
+    $visiteurCommentaire['statut'] === 302 && str_ends_with($visiteurCommentaire['location'] ?? '', '/connexion')
+        && $membreCommentaire['statut'] === 302
+        && str_contains($ficheCommentee['html'], 'Merci pour ce partage.'),
+    'seule la session Core d’un membre vérifié permet de commenter',
+);
+$requete('GET', '/fil', cookies: $cookies);
 $jetonWeb = $app['session']->driver()->get('gamad_session');
 if (is_string($jetonWeb)) {
     $ctr16->revoquerSession($jetonWeb);
@@ -346,6 +459,211 @@ $verifier(
 
 echo "\n";
 $connexionWeb = $requete('POST', '/connexion', ['entite' => $reference, 'secret' => $motDePasse]);
+$resolution->attacher($referenceTel, 'EMAIL', 'membre-blocage@example.test', [
+    'verifie' => true, 'source' => 'TEST', 'preuve' => 'TEST-EMAIL-BLOCAGE', 'producteur' => $satellite,
+]);
+$secondWeb = $requete('POST', '/connexion', ['entite' => $referenceTel, 'secret' => $motDePasseTel]);
+$secondCookies = $secondWeb['cookies'];
+$premierCookies = $connexionWeb['cookies'];
+$requete('PATCH', '/mon-profil', [
+    'bio' => 'Deuxième profil', 'visibilite' => 'public', 'apportees' => 'Rénovation',
+], cookies: $secondCookies);
+$referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
+$referenceSecond->execute([$referenceTel]);
+$uriSecond = '/personnes/'.$referenceSecond->fetchColumn();
+$referenceSecond->closeCursor();
+$uriBlocage = '/mon-profil/blocages/'.$fichePublique;
+$relationVersPremier = '/relations/'.$fichePublique;
+$relationVersSecond = '/relations/'.basename($uriSecond);
+$demande = $requete('POST', $relationVersPremier, ['note' => 'Échangeons sur la rénovation.'], cookies: $secondCookies);
+$reception = $requete('GET', '/relations', cookies: $premierCookies);
+$duplicate = $requete('POST', $relationVersSecond, ['note' => 'Demande croisée'], cookies: $premierCookies);
+$autoAcceptation = $requete('PATCH', $relationVersPremier, ['action' => 'accept', 'revision' => 1], cookies: $secondCookies);
+$acceptation = $requete('PATCH', $relationVersSecond, ['action' => 'accept', 'revision' => 1], cookies: $premierCookies);
+$ancienFormulaire = $requete('PATCH', $relationVersSecond, ['action' => 'decline', 'revision' => 1], cookies: $premierCookies);
+$etatRelation = $requete('GET', '/relations', cookies: $secondCookies);
+$verifier(
+    $demande['statut'] === 302 && str_contains($reception['html'], 'Échangeons sur la rénovation.')
+        && $duplicate['statut'] === 409 && $autoAcceptation['statut'] === 403
+        && $acceptation['statut'] === 302 && $ancienFormulaire['statut'] === 409
+        && str_contains($etatRelation['html'], 'En relation'),
+    'une demande est unique par paire, seul le destinataire l’accepte et une décision périmée est refusée',
+);
+$conversation = '/conversations/'.$fichePublique;
+$conversationInverse = '/conversations/'.basename($uriSecond);
+$envoi = $requete('POST', $conversation, ['texte' => 'Message privé de test'], cookies: $secondCookies);
+$lecture = $requete('GET', $conversationInverse, cookies: $premierCookies);
+$notifications = $requete('GET', '/notifications', cookies: $premierCookies);
+$notice = $registreIdentites->prepare("SELECT reference FROM notification_reseau_gamad WHERE destinataire_reference = ? AND type = 'message'");
+$notice->execute([$reference]);
+$noticeUri = '/notifications/'.$notice->fetchColumn().'/lire';
+$notice->closeCursor();
+$verifier(
+    $envoi['statut'] === 302 && str_contains($lecture['html'], 'Message privé de test')
+        && str_contains($notifications['html'], 'vous a envoyé un message')
+        && $requete('POST', $noticeUri, cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', $noticeUri, cookies: $premierCookies)['statut'] === 302,
+    'les deux membres lisent la conversation et seule la destination peut lire sa notification',
+);
+$contenuModeration = $requete('POST', '/fil', [
+    'type' => 'share', 'visibilite' => 'public', 'contenu' => 'Contenu de test à modérer.',
+], cookies: $premierCookies);
+$uriModeration = parse_url($contenuModeration['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$signalement = $requete('POST', $uriModeration.'/signalements', ['motif' => 'spam'], cookies: $secondCookies);
+$signalements = $registreIdentites->query('SELECT reference FROM signalement_reseau_gamad');
+$uriDecision = '/console/moderation-reseau/'.$signalements->fetchColumn();
+$signalements->closeCursor();
+$nonAdmin = $requete('POST', $uriDecision, ['action' => 'masquer'], cookies: $secondCookies);
+$admission = $console->call('core:console:accorder-acces-administratif');
+$secretModeration = 'Secret-moderation-GAMAD-2026';
+$ctr16->inscrireAuthentificateur($autorite, $secretModeration);
+$admin = $requete('POST', '/connexion', ['entite' => $autorite, 'secret' => $secretModeration]);
+$ecranModeration = $requete('GET', '/console/moderation-reseau', cookies: $admin['cookies']);
+$decision = $requete('POST', $uriDecision, ['action' => 'masquer'], cookies: $admin['cookies']);
+$verifier(
+    $signalement['statut'] === 302 && $nonAdmin['statut'] === 403
+        && $admission === 0 && str_contains($ecranModeration['html'], 'Contenu de test à modérer.')
+        && $decision['statut'] === 302 && $requete('GET', $uriModeration)['statut'] === 404,
+    'seule la console Core traite le signalement et le masquage retire l’URL publique',
+);
+$avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
+$blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
+$listeBlocages = $requete('GET', '/mon-profil/blocages', cookies: $secondCookies);
+$filBloque = $requete('GET', '/fil', cookies: $secondCookies);
+$verifier(
+    $avantBlocage['statut'] === 200 && $blocage['statut'] === 302
+        && str_contains($listeBlocages['html'], 'Personne Compte GAMAD')
+        && $filBloque['statut'] === 200 && !str_contains($filBloque['html'], $uriPublication)
+        && $requete('GET', $uriPublication, cookies: $secondCookies)['statut'] === 404
+        && $requete('GET', $uriFiche, cookies: $secondCookies)['statut'] === 404
+        && $requete('GET', $uriSecond, cookies: $premierCookies)['statut'] === 404
+        && $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Bloqué'], cookies: $secondCookies)['statut'] === 404,
+    'le blocage exclut réciproquement les profils et ferme le fil, les URL directes et les commentaires concernés',
+);
+$verifier(
+    $requete('GET', $conversation, cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', $conversationInverse, ['texte' => 'Bloqué'], cookies: $premierCookies)['statut'] === 404,
+    'le blocage ferme la lecture et l’écriture de la conversation',
+);
+$requete('DELETE', $uriBlocage, cookies: $secondCookies);
+$verifier(
+    $requete('GET', $uriPublication, cookies: $secondCookies)['statut'] === 200
+        && $requete('GET', $uriSecond, cookies: $premierCookies)['statut'] === 200,
+    'le déblocage rétablit la visibilité permise',
+);
+$relationRetiree = $requete('GET', '/relations', cookies: $premierCookies);
+$nouvelleDemande = $requete('POST', $relationVersPremier, ['note' => 'Nouvelle demande'], cookies: $secondCookies);
+$verifier(
+    !str_contains($relationRetiree['html'], 'En relation') && $nouvelleDemande['statut'] === 409,
+    'le blocage retire la relation et le déblocage ne la rétablit pas',
+);
+$creationZumra = $requete('POST', '/zumra', [
+    'nom' => 'ZUMRA de qualification', 'presentation' => 'Communauté de test ouverte.',
+], cookies: $premierCookies);
+$uriZumra = parse_url($creationZumra['location'] ?? '', PHP_URL_PATH) ?: '/zumra-manquante';
+$creationProjet = $requete('POST', '/projets', [
+    'zumra' => basename($uriZumra), 'titre' => 'Projet de qualification', 'dossier' => 'Dossier réservé au porteur.',
+], cookies: $secondCookies);
+$uriProjet = parse_url($creationProjet['location'] ?? '', PHP_URL_PATH) ?: '/projet-manquant';
+$accueilProjet = $uriZumra.'/accueil/'.basename($uriProjet);
+$demandeAccueil = $requete('GET', $uriZumra, cookies: $premierCookies);
+$projetPrive = $requete('GET', $uriProjet, cookies: $secondCookies);
+$verifier(
+    $creationZumra['statut'] === 302 && $requete('GET', $uriZumra)['statut'] === 200
+        && $creationProjet['statut'] === 302 && str_contains($projetPrive['html'], 'Dossier réservé au porteur.')
+        && str_contains($demandeAccueil['html'], 'Projet de qualification')
+        && !str_contains($demandeAccueil['html'], 'Dossier réservé au porteur.')
+        && $requete('GET', $uriProjet, cookies: $premierCookies)['statut'] === 404
+        && $requete('GET', $uriProjet)['statut'] === 404,
+    'le fondateur voit la demande d’accueil mais le dossier reste privé, même par URL directe',
+);
+$publicationPrematuree = $requete('POST', $uriProjet.'/vitrine', [
+    'action' => 'publier', 'vitrine' => 'Résumé public distinct.',
+], cookies: $secondCookies);
+$autoAccueil = $requete('POST', $accueilProjet, ['decision' => 'accepter'], cookies: $secondCookies);
+$accueilAccepte = $requete('POST', $accueilProjet, ['decision' => 'accepter'], cookies: $premierCookies);
+$publicationTiers = $requete('POST', $uriProjet.'/vitrine', [
+    'action' => 'publier', 'vitrine' => 'Résumé public distinct.',
+], cookies: $premierCookies);
+$publication = $requete('POST', $uriProjet.'/vitrine', [
+    'action' => 'publier', 'vitrine' => 'Résumé public distinct.',
+], cookies: $secondCookies);
+$vitrine = $requete('GET', $uriProjet);
+$verifier(
+    $publicationPrematuree['statut'] === 404 && $autoAccueil['statut'] === 404
+        && $accueilAccepte['statut'] === 302 && $publicationTiers['statut'] === 404
+        && $publication['statut'] === 302 && $vitrine['statut'] === 200
+        && str_contains($vitrine['html'], 'Résumé public distinct.')
+        && !str_contains($vitrine['html'], 'Dossier réservé au porteur.')
+        && str_contains($requete('GET', '/projets')['html'], $uriProjet),
+    'la vitrine devient publique seulement après accueil accepté et publication par le porteur',
+);
+$requete('POST', $uriProjet.'/vitrine', ['action' => 'retirer'], cookies: $secondCookies);
+$verifier($requete('GET', $uriProjet)['statut'] === 404, 'le retrait ferme immédiatement la vitrine');
+$adhesion = $requete('POST', $uriZumra.'/adhesion', ['action' => 'rejoindre'], cookies: $secondCookies);
+$acceptationAdhesion = $requete('POST', $uriZumra.'/membres', [
+    'action' => 'accepter', 'cible' => $referenceTel,
+], cookies: $premierCookies);
+$verifier(
+    $adhesion['statut'] === 302 && $acceptationAdhesion['statut'] === 302
+        && str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Membre de la ZUMRA'),
+    'la demande d’adhésion devient effective après décision du fondateur',
+);
+$invitationProjet = $requete('POST', $uriProjet.'/invitations', ['profil' => $fichePublique], cookies: $secondCookies);
+$avantEquipe = $requete('GET', $uriProjet, cookies: $premierCookies);
+$acceptationEquipe = $requete('POST', $uriProjet.'/equipe', ['action' => 'accepter'], cookies: $premierCookies);
+$apresEquipe = $requete('GET', $uriProjet, cookies: $premierCookies);
+$retraitEquipe = $requete('POST', $uriProjet.'/equipe', ['action' => 'retirer', 'cible' => $reference], cookies: $secondCookies);
+$verifier(
+    $invitationProjet['statut'] === 302 && str_contains($avantEquipe['html'], 'Vous êtes invité')
+        && !str_contains($avantEquipe['html'], 'Dossier réservé au porteur.')
+        && $acceptationEquipe['statut'] === 302 && str_contains($apresEquipe['html'], 'Dossier réservé au porteur.')
+        && $retraitEquipe['statut'] === 302 && $requete('GET', $uriProjet, cookies: $premierCookies)['statut'] === 404,
+    'seul un collaborateur qui a accepté son invitation accède au dossier et le retrait ferme cet accès',
+);
+$cheminRccm = tempnam(sys_get_temp_dir(), 'gamad-rccm-');
+file_put_contents($cheminRccm, "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n%%EOF");
+try {
+    $dossierEntreprise = $requete('POST', '/entreprises', [
+        'nom' => 'Entreprise de qualification', 'pays' => 'CI', 'immatriculation' => 'CI TEST 001', 'secteur' => 'Rénovation',
+    ], cookies: $premierCookies, fichiersRequete: [
+        'rccm' => new \Illuminate\Http\UploadedFile($cheminRccm, 'rccm.pdf', 'application/pdf', null, true),
+    ]);
+} finally {
+    unlink($cheminRccm);
+}
+$uriEntreprise = parse_url($dossierEntreprise['location'] ?? '', PHP_URL_PATH) ?: '/entreprise-manquante';
+$uriRevue = '/console/entreprises/'.basename($uriEntreprise);
+$offre = ['titre' => 'Mission de qualification', 'description' => 'Une mission ouverte aux membres.'];
+$interdite = $requete('POST', $uriEntreprise.'/opportunites', $offre, cookies: $premierCookies);
+$verifier(
+    $dossierEntreprise['statut'] === 302 && $requete('GET', $uriEntreprise)['statut'] === 404
+        && $interdite['statut'] === 404
+        && $requete('GET', $uriRevue.'/justificatif', cookies: $secondCookies)['statut'] === 403
+        && str_starts_with($requete('GET', $uriRevue.'/justificatif', cookies: $admin['cookies'])['html'], '%PDF-'),
+    'le justificatif est réservé à la console et une entreprise non vérifiée ne publie pas',
+);
+$verificationEntreprise = $requete('POST', $uriRevue, ['action' => 'verified'], cookies: $admin['cookies']);
+$publicationOffre = $requete('POST', $uriEntreprise.'/opportunites', $offre, cookies: $premierCookies);
+$uriOffre = parse_url($publicationOffre['location'] ?? '', PHP_URL_PATH) ?: '/opportunite-manquante';
+$candidature = ['message' => 'Candidature privée de qualification.'];
+$envoiCandidature = $requete('POST', $uriOffre.'/candidatures', $candidature, cookies: $secondCookies);
+$verifier(
+    $verificationEntreprise['statut'] === 302 && $publicationOffre['statut'] === 302
+        && $requete('GET', $uriOffre)['statut'] === 200 && $envoiCandidature['statut'] === 302
+        && !str_contains($requete('GET', $uriOffre)['html'], $candidature['message'])
+        && str_contains($requete('GET', $uriOffre, cookies: $premierCookies)['html'], $candidature['message']),
+    'une entreprise vérifiée publie et la candidature reste privée',
+);
+$requete('POST', $uriOffre.'/cloture', cookies: $premierCookies);
+$verifier(
+    $requete('POST', $uriOffre.'/candidatures', $candidature, cookies: $secondCookies)['statut'] === 409
+        && str_contains($requete('GET', $uriOffre)['html'], 'Clôturée'),
+    'la clôture maintient la fiche visible et ferme les candidatures',
+);
+$requete('POST', $uriRevue, ['action' => 'suspended'], cookies: $admin['cookies']);
+$verifier($requete('GET', $uriEntreprise)['statut'] === 404 && $requete('GET', $uriOffre)['statut'] === 404,
+    'la suspension Core de l’entreprise retire ses opportunités publiques');
 $cycle = $registreIdentites->prepare(
     'INSERT INTO evenement_cycle_identite
      (identite_reference, evenement_type, etat_avant, etat_apres, source, preuve_reference,
@@ -362,6 +680,10 @@ $verifier(
     $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies'])['statut'] === 403,
     'la révocation effective de l’identité ferme l’accès même avec une session CTR-16 encore valide',
 );
+
+$verifier($requete('GET', $uriFiche)['statut'] === 404, 'la révocation de la personne retire sa fiche publique');
+
+$verifier($requete('GET', $uriPublication)['statut'] === 404, 'la révocation Core retire la publication publique');
 
 $migrations = $application . '/database/migrations/';
 (require $migrations . '0001_01_01_000000_create_users_table.php')->up();
@@ -383,6 +705,24 @@ $verifier(
     !$base->getSchemaBuilder()->hasTable('archive_reseau_comptes_identites')
         && $base->table('reseau_comptes_identites')->where($ligne)->exists(),
     'le retour arrière restaure la table et ses lignes',
+);
+
+$archivage->up();
+$retrait = require $migrations . '2026_11_06_000003_retirer_comptes_laravel_historiques.php';
+try {
+    $retrait->up();
+    $verifier(false, 'le retrait doit refuser un stockage historique non vide');
+} catch (RuntimeException) {
+    $verifier($base->table('archive_reseau_comptes_identites')->where($ligne)->exists(), 'le retrait refuse un stockage historique non vide');
+}
+$base->table('archive_reseau_comptes_identites')->delete();
+$base->table('users')->delete();
+$retrait->up();
+$schema = $base->getSchemaBuilder();
+$verifier(
+    !$schema->hasTable('users') && !$schema->hasTable('password_reset_tokens')
+        && !$schema->hasTable('archive_reseau_comptes_identites') && $schema->hasTable('sessions'),
+    'une installation neuve ne conserve que le transport HTTP, sans tables de comptes Laravel',
 );
 
 if ($echecs === 0) {

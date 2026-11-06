@@ -8,6 +8,8 @@ use Gamad\JournalOperationnel\Journal;
 use Gamad\JournalOperationnel\Magasin as JournalMagasin;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
+use Gamad\RegistreIdentites\IdentifiantsResolution;
+use Gamad\RegistreIdentites\Magasin as MagasinIdentites;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -31,11 +33,15 @@ final class AccesController
     public function connecter(Request $request): RedirectResponse
     {
         $donnees = $request->validate([
-            'entite' => ['required', 'string', 'max:64'],
+            'entite' => ['required', 'string', 'max:'.($request->input('mode') === 'identifiant' ? 256 : 64)],
+            'mode' => ['nullable', 'in:identifiant,reference'],
             'secret' => ['required', 'string', 'max:4096'],
         ]);
 
-        $cleLimite = $this->cleLimite($request, $donnees['entite']);
+        $presente = $donnees['entite'];
+        $mode = $donnees['mode'] ?? 'reference';
+        $saisie = ['entite' => $presente, 'mode' => $mode];
+        $cleLimite = $this->cleLimite($request, $presente);
         $correlation = 'REQ-' . Str::upper((string) Str::uuid());
 
         try {
@@ -43,7 +49,7 @@ final class AccesController
                 $attente = max(1, RateLimiter::availableIn($cleLimite));
                 $this->journaliserConnexion(
                     $request,
-                    $donnees['entite'],
+                    $presente,
                     null,
                     'BLOQUEE',
                     'limite de tentatives atteinte',
@@ -51,7 +57,7 @@ final class AccesController
                 );
 
                 return back()
-                    ->withInput(['entite' => $donnees['entite']])
+                    ->withInput($saisie)
                     ->withErrors([
                         'entite' => "Trop de tentatives. Réessayez dans {$attente} seconde(s).",
                     ])
@@ -61,7 +67,7 @@ final class AccesController
             RateLimiter::hit($cleLimite, 60);
         } catch (\Throwable) {
             return back()
-                ->withInput(['entite' => $donnees['entite']])
+                ->withInput($saisie)
                 ->withErrors([
                     'entite' => 'Connexion temporairement indisponible. Réessayez dans un instant.',
                 ]);
@@ -71,12 +77,18 @@ final class AccesController
         $session = null;
         try {
             $ctr = new Ctr16(Magasin::connecter());
-            $session = $ctr->etablirSession($donnees['entite'], $donnees['secret']);
+            $reference = $presente;
+            if ($mode === 'identifiant') {
+                $resolution = (new IdentifiantsResolution(MagasinIdentites::connecter()))
+                    ->resoudrePourAuthentification($presente);
+                $reference = $resolution['identite'] ?? null;
+            }
+            $session = $reference === null ? null : $ctr->etablirSession($reference, $donnees['secret']);
         } catch (\Throwable) {
             try {
                 $this->journaliserConnexion(
                     $request,
-                    $donnees['entite'],
+                    $presente,
                     null,
                     'INDISPONIBLE',
                     'magasin d’accès indisponible',
@@ -87,7 +99,7 @@ final class AccesController
             }
 
             return back()
-                ->withInput(['entite' => $donnees['entite']])
+                ->withInput($saisie)
                 ->withErrors([
                     'entite' => 'Connexion temporairement indisponible. Réessayez dans un instant.',
                 ]);
@@ -96,7 +108,7 @@ final class AccesController
         try {
             $this->journaliserConnexion(
                 $request,
-                $donnees['entite'],
+                $presente,
                 $session['entite'] ?? null,
                 $session === null ? 'REFUSEE' : 'ACCEPTEE',
                 $session === null ? 'identifiant ou secret refusé' : null,
@@ -109,7 +121,7 @@ final class AccesController
             }
 
             return back()
-                ->withInput(['entite' => $donnees['entite']])
+                ->withInput($saisie)
                 ->withErrors([
                     'entite' => 'Connexion temporairement indisponible. Aucune session sans preuve d’audit.',
                 ]);
@@ -118,7 +130,7 @@ final class AccesController
         if ($session === null) {
             // Aucune distinction entre entité inconnue et secret erroné.
             return back()
-                ->withInput(['entite' => $donnees['entite']])
+                ->withInput($saisie)
                 ->withErrors(['entite' => 'Identifiant ou secret refusé.']);
         }
 

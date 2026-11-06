@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Application\Comptes\CreerCompteGamad;
+use App\Application\Comptes\ParcoursInscriptionGamad;
 use Gamad\RegistreIdentites\Ctr01;
 use Gamad\RegistreIdentites\Magasin as IdentiteMagasin;
 use Gamad\RegistreIdentites\PolitiqueInscription;
@@ -34,7 +35,7 @@ final class BootstrapComptesGamadCommand extends Command
 
     private const POLITIQUE = 'POL-COMPTES-GAMAD-V1';
     private const VERSION = '1.0.0';
-    private const PRODUIT = 'PRD-GAMAD-005';
+    private const PRODUIT = ParcoursInscriptionGamad::PRODUIT_WEB;
     private const SOURCE = 'CAP-PORTAL-003 — délégation gouvernée de création des Comptes GAMAD';
 
     public function handle(): int

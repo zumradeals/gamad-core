@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands()
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trimStrings(except: ['mot_de_passe', 'mot_de_passe_confirmation', 'secret']);
         $middleware->trustProxies(at: env('TRUSTED_PROXIES'));
         $middleware->alias([
             'throttle' => \App\Http\Middleware\GamadThrottleRequests::class,
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->dontFlash(['mot_de_passe', 'mot_de_passe_confirmation', 'secret', 'code']);
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );

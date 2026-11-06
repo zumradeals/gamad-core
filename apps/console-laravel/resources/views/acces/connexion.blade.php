@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f8d40a">
-    <title>Connexion — GAMAD Core</title>
+    <title>Connexion — GAMAD</title>
     <link rel="stylesheet" href="{{ asset('css/gamad-core.css') }}">
 </head>
 <body class="auth-page">
@@ -25,22 +25,33 @@
     <section class="auth-form-panel">
         <form class="auth-form" method="POST" action="{{ route('acces.connecter') }}">
             @csrf
-            <p class="eyebrow">Accès réservé</p>
-            <h2>Ouvrir la console</h2>
-            <p class="auth-form__intro">Identifiez-vous pour accéder aux opérations autorisées du Core.</p>
+            <p class="eyebrow">Compte GAMAD</p>
+            <h2>Se connecter à GAMAD</h2>
+            <p class="auth-form__intro">Utilisez le moyen de connexion associé à votre compte.</p>
+
+            @if (session('inscription_statut'))
+                <p role="status">{{ session('inscription_statut') }}</p>
+            @endif
 
             @if ($errors->any())
                 <div class="form-error auth-error" role="alert">{{ $errors->first() }}</div>
             @endif
 
             <div class="field">
-                <label for="entite">Référence d’identité</label>
+                <label for="mode">Moyen de connexion</label>
+                <select class="input" id="mode" name="mode">
+                    <option value="identifiant" @selected(old('mode', 'identifiant') === 'identifiant')>E-mail, téléphone ou nom d’utilisateur</option>
+                    <option value="reference" @selected(old('mode') === 'reference')>Référence d’identité</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="entite">Identifiant</label>
                 <input class="input"
                        id="entite"
                        name="entite"
                        value="{{ old('entite') }}"
                        autocomplete="username"
-                       placeholder="AUT-GAMAD-001"
                        required
                        autofocus>
             </div>

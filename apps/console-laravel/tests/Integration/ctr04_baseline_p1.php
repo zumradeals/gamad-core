@@ -113,6 +113,25 @@ $verifier(
     'le scénario démarre sans index préconstruit',
 );
 
+$public = $requete('GET', '/');
+$verifier(
+    $public['statut'] === 200
+        && str_contains($public['corps'], 'Des personnes qui inspirent.')
+        && str_contains($public['corps'], route('acces.formulaire')),
+    'l’accueil Réseau est public et mène à la connexion Core',
+);
+$aide = $requete('GET', '/aide');
+$verifier(
+    $aide['statut'] === 200
+        && str_contains($public['corps'], route('reseau.aide'))
+        && str_contains($aide['corps'], 'Comment me connecter ?'),
+    'l’aide Réseau est publique et accessible depuis l’accueil',
+);
+$verifier(
+    $requete('GET', '/console')['statut'] === 302,
+    'la console reste inaccessible sans session Core',
+);
+
 $connexion = $requete('POST', '/connexion', [
     'entite' => 'AUT-GAMAD-001',
     'secret' => $secret,
@@ -124,7 +143,7 @@ $verifier(
 );
 
 $verifier(
-    $requete('GET', '/', null, $cookies)['statut'] === 403,
+    $requete('GET', '/console', null, $cookies)['statut'] === 403,
     'une session sans socle ni habilitation ne permet pas l’accès administratif',
 );
 
@@ -139,7 +158,7 @@ try {
     exit(1);
 }
 
-$accueil = $requete('GET', '/', null, $cookies);
+$accueil = $requete('GET', '/console', null, $cookies);
 $corps = $accueil['corps'];
 $verifier(
     $accueil['statut'] === 200,

@@ -12,12 +12,13 @@ use PDO;
 /** Lecture personnelle du compte dont le sujet est établi par le Core. */
 final class LireCompteGamad
 {
-    /** @return array{identite_reference: string, nom: string}|null */
-    public function executer(string $identite): ?array
+    /** @return array{identite_reference: string, nom: string, bio: ?string}|null */
+    public function executer(string $identite, ?PDO $registre = null): ?array
     {
-        $registre = Magasin::ouvrir();
+        $registre ??= Magasin::ouvrir();
         $requete = $registre->prepare(
-            "SELECT libelle FROM identite_inscrite
+            "SELECT libelle, profil_compte_gamad.bio FROM identite_inscrite
+             LEFT JOIN profil_compte_gamad ON profil_compte_gamad.identite_reference = identite_inscrite.reference
              WHERE reference = ? AND type = 'personne'
              AND regime = 'INSCRIT_AU_REGISTRE' AND provisoire = 0
              AND EXISTS (
@@ -32,7 +33,7 @@ final class LireCompteGamad
             return null;
         }
 
-        return ['identite_reference' => $identite, 'nom' => $inscription['libelle']];
+        return ['identite_reference' => $identite, 'nom' => $inscription['libelle'], 'bio' => $inscription['bio']];
     }
 
     /**

@@ -4,16 +4,25 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccesConsoleController;
 use App\Http\Controllers\AccesController;
+use App\Http\Controllers\AnnuaireGamadController;
+use App\Http\Controllers\BlocagesGamadController;
+use App\Http\Controllers\ContenusGamadController;
 use App\Http\Controllers\CompteReseauCoreController;
+use App\Http\Controllers\ProfilCompteGamadController;
 use App\Http\Controllers\ContinuiteConsoleController;
 use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
 use App\Http\Controllers\Ctr03Controller;
 use App\Http\Controllers\Ctr04Controller;
+use App\Http\Controllers\EntreprisesGamadController;
+use App\Http\Controllers\EspacesGamadController;
 use App\Http\Controllers\EvenementConsoleController;
 use App\Http\Controllers\IdentiteConsoleController;
+use App\Http\Controllers\InscriptionGamadController;
+use App\Http\Controllers\InteractionsGamadController;
 use App\Http\Controllers\OrganisationConsoleController;
 use App\Http\Controllers\RealmConsoleController;
+use App\Http\Controllers\RelationsGamadController;
 use App\Http\Controllers\PasskeyController;
 use App\Http\Controllers\ContratConsoleController;
 use App\Http\Controllers\PolitiqueConsoleController;
@@ -31,8 +40,89 @@ use Illuminate\Support\Facades\Route;
  * Core. La seule écriture web est l'inscription gouvernée d'une identité ;
  * elle partage le même cas d'usage que l'API v1.
  */
+Route::view('/', 'reseau.accueil')->name('reseau.accueil');
+Route::view('/aide', 'reseau.aide')->name('reseau.aide');
+Route::get('/personnes', [AnnuaireGamadController::class, 'index'])->name('personnes.index');
+Route::get('/personnes/{reference}', [AnnuaireGamadController::class, 'montrer'])
+    ->where('reference', '[a-f0-9]{24}')->name('personnes.show');
+
+Route::get('/entreprises', [EntreprisesGamadController::class, 'index'])->name('entreprises.index');
+Route::get('/entreprises/{reference}', [EntreprisesGamadController::class, 'fiche'])
+    ->where('reference', '[a-f0-9]{24}')->name('entreprises.show');
+Route::get('/opportunites', [EntreprisesGamadController::class, 'opportunites'])->name('opportunites.index');
+Route::get('/opportunites/{reference}', [EntreprisesGamadController::class, 'opportunite'])
+    ->where('reference', '[a-f0-9]{24}')->name('opportunites.show');
+Route::get('/zumra', [EspacesGamadController::class, 'zumras'])->name('zumras.index');
+Route::get('/zumra/{reference}', [EspacesGamadController::class, 'zumra'])
+    ->where('reference', '[a-f0-9]{24}')->name('zumras.show');
+Route::get('/projets', [EspacesGamadController::class, 'projets'])->name('projets.index');
+Route::get('/projets/{reference}', [EspacesGamadController::class, 'projet'])
+    ->where('reference', '[a-f0-9]{24}')->name('projets.show');
+Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
+    ->where('reference', '[a-f0-9]{24}')->name('publications.show');
+Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
+    Route::get('/entreprises/creer', [EntreprisesGamadController::class, 'formulaire'])->name('entreprises.create');
+    Route::post('/entreprises', [EntreprisesGamadController::class, 'soumettre'])
+        ->middleware('throttle:5,1,entreprise-')->name('entreprises.store');
+    Route::post('/entreprises/{reference}/opportunites', [EntreprisesGamadController::class, 'publier'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:10,1,opportunite-')->name('opportunites.store');
+    Route::post('/opportunites/{reference}/candidatures', [EntreprisesGamadController::class, 'candidater'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,candidature-')->name('opportunites.candidater');
+    Route::post('/opportunites/{reference}/cloture', [EntreprisesGamadController::class, 'cloturer'])
+        ->where('reference', '[a-f0-9]{24}')->name('opportunites.cloturer');
+    Route::get('/zumra/nouvelle', [EspacesGamadController::class, 'nouvelleZumra'])->name('zumras.create');
+    Route::post('/zumra', [EspacesGamadController::class, 'creerZumra'])
+        ->middleware('throttle:10,1,zumra-')->name('zumras.store');
+    Route::get('/projets/nouveau', [EspacesGamadController::class, 'nouveauProjet'])->name('projets.create');
+    Route::post('/projets', [EspacesGamadController::class, 'creerProjet'])
+        ->middleware('throttle:10,1,projet-')->name('projets.store');
+    Route::post('/zumra/{reference}/accueil/{projet}', [EspacesGamadController::class, 'accueil'])
+        ->where(['reference' => '[a-f0-9]{24}', 'projet' => '[a-f0-9]{24}'])->name('zumras.accueil');
+    Route::post('/projets/{reference}/vitrine', [EspacesGamadController::class, 'vitrine'])
+        ->where('reference', '[a-f0-9]{24}')->name('projets.vitrine');
+    Route::post('/zumra/{reference}/adhesion', [EspacesGamadController::class, 'adhesion'])
+        ->where('reference', '[a-f0-9]{24}')->name('zumras.adhesion');
+    Route::post('/zumra/{reference}/membres', [EspacesGamadController::class, 'membreZumra'])
+        ->where('reference', '[a-f0-9]{24}')->name('zumras.membres');
+    Route::post('/projets/{reference}/invitations', [EspacesGamadController::class, 'inviter'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,invitation-projet-')->name('projets.inviter');
+    Route::post('/projets/{reference}/equipe', [EspacesGamadController::class, 'membreProjet'])
+        ->where('reference', '[a-f0-9]{24}')->name('projets.equipe');
+    Route::get('/mon-profil/blocages', [BlocagesGamadController::class, 'index'])->name('blocages.index');
+    Route::match(['POST', 'DELETE'], '/mon-profil/blocages/{reference}', [BlocagesGamadController::class, 'modifier'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,blocage-')->name('blocages.modifier');
+    Route::get('/relations', [RelationsGamadController::class, 'index'])->name('relations.index');
+    Route::post('/relations/{reference}', [RelationsGamadController::class, 'demander'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,demande-relation-')->name('relations.demander');
+    Route::patch('/relations/{reference}', [RelationsGamadController::class, 'decider'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,decision-relation-')->name('relations.decider');
+    Route::get('/conversations/{reference}', [InteractionsGamadController::class, 'conversation'])
+        ->where('reference', '[a-f0-9]{24}')->name('conversations.show');
+    Route::post('/conversations/{reference}', [InteractionsGamadController::class, 'envoyer'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,messagerie-')->name('conversations.envoyer');
+    Route::get('/notifications', [InteractionsGamadController::class, 'notifications'])->name('notifications');
+    Route::post('/notifications/{reference}/lire', [InteractionsGamadController::class, 'lireNotification'])
+        ->where('reference', '[a-f0-9]{24}')->name('notifications.lire');
+    Route::post('/publications/{reference}/signalements/{commentaire?}', [InteractionsGamadController::class, 'signaler'])
+        ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
+        ->middleware('throttle:10,1,signalement-')->name('publications.signaler');
+    Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
+    Route::post('/fil', [ContenusGamadController::class, 'publier'])
+        ->middleware('throttle:10,1,publication-')->name('publications.store');
+    Route::post('/publications/{reference}/commentaires', [ContenusGamadController::class, 'commenter'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,60,commentaire-')->name('publications.commenter');
+});
+
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
-    Route::get('/', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');
+    Route::get('/console/entreprises', [EntreprisesGamadController::class, 'revue'])->name('entreprises.revue');
+    Route::get('/console/entreprises/{reference}/justificatif', [EntreprisesGamadController::class, 'justificatif'])
+        ->where('reference', '[a-f0-9]{24}')->name('entreprises.justificatif');
+    Route::post('/console/entreprises/{reference}', [EntreprisesGamadController::class, 'decider'])
+        ->where('reference', '[a-f0-9]{24}')->name('entreprises.decider');
+    Route::get('/console/moderation-reseau', [InteractionsGamadController::class, 'moderation'])->name('reseau.moderation');
+    Route::post('/console/moderation-reseau/{reference}', [InteractionsGamadController::class, 'traiter'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,moderation-reseau-')->name('reseau.moderation.traiter');
+    Route::get('/console', [Ctr04Controller::class, 'tableauDeBord'])->name('console.accueil');
     Route::get('/normes/{reference}', [Ctr04Controller::class, 'resoudreNorme'])->name('ctr04.resoudre-norme');
     Route::get('/sources/{reference}', [Ctr04Controller::class, 'resoudreSource'])->name('ctr04.resoudre-source');
     Route::get('/capacites/{reference}', [Ctr04Controller::class, 'resoudreCapacite'])->name('ctr04.resoudre-capacite');
@@ -513,8 +603,12 @@ Route::middleware('gamad.session')->group(function (): void {
 });
 
 // Acces Réseau : session Core requise, sans privilege de console.
-Route::middleware('gamad.session')->get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])
-    ->name('reseau.compte.core');
+Route::middleware('gamad.session')->group(function (): void {
+    Route::get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])->name('reseau.compte.core');
+    Route::get('/mon-profil', [ProfilCompteGamadController::class, 'montrer'])->name('compte.profil');
+    Route::patch('/mon-profil', [ProfilCompteGamadController::class, 'modifier'])
+        ->middleware('throttle:20,1,profil-')->name('compte.profil.modifier');
+});
 
 // Le reste de la console demeure strictement administratif.
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
@@ -539,7 +633,19 @@ Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     Route::get('/index/diagnostic', [Ctr04Controller::class, 'diagnostiquerIndex'])->name('ctr04.diagnostiquer-index');
 });
 
-// Accès : la seule porte ouverte sans session (CAP-CORE-005).
+// Inscription personnelle. Le navigateur ne choisit ni le produit ni le sujet du défi.
+Route::middleware('gamad.https')->group(function (): void {
+    Route::get('/inscription', [InscriptionGamadController::class, 'formulaire'])->name('inscription.formulaire');
+    Route::post('/inscription', [InscriptionGamadController::class, 'inscrire'])
+        ->middleware('throttle:5,1')->name('inscription.creer');
+    Route::get('/inscription/verification', [InscriptionGamadController::class, 'verification'])->name('inscription.verification');
+    Route::post('/inscription/verification', [InscriptionGamadController::class, 'verifier'])
+        ->middleware('throttle:10,1')->name('inscription.verifier');
+    Route::post('/inscription/verification/renvoi', [InscriptionGamadController::class, 'renvoyer'])
+        ->middleware('throttle:5,1')->name('inscription.renvoyer');
+});
+
+// Accès au compte et à la console (CAP-CORE-005).
 Route::get('/connexion', [AccesController::class, 'formulaire'])->name('acces.formulaire');
 Route::post('/connexion', [AccesController::class, 'connecter'])
     ->middleware('throttle:10,1')

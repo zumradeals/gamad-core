@@ -20,6 +20,9 @@
     <div>
         <p class="eyebrow">Vos moyens d’entrer</p>
         <h1 class="page-title">Mon accès</h1>
+        @if (str_starts_with($entite, 'IDN-PER-'))
+            <a href="{{ route('compte.profil') }}">Mon profil GAMAD</a>
+        @endif
         <p class="page-subtitle">
             Ce que vous possédez pour ouvrir le Core. Tant qu’il n’y en a qu’un,
             le perdre ferme la porte à tout le monde.
