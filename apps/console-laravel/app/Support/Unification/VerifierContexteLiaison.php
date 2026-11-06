@@ -6,6 +6,8 @@ namespace App\Support\Unification;
 
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
+use Gamad\RegistreAutorisation\Ctr03;
+use Gamad\RegistrePolitiques\Magasin as PolitiquesMagasin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -13,15 +15,15 @@ use Throwable;
 /**
  * Contrôles réels, sans route ni écriture.
  *
- * Les preuves de possession du compte et d'autorisation ne sont PAS
- * implémentées ici : elles restent systématiquement refusées.
+ * Possession : compte Laravel authentifié. Autorisation : décision PERMIS
+ * explicite du Core. Sans politique dédiée, la liaison reste fermée.
  */
 final class VerifierContexteLiaison
 {
     /**
      * @return array{qualifie: bool, blocages: list<string>}
      */
-    public static function verifier(Request $request, string $referenceIdentite): array
+    public static function verifier(Request $request, string $referenceIdentite, string $userId): array
     {
         $sessionValide = false;
         $acteur = null;
@@ -40,16 +42,44 @@ final class VerifierContexteLiaison
             // Magasin indisponible ou session invalide : refus fermé.
         }
 
+        $possessionProuvee = self::possedeCompte($request, $userId);
+        $liaisonAutorisee = false;
+        if ($sessionValide && $acteur === $referenceIdentite && $possessionProuvee) {
+            try {
+                $decision = (new Ctr03(PolitiquesMagasin::connecter()))
+                    ->autoriser($acteur, 'lier compte reseau', 'reseau');
+                $liaisonAutorisee = ($decision['decision'] ?? null) === 'PERMIS';
+            } catch (Throwable) {
+                // Politique absente ou registre indisponible : refus fermé.
+            }
+        }
+
         $memeTransaction = self::registreDansTransactionLocale();
 
         return QualificationLiaisonReseau::evaluer(
             $sessionValide,
             $acteur,
             $referenceIdentite,
-            false, // Aucune preuve de possession de compte implémentée.
+            $possessionProuvee,
             $memeTransaction,
-            false, // Aucune autorisation institutionnelle de liaison implémentée.
+            $liaisonAutorisee,
         );
+    }
+
+    public static function possedeCompte(Request $request, string $userId): bool
+    {
+        if (! preg_match('/^[1-9][0-9]*$/D', $userId)) {
+            return false;
+        }
+
+        try {
+            $utilisateur = $request->user();
+
+            return $utilisateur !== null
+                && (string) $utilisateur->getAuthIdentifier() === $userId;
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     /**
