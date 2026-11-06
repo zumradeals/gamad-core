@@ -11,16 +11,41 @@ use Illuminate\Support\Facades\Schema;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Schema::create('identite_inscrite', function (Blueprint $table) {
-        $table->string('reference')->primary();
-        $table->string('type');
-        $table->string('regime');
-        $table->integer('provisoire');
-    });
-    DB::table('identite_inscrite')->insert([
-        ['reference' => 'PER-001', 'type' => 'personne', 'regime' => 'INSCRIT_AU_REGISTRE', 'provisoire' => 0],
-        ['reference' => 'PER-002', 'type' => 'personne', 'regime' => 'INSCRIT_AU_REGISTRE', 'provisoire' => 1],
+    $chemin = tempnam(sys_get_temp_dir(), 'gamad-liaison-');
+    config()->set('database.connections.gamad_identity.url', null);
+    config()->set('database.connections.gamad_identity.database', $chemin);
+    $this->cheminRegistreCore = $chemin;
+
+    $registre = new PDO('sqlite:'.$chemin);
+    $registre->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    \\Gamad\\RegistreIdentites\\SchemaInscription::migrer($registre);
+
+    $inscription = $registre->prepare(
+        'INSERT INTO identite_inscrite
+         (reference,type,libelle,regime,provisoire,canal,producteur,
+          politique_inscription,source_inscription,preuve_reference,
+          classification,date_creation) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+    );
+    foreach ([['PER-001', 0], ['PER-002', 1]] as [$reference, $provisoire]) {
+        $inscription->execute([
+            $reference, 'personne', 'Qualification', 'INSCRIT_AU_REGISTRE',
+            $provisoire, 'TEST', 'CORE', 'TEST', 'TEST', 'PREUVE', 'INTERNE', date('Y-m-d'),
+        ]);
+    }
+
+    $registre->prepare(
+        'INSERT INTO evenement_cycle_identite
+         (identite_reference,evenement_type,etat_avant,etat_apres,source,
+          preuve_reference,politique_inscription,acteur_reference,date_effet)
+         VALUES (?,?,?,?,?,?,?,?,?)'
+    )->execute([
+        'PER-001', 'ACTIVATION', null, 'ACTIVE', 'TEST',
+        'PREUVE', 'TEST', 'CORE', date('Y-m-d', strtotime('-1 day')),
     ]);
+});
+
+afterEach(function () {
+    @unlink($this->cheminRegistreCore);
 });
 
 function comptePourLiaison(string $email): CompteReseauUnifie
