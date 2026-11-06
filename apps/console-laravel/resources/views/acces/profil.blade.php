@@ -20,9 +20,6 @@
             <div class="field">
                 <label for="bio">Ma présentation</label>
                 <textarea class="input" id="bio" name="bio" maxlength="{{ $bioMax }}" rows="5">{{ old('bio', $compte['bio']) }}</textarea>
-                @error('bio')
-                    <p class="form-error" role="alert">{{ $message }}</p>
-                @enderror
             </div>
             <div class="field">
                 <label for="visibilite">Visibilité du profil</label>
@@ -40,7 +37,33 @@
                 <label for="recherchees">Ce que je veux apprendre (une compétence par ligne)</label>
                 <textarea class="input" id="recherchees" name="recherchees" rows="4">{{ old('recherchees', $fiche['competences_recherchees'] ?? '') }}</textarea>
             </div>
-            @error('competences')<p class="form-error" role="alert">{{ $message }}</p>@enderror
+            <div class="field">
+                <label for="titre">Titre de profil</label>
+                <input class="input" id="titre" name="titre" maxlength="100" value="{{ old('titre', $fiche['titre'] ?? '') }}">
+            </div>
+            <div class="field">
+                <label for="introduction">Introduction</label>
+                <textarea class="input" id="introduction" name="introduction" maxlength="1200" rows="4">{{ old('introduction', $fiche['introduction'] ?? '') }}</textarea>
+            </div>
+            <div class="field">
+                <label for="territoire">Localité</label>
+                <select class="input" id="territoire" name="territoire">
+                    <option value="">Non renseignée</option>
+                    @foreach ($territoires as $code => $libelle)
+                        <option value="{{ $code }}" @selected(old('territoire', $fiche['territoire'] ?? null) === $code)>{{ $libelle }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <fieldset>
+                <legend>Domaines d’action (trois maximum)</legend>
+                <input type="hidden" name="domaines_present" value="1">
+                @foreach ($domaines as $code => $libelle)
+                    <label><input type="checkbox" name="domaines[]" value="{{ $code }}" @checked(in_array($code, (array) old('domaines', old('domaines_present') ? [] : ($fiche['domaines'] ?? [])), true))> {{ $libelle }}</label>
+                @endforeach
+            </fieldset>
+            @foreach ($errors->all() as $erreur)
+                <p class="form-error" role="alert">{{ $erreur }}</p>
+            @endforeach
             <button class="button button--primary" type="submit">Enregistrer</button>
             <a href="{{ route('console.acces.index') }}">Mes moyens d’accès</a>
             <a href="{{ route('fil') }}">Ouvrir le fil GAMAD</a>

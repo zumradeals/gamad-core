@@ -335,6 +335,8 @@ $profilEfface = $requete('GET', '/reseau/mon-compte', cookies: $cookies)['corps'
 $verifier(array_key_exists('bio', $profilEfface) && $profilEfface['bio'] === null, 'la présentation peut être effacée');
 $requete('PATCH', '/mon-profil', [
     'bio' => 'Profil pour annuaire', 'visibilite' => 'members', 'apportees' => "Électricité\nElectricite",
+    'titre' => 'Technicien solaire', 'introduction' => 'Installation et dépannage.',
+    'territoire' => 'ci-bouake', 'domaines' => ['artisanat', 'construction-et-industries'],
     'recherchees' => 'Rénovation',
 ], cookies: $cookies);
 $fichePublique = $registreIdentites->query('SELECT reference_publique FROM fiche_annuaire_gamad')->fetchColumn();
@@ -360,6 +362,23 @@ $verifier($requete('GET', $uriFiche)['statut'] === 404, 'rendre la fiche privée
 $requete('PATCH', '/mon-profil', [
     'bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité',
 ], cookies: $cookies);
+$annuaireFiltre = '/personnes?territoire=ci-bouake&domaine=artisanat&competence=apportees&q=electricite';
+$ficheStructuree = $requete('GET', $uriFiche);
+$verifier(
+    str_contains($requete('GET', $annuaireFiltre)['html'], 'Technicien solaire')
+        && str_contains($ficheStructuree['html'], 'Installation et dépannage.')
+        && str_contains($ficheStructuree['html'], 'Bouaké')
+        && !str_contains($requete('GET', str_replace('ci-bouake', 'ci-abidjan', $annuaireFiltre))['html'], 'Technicien solaire')
+        && !str_contains($requete('GET', str_replace('apportees', 'recherchees', $annuaireFiltre))['html'], 'Technicien solaire'),
+    'le profil structuré est consultable et les trois filtres d’annuaire se combinent',
+);
+$requete('PATCH', '/mon-profil', ['bio' => 'Profil pour annuaire', 'visibilite' => 'members', 'apportees' => 'Électricité'], cookies: $cookies);
+$verifier(
+    !str_contains($requete('GET', $annuaireFiltre)['html'], 'Technicien solaire')
+        && str_contains($requete('GET', $annuaireFiltre, cookies: $cookies)['html'], 'Technicien solaire'),
+    'les filtres respectent l’audience du profil et une ancienne mise à jour conserve les détails structurés',
+);
+$requete('PATCH', '/mon-profil', ['bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité'], cookies: $cookies);
 $verifier($requete('GET', '/fil')['statut'] === 302, 'le fil exige une session Core');
 $privee = $requete('POST', '/fil', [
     'type' => 'knowledge', 'visibilite' => 'members', 'contenu' => 'Une expérience réservée aux membres.',

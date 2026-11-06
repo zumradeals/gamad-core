@@ -7,9 +7,11 @@ namespace App\Http\Controllers;
 use App\Application\Comptes\AnnuaireGamad;
 use App\Application\Comptes\LireCompteGamad;
 use App\Application\Comptes\ModifierProfilGamad;
+use App\Application\Reseau\ReferentielBesoinsGamad;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 
 final class ProfilCompteGamadController
 {
@@ -22,6 +24,8 @@ final class ProfilCompteGamadController
             'compte' => $compte,
             'bioMax' => ModifierProfilGamad::BIO_MAX,
             'fiche' => $annuaire->fichePersonnelle($compte['identite_reference']),
+            'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
+            'domaines' => ReferentielBesoinsGamad::DOMAINES,
         ])
             ->header('Cache-Control', 'no-store');
     }
@@ -32,8 +36,18 @@ final class ProfilCompteGamadController
             'visibilite' => ['sometimes', 'required', 'in:prive,public,members'],
             'apportees' => ['nullable', 'string', 'max:800'],
             'recherchees' => ['nullable', 'string', 'max:800'],
+            'titre' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'introduction' => ['sometimes', 'nullable', 'string', 'max:1200'],
+            'territoire' => ['sometimes', 'nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::TERRITOIRES))],
+            'domaines' => ['sometimes', 'array', 'max:3'],
+            'domaines.*' => ['required', 'string', 'distinct', Rule::in(array_keys(ReferentielBesoinsGamad::DOMAINES))],
+            'domaines_present' => ['sometimes', 'accepted'],
             'bio' => ['present', 'nullable', 'string', 'max:'.ModifierProfilGamad::BIO_MAX],
         ]);
+
+        if (isset($donnees['domaines_present'])) {
+            $donnees['domaines'] ??= [];
+        }
 
         abort_unless($modification->executer(
             (string) $request->attributes->get('gamad_entite'),

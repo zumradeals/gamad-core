@@ -16,29 +16,42 @@ final class AnnuaireGamad
 
     public function fichePersonnelle(string $identite): array
     {
-        $requete = Magasin::ouvrir()->prepare(
-            'SELECT visibilite, competences_apportees, competences_recherchees
-             FROM fiche_annuaire_gamad WHERE identite_reference = ?'
+        $registre = Magasin::ouvrir();
+        $requete = $registre->prepare(
+            'SELECT f.visibilite, f.competences_apportees, f.competences_recherchees, d.titre, d.introduction, d.territoire
+             FROM fiche_annuaire_gamad f LEFT JOIN details_annuaire_gamad d ON d.identite_reference = f.identite_reference
+             WHERE f.identite_reference = ?'
         );
         $requete->execute([$identite]);
 
-        return $requete->fetch(PDO::FETCH_ASSOC) ?: [];
+        $fiche = $requete->fetch(PDO::FETCH_ASSOC);
+        $requete->closeCursor();
+
+        return $fiche === false ? [] : $fiche + ['domaines' => $this->domaines($registre, $identite)];
     }
 
-    public function rechercher(?string $session, ?string $referencePublique = null): array
+    public function rechercher(?string $session, ?string $referencePublique = null, ?string $territoire = null, ?string $domaine = null): array
     {
         $registre = Magasin::ouvrir();
         $membre = $this->membres->depuisSession($session, $registre);
         $sujet = $membre['identite_reference'] ?? null;
         $exclus = $this->blocages->exclus($registre, $sujet);
         $visibilites = $membre ? "'public', 'members'" : "'public'";
-        $sql = "SELECT * FROM fiche_annuaire_gamad WHERE visibilite IN ({$visibilites})";
+        $sql = "SELECT f.*, d.titre, d.introduction, d.territoire FROM fiche_annuaire_gamad f
+                LEFT JOIN details_annuaire_gamad d ON d.identite_reference = f.identite_reference
+                WHERE f.visibilite IN ({$visibilites})";
         $parametres = [];
         if ($referencePublique !== null) {
             $sql .= ' AND reference_publique = ?';
             $parametres[] = $referencePublique;
-        } else {
-            $sql .= " AND (competences_apportees <> '' OR competences_recherchees <> '')";
+        }
+        if ($territoire !== null) {
+            $sql .= ' AND d.territoire = ?';
+            $parametres[] = $territoire;
+        }
+        if ($domaine !== null) {
+            $sql .= ' AND EXISTS (SELECT 1 FROM domaine_annuaire_gamad da WHERE da.identite_reference = f.identite_reference AND da.domaine = ?)';
+            $parametres[] = $domaine;
         }
 
         $requete = $registre->prepare($sql.' ORDER BY reference_publique');
@@ -55,6 +68,10 @@ final class AnnuaireGamad
                     'peut_bloquer' => $sujet !== null && $sujet !== $fiche['identite_reference'],
                     'nom' => $compte['nom'],
                     'bio' => $compte['bio'],
+                    'titre' => $fiche['titre'],
+                    'introduction' => $fiche['introduction'],
+                    'territoire' => $fiche['territoire'],
+                    'domaines' => $this->domaines($registre, $fiche['identite_reference']),
                     'apportees' => array_filter(explode("\n", $fiche['competences_apportees']), 'strlen'),
                     'recherchees' => array_filter(explode("\n", $fiche['competences_recherchees']), 'strlen'),
                 ];
@@ -62,5 +79,13 @@ final class AnnuaireGamad
         }
 
         return $profils;
+    }
+
+    private function domaines(PDO $registre, string $identite): array
+    {
+        $requete = $registre->prepare('SELECT domaine FROM domaine_annuaire_gamad WHERE identite_reference = ? ORDER BY domaine');
+        $requete->execute([$identite]);
+
+        return $requete->fetchAll(PDO::FETCH_COLUMN);
     }
 }

@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 26;
+    public const VERSION = 27;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -22,6 +22,8 @@ final class SchemaInscription
         'identite_inscrite',
         'profil_compte_gamad',
         'fiche_annuaire_gamad',
+        'details_annuaire_gamad',
+        'domaine_annuaire_gamad',
         'publication_gamad',
         'favori_publication_gamad',
         'classement_besoin_gamad',
@@ -119,6 +121,23 @@ final class SchemaInscription
                 visibilite TEXT NOT NULL CHECK (visibilite IN ('prive', 'public', 'members')),
                 competences_apportees TEXT NOT NULL,
                 competences_recherchees TEXT NOT NULL
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS details_annuaire_gamad (
+                identite_reference TEXT PRIMARY KEY REFERENCES fiche_annuaire_gamad(identite_reference) ON DELETE CASCADE,
+                titre VARCHAR(100),
+                introduction VARCHAR(1200),
+                territoire TEXT
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS domaine_annuaire_gamad (
+                identite_reference TEXT NOT NULL REFERENCES fiche_annuaire_gamad(identite_reference) ON DELETE CASCADE,
+                domaine TEXT NOT NULL,
+                PRIMARY KEY (identite_reference, domaine)
             )
         SQL);
 

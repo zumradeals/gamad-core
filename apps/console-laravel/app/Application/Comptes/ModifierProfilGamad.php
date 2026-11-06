@@ -42,6 +42,26 @@ final class ModifierProfilGamad
                          competences_apportees = excluded.competences_apportees,
                          competences_recherchees = excluded.competences_recherchees'
                 )->execute([$identite, bin2hex(random_bytes(12)), $fiche['visibilite'], $apportees, $recherchees]);
+                foreach (['titre', 'introduction', 'territoire'] as $champ) {
+                    if (array_key_exists($champ, $fiche)) {
+                        $valeur = match ($champ) {
+                            'titre' => Normalizer::display($fiche[$champ] ?? ''),
+                            'introduction' => Normalizer::multiline($fiche[$champ] ?? ''),
+                            'territoire' => $fiche[$champ],
+                        };
+                        $registre->prepare(
+                            "INSERT INTO details_annuaire_gamad (identite_reference, {$champ}) VALUES (?, ?)
+                             ON CONFLICT (identite_reference) DO UPDATE SET {$champ} = excluded.{$champ}"
+                        )->execute([$identite, $valeur === '' ? null : $valeur]);
+                    }
+                }
+                if (array_key_exists('domaines', $fiche)) {
+                    $registre->prepare('DELETE FROM domaine_annuaire_gamad WHERE identite_reference = ?')->execute([$identite]);
+                    $ajouter = $registre->prepare('INSERT INTO domaine_annuaire_gamad (identite_reference, domaine) VALUES (?, ?)');
+                    foreach ($fiche['domaines'] as $domaine) {
+                        $ajouter->execute([$identite, $domaine]);
+                    }
+                }
             }
             $registre->commit();
         } catch (\Throwable $exception) {
