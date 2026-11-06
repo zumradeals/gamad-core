@@ -56,3 +56,31 @@ it('reconnait uniquement le compte Laravel effectivement authentifié', function
     expect(VerifierContexteLiaison::possedeCompte($request, (string) $utilisateur->getAuthIdentifier()))->toBeTrue();
     expect(VerifierContexteLiaison::possedeCompte($request, '0'))->toBeFalse();
 });
+
+it('refuse deux stockages distincts même si les tables applicatives existent', function () {
+    $origine = config('database.connections.gamad_identity.database');
+    try {
+        config()->set('database.connections.gamad_identity.database', '/tmp/gamad-registre-distinct.sqlite');
+        DB::purge('gamad_identity');
+
+        expect(VerifierContexteLiaison::registreDansTransactionLocale())->toBeFalse();
+    } finally {
+        config()->set('database.connections.gamad_identity.database', $origine);
+        DB::purge('gamad_identity');
+    }
+});
+
+it('refuse deux connexions SQLite en mémoire comme registre partagé', function () {
+    $origine = config('database.connections.gamad_identity');
+    try {
+        config()->set('database.connections.gamad_identity', [
+            'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '',
+        ]);
+        DB::purge('gamad_identity');
+
+        expect(VerifierContexteLiaison::registreDansTransactionLocale())->toBeFalse();
+    } finally {
+        config()->set('database.connections.gamad_identity', $origine);
+        DB::purge('gamad_identity');
+    }
+});
