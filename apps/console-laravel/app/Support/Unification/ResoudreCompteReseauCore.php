@@ -8,6 +8,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
+use Gamad\RegistreIdentites\Magasin as IdentitesMagasin;
+use PDO;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -47,26 +49,30 @@ final class ResoudreCompteReseauCore
     private static function resoudreLiaisonActive(string $identite): ?CompteReseauUnifie
     {
         try {
-            if (! VerifierContexteLiaison::registreDansTransactionLocale()) {
-                return null;
-            }
-
+            // Projection locale en lecture seule : aucun besoin de transaction
+            // repartie avec le registre souverain du Core.
             $lien = DB::table('reseau_comptes_identites')
-                ->join('identite_inscrite', 'identite_inscrite.reference', '=', 'reseau_comptes_identites.identite_reference')
                 ->join('users', 'users.id', '=', 'reseau_comptes_identites.user_id')
                 ->where('reseau_comptes_identites.identite_reference', $identite)
-                ->where('identite_inscrite.type', 'personne')
-                ->where('identite_inscrite.regime', 'INSCRIT_AU_REGISTRE')
-                ->where('identite_inscrite.provisoire', 0)
                 ->first(['reseau_comptes_identites.user_id', 'reseau_comptes_identites.identite_reference']);
 
             if ($lien === null) {
                 return null;
             }
 
-            // L'inscription est immuable : seul le journal de cycle dit si
-            // l'identité est encore utilisable. Absence d'événement = refus.
-            if (! self::identiteActive($identite)) {
+            // Le registre souverain est lu dans son stockage Core distinct.
+            // Aucune copie locale d'identite_inscrite ne fait autorite.
+            $registre = IdentitesMagasin::ouvrir();
+            $requete = $registre->prepare(
+                'SELECT type, regime, provisoire FROM identite_inscrite WHERE reference = ?'
+            );
+            $requete->execute([$identite]);
+            $inscription = $requete->fetch(PDO::FETCH_ASSOC);
+            if ($inscription === false
+                || $inscription['type'] !== 'personne'
+                || $inscription['regime'] !== 'INSCRIT_AU_REGISTRE'
+                || (int) $inscription['provisoire'] !== 0
+                || ! self::identiteActive($identite, $registre)) {
                 return null;
             }
 
@@ -80,16 +86,19 @@ final class ResoudreCompteReseauCore
      * Lecture du journal canonique, pas du fait d'inscription immuable.
      * Un événement futur ne peut pas activer ou révoquer prématurément.
      */
-    public static function identiteActive(string $reference): bool
+    public static function identiteActive(string $reference, ?PDO $registre = null): bool
     {
         try {
-            $evenements = DB::table('evenement_cycle_identite')
-                ->where('identite_reference', $reference)
-                ->whereNotIn('evenement_type', [
-                    'RATTACHEMENT_PRODUIT', 'RETRAIT_PRODUIT',
-                    'RATTACHEMENT_ORGANISATION', 'RETRAIT_ORGANISATION',
-                ])
-                ->get(['id', 'date_effet', 'etat_apres']);
+            $registre ??= IdentitesMagasin::ouvrir();
+            $requete = $registre->prepare(
+                "SELECT id, date_effet, etat_apres FROM evenement_cycle_identite
+                 WHERE identite_reference = ?
+                 AND evenement_type NOT IN
+                 ('RATTACHEMENT_PRODUIT','RETRAIT_PRODUIT',
+                  'RATTACHEMENT_ORGANISATION','RETRAIT_ORGANISATION')"
+            );
+            $requete->execute([$reference]);
+            $evenements = $requete->fetchAll(PDO::FETCH_OBJ);
 
             $maintenant = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $dernierInstant = null;
