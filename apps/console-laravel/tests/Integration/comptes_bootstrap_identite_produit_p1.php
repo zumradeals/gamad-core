@@ -334,11 +334,11 @@ $verifier($transport->messages()->count() === $nombreAvant + 1, 'le renvoi Core 
     'code' => $codeRelivre[1] ?? '',
 ], $cookiesWeb);
 $verifier(
-    str_ends_with((string) $validationWeb->headers->get('Location'), '/connexion'),
+    parse_url((string) $validationWeb->headers->get('Location'), PHP_URL_PATH) === '/reseau/connexion',
     'le code reçu ouvre le parcours de connexion',
 );
-[$connexionWeb, $cookiesWeb] = $web('POST', '/connexion', [
-    'entite' => $emailWeb, 'mode' => 'identifiant', 'secret' => $secretWeb,
+[$connexionWeb, $cookiesWeb] = $web('POST', '/reseau/connexion', [
+    'entite' => $emailWeb, 'secret' => $secretWeb,
 ], $cookiesWeb);
 $destinationWeb = parse_url((string) $connexionWeb->headers->get('Location'), PHP_URL_PATH);
 [$espaceWeb] = $web('GET', '/espace', cookies: $cookiesWeb);
