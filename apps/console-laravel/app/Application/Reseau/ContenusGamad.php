@@ -76,7 +76,7 @@ final class ContenusGamad
         return $this->insererPublication($registre, $sujet, $type, $visibilite, $contenu);
     }
 
-    public function publierBesoin(string $sujet, string $visibilite, string $contenu, ?string $domaine, ?string $territoire): ?string
+    public function publierBesoin(string $sujet, string $visibilite, string $contenu, ?string $domaine, ?string $territoire, ?string $zumra, ?string $projet): ?string
     {
         $registre = Magasin::ouvrir();
         if ($this->membres->lire($sujet, $registre) === null) {
@@ -85,11 +85,17 @@ final class ContenusGamad
 
         $registre->beginTransaction();
         try {
+            abort_unless(EmetteurBesoinGamad::peutPublier($registre, $sujet, $zumra, $projet), 404);
             $reference = $this->insererPublication($registre, $sujet, self::TYPE_BESOIN, $visibilite, $contenu);
             if ($domaine !== null || $territoire !== null) {
                 $registre->prepare(
                     'INSERT INTO classement_besoin_gamad (besoin_reference, domaine, territoire) VALUES (?, ?, ?)'
                 )->execute([$reference, $domaine, $territoire]);
+            }
+            if ($zumra !== null || $projet !== null) {
+                $registre->prepare(
+                    'INSERT INTO emetteur_besoin_gamad (besoin_reference, zumra_reference, projet_reference) VALUES (?, ?, ?)'
+                )->execute([$reference, $zumra, $projet]);
             }
             $registre->commit();
 
@@ -110,22 +116,29 @@ final class ContenusGamad
         return $reference;
     }
 
-    public function besoins(?string $session, string $etat, string $recherche, int $page, ?string $domaine, ?string $territoire): array
+    public function besoins(?string $session, string $etat, string $recherche, int $page, ?string $domaine, ?string $territoire, ?string $emetteur): array
     {
         $registre = Magasin::ouvrir();
         $membre = $this->membres->depuisSession($session, $registre);
         $exclus = $this->blocages->exclus($registre, $membre['identite_reference'] ?? null);
+        $jointures = EmetteurBesoinGamad::JOINTURES;
+        $visible = EmetteurBesoinGamad::VISIBLE;
+        $type = EmetteurBesoinGamad::TYPE;
         $requete = $registre->prepare(
-            "SELECT p.*, c.domaine, c.territoire FROM publication_gamad p
+            "SELECT p.*, c.domaine, c.territoire, {$type} AS emetteur,
+                    COALESCE(e.projet_reference, e.zumra_reference) AS emetteur_reference,
+                    COALESCE(pr.titre, z.nom) AS emetteur_nom FROM publication_gamad p
+             {$jointures}
              LEFT JOIN classement_besoin_gamad c ON c.besoin_reference = p.reference
-             WHERE (CAST(? AS TEXT) IS NULL OR c.domaine = ?)
+             WHERE {$visible} AND (CAST(? AS TEXT) IS NULL OR {$type} = ?)
+               AND (CAST(? AS TEXT) IS NULL OR c.domaine = ?)
                AND (CAST(? AS TEXT) IS NULL OR c.territoire = ?)
                AND p.type = 'need' AND (p.etat_besoin = ? OR ? = 'tous')
                AND (p.visibilite = 'public' OR CAST(? AS INTEGER) = 1)
                AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)
              ORDER BY p.cree_le DESC, p.reference DESC"
         );
-        $requete->execute([$domaine, $domaine, $territoire, $territoire, $etat, $etat, $membre === null ? 0 : 1]);
+        $requete->execute([$emetteur, $emetteur, $domaine, $domaine, $territoire, $territoire, $etat, $etat, $membre === null ? 0 : 1]);
         $correspondances = (static function () use ($requete, $recherche): \Generator {
             foreach ($requete as $ligne) {
                 if ($recherche === '' || str_contains(Normalizer::key($ligne['contenu']), $recherche)) {
@@ -164,6 +177,10 @@ final class ContenusGamad
     {
         $registre = Magasin::ouvrir();
         abort_if($this->membres->lire($sujet, $registre) === null, 403);
+
+        if (!EmetteurBesoinGamad::peutGerer($registre, $sujet, $reference)) {
+            return false;
+        }
 
         $requete = $registre->prepare(
             "UPDATE publication_gamad SET etat_besoin = ?
@@ -207,7 +224,14 @@ final class ContenusGamad
 
     private function lirePublication(PDO $registre, string $reference, bool $membre, array $exclus): ?array
     {
-        $requete = $registre->prepare("SELECT p.*, c.domaine, c.territoire FROM publication_gamad p LEFT JOIN classement_besoin_gamad c ON c.besoin_reference = p.reference WHERE p.reference = ? AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)");
+        $jointures = EmetteurBesoinGamad::JOINTURES;
+        $visible = EmetteurBesoinGamad::VISIBLE;
+        $type = EmetteurBesoinGamad::TYPE;
+        $requete = $registre->prepare("SELECT p.*, c.domaine, c.territoire, {$type} AS emetteur,
+            COALESCE(e.projet_reference, e.zumra_reference) AS emetteur_reference,
+            COALESCE(pr.titre, z.nom) AS emetteur_nom FROM publication_gamad p {$jointures}
+            LEFT JOIN classement_besoin_gamad c ON c.besoin_reference = p.reference
+            WHERE p.reference = ? AND {$visible} AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)");
         $requete->execute([$reference]);
         $publication = $requete->fetch(PDO::FETCH_ASSOC);
         if ($publication === false || (!$membre && $publication['visibilite'] !== 'public')) {
@@ -235,7 +259,7 @@ final class ContenusGamad
             }
             if ($auteurs[$reference] !== null) {
                 unset($ligne['auteur_reference']);
-                yield $ligne + ['auteur' => $auteurs[$reference]['nom']];
+                yield $ligne + ['auteur' => $ligne['emetteur_nom'] ?? $auteurs[$reference]['nom']];
             }
         }
     }

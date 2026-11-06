@@ -21,11 +21,10 @@ final class PropositionsAideGamad
         $this->besoin($registre, $sujet, $besoin);
         $requete = $registre->prepare(
             'SELECT reference, proposant_reference, message, etat FROM proposition_aide_gamad
-             WHERE besoin_reference = ? AND (proposant_reference = ? OR EXISTS (SELECT 1 FROM publication_gamad p
-                 WHERE p.reference = besoin_reference AND p.auteur_reference = ?))
+             WHERE besoin_reference = ? AND (proposant_reference = ? OR CAST(? AS INTEGER) = 1)
              ORDER BY reference'
         );
-        $requete->execute([$besoin, $sujet, $sujet]);
+        $requete->execute([$besoin, $sujet, EmetteurBesoinGamad::peutGerer($registre, $sujet, $besoin) ? 1 : 0]);
         $exclus = $this->blocages->exclus($registre, $sujet);
         $resultat = [];
         foreach ($requete->fetchAll() as $ligne) {
@@ -87,7 +86,7 @@ final class PropositionsAideGamad
             if ($etat === 'withdrawn') {
                 abort_unless($sujet === $proposant, 404);
             } else {
-                abort_unless($sujet === $publication['auteur_reference'], 404);
+                abort_unless(EmetteurBesoinGamad::peutGerer($registre, $sujet, $besoin), 404);
                 abort_if(isset($this->blocages->exclus($registre, $sujet)[$proposant])
                     || $this->membres->lire($proposant, $registre) === null, 404);
                 $this->exigerOuvert($publication);
@@ -110,11 +109,13 @@ final class PropositionsAideGamad
     private function besoin(PDO $registre, string $sujet, string $reference, bool $verrouiller = false): array
     {
         abort_if($this->membres->lire($sujet, $registre) === null, 403);
-        $sql = "SELECT auteur_reference, etat_besoin FROM publication_gamad
-                WHERE reference = ? AND type = 'need'
+        $jointures = EmetteurBesoinGamad::JOINTURES;
+        $visible = EmetteurBesoinGamad::VISIBLE;
+        $sql = "SELECT p.auteur_reference, p.etat_besoin FROM publication_gamad p {$jointures}
+                WHERE p.reference = ? AND p.type = 'need' AND {$visible}
                 AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'publication' AND cible_reference = ?)";
         if ($verrouiller && $registre->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql') {
-            $sql .= ' FOR UPDATE';
+            $sql .= ' FOR UPDATE OF p';
         }
         $requete = $registre->prepare($sql);
         $requete->execute([$reference, $reference]);

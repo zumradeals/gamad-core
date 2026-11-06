@@ -80,6 +80,7 @@ final class ContenusGamadController
             'etat' => ['nullable', 'in:open,in_progress,resolved,closed,tous'],
             'q' => ['nullable', 'string', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            'emetteur' => ['nullable', 'in:personne,zumra,projet'],
             'domaine' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::DOMAINES))],
             'territoire' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::TERRITOIRES))],
         ]);
@@ -91,6 +92,7 @@ final class ContenusGamadController
             $page,
             $filtres['domaine'] ?? null,
             $filtres['territoire'] ?? null,
+            $filtres['emetteur'] ?? null,
         );
 
         return response()->json($besoins + ['page' => $page])->header('Cache-Control', 'private, no-store');
@@ -115,6 +117,8 @@ final class ContenusGamadController
     public function publierBesoin(Request $request, ContenusGamad $contenus): JsonResponse
     {
         $donnees = $request->validate([
+            'zumra' => ['nullable', 'prohibits:projet', 'regex:/^[a-f0-9]{24}$/D'],
+            'projet' => ['nullable', 'regex:/^[a-f0-9]{24}$/D'],
             'visibilite' => ['required', 'in:public,members'],
             'contenu' => ['required', 'string', 'max:500'],
             'domaine' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::DOMAINES))],
@@ -126,6 +130,8 @@ final class ContenusGamadController
             $donnees['contenu'],
             $donnees['domaine'] ?? null,
             $donnees['territoire'] ?? null,
+            $donnees['zumra'] ?? null,
+            $donnees['projet'] ?? null,
         );
         abort_if($reference === null, 403);
 

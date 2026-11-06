@@ -757,7 +757,28 @@ $verifier(
         && str_contains($requete('GET', '/projets')['html'], $uriProjet),
     'la vitrine devient publique seulement après accueil accepté et publication par le porteur',
 );
+$besoinZumra = ['visibilite' => 'public', 'contenu' => 'Besoin de la ZUMRA.', 'zumra' => basename($uriZumra)];
+$besoinProjet = ['visibilite' => 'public', 'contenu' => 'Besoin du projet.', 'projet' => basename($uriProjet)];
+$publicationZumra = $requete('POST', '/besoins', $besoinZumra, cookies: $premierCookies);
+$publicationProjet = $requete('POST', '/besoins', $besoinProjet, cookies: $secondCookies);
+$referenceBesoinProjet = $publicationProjet['corps']['reference'] ?? '';
+$verifier(
+    $publicationZumra['statut'] === 201 && $publicationProjet['statut'] === 201
+        && $requete('POST', '/besoins', $besoinZumra, cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', '/besoins', $besoinProjet, cookies: $premierCookies)['statut'] === 404
+        && array_column($requete('GET', '/besoins?emetteur=zumra')['corps']['besoins'] ?? [], 'reference') === [$publicationZumra['corps']['reference']]
+        && array_column($requete('GET', '/besoins?emetteur=projet')['corps']['besoins'] ?? [], 'reference') === [$referenceBesoinProjet]
+        && ($requete('GET', '/besoins/'.$referenceBesoinProjet)['corps']['emetteur_reference'] ?? null) === basename($uriProjet)
+        && $requete('PATCH', '/besoins/'.$referenceBesoinProjet.'/etat', ['action' => 'fermer'], cookies: $premierCookies)['statut'] === 404,
+    'les besoins collectifs sont émis par les rôles autorisés et se filtrent par émetteur',
+);
 $requete('POST', $uriProjet.'/vitrine', ['action' => 'retirer'], cookies: $secondCookies);
+$verifier(
+    $requete('GET', '/besoins/'.$referenceBesoinProjet)['statut'] === 404
+        && ($requete('GET', '/besoins?emetteur=projet')['corps']['besoins'] ?? null) === []
+        && $requete('POST', '/besoins/'.$referenceBesoinProjet.'/propositions', [], cookies: $premierCookies)['statut'] === 404,
+    'le retrait de la vitrine ferme le besoin collectif et les nouvelles propositions',
+);
 $verifier($requete('GET', $uriProjet)['statut'] === 404, 'le retrait ferme immédiatement la vitrine');
 $adhesion = $requete('POST', $uriZumra.'/adhesion', ['action' => 'rejoindre'], cookies: $secondCookies);
 $acceptationAdhesion = $requete('POST', $uriZumra.'/membres', [
@@ -775,6 +796,7 @@ $interdictionDeleguer = $requete('POST', $uriZumra.'/responsabilites', [
     'cible' => $referenceTel, 'action' => 'revoquer',
 ], cookies: $secondCookies);
 $delegue = $requete('GET', $uriZumra, cookies: $secondCookies);
+$besoinDelegue = $requete('POST', '/besoins', $besoinZumra, cookies: $secondCookies);
 $retraitDelegation = $requete('POST', $uriZumra.'/responsabilites', [
     'cible' => $referenceTel, 'action' => 'revoquer',
 ], cookies: $premierCookies);
@@ -784,6 +806,12 @@ $verifier(
         && $retraitDelegation['statut'] === 302
         && !str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Demandes d’accueil'),
     'seul le fondateur délègue les droits de gestion et le retrait prend effet immédiatement',
+);
+$verifier(
+    $besoinDelegue['statut'] === 201
+        && $requete('POST', '/besoins', $besoinZumra, cookies: $secondCookies)['statut'] === 404
+        && $requete('PATCH', '/besoins/'.($besoinDelegue['corps']['reference'] ?? '').'/etat', ['action' => 'fermer'], cookies: $secondCookies)['statut'] === 404,
+    'la délégation autorise la publication pour la ZUMRA et sa révocation ferme les écritures',
 );
 $uriEtapes = $uriProjet.'/etapes';
 $premiereEtape = $requete('POST', $uriEtapes, ['titre' => 'Préparation confidentielle'], cookies: $secondCookies);

@@ -52,6 +52,10 @@ final class NotificationsGamad
             if (!isset($exclus[$notice['auteur_reference']])
                 && $this->membres->lire($notice['auteur_reference'], $registre) !== null) {
                 if ($notice['proposition_reference'] !== null) {
+                    if ($notice['type'] === 'demande' && !EmetteurBesoinGamad::peutGerer($registre, $sujet, $notice['besoin_reference'])) {
+                        continue;
+                    }
+
                     $notice['type'] = match ($notice['type']) {
                         'demande' => 'aide_proposee',
                         'acceptation' => 'aide_acceptee',

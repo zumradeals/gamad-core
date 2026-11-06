@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 19;
+    public const VERSION = 20;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -24,6 +24,7 @@ final class SchemaInscription
         'fiche_annuaire_gamad',
         'publication_gamad',
         'classement_besoin_gamad',
+        'emetteur_besoin_gamad',
         'proposition_aide_gamad',
         'message_aide_gamad',
         'commentaire_gamad',
@@ -266,6 +267,15 @@ final class SchemaInscription
             )
         SQL);
         $pdo->exec('CREATE INDEX IF NOT EXISTS projet_gamad_zumra ON projet_gamad(zumra_reference, accueil)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS emetteur_besoin_gamad (
+                besoin_reference TEXT PRIMARY KEY REFERENCES publication_gamad(reference) ON DELETE CASCADE,
+                zumra_reference TEXT REFERENCES zumra_gamad(reference),
+                projet_reference TEXT REFERENCES projet_gamad(reference),
+                CHECK ((zumra_reference IS NULL) <> (projet_reference IS NULL))
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS entreprise_gamad (
