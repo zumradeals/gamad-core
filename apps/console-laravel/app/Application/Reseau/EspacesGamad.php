@@ -61,7 +61,10 @@ final class EspacesGamad
         $adhesion = $registre->prepare('SELECT etat FROM adhesion_zumra_gamad WHERE espace_reference = ? AND membre_reference = ?');
         $adhesion->execute([$reference, $sujet]);
 
-        return ['zumra' => $zumra, 'responsable' => $responsable, 'demandes' => $demandes,
+        $mode = $registre->prepare('SELECT mode_adhesion FROM configuration_zumra_gamad WHERE zumra_reference = ?');
+        $mode->execute([$reference]);
+
+        return ['mode_adhesion' => $mode->fetchColumn() ?: 'approval', 'zumra' => $zumra, 'responsable' => $responsable, 'demandes' => $demandes,
             'fondateur' => $fondateur, 'connecte' => $sujet !== null, 'adhesion' => $adhesion->fetchColumn(),
             'membres' => $responsable ? array_map(
                 fn (array $membre): array => $membre + ['delegue' => MembresEspacesGamad::estDelegue($registre, $reference, $membre['membre_reference'])],
@@ -124,7 +127,8 @@ final class EspacesGamad
         if ($sujet === $projet['porteur_reference']) {
             return $projet + ['prive' => true, 'porteur' => true,
                 'equipe' => MembresEspacesGamad::liste($registre, $reference, false),
-                'etapes' => EtapesProjetGamad::lister($registre, $reference)];
+                'etapes' => EtapesProjetGamad::lister($registre, $reference),
+                'participations' => ParticipationsGamad::demandes($registre, $reference)];
         }
         $equipe = $registre->prepare('SELECT etat FROM equipe_projet_gamad WHERE espace_reference = ? AND membre_reference = ?');
         $equipe->execute([$reference, $sujet]);
@@ -143,7 +147,9 @@ final class EspacesGamad
             return null;
         }
 
-        return ['reference' => $reference, 'titre' => $projet['titre'], 'vitrine' => $projet['vitrine'], 'prive' => false];
+        return ['reference' => $reference, 'titre' => $projet['titre'], 'vitrine' => $projet['vitrine'], 'prive' => false,
+            'participation_autorisee' => $sujet !== null,
+            'participation' => $sujet === null ? null : ParticipationsGamad::etat($registre, $reference, $sujet)];
     }
 
     public function deciderAccueil(string $sujet, string $zumra, string $projet, bool $accepter): void

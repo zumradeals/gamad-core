@@ -21,10 +21,30 @@ final class MembresEspacesGamad
         $fondateur = $this->responsable($registre, $zumra, true);
         abort_if($fondateur === $sujet, 403);
         if ($rejoindre) {
-            $this->ajouter($registre, 'adhesion_zumra_gamad', $zumra, $sujet);
+            $requete = $registre->prepare(
+                "INSERT INTO adhesion_zumra_gamad (espace_reference, membre_reference, etat)
+                 SELECT reference, ?, CASE WHEN c.mode_adhesion = 'open' THEN 'accepted' ELSE 'pending' END
+                 FROM zumra_gamad z LEFT JOIN configuration_zumra_gamad c ON c.zumra_reference = z.reference
+                 WHERE z.reference = ? ON CONFLICT (espace_reference, membre_reference) DO NOTHING"
+            );
+            $requete->execute([$sujet, $zumra]);
+            abort_if($requete->rowCount() === 0, 409);
         } else {
             $this->retirer($registre, 'adhesion_zumra_gamad', $zumra, $sujet);
         }
+    }
+
+    public function configurerAdhesion(string $sujet, string $zumra, string $mode): void
+    {
+        $registre = Magasin::ouvrir();
+        $this->exigerMembre($registre, $sujet);
+        $fondateur = $this->responsable($registre, $zumra, true);
+        abort_unless($fondateur === $sujet || self::estDelegue($registre, $zumra, $sujet), 404);
+
+        $registre->prepare(
+            'INSERT INTO configuration_zumra_gamad (zumra_reference, mode_adhesion) VALUES (?, ?)
+             ON CONFLICT (zumra_reference) DO UPDATE SET mode_adhesion = excluded.mode_adhesion'
+        )->execute([$zumra, $mode]);
     }
 
     public function inviter(string $sujet, string $projet, string $reference): void

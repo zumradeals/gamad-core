@@ -48,4 +48,6 @@ L’entreprise soumet un justificatif RCCM réservé aux autorités admises dans
 
 Le porteur peut créer, réordonner et modifier les étapes de son projet. Les collaborateurs acceptés peuvent les consulter dans le dossier privé. Le fondateur d’une ZUMRA peut déléguer le traitement des adhésions et des demandes d’accueil à un membre accepté. Le retrait de l’adhésion ou de la délégation supprime ces droits.
 
-La parité des espaces métier reste à vérifier et à compléter avec les écrans source, dont les contributions de projet, les modes d’adhésion des ZUMRA, les dossiers d’entreprise complémentaires et les modes avancés de gestion des opportunités.
+Les responsables d’une ZUMRA peuvent choisir une adhésion ouverte ou sur validation. Le mode sur validation demeure le défaut des ZUMRA existantes. Un membre peut proposer son aide depuis une vitrine publiée, puis retirer sa demande en attente. Seul le porteur peut accepter ou refuser. L’acceptation ouvre le dossier au nouveau collaborateur.
+
+La parité des espaces métier reste à compléter avec les écrans source, dont le suivi des contributions et leurs notifications, les dossiers d’entreprise complémentaires et les modes avancés de gestion des opportunités.

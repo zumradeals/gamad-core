@@ -34,11 +34,20 @@
                         <p>{{ $adhesion === 'accepted' ? 'Membre de la ZUMRA' : 'Adhésion en attente' }}</p>
                         <button class="bouton" name="action" value="quitter">Quitter ou retirer la demande</button>
                     @else
-                        <button class="bouton" name="action" value="rejoindre">Demander à rejoindre</button>
+                        <button class="bouton" name="action" value="rejoindre">{{ $mode_adhesion === 'open' ? 'Rejoindre la ZUMRA' : 'Demander à rejoindre' }}</button>
                     @endif
                 </form>
             @endif
             @if ($responsable)
+                <form class="formulaire-reseau" method="post" action="{{ route('zumras.mode-adhesion', $zumra['reference']) }}">
+                    @csrf
+                    <label for="mode-adhesion">Mode d’adhésion</label>
+                    <select id="mode-adhesion" name="mode">
+                        <option value="approval" @selected($mode_adhesion === 'approval')>Sur validation</option>
+                        <option value="open" @selected($mode_adhesion === 'open')>Ouverte</option>
+                    </select>
+                    <button class="bouton">Enregistrer</button>
+                </form>
                 <section aria-labelledby="accueils">
                     <h2 id="accueils">Demandes d’accueil</h2>
                     @forelse ($demandes as $demande)
@@ -139,6 +148,19 @@
                     </form>
                 @endif
                 @if ($projet['porteur'])
+                    <h2>Propositions d’aide</h2>
+                    @forelse ($projet['participations'] as $demande)
+                        <form class="barre" method="post" action="{{ route('projets.participations', $projet['reference']) }}">
+                            @csrf
+                            <input type="hidden" name="cible" value="{{ $demande['candidat_reference'] }}">
+                            <strong>{{ $demande['nom'] }}</strong>
+                            @if ($demande['message'])<p class="texte-reseau">{{ $demande['message'] }}</p>@endif
+                            <button class="bouton" name="action" value="accepter">Accepter l’aide</button>
+                            <button class="bouton" name="action" value="refuser">Refuser</button>
+                        </form>
+                    @empty
+                        <p>Aucune proposition en attente.</p>
+                    @endforelse
                     <h2>Équipe du projet</h2>
                     <form class="formulaire-reseau" method="post" action="{{ route('projets.inviter', $projet['reference']) }}">
                         @csrf
@@ -164,6 +186,19 @@
                 </form>
             @else
                 <p class="texte-reseau">{{ $projet['vitrine'] }}</p>
+                @if ($projet['participation_autorisee'] && in_array($projet['participation'], [null, 'pending', 'withdrawn'], true))
+                    <form class="formulaire-reseau" method="post" action="{{ route('projets.participations', $projet['reference']) }}">
+                        @csrf
+                        @if ($projet['participation'] === 'pending')
+                            <p>Proposition d’aide en attente.</p>
+                            <button class="bouton" name="action" value="retirer">Retirer ma proposition</button>
+                        @else
+                            <label for="message-aide">Un mot au porteur (facultatif)</label>
+                            <textarea id="message-aide" name="message" maxlength="280">{{ old('message') }}</textarea>
+                            <button class="bouton" name="action" value="proposer">Proposer mon aide</button>
+                        @endif
+                    </form>
+                @endif
             @endif
             @break
         @case('creer-zumra')

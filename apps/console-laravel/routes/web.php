@@ -80,6 +80,10 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
         ->where(['reference' => '[a-f0-9]{24}', 'projet' => '[a-f0-9]{24}'])->name('zumras.accueil');
     Route::post('/projets/{reference}/vitrine', [EspacesGamadController::class, 'vitrine'])
         ->where('reference', '[a-f0-9]{24}')->name('projets.vitrine');
+    Route::post('/zumra/{reference}/mode-adhesion', [EspacesGamadController::class, 'modeAdhesion'])
+        ->where('reference', '[a-f0-9]{24}')->name('zumras.mode-adhesion');
+    Route::post('/projets/{reference}/participations', [EspacesGamadController::class, 'participation'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,participation-projet-')->name('projets.participations');
     Route::post('/zumra/{reference}/adhesion', [EspacesGamadController::class, 'adhesion'])
         ->where('reference', '[a-f0-9]{24}')->name('zumras.adhesion');
     Route::post('/zumra/{reference}/responsabilites', [EspacesGamadController::class, 'deleguer'])

@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 11;
+    public const VERSION = 12;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -38,6 +38,8 @@ final class SchemaInscription
         'candidature_gamad',
         'adhesion_zumra_gamad',
         'responsabilite_zumra_gamad',
+        'configuration_zumra_gamad',
+        'participation_projet_gamad',
         'equipe_projet_gamad',
         'identifiant_resolution',
         'evenement_cycle_identite',
@@ -301,6 +303,23 @@ final class SchemaInscription
                 PRIMARY KEY (espace_reference, membre_reference),
                 FOREIGN KEY (espace_reference, membre_reference)
                     REFERENCES adhesion_zumra_gamad(espace_reference, membre_reference) ON DELETE CASCADE
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS configuration_zumra_gamad (
+                zumra_reference TEXT PRIMARY KEY REFERENCES zumra_gamad(reference) ON DELETE CASCADE,
+                mode_adhesion TEXT NOT NULL CHECK (mode_adhesion IN ('open', 'approval'))
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS participation_projet_gamad (
+                projet_reference TEXT NOT NULL REFERENCES projet_gamad(reference) ON DELETE CASCADE,
+                candidat_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                message VARCHAR(280),
+                etat TEXT NOT NULL CHECK (etat IN ('pending', 'accepted', 'declined', 'withdrawn')),
+                PRIMARY KEY (projet_reference, candidat_reference)
             )
         SQL);
 

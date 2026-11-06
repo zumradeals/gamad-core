@@ -665,6 +665,39 @@ $verifier(
         && !str_contains($requete('GET', $uriProjet, cookies: $secondCookies)['html'], 'Vérification confidentielle'),
     'le porteur peut retirer une étape',
 );
+$uriMode = $uriZumra.'/mode-adhesion';
+$modeNonAutorise = $requete('POST', $uriMode, ['mode' => 'open'], cookies: $secondCookies);
+$modeOuvert = $requete('POST', $uriMode, ['mode' => 'open'], cookies: $premierCookies);
+$requete('POST', $uriZumra.'/adhesion', ['action' => 'quitter'], cookies: $secondCookies);
+$adhesionOuverte = $requete('POST', $uriZumra.'/adhesion', ['action' => 'rejoindre'], cookies: $secondCookies);
+$verifier(
+    $modeNonAutorise['statut'] === 404 && $modeOuvert['statut'] === 302 && $adhesionOuverte['statut'] === 302
+        && str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Membre de la ZUMRA'),
+    'un responsable règle le mode et une adhésion ouverte devient effective immédiatement',
+);
+$uriParticipation = $uriProjet.'/participations';
+$proposition = ['action' => 'proposer', 'message' => 'Je peux aider à préparer le chantier.'];
+$projetSansVitrine = $requete('POST', $uriParticipation, $proposition, cookies: $premierCookies);
+$requete('POST', $uriProjet.'/vitrine', [
+    'action' => 'publier', 'vitrine' => 'Projet ouvert aux propositions.',
+], cookies: $secondCookies);
+$demandeParticipation = $requete('POST', $uriParticipation, $proposition, cookies: $premierCookies);
+$porteurVoit = $requete('GET', $uriProjet, cookies: $secondCookies);
+$publicNeVoitPas = $requete('GET', $uriProjet);
+$retraitParticipation = $requete('POST', $uriParticipation, ['action' => 'retirer'], cookies: $premierCookies);
+$nouvelleParticipation = $requete('POST', $uriParticipation, $proposition, cookies: $premierCookies);
+$autoDecision = $requete('POST', $uriParticipation, ['action' => 'accepter', 'cible' => $reference], cookies: $premierCookies);
+$decisionParticipation = $requete('POST', $uriParticipation, ['action' => 'accepter', 'cible' => $reference], cookies: $secondCookies);
+$collaborateurVoit = $requete('GET', $uriProjet, cookies: $premierCookies);
+$verifier(
+    $projetSansVitrine['statut'] === 404 && $demandeParticipation['statut'] === 302
+        && str_contains($porteurVoit['html'], $proposition['message'])
+        && !str_contains($publicNeVoitPas['html'], $proposition['message'])
+        && $retraitParticipation['statut'] === 302 && $nouvelleParticipation['statut'] === 302
+        && $autoDecision['statut'] === 404 && $decisionParticipation['statut'] === 302
+        && str_contains($collaborateurVoit['html'], 'Dossier réservé au porteur.'),
+    'une proposition privée depuis la vitrine peut être retirée, resoumise et acceptée seulement par le porteur',
+);
 $cheminRccm = tempnam(sys_get_temp_dir(), 'gamad-rccm-');
 file_put_contents($cheminRccm, "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n%%EOF");
 try {
