@@ -12,6 +12,7 @@
         <div class="conteneur barre">
             <a class="marque" href="{{ route('reseau.accueil') }}" aria-current="page">GAMAD</a>
             <nav aria-label="Navigation principale">
+                <a href="{{ route('reseau.decouvrir') }}">Découvrir</a>
                 <a href="#comment">Comment ça marche</a>
                 <a href="#confiance">À propos</a>
                 <a href="{{ route('reseau.aide') }}">Aide</a>

@@ -22,6 +22,7 @@ class ExampleTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('Des personnes qui inspirent.')
+            ->assertSee(route('reseau.decouvrir'))
             ->assertSee(route('reseau.connexion'));
     }
 
@@ -37,5 +38,18 @@ class ExampleTest extends TestCase
             ->assertSee('Se connecter à GAMAD Réseau')
             ->assertSee(route('reseau.connecter'))
             ->assertSee(route('inscription.formulaire'));
+    }
+
+    public function test_discover_links_to_existing_public_catalogues(): void
+    {
+        $this->get('/decouvrir')
+            ->assertOk()
+            ->assertSee(route('personnes.index'))
+            ->assertSee(route('projets.index'))
+            ->assertSee(route('entreprises.index'))
+            ->assertSee(route('zumras.index'))
+            ->assertSee(route('opportunites.index'));
+
+        $this->get('/agir')->assertRedirect(route('reseau.connexion'));
     }
 }

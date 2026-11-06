@@ -299,6 +299,14 @@ $verifier(
     'Réseau lit directement le compte et son nom Core avec la session du navigateur',
 );
 $cookies = $connexionWeb['cookies'];
+$agir = $requete('GET', '/agir', cookies: $cookies);
+$formulaireSavoir = $requete('GET', '/fil?type=knowledge', cookies: $cookies);
+$verifier(
+    $agir['statut'] === 200 && str_contains($agir['html'], '/fil?type=knowledge#publier')
+        && $formulaireSavoir['statut'] === 200
+        && str_contains($formulaireSavoir['html'], 'value="knowledge" selected'),
+    'Agir ouvre le formulaire de publication avec le type choisi dans la session Core',
+);
 $profil = $requete('GET', '/mon-profil', cookies: $cookies);
 $verifier(
     $profil['statut'] === 200 && str_contains($profil['html'], 'Ma présentation'),
