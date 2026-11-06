@@ -472,6 +472,22 @@ $referenceSecond->execute([$referenceTel]);
 $uriSecond = '/personnes/'.$referenceSecond->fetchColumn();
 $referenceSecond->closeCursor();
 $uriBlocage = '/mon-profil/blocages/'.$fichePublique;
+$relationVersPremier = '/relations/'.$fichePublique;
+$relationVersSecond = '/relations/'.basename($uriSecond);
+$demande = $requete('POST', $relationVersPremier, ['note' => 'Échangeons sur la rénovation.'], cookies: $secondCookies);
+$reception = $requete('GET', '/relations', cookies: $premierCookies);
+$duplicate = $requete('POST', $relationVersSecond, ['note' => 'Demande croisée'], cookies: $premierCookies);
+$autoAcceptation = $requete('PATCH', $relationVersPremier, ['action' => 'accept', 'revision' => 1], cookies: $secondCookies);
+$acceptation = $requete('PATCH', $relationVersSecond, ['action' => 'accept', 'revision' => 1], cookies: $premierCookies);
+$ancienFormulaire = $requete('PATCH', $relationVersSecond, ['action' => 'decline', 'revision' => 1], cookies: $premierCookies);
+$etatRelation = $requete('GET', '/relations', cookies: $secondCookies);
+$verifier(
+    $demande['statut'] === 302 && str_contains($reception['html'], 'Échangeons sur la rénovation.')
+        && $duplicate['statut'] === 409 && $autoAcceptation['statut'] === 403
+        && $acceptation['statut'] === 302 && $ancienFormulaire['statut'] === 409
+        && str_contains($etatRelation['html'], 'En relation'),
+    'une demande est unique par paire, seul le destinataire l’accepte et une décision périmée est refusée',
+);
 $avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
 $blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
 $listeBlocages = $requete('GET', '/mon-profil/blocages', cookies: $secondCookies);
@@ -491,6 +507,12 @@ $verifier(
     $requete('GET', $uriPublication, cookies: $secondCookies)['statut'] === 200
         && $requete('GET', $uriSecond, cookies: $premierCookies)['statut'] === 200,
     'le déblocage rétablit la visibilité permise',
+);
+$relationRetiree = $requete('GET', '/relations', cookies: $premierCookies);
+$nouvelleDemande = $requete('POST', $relationVersPremier, ['note' => 'Nouvelle demande'], cookies: $secondCookies);
+$verifier(
+    !str_contains($relationRetiree['html'], 'En relation') && $nouvelleDemande['statut'] === 409,
+    'le blocage retire la relation et le déblocage ne la rétablit pas',
 );
 $cycle = $registreIdentites->prepare(
     'INSERT INTO evenement_cycle_identite

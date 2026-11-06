@@ -34,6 +34,13 @@
                 @if ($profil['apportees'])<p><strong>Peut apporter</strong> {{ implode(', ', $profil['apportees']) }}</p>@endif
                 @if ($profil['recherchees'])<p><strong>Veut apprendre</strong> {{ implode(', ', $profil['recherchees']) }}</p>@endif
                 @if (($fiche ?? false) && $profil['peut_bloquer'])
+                    <form method="post" class="formulaire-reseau" action="{{ route('relations.demander', $profil['reference_publique']) }}">
+                        @csrf
+                        <label for="note">Pourquoi souhaitez-vous faire connaissance ?</label>
+                        <textarea name="note" id="note" maxlength="280" required>{{ old('note') }}</textarea>
+                        @error('note')<p role="alert">{{ $message }}</p>@enderror
+                        <button class="bouton" type="submit">Entrer en relation</button>
+                    </form>
                     <form method="post" action="{{ route('blocages.modifier', $profil['reference_publique']) }}">
                         @csrf
                         <button class="bouton" type="submit">Bloquer cette personne</button>

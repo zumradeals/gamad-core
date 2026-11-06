@@ -19,6 +19,7 @@ use App\Http\Controllers\IdentiteConsoleController;
 use App\Http\Controllers\InscriptionGamadController;
 use App\Http\Controllers\OrganisationConsoleController;
 use App\Http\Controllers\RealmConsoleController;
+use App\Http\Controllers\RelationsGamadController;
 use App\Http\Controllers\PasskeyController;
 use App\Http\Controllers\ContratConsoleController;
 use App\Http\Controllers\PolitiqueConsoleController;
@@ -48,6 +49,11 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
     Route::get('/mon-profil/blocages', [BlocagesGamadController::class, 'index'])->name('blocages.index');
     Route::match(['POST', 'DELETE'], '/mon-profil/blocages/{reference}', [BlocagesGamadController::class, 'modifier'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,blocage-')->name('blocages.modifier');
+    Route::get('/relations', [RelationsGamadController::class, 'index'])->name('relations.index');
+    Route::post('/relations/{reference}', [RelationsGamadController::class, 'demander'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,demande-relation-')->name('relations.demander');
+    Route::patch('/relations/{reference}', [RelationsGamadController::class, 'decider'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,decision-relation-')->name('relations.decider');
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
     Route::post('/fil', [ContenusGamadController::class, 'publier'])
         ->middleware('throttle:10,1,publication-')->name('publications.store');

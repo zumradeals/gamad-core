@@ -60,25 +60,35 @@ final class BlocagesGamad
         );
         $requete->execute([$referencePublique]);
         $fiche = $requete->fetch(PDO::FETCH_ASSOC);
+        $requete->closeCursor();
         if ($fiche === false || $fiche['identite_reference'] === $sujet) {
             return false;
         }
 
         $cible = $fiche['identite_reference'];
         if (!$bloquer) {
-            $suppression = $registre->prepare('DELETE FROM blocage_gamad WHERE auteur_reference = ? AND cible_reference = ?');
-            $suppression->execute([$sujet, $cible]);
+            return PaireGamad::verrouiller($registre, $sujet, $cible, function () use ($registre, $sujet, $cible): bool {
+                $suppression = $registre->prepare('DELETE FROM blocage_gamad WHERE auteur_reference = ? AND cible_reference = ?');
+                $suppression->execute([$sujet, $cible]);
 
-            return $suppression->rowCount() === 1;
+                return $suppression->rowCount() === 1;
+            });
         }
 
         if ($fiche['visibilite'] === 'prive' || $this->membres->lire($cible, $registre) === null) {
             return false;
         }
 
-        return $registre->prepare(
-            'INSERT INTO blocage_gamad (auteur_reference, cible_reference) VALUES (?, ?)
-             ON CONFLICT (auteur_reference, cible_reference) DO NOTHING'
-        )->execute([$sujet, $cible]);
+        return PaireGamad::verrouiller($registre, $sujet, $cible, function (array $paire) use ($registre, $sujet, $cible): bool {
+            $registre->prepare(
+                'INSERT INTO blocage_gamad (auteur_reference, cible_reference) VALUES (?, ?)
+                 ON CONFLICT (auteur_reference, cible_reference) DO NOTHING'
+            )->execute([$sujet, $cible]);
+
+            return $registre->prepare(
+                "UPDATE relation_personnes_gamad SET etat = 'removed', note = NULL, revision = revision + 1, modifie_le = ?
+                 WHERE premiere_reference = ? AND seconde_reference = ? AND etat IN ('pending', 'accepted')"
+            )->execute([time(), ...$paire]);
+        });
     }
 }
