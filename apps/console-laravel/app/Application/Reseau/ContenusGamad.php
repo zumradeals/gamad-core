@@ -92,6 +92,22 @@ final class ContenusGamad
         )->execute([bin2hex(random_bytes(12)), $publication, $sujet, $this->texte($contenu), gmdate('c')]);
     }
 
+    public function modifierCommentaire(string $sujet, string $publication, string $commentaire, string $contenu): void
+    {
+        $registre = Magasin::ouvrir();
+        abort_if($this->membres->lire($sujet, $registre) === null, 403);
+        abort_if($this->lirePublication($registre, $publication, true, $this->blocages->exclus($registre, $sujet)) === null, 404);
+
+        $requete = $registre->prepare(
+            "UPDATE commentaire_gamad SET contenu = ?
+             WHERE reference = ? AND publication_reference = ? AND auteur_reference = ?
+               AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'commentaire' AND cible_reference = ?)
+               AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'publication' AND cible_reference = ?)"
+        );
+        $requete->execute([$this->texte($contenu), $commentaire, $publication, $sujet, $commentaire, $publication]);
+        abort_if($requete->rowCount() === 0, 404);
+    }
+
     private function lirePublication(PDO $registre, string $reference, bool $membre, array $exclus): ?array
     {
         $requete = $registre->prepare("SELECT p.* FROM publication_gamad p WHERE p.reference = ? AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)");

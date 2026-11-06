@@ -61,6 +61,14 @@ final class ContenusGamadController
         return redirect()->route('publications.show', $reference);
     }
 
+    public function modifierCommentaire(Request $request, ContenusGamad $contenus, string $reference, string $commentaire): Response
+    {
+        $donnees = $request->validate(['contenu' => ['required', 'string', 'max:500']]);
+        $contenus->modifierCommentaire($this->sujet($request), $reference, $commentaire, $donnees['contenu']);
+
+        return response()->noContent();
+    }
+
     private function sujet(Request $request): string
     {
         return (string) $request->attributes->get('gamad_entite');
