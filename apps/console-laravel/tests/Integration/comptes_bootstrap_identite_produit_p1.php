@@ -340,12 +340,13 @@ $verifier(
 [$connexionWeb, $cookiesWeb] = $web('POST', '/connexion', [
     'entite' => $emailWeb, 'mode' => 'identifiant', 'secret' => $secretWeb,
 ], $cookiesWeb);
-[$profilWeb] = $web('GET', '/mon-profil', cookies: $cookiesWeb);
+$destinationWeb = parse_url((string) $connexionWeb->headers->get('Location'), PHP_URL_PATH);
+[$espaceWeb] = $web('GET', '/espace', cookies: $cookiesWeb);
 $verifier(
-    str_ends_with((string) $connexionWeb->headers->get('Location'), '/mon-profil')
-        && $profilWeb->getStatusCode() === 200
-        && str_contains((string) $profilWeb->getContent(), 'Personne inscrite depuis le navigateur'),
-    'le nouveau compte Core se connecte et ouvre son profil',
+    $connexionWeb->getStatusCode() === 302 && $destinationWeb === '/espace'
+        && $espaceWeb->getStatusCode() === 200
+        && str_contains((string) $espaceWeb->getContent(), 'Personne inscrite depuis le navigateur'),
+    'le nouveau compte Core se connecte et ouvre Mon Espace',
 );
 
 $suspension = $registreProduits->suspendreProduit('PRD-GAMAD-005', [
