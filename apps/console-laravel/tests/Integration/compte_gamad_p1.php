@@ -762,6 +762,8 @@ $besoinProjet = ['visibilite' => 'public', 'contenu' => 'Besoin du projet.', 'pr
 $publicationZumra = $requete('POST', '/besoins', $besoinZumra, cookies: $premierCookies);
 $publicationProjet = $requete('POST', '/besoins', $besoinProjet, cookies: $secondCookies);
 $referenceBesoinProjet = $publicationProjet['corps']['reference'] ?? '';
+$interneZumra = $requete('POST', '/besoins', array_replace($besoinZumra, ['visibilite' => 'zumra']), cookies: $premierCookies);
+$uriInterneZumra = '/besoins/'.($interneZumra['corps']['reference'] ?? '');
 $verifier(
     $publicationZumra['statut'] === 201 && $publicationProjet['statut'] === 201
         && $requete('POST', '/besoins', $besoinZumra, cookies: $secondCookies)['statut'] === 404
@@ -771,6 +773,14 @@ $verifier(
         && ($requete('GET', '/besoins/'.$referenceBesoinProjet)['corps']['emetteur_reference'] ?? null) === basename($uriProjet)
         && $requete('PATCH', '/besoins/'.$referenceBesoinProjet.'/etat', ['action' => 'fermer'], cookies: $premierCookies)['statut'] === 404,
     'les besoins collectifs sont émis par les rôles autorisés et se filtrent par émetteur',
+);
+$verifier(
+    $interneZumra['statut'] === 201
+        && $requete('GET', $uriInterneZumra)['statut'] === 404
+        && $requete('GET', $uriInterneZumra, cookies: $secondCookies)['statut'] === 404
+        && $requete('GET', $uriInterneZumra, cookies: $premierCookies)['corps']['visibilite'] === 'zumra'
+        && $requete('POST', $uriInterneZumra.'/propositions', [], cookies: $secondCookies)['statut'] === 404,
+    'la visibilité interne ZUMRA écarte les visiteurs et les membres GAMAD extérieurs',
 );
 $requete('POST', $uriProjet.'/vitrine', ['action' => 'retirer'], cookies: $secondCookies);
 $verifier(
@@ -809,9 +819,24 @@ $verifier(
 );
 $verifier(
     $besoinDelegue['statut'] === 201
-        && $requete('POST', '/besoins', $besoinZumra, cookies: $secondCookies)['statut'] === 404
         && $requete('PATCH', '/besoins/'.($besoinDelegue['corps']['reference'] ?? '').'/etat', ['action' => 'fermer'], cookies: $secondCookies)['statut'] === 404,
     'la délégation autorise la publication pour la ZUMRA et sa révocation ferme les écritures',
+);
+$uriBesoinDelegue = '/besoins/'.($besoinDelegue['corps']['reference'] ?? '');
+$verifier(
+    $requete('GET', $uriInterneZumra, cookies: $secondCookies)['statut'] === 200
+        && $requete('PATCH', $uriBesoinDelegue.'/etat', ['action' => 'resoudre'], cookies: $premierCookies)['statut'] === 204
+        && $requete('PATCH', $uriBesoinDelegue.'/bilan', ['bilan' => 'Besoin résolu par la ZUMRA.'], cookies: $premierCookies)['statut'] === 204
+        && ($requete('GET', $uriBesoinDelegue)['corps']['bilan'] ?? null) === 'Besoin résolu par la ZUMRA.',
+    'le fondateur reprend le besoin après révocation et publie le bilan une fois le besoin résolu',
+);
+$uriBesoinZumra = '/besoins/'.$publicationZumra['corps']['reference'];
+$aideZumra = $requete('POST', $uriBesoinZumra.'/propositions', [], cookies: $secondCookies);
+$verifier(
+    $aideZumra['statut'] === 201
+        && $requete('PATCH', $uriBesoinZumra.'/etat', ['action' => 'fermer'], cookies: $premierCookies)['statut'] === 204
+        && ($requete('GET', $uriBesoinZumra.'/propositions', cookies: $secondCookies)['corps'][0]['etat'] ?? null) === 'declined',
+    'la clôture refuse les propositions encore en attente',
 );
 $uriEtapes = $uriProjet.'/etapes';
 $premiereEtape = $requete('POST', $uriEtapes, ['titre' => 'Préparation confidentielle'], cookies: $secondCookies);

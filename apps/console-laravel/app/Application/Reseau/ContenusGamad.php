@@ -49,7 +49,7 @@ final class ContenusGamad
         $registre = Magasin::ouvrir();
         $membre = $this->membres->depuisSession($session, $registre);
         $exclus = $this->blocages->exclus($registre, $membre['identite_reference'] ?? null);
-        $publication = $this->lirePublication($registre, $reference, $membre !== null, $exclus);
+        $publication = $this->lirePublication($registre, $reference, $membre['identite_reference'] ?? null, $exclus);
         if ($publication === null) {
             return null;
         }
@@ -86,7 +86,12 @@ final class ContenusGamad
         $registre->beginTransaction();
         try {
             abort_unless(EmetteurBesoinGamad::peutPublier($registre, $sujet, $zumra, $projet), 404);
-            $reference = $this->insererPublication($registre, $sujet, self::TYPE_BESOIN, $visibilite, $contenu);
+            $interne = $visibilite === 'zumra';
+            abort_if($interne && $zumra === null && $projet === null, 422);
+            $reference = $this->insererPublication($registre, $sujet, self::TYPE_BESOIN, $interne ? 'members' : $visibilite, $contenu);
+            if ($interne) {
+                $registre->prepare('INSERT INTO suivi_besoin_gamad (besoin_reference, interne) VALUES (?, 1)')->execute([$reference]);
+            }
             if ($domaine !== null || $territoire !== null) {
                 $registre->prepare(
                     'INSERT INTO classement_besoin_gamad (besoin_reference, domaine, territoire) VALUES (?, ?, ?)'
@@ -127,7 +132,7 @@ final class ContenusGamad
         $requete = $registre->prepare(
             "SELECT p.*, c.domaine, c.territoire, {$type} AS emetteur,
                     COALESCE(e.projet_reference, e.zumra_reference) AS emetteur_reference,
-                    COALESCE(pr.titre, z.nom) AS emetteur_nom FROM publication_gamad p
+                    COALESCE(pr.titre, z.nom) AS emetteur_nom, sb.interne, sb.bilan, z.reference AS zumra_interne, z.fondateur_reference FROM publication_gamad p
              {$jointures}
              LEFT JOIN classement_besoin_gamad c ON c.besoin_reference = p.reference
              WHERE {$visible} AND (CAST(? AS TEXT) IS NULL OR {$type} = ?)
@@ -139,9 +144,10 @@ final class ContenusGamad
              ORDER BY p.cree_le DESC, p.reference DESC"
         );
         $requete->execute([$emetteur, $emetteur, $domaine, $domaine, $territoire, $territoire, $etat, $etat, $membre === null ? 0 : 1]);
-        $correspondances = (static function () use ($requete, $recherche): \Generator {
+        $correspondances = (static function () use ($requete, $recherche, $registre, $membre): \Generator {
             foreach ($requete as $ligne) {
-                if ($recherche === '' || str_contains(Normalizer::key($ligne['contenu']), $recherche)) {
+                if (($recherche === '' || str_contains(Normalizer::key($ligne['contenu']), $recherche))
+                    && EmetteurBesoinGamad::voitInterne($registre, $membre['identite_reference'] ?? null, $ligne)) {
                     yield $ligne;
                 }
             }
@@ -168,7 +174,7 @@ final class ContenusGamad
         $registre = Magasin::ouvrir();
         $membre = $this->membres->depuisSession($session, $registre);
         $exclus = $this->blocages->exclus($registre, $membre['identite_reference'] ?? null);
-        $publication = $this->lirePublication($registre, $reference, $membre !== null, $exclus);
+        $publication = $this->lirePublication($registre, $reference, $membre['identite_reference'] ?? null, $exclus);
 
         return ($publication['type'] ?? null) === self::TYPE_BESOIN ? $publication : null;
     }
@@ -178,26 +184,52 @@ final class ContenusGamad
         $registre = Magasin::ouvrir();
         abort_if($this->membres->lire($sujet, $registre) === null, 403);
 
-        if (!EmetteurBesoinGamad::peutGerer($registre, $sujet, $reference)) {
-            return false;
-        }
+        return PaireGamad::verrouiller($registre, 'besoin', $reference, function () use ($registre, $sujet, $reference, $resolu): bool {
+            if (!EmetteurBesoinGamad::peutGerer($registre, $sujet, $reference)) {
+                return false;
+            }
 
-        $requete = $registre->prepare(
-            "UPDATE publication_gamad SET etat_besoin = ?
-             WHERE reference = ? AND auteur_reference = ? AND type = 'need'
-               AND etat_besoin IN ('open', 'in_progress')
-               AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'publication' AND cible_reference = ?)"
-        );
-        $requete->execute([$resolu ? 'resolved' : 'closed', $reference, $sujet, $reference]);
+            $requete = $registre->prepare(
+                "UPDATE publication_gamad SET etat_besoin = ?
+                 WHERE reference = ? AND type = 'need' AND etat_besoin IN ('open', 'in_progress')
+                   AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'publication' AND cible_reference = ?)"
+            );
+            $requete->execute([$resolu ? 'resolved' : 'closed', $reference, $reference]);
+            if ($requete->rowCount() !== 1) {
+                return false;
+            }
 
-        return $requete->rowCount() === 1;
+            $registre->prepare("UPDATE proposition_aide_gamad SET etat = 'declined' WHERE besoin_reference = ? AND etat = 'pending'")
+                ->execute([$reference]);
+
+            return true;
+        });
+    }
+
+    public function enregistrerBilan(string $sujet, string $reference, ?string $bilan): void
+    {
+        $registre = Magasin::ouvrir();
+        abort_if($this->membres->lire($sujet, $registre) === null, 403);
+        PaireGamad::verrouiller($registre, 'besoin', $reference, function () use ($registre, $sujet, $reference, $bilan): void {
+            abort_unless(EmetteurBesoinGamad::peutGerer($registre, $sujet, $reference), 404);
+            $bilan = Normalizer::multiline($bilan ?? '');
+            $requete = $registre->prepare(
+                "INSERT INTO suivi_besoin_gamad (besoin_reference, bilan)
+                 SELECT reference, ? FROM publication_gamad
+                 WHERE reference = ? AND etat_besoin = 'resolved'
+                   AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'publication' AND cible_reference = ?)
+                 ON CONFLICT (besoin_reference) DO UPDATE SET bilan = excluded.bilan"
+            );
+            $requete->execute([$bilan === '' ? null : $bilan, $reference, $reference]);
+            abort_unless($requete->rowCount() === 1, 404);
+        });
     }
 
     public function commenter(string $sujet, string $publication, string $contenu): bool
     {
         $registre = Magasin::ouvrir();
         if ($this->membres->lire($sujet, $registre) === null
-            || $this->lirePublication($registre, $publication, true, $this->blocages->exclus($registre, $sujet)) === null) {
+            || $this->lirePublication($registre, $publication, $sujet, $this->blocages->exclus($registre, $sujet)) === null) {
             return false;
         }
 
@@ -210,7 +242,7 @@ final class ContenusGamad
     {
         $registre = Magasin::ouvrir();
         abort_if($this->membres->lire($sujet, $registre) === null, 403);
-        abort_if($this->lirePublication($registre, $publication, true, $this->blocages->exclus($registre, $sujet)) === null, 404);
+        abort_if($this->lirePublication($registre, $publication, $sujet, $this->blocages->exclus($registre, $sujet)) === null, 404);
 
         $requete = $registre->prepare(
             "UPDATE commentaire_gamad SET contenu = ?
@@ -222,19 +254,20 @@ final class ContenusGamad
         abort_if($requete->rowCount() === 0, 404);
     }
 
-    private function lirePublication(PDO $registre, string $reference, bool $membre, array $exclus): ?array
+    private function lirePublication(PDO $registre, string $reference, ?string $sujet, array $exclus): ?array
     {
         $jointures = EmetteurBesoinGamad::JOINTURES;
         $visible = EmetteurBesoinGamad::VISIBLE;
         $type = EmetteurBesoinGamad::TYPE;
         $requete = $registre->prepare("SELECT p.*, c.domaine, c.territoire, {$type} AS emetteur,
             COALESCE(e.projet_reference, e.zumra_reference) AS emetteur_reference,
-            COALESCE(pr.titre, z.nom) AS emetteur_nom FROM publication_gamad p {$jointures}
+            COALESCE(pr.titre, z.nom) AS emetteur_nom, sb.interne, sb.bilan, z.reference AS zumra_interne, z.fondateur_reference FROM publication_gamad p {$jointures}
             LEFT JOIN classement_besoin_gamad c ON c.besoin_reference = p.reference
             WHERE p.reference = ? AND {$visible} AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)");
         $requete->execute([$reference]);
         $publication = $requete->fetch(PDO::FETCH_ASSOC);
-        if ($publication === false || (!$membre && $publication['visibilite'] !== 'public')) {
+        if ($publication === false || ($sujet === null && $publication['visibilite'] !== 'public')
+            || !EmetteurBesoinGamad::voitInterne($registre, $sujet, $publication)) {
             return null;
         }
 
@@ -258,7 +291,10 @@ final class ContenusGamad
                 $auteurs[$reference] = $this->membres->lire($reference, $registre);
             }
             if ($auteurs[$reference] !== null) {
-                unset($ligne['auteur_reference']);
+                if ((int) ($ligne['interne'] ?? 0) === 1) {
+                    $ligne['visibilite'] = 'zumra';
+                }
+                unset($ligne['auteur_reference'], $ligne['interne'], $ligne['zumra_interne'], $ligne['fondateur_reference']);
                 yield $ligne + ['auteur' => $ligne['emetteur_nom'] ?? $auteurs[$reference]['nom']];
             }
         }

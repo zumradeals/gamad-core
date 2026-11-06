@@ -147,6 +147,8 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::post('/besoins/{reference}/propositions/{proposition}/messages', [ContenusGamadController::class, 'envoyerMessageAide'])
         ->where(['reference' => '[a-f0-9]{24}', 'proposition' => '[a-f0-9]{24}'])
         ->middleware('throttle:30,1,aide-messages-')->name('besoins.propositions.messages.store');
+    Route::patch('/besoins/{reference}/bilan', [ContenusGamadController::class, 'enregistrerBilanBesoin'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,besoin-bilan-')->name('besoins.bilan');
     Route::patch('/besoins/{reference}/etat', [ContenusGamadController::class, 'terminerBesoin'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,besoin-etat-')->name('besoins.etat');
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');

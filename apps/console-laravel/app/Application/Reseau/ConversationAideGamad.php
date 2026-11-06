@@ -57,10 +57,11 @@ final class ConversationAideGamad
     private function interlocuteur(PDO $registre, string $sujet, string $besoin, string $proposition): string
     {
         $requete = $registre->prepare(
-            "SELECT p.auteur_reference, a.proposant_reference
+            "SELECT COALESCE(d.acceptant_reference, p.auteur_reference) AS auteur_reference, a.proposant_reference
              FROM proposition_aide_gamad a JOIN publication_gamad p ON p.reference = a.besoin_reference
+             LEFT JOIN acceptation_aide_gamad d ON d.proposition_reference = a.reference
              WHERE a.reference = ? AND a.besoin_reference = ? AND a.etat = 'accepted'
-               AND (? = p.auteur_reference OR ? = a.proposant_reference)"
+               AND (? = COALESCE(d.acceptant_reference, p.auteur_reference) OR ? = a.proposant_reference)"
         );
         $requete->execute([$proposition, $besoin, $sujet, $sujet]);
         $participants = $requete->fetch();

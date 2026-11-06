@@ -45,7 +45,7 @@ final class PropositionsAideGamad
 
         return PaireGamad::verrouiller($registre, 'besoin', $besoin, function () use ($registre, $sujet, $besoin, $message): string {
             $publication = $this->besoin($registre, $sujet, $besoin, verrouiller: true);
-            abort_if($sujet === $publication['auteur_reference'], 403);
+            abort_if($sujet === $publication['auteur_reference'] || EmetteurBesoinGamad::peutGerer($registre, $sujet, $besoin), 403);
             $this->exigerOuvert($publication);
 
             $requete = $registre->prepare(
@@ -61,7 +61,12 @@ final class PropositionsAideGamad
             $requete->closeCursor();
             abort_unless(is_string($reference), 409);
 
-            NotificationsGamad::ajouter($registre, $publication['auteur_reference'], $sujet, 'demande', $reference);
+            foreach (EmetteurBesoinGamad::gestionnaires($registre, $besoin) as $gestionnaire) {
+                if ($this->membres->lire($gestionnaire, $registre) !== null
+                    && !isset($this->blocages->exclus($registre, $sujet)[$gestionnaire])) {
+                    NotificationsGamad::ajouter($registre, $gestionnaire, $sujet, 'demande', $reference);
+                }
+            }
 
             return $reference;
         });
@@ -99,6 +104,8 @@ final class PropositionsAideGamad
             abort_unless($requete->rowCount() === 1, 409);
 
             if ($etat === 'accepted') {
+                $registre->prepare('INSERT INTO acceptation_aide_gamad (proposition_reference, acceptant_reference) VALUES (?, ?)')
+                    ->execute([$reference, $sujet]);
                 $registre->prepare("UPDATE publication_gamad SET etat_besoin = 'in_progress' WHERE reference = ? AND etat_besoin = 'open'")
                     ->execute([$besoin]);
                 NotificationsGamad::ajouter($registre, $proposant, $sujet, 'acceptation', $reference);
@@ -111,7 +118,7 @@ final class PropositionsAideGamad
         abort_if($this->membres->lire($sujet, $registre) === null, 403);
         $jointures = EmetteurBesoinGamad::JOINTURES;
         $visible = EmetteurBesoinGamad::VISIBLE;
-        $sql = "SELECT p.auteur_reference, p.etat_besoin FROM publication_gamad p {$jointures}
+        $sql = "SELECT p.auteur_reference, p.etat_besoin, sb.interne, z.reference AS zumra_interne, z.fondateur_reference FROM publication_gamad p {$jointures}
                 WHERE p.reference = ? AND p.type = 'need' AND {$visible}
                 AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'publication' AND cible_reference = ?)";
         if ($verrouiller && $registre->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql') {
@@ -122,7 +129,8 @@ final class PropositionsAideGamad
         $publication = $requete->fetch();
         $requete->closeCursor();
         abort_if($publication === false || isset($this->blocages->exclus($registre, $sujet)[$publication['auteur_reference']])
-            || $this->membres->lire($publication['auteur_reference'], $registre) === null, 404);
+            || $this->membres->lire($publication['auteur_reference'], $registre) === null
+            || !EmetteurBesoinGamad::voitInterne($registre, $sujet, $publication), 404);
 
         return $publication;
     }

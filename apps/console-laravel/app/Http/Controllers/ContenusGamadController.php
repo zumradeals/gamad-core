@@ -119,7 +119,7 @@ final class ContenusGamadController
         $donnees = $request->validate([
             'zumra' => ['nullable', 'prohibits:projet', 'regex:/^[a-f0-9]{24}$/D'],
             'projet' => ['nullable', 'regex:/^[a-f0-9]{24}$/D'],
-            'visibilite' => ['required', 'in:public,members'],
+            'visibilite' => ['required', 'in:public,members,zumra'],
             'contenu' => ['required', 'string', 'max:500'],
             'domaine' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::DOMAINES))],
             'territoire' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::TERRITOIRES))],
@@ -144,6 +144,14 @@ final class ContenusGamadController
     {
         $donnees = $request->validate(['action' => ['required', 'in:resoudre,fermer']]);
         abort_unless($contenus->terminerBesoin($this->sujet($request), $reference, $donnees['action'] === 'resoudre'), 404);
+
+        return response()->noContent();
+    }
+
+    public function enregistrerBilanBesoin(Request $request, ContenusGamad $contenus, string $reference): Response
+    {
+        $donnees = $request->validate(['bilan' => ['present', 'nullable', 'string', 'max:280']]);
+        $contenus->enregistrerBilan($this->sujet($request), $reference, $donnees['bilan']);
 
         return response()->noContent();
     }
