@@ -54,6 +54,8 @@ La parité des espaces métier reste à compléter avec les écrans source, dont
 
 ## Écrans publics et premiers parcours
 
+Le [registre des routes et gabarits source](GAMAD-UNIFIE-INVENTAIRE-ECRANS.md) conserve les écarts par écran.
+
 | Périmètre | Parcours présents dans Core | Écarts avec la source |
 | --- | --- | --- |
 | Entrée publique et compte | Accueil, aide, Contact, inscription, vérification et renvoi du code, connexion | Accueil et aide repris en partie, textes publics selon leur état d’adoption, parcours de récupération source |

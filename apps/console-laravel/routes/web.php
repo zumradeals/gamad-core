@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccesConsoleController;
 use App\Http\Controllers\AccesController;
+use App\Http\Controllers\AdministrationReseauGamadController;
 use App\Http\Controllers\AnnuaireGamadController;
 use App\Http\Controllers\BlocagesGamadController;
 use App\Http\Controllers\ContenusGamadController;
@@ -130,6 +131,7 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
 });
 
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
+    Route::get('/console/reseau', [AdministrationReseauGamadController::class, 'index'])->name('reseau.administration');
     Route::get('/console/contact', [ContactGamadController::class, 'liste'])->name('reseau.contact.console');
     Route::get('/console/contact/{reference}', [ContactGamadController::class, 'ouvrir'])
         ->where('reference', '[a-f0-9]{24}')->name('reseau.contact.ouvrir');

@@ -73,8 +73,12 @@ final class ContactsGamad
 
     private function purger(PDO $registre): void
     {
-        $date = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->modify('-12 months')->format('c');
-        $registre->prepare('DELETE FROM contact_reseau_gamad WHERE cree_le < ?')->execute([$date]);
+        $registre->prepare('DELETE FROM contact_reseau_gamad WHERE cree_le < ?')->execute([self::dateLimite()]);
+    }
+
+    public static function dateLimite(): string
+    {
+        return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->modify('-12 months')->format('c');
     }
 
     private function journaliser(string $acteur, string $reference, string $action): void

@@ -778,6 +778,18 @@ $contactStocke = $registreIdentites->query('SELECT reference FROM contact_reseau
 $referencesContact = $contactStocke->fetchAll(PDO::FETCH_COLUMN);
 $uriContact = '/console/contact/'.($referencesContact[0] ?? 'manquant');
 $contactInterdit = $requete('GET', $uriContact, cookies: $secondCookies);
+$administrationReseau = $requete('GET', '/console/reseau', cookies: $admin['cookies']);
+$verifier(
+    $requete('GET', '/console/reseau')['statut'] === 302
+        && $requete('GET', '/console/reseau', cookies: $secondCookies)['statut'] === 403
+        && $administrationReseau['statut'] === 200
+        && str_contains($administrationReseau['html'], '/console/moderation-reseau')
+        && str_contains($administrationReseau['html'], '/console/entreprises')
+        && str_contains($administrationReseau['html'], '/console/contact')
+        && str_contains($administrationReseau['html'], '1 en attente')
+        && !str_contains($administrationReseau['html'], $messageContact['message']),
+    'le tableau Réseau est réservé à la console, relie les trois files et ne présente que les compteurs',
+);
 $contactConsole = $requete('GET', $uriContact, cookies: $admin['cookies']);
 $verifier(
     $contactPublic['statut'] === 200 && $contactRobot['statut'] === 302 && $contactEnvoye['statut'] === 302
