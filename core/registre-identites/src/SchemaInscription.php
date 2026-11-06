@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 6;
+    public const VERSION = 7;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -25,6 +25,7 @@ final class SchemaInscription
         'publication_gamad',
         'commentaire_gamad',
         'blocage_gamad',
+        'relation_personnes_gamad',
         'identifiant_resolution',
         'evenement_cycle_identite',
         'evenement_assurance_identite',
@@ -124,6 +125,22 @@ final class SchemaInscription
             )
         SQL);
         $pdo->exec('CREATE INDEX IF NOT EXISTS blocage_gamad_cible ON blocage_gamad(cible_reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS relation_personnes_gamad (
+                premiere_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                seconde_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                expediteur_reference TEXT NOT NULL,
+                etat TEXT NOT NULL CHECK (etat IN ('pending', 'accepted', 'declined', 'withdrawn', 'removed')),
+                note VARCHAR(280),
+                revision INTEGER NOT NULL CHECK (revision > 0),
+                modifie_le BIGINT NOT NULL,
+                PRIMARY KEY (premiere_reference, seconde_reference),
+                CHECK (premiere_reference < seconde_reference),
+                CHECK (expediteur_reference IN (premiere_reference, seconde_reference))
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS relation_personnes_gamad_seconde ON relation_personnes_gamad(seconde_reference)');
 
         // Identifiants humains de résolution. La valeur brute (email, téléphone,
         // username...) n'est pas conservée : seule son empreinte normalisée sert
