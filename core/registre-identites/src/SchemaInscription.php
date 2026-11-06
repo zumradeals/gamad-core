@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 25;
+    public const VERSION = 26;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -34,6 +34,7 @@ final class SchemaInscription
         'reponse_commentaire_gamad',
         'retrait_commentaire_gamad',
         'blocage_gamad',
+        'suivi_personne_gamad',
         'relation_personnes_gamad',
         'message_reseau_gamad',
         'notification_reseau_gamad',
@@ -215,6 +216,16 @@ final class SchemaInscription
             )
         SQL);
         $pdo->exec('CREATE INDEX IF NOT EXISTS blocage_gamad_cible ON blocage_gamad(cible_reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS suivi_personne_gamad (
+                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference) ON DELETE CASCADE,
+                cible_reference TEXT NOT NULL REFERENCES identite_inscrite(reference) ON DELETE CASCADE,
+                cree_le TEXT NOT NULL,
+                PRIMARY KEY (auteur_reference, cible_reference),
+                CHECK (auteur_reference <> cible_reference)
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS relation_personnes_gamad (
