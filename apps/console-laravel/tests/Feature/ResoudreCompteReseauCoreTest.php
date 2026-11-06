@@ -174,3 +174,30 @@ it('qualifie la session CTR-16 et refuse une resolution si le stockage Core est 
     ]);
     expect(ResoudreCompteReseauCore::resoudre($request))->toBeNull();
 });
+
+it('accepte les dates civiles CTR-01 et refuse une revocation future', function () {
+    \Illuminate\Support\Facades\Schema::create('evenement_cycle_identite', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $table->id();
+        $table->string('identite_reference');
+        $table->string('evenement_type');
+        $table->string('etat_apres');
+        $table->string('date_effet');
+    });
+    DB::table('evenement_cycle_identite')->insert([
+        'identite_reference' => 'PER-CIVILE', 'evenement_type' => 'ACTIVATION',
+        'etat_apres' => 'ACTIVE', 'date_effet' => now('UTC')->subDay()->format('Y-m-d'),
+    ]);
+    expect(ResoudreCompteReseauCore::identiteActive('PER-CIVILE'))->toBeTrue();
+
+    DB::table('evenement_cycle_identite')->insert([
+        'identite_reference' => 'PER-CIVILE', 'evenement_type' => 'REVOCATION',
+        'etat_apres' => 'REVOQUEE', 'date_effet' => now('UTC')->addDay()->format('Y-m-d'),
+    ]);
+    expect(ResoudreCompteReseauCore::identiteActive('PER-CIVILE'))->toBeTrue();
+
+    DB::table('evenement_cycle_identite')->insert([
+        'identite_reference' => 'PER-CIVILE', 'evenement_type' => 'REVOCATION',
+        'etat_apres' => 'REVOQUEE', 'date_effet' => now('UTC')->format('Y-m-d'),
+    ]);
+    expect(ResoudreCompteReseauCore::identiteActive('PER-CIVILE'))->toBeFalse();
+});
