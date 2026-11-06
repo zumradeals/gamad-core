@@ -57,6 +57,9 @@ $environnement = [
     'APP_ROUTES_CACHE' => $temp . '-routes.php',
     'APP_SERVICES_CACHE' => $temp . '-services.php',
     'CACHE_STORE' => 'array',
+    'DB_CONNECTION' => 'sqlite',
+    'DB_DATABASE' => ':memory:',
+    'DB_URL' => '',
     'SESSION_DRIVER' => 'array',
     'LOG_CHANNEL' => 'errorlog',
     'MAIL_MAILER' => 'array',
@@ -113,6 +116,7 @@ $requete = static function (
     string $uri,
     ?array $json = null,
     ?string $jeton = null,
+    array $cookies = [],
 ) use ($kernel): array {
     $serveur = [
         'HTTP_ACCEPT' => 'application/json',
@@ -125,7 +129,7 @@ $requete = static function (
         $uri,
         $methode,
         [],
-        [],
+        $cookies,
         [],
         $serveur,
         $json === null ? null : json_encode($json, JSON_THROW_ON_ERROR),
@@ -134,6 +138,10 @@ $requete = static function (
     $corps = json_decode((string) $response->getContent(), true);
     $resultat = [
         'statut' => $response->getStatusCode(),
+        'cookies' => array_column(array_map(
+            static fn ($cookie): array => [$cookie->getName(), $cookie->getValue()],
+            $response->headers->getCookies(),
+        ), 1, 0),
         'corps' => is_array($corps) ? $corps : [],
     ];
     $kernel->terminate($request, $response);
@@ -241,6 +249,35 @@ $verifier(
     'après vérification la personne se reconnecte par email sans connaître son IDN',
 );
 
+// Un compte canonique ne dépend d’aucune table du stockage Laravel.
+$verifier(
+    !\Illuminate\Support\Facades\Schema::hasTable('users')
+        && !\Illuminate\Support\Facades\Schema::hasTable('reseau_comptes_identites'),
+    'le parcours se déroule sans table locale de comptes ou de liaison',
+);
+
+// Le navigateur utilise la même personne canonique et la vraie session CTR-16.
+$verifier($requete('GET', '/reseau/mon-compte')['statut'] === 302, 'Réseau exige une session Core');
+$connexionWeb = $requete('POST', '/connexion', ['entite' => $reference, 'secret' => $motDePasse]);
+$compteReseau = $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies']);
+$verifier(
+    $connexionWeb['statut'] === 302
+        && $compteReseau['statut'] === 200
+        && ($compteReseau['corps']['compte'] ?? null) === [
+            'identite_reference' => $reference,
+            'nom' => 'Personne Compte GAMAD',
+        ],
+    'Réseau lit directement le compte et son nom Core avec la session du navigateur',
+);
+$jetonWeb = $app['session']->driver()->get('gamad_session');
+if (is_string($jetonWeb)) {
+    $ctr16->revoquerSession($jetonWeb);
+}
+$verifier(
+    is_string($jetonWeb) && $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies'])['statut'] === 302,
+    'la révocation CTR-16 ferme immédiatement l’accès Réseau',
+);
+
 $duplique = $requete('POST', '/api/v1/comptes', [
     'nom' => 'Tentative de doublon',
     'type_identifiant' => 'EMAIL',
@@ -308,6 +345,46 @@ $verifier(
 );
 
 echo "\n";
+$connexionWeb = $requete('POST', '/connexion', ['entite' => $reference, 'secret' => $motDePasse]);
+$cycle = $registreIdentites->prepare(
+    'INSERT INTO evenement_cycle_identite
+     (identite_reference, evenement_type, etat_avant, etat_apres, source, preuve_reference,
+      politique_inscription, acteur_reference, date_effet) VALUES (?,?,?,?,?,?,?,?,?)'
+);
+$evenement = [$reference, 'REVOCATION', 'ACTIVE', 'REVOQUEE', 'TEST', 'TEST', 'TEST', $autorite];
+$cycle->execute([...$evenement, gmdate('Y-m-d', time() + 86400)]);
+$verifier(
+    $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies'])['statut'] === 200,
+    'une révocation future laisse le compte accessible jusqu’à sa date d’effet',
+);
+$cycle->execute([...$evenement, gmdate('Y-m-d')]);
+$verifier(
+    $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies'])['statut'] === 403,
+    'la révocation effective de l’identité ferme l’accès même avec une session CTR-16 encore valide',
+);
+
+$migrations = $application . '/database/migrations/';
+(require $migrations . '0001_01_01_000000_create_users_table.php')->up();
+(require $migrations . '2026_11_06_000001_create_reseau_comptes_identites_table.php')->up();
+$base = \Illuminate\Support\Facades\DB::connection();
+$base->table('users')->insert(['id' => 17, 'name' => 'Ancien', 'email' => 'archive@example.test', 'password' => 'archive']);
+$ligne = ['id' => 1, 'user_id' => 17, 'identite_reference' => $reference];
+$base->table('reseau_comptes_identites')->insert($ligne);
+$archivage = require $migrations . '2026_11_06_000002_archiver_reseau_comptes_identites.php';
+$archivage->up();
+$verifier(
+    !$base->getSchemaBuilder()->hasTable('reseau_comptes_identites')
+        && $base->table('archive_reseau_comptes_identites')->where($ligne)->exists()
+        && $base->table('users')->where('id', 17)->exists(),
+    'la migration retire la table active en préservant les lignes et leur compte historique',
+);
+$archivage->down();
+$verifier(
+    !$base->getSchemaBuilder()->hasTable('archive_reseau_comptes_identites')
+        && $base->table('reseau_comptes_identites')->where($ligne)->exists(),
+    'le retour arrière restaure la table et ses lignes',
+);
+
 if ($echecs === 0) {
     echo "Compte GAMAD P1 : ÉTABLI.\n";
     exit(0);

@@ -25,6 +25,7 @@ $fichiers = [
     'acces' => $temp.'-acces.sqlite',
     'identites' => $temp.'-identites.sqlite',
     'journal' => $temp.'-journal.sqlite',
+    'politiques' => $temp.'-politiques.sqlite',
 ];
 foreach ($fichiers as $fichier) {
     @unlink($fichier);
@@ -53,6 +54,8 @@ $environnement = [
     'MAGASIN_PATH' => $fichiers['acces'],
     'IDENTITY_REGISTRY_URL' => '',
     'IDENTITY_REGISTRY_PATH' => $fichiers['identites'],
+    'POLICY_REGISTRY_URL' => '',
+    'POLICY_REGISTRY_PATH' => $fichiers['politiques'],
     'JOURNAL_OPERATIONNEL_URL' => '',
     'JOURNAL_OPERATIONNEL_PATH' => $fichiers['journal'],
 ];
@@ -120,11 +123,27 @@ $verifier(
     'une session console est ouverte',
 );
 
+$verifier(
+    $requete('GET', '/', null, $cookies)['statut'] === 403,
+    'une session sans socle ni habilitation ne permet pas l’accès administratif',
+);
+
+try {
+    \Gamad\RegistreNormes\BaselineOperationnelle::standard()->reconstruire(Db::connect());
+    $console = $app->make(\Illuminate\Contracts\Console\Kernel::class);
+    if ($console->call('core:console:accorder-acces-administratif') !== 0) {
+        throw new RuntimeException($console->output());
+    }
+} catch (Throwable $exception) {
+    fwrite(STDERR, $exception->getMessage().PHP_EOL);
+    exit(1);
+}
+
 $accueil = $requete('GET', '/', null, $cookies);
 $corps = $accueil['corps'];
 $verifier(
     $accueil['statut'] === 200,
-    'le tableau de bord répond sur un index initialement vide',
+    'le tableau de bord répond après initialisation du socle et admission explicite',
 );
 $verifier(
     str_contains($corps, 'Intégrité du système')
@@ -171,7 +190,12 @@ $verifier(
 
 // Contre-épreuve : un index amputé doit être signalé, non présumé conforme.
 $pdo = Db::connect();
-$pdo->exec("DELETE FROM etat_capacite WHERE capacite_reference = 'CAP-CORE-001'");
+try {
+    $pdo->exec("DELETE FROM etat_capacite WHERE capacite_reference = 'CAP-CORE-001'");
+} catch (PDOException $exception) {
+    fwrite(STDERR, $exception->getMessage().PHP_EOL);
+    exit(1);
+}
 $apres = $requete('GET', '/index/diagnostic', null, $cookies);
 $apresCorps = json_decode($apres['corps'], true);
 $verifier(

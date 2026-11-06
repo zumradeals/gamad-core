@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccesConsoleController;
 use App\Http\Controllers\AccesController;
+use App\Http\Controllers\CompteReseauCoreController;
 use App\Http\Controllers\ContinuiteConsoleController;
 use App\Http\Controllers\Ctr01Controller;
 use App\Http\Controllers\Ctr02Controller;
@@ -510,6 +511,10 @@ Route::middleware('gamad.session')->group(function (): void {
         ->name('console.acces.retirer');
 
 });
+
+// Acces Réseau : session Core requise, sans privilege de console.
+Route::middleware('gamad.session')->get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])
+    ->name('reseau.compte.core');
 
 // Le reste de la console demeure strictement administratif.
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
