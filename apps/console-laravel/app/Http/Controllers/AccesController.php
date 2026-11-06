@@ -158,7 +158,7 @@ final class AccesController
         if ($reseau) {
             $destination = $request->session()->pull('reseau.url.intended');
 
-            return $destination === null ? redirect()->route('fil') : redirect()->to($destination);
+            return $destination === null ? redirect()->route('reseau.espace') : redirect()->to($destination);
         }
 
         return redirect()->intended('/mon-acces');

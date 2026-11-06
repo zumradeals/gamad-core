@@ -12,6 +12,7 @@
         <form class="auth-form" method="post" action="{{ route('compte.profil.modifier') }}">
             @csrf
             @method('PATCH')
+            <a href="{{ route('reseau.espace') }}">Retour à Mon Espace</a>
             <h1>Mon profil GAMAD</h1>
             <p>{{ $compte['nom'] }}</p>
             @if (session('profil_enregistre'))

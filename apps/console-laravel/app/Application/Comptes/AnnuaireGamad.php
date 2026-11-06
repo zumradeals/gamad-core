@@ -18,7 +18,7 @@ final class AnnuaireGamad
     {
         $registre = Magasin::ouvrir();
         $requete = $registre->prepare(
-            'SELECT f.visibilite, f.competences_apportees, f.competences_recherchees, d.titre, d.introduction, d.territoire
+            'SELECT f.reference_publique, f.visibilite, f.competences_apportees, f.competences_recherchees, d.titre, d.introduction, d.territoire
              FROM fiche_annuaire_gamad f LEFT JOIN details_annuaire_gamad d ON d.identite_reference = f.identite_reference
              WHERE f.identite_reference = ?'
         );

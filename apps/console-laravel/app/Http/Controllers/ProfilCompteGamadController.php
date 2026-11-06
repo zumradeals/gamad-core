@@ -16,6 +16,19 @@ use Illuminate\Validation\Rule;
 
 final class ProfilCompteGamadController
 {
+    public function espace(Request $request, LireCompteGamad $lecture, AnnuaireGamad $annuaire, ExperiencesProfilGamad $experiences): Response
+    {
+        $compte = $lecture->executer((string) $request->attributes->get('gamad_entite'));
+        abort_if($compte === null, 403);
+
+        return response()->view('reseau.mon-espace', [
+            'compte' => $compte,
+            'fiche' => $annuaire->fichePersonnelle($compte['identite_reference']),
+            'territoires' => ReferentielBesoinsGamad::libelles('territoires'),
+            'realisations' => array_slice($experiences->realisations($compte['identite_reference']), 0, 3),
+        ])->header('Cache-Control', 'private, no-store');
+    }
+
     public function montrer(Request $request, LireCompteGamad $lecture, AnnuaireGamad $annuaire, ExperiencesProfilGamad $experiences): Response
     {
         $compte = $lecture->executer((string) $request->attributes->get('gamad_entite'));

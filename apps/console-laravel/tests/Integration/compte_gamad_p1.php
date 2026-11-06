@@ -342,6 +342,14 @@ $requete('PATCH', '/mon-profil', [
 ], cookies: $cookies);
 $fichePublique = $registreIdentites->query('SELECT reference_publique FROM fiche_annuaire_gamad')->fetchColumn();
 $uriFiche = '/personnes/'.$fichePublique;
+$espace = $requete('GET', '/espace', cookies: $cookies);
+$verifier(
+    $requete('GET', '/espace')['statut'] === 302 && $espace['statut'] === 200
+        && str_contains($espace['html'], 'Électricité') && str_contains($espace['html'], 'Rénovation')
+        && str_contains($espace['html'], 'Bouaké') && str_contains($espace['html'], $uriFiche)
+        && !str_contains($espace['html'], $email),
+    'Mon Espace affiche les données du compte connecté sans exposer son e-mail',
+);
 $visiteur = $requete('GET', $uriFiche);
 $membre = $requete('GET', '/personnes?q=electricite', cookies: $cookies);
 $verifier(

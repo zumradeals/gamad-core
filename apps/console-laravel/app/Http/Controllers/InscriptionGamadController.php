@@ -84,7 +84,7 @@ final class InscriptionGamadController
         }
 
         $request->session()->forget(self::ATTENTE);
-        $request->session()->put('url.intended', route('compte.profil'));
+        $request->session()->put('reseau.url.intended', route('reseau.espace'));
 
         return redirect()->route('reseau.connexion')->with('inscription_statut', 'Adresse vérifiée. Connectez-vous pour accéder au Réseau.');
     }
