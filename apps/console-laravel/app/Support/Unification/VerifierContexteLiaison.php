@@ -54,7 +54,9 @@ final class VerifierContexteLiaison
             }
         }
 
-        $memeTransaction = self::registreDansTransactionLocale();
+        // La transaction de liaison porte uniquement sur le stockage local.
+        // Le registre Core est consulte en lecture via son propre magasin.
+        $memeTransaction = self::stockageLiaisonLocaleDisponible();
 
         return QualificationLiaisonReseau::evaluer(
             $sessionValide,
@@ -88,6 +90,22 @@ final class VerifierContexteLiaison
      * distincts vers ce stockage ne constituent pas deux transactions ici.
      * En cas de configuration ambiguë, la liaison reste interdite.
      */
+    /**
+     * La liaison locale est atomique sur sa base, sans transaction repartie
+     * ni exigence de co-localisation avec le registre souverain.
+     */
+    public static function stockageLiaisonLocaleDisponible(): bool
+    {
+        try {
+            $schema = DB::connection()->getSchemaBuilder();
+
+            return $schema->hasTable('users')
+                && $schema->hasTable('reseau_comptes_identites');
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
     public static function registreDansTransactionLocale(): bool
     {
         try {
