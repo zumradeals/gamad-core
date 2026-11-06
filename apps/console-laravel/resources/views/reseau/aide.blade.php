@@ -10,7 +10,7 @@
     <header class="bandeau">
         <div class="conteneur barre">
             <a class="marque" href="{{ route('reseau.accueil') }}">GAMAD</a>
-            <a class="bouton" href="{{ route('acces.formulaire') }}">Se connecter</a>
+            <a class="bouton" href="{{ route('reseau.connexion') }}">Se connecter</a>
         </div>
     </header>
     <main class="conteneur section">

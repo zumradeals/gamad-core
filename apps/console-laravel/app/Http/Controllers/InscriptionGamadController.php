@@ -86,7 +86,7 @@ final class InscriptionGamadController
         $request->session()->forget(self::ATTENTE);
         $request->session()->put('url.intended', route('compte.profil'));
 
-        return redirect()->route('acces.formulaire')->with('inscription_statut', 'Adresse vérifiée. Connectez-vous pour ouvrir votre profil.');
+        return redirect()->route('reseau.connexion')->with('inscription_statut', 'Adresse vérifiée. Connectez-vous pour accéder au Réseau.');
     }
 
     public function renvoyer(Request $request, ParcoursInscriptionGamad $parcours): RedirectResponse

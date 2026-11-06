@@ -142,7 +142,7 @@ Le registre ci-dessous couvre les déclarations HTTP de `routes/web.php`, les é
 
 | Écran source | Équivalent Core | État |
 | --- | --- | --- |
-| Connexion | `/connexion` | Disponible · compte Core, identifiant vérifié |
+| Connexion | `/reseau/connexion` | Écran Réseau · identifiant vérifié, authentification et session Core · retour vers la page demandée ou le fil |
 | Inscription | `/inscription` | Disponible · parcours e-mail Core |
 | Vérification de l’e-mail | `/inscription/verification` | Disponible · vérification et renvoi |
 | Mot de passe oublié | — | À reprendre |

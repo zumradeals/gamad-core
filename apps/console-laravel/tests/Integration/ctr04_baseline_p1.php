@@ -117,7 +117,7 @@ $public = $requete('GET', '/');
 $verifier(
     $public['statut'] === 200
         && str_contains($public['corps'], 'Des personnes qui inspirent.')
-        && str_contains($public['corps'], route('acces.formulaire')),
+        && str_contains($public['corps'], route('reseau.connexion')),
     'l’accueil Réseau est public et mène à la connexion Core',
 );
 $aide = $requete('GET', '/aide');

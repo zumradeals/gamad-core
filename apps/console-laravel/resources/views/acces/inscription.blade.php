@@ -30,7 +30,7 @@
                 <input class="input" id="mot_de_passe_confirmation" name="mot_de_passe_confirmation" type="password" autocomplete="new-password" required minlength="8">
             </div>
             <button class="button button--primary" type="submit">Créer mon compte</button>
-            <a href="{{ route('acces.formulaire') }}">J’ai déjà un compte</a>
+            <a href="{{ route('reseau.connexion') }}">J’ai déjà un compte</a>
         </form>
     </section>
 </main>
