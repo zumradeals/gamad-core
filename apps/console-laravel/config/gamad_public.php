@@ -13,6 +13,9 @@ return [
             ['title' => 'Explorer', 'links' => [
                 ['label' => 'Accueil', 'route' => 'reseau.accueil'],
                 ['label' => 'Personnes', 'route' => 'personnes.index'],
+                ['label' => 'Entreprises', 'route' => 'entreprises.index'],
+                ['label' => 'Opportunités', 'route' => 'opportunites.index'],
+                ['label' => 'ZUMRA', 'route' => 'zumras.index'],
             ]],
             ['title' => 'Ressources', 'links' => [
                 ['label' => 'Comment ça marche ?', 'url' => '/#comment'],
