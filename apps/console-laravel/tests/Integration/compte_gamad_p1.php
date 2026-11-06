@@ -509,6 +509,46 @@ $verifier(
         && str_contains($requete('GET', $uriPublication)['html'], 'Commentaire corrigé.'),
     'seul l’auteur Core peut corriger son commentaire sur la publication correspondante',
 );
+$parentCommentaire = basename($uriModificationCommentaire);
+$uriCommentaires = $uriPublication.'/commentaires';
+$reponseCommentaire = $requete('POST', $uriCommentaires, [
+    'parent' => $parentCommentaire, 'contenu' => 'Une réponse au commentaire.',
+], cookies: $secondCookies);
+$commentairesPublics = $requete('GET', $uriCommentaires);
+$reponsesCommentaire = array_values(array_filter($commentairesPublics['corps'], static fn (array $ligne): bool => $ligne['parent_reference'] !== null));
+$verifier(
+    $reponseCommentaire['statut'] === 302 && $commentairesPublics['statut'] === 200
+        && ($reponsesCommentaire[0]['parent_reference'] ?? null) === $parentCommentaire
+        && ($reponsesCommentaire[0]['contenu'] ?? null) === 'Une réponse au commentaire.'
+        && $requete('POST', $uriCommentaires, ['parent' => $reponsesCommentaire[0]['reference'] ?? '', 'contenu' => 'Trop profond.'], cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', $uriPrivee.'/commentaires', ['parent' => $parentCommentaire, 'contenu' => 'Mauvais fil.'], cookies: $secondCookies)['statut'] === 404
+        && $requete('GET', $uriPrivee.'/commentaires')['statut'] === 404,
+    'les réponses restent dans leur discussion, sur un seul niveau et dans l’audience de la publication',
+);
+$retraitTiers = $requete('DELETE', $uriModificationCommentaire, cookies: $secondCookies);
+$retraitAuteur = $requete('DELETE', $uriModificationCommentaire, cookies: $premierCookies);
+$filApresRetrait = $requete('GET', $uriCommentaires);
+$ficheApresRetrait = $requete('GET', $uriPublication, cookies: $secondCookies);
+$parReference = array_column($filApresRetrait['corps'], null, 'reference');
+$texteRetire = $registreIdentites->prepare('SELECT contenu FROM commentaire_gamad WHERE reference = ?');
+$texteRetire->execute([$parentCommentaire]);
+$contenuRetire = $texteRetire->fetchColumn();
+$texteRetire->closeCursor();
+$verifier(
+    $retraitTiers['statut'] === 404 && $retraitAuteur['statut'] === 204
+        && isset($parReference[$parentCommentaire]['retire_le'])
+        && $parReference[$parentCommentaire]['contenu'] === null
+        && $ficheApresRetrait['statut'] === 200
+        && preg_match('/<article id="commentaire-'.$parentCommentaire.'">.*?Commentaire retiré\..*?<ul[^>]*>.*?Une réponse au commentaire\..*?<\/article>/s', $ficheApresRetrait['html']) === 1
+        && !str_contains($ficheApresRetrait['html'], 'Commentaire corrigé.')
+        && !str_contains($ficheApresRetrait['html'], 'name="parent" value="'.$parentCommentaire.'"')
+        && $contenuRetire === 'Commentaire retiré.'
+        && ($parReference[$reponsesCommentaire[0]['reference']]['contenu'] ?? null) === 'Une réponse au commentaire.'
+        && $requete('PATCH', $uriModificationCommentaire, ['contenu' => 'Rétablir.'], cookies: $premierCookies)['statut'] === 404
+        && $requete('POST', $uriCommentaires, ['parent' => $parentCommentaire, 'contenu' => 'Trop tard.'], cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', $uriPublication.'/signalements/'.$parentCommentaire, ['motif' => 'spam'], cookies: $secondCookies)['statut'] === 404,
+    'seul l’auteur retire son commentaire, le texte est effacé et les réponses restent consultables',
+);
 $besoinPrive = $requete('POST', '/besoins', [
     'visibilite' => 'members', 'contenu' => 'Besoin réservé aux membres.',
     'domaine' => 'artisanat', 'territoire' => 'ci-bouake',

@@ -69,6 +69,8 @@ Route::get('/besoins', [ContenusGamadController::class, 'besoins'])->name('besoi
 Route::get('/besoins/referentiels', [ContenusGamadController::class, 'referentielsBesoins'])->name('besoins.referentiels');
 Route::get('/besoins/{reference}', [ContenusGamadController::class, 'besoin'])
     ->where('reference', '[a-f0-9]{24}')->name('besoins.show');
+Route::get('/publications/{reference}/commentaires', [ContenusGamadController::class, 'commentaires'])
+    ->where('reference', '[a-f0-9]{24}')->name('publications.commentaires.index');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
 Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): void {
@@ -171,6 +173,9 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
     Route::post('/fil', [ContenusGamadController::class, 'publier'])
         ->middleware('throttle:10,1,publication-')->name('publications.store');
+    Route::delete('/publications/{reference}/commentaires/{commentaire}', [ContenusGamadController::class, 'retirerCommentaire'])
+        ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
+        ->middleware('throttle:30,60,commentaire-retrait-')->name('publications.commentaires.retirer');
     Route::patch('/publications/{reference}/commentaires/{commentaire}', [ContenusGamadController::class, 'modifierCommentaire'])
         ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
         ->middleware('throttle:30,60,commentaire-modification-')->name('publications.commentaires.modifier');

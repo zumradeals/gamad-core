@@ -33,7 +33,8 @@ final class ModerationGamad
         $categorie = $commentaire === null ? 'publication' : 'commentaire';
         $cible = $commentaire ?? $publication;
         if ($commentaire !== null) {
-            abort_unless(in_array($commentaire, array_column($fiche['commentaires'], 'reference'), true), 404);
+            $signalables = array_filter($fiche['commentaires'], static fn (array $ligne): bool => $ligne['retire_le'] === null);
+            abort_unless(in_array($commentaire, array_column($signalables, 'reference'), true), 404);
         }
 
         $table = $commentaire === null ? 'publication_gamad' : 'commentaire_gamad';
