@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 15;
+    public const VERSION = 21;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -23,11 +23,18 @@ final class SchemaInscription
         'profil_compte_gamad',
         'fiche_annuaire_gamad',
         'publication_gamad',
+        'classement_besoin_gamad',
+        'emetteur_besoin_gamad',
+        'suivi_besoin_gamad',
+        'acceptation_aide_gamad',
+        'proposition_aide_gamad',
+        'message_aide_gamad',
         'commentaire_gamad',
         'blocage_gamad',
         'relation_personnes_gamad',
         'message_reseau_gamad',
         'notification_reseau_gamad',
+        'contexte_notification_aide_gamad',
         'signalement_reseau_gamad',
         'masquage_reseau_gamad',
         'zumra_gamad',
@@ -115,6 +122,53 @@ final class SchemaInscription
         $pdo->exec('CREATE INDEX IF NOT EXISTS publication_gamad_fil ON publication_gamad(cree_le, reference)');
 
         $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS classement_besoin_gamad (
+                besoin_reference TEXT PRIMARY KEY REFERENCES publication_gamad(reference) ON DELETE CASCADE,
+                domaine TEXT,
+                territoire TEXT,
+                CHECK (domaine IS NOT NULL OR territoire IS NOT NULL)
+            )
+        SQL);
+
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS proposition_aide_gamad (
+                reference TEXT PRIMARY KEY,
+                besoin_reference TEXT NOT NULL REFERENCES publication_gamad(reference) ON DELETE CASCADE,
+                proposant_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                message VARCHAR(280) NOT NULL,
+                etat TEXT NOT NULL CHECK (etat IN ('pending', 'withdrawn', 'accepted', 'declined')),
+                UNIQUE (besoin_reference, proposant_reference)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS message_aide_gamad (
+                reference TEXT PRIMARY KEY,
+                proposition_reference TEXT NOT NULL REFERENCES proposition_aide_gamad(reference) ON DELETE CASCADE,
+                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                texte VARCHAR(1000) NOT NULL CHECK (length(texte) BETWEEN 1 AND 1000),
+                cree_le TEXT NOT NULL
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS message_aide_gamad_conversation ON message_aide_gamad(proposition_reference, cree_le, reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS suivi_besoin_gamad (
+                besoin_reference TEXT PRIMARY KEY REFERENCES publication_gamad(reference) ON DELETE CASCADE,
+                interne INTEGER NOT NULL DEFAULT 0 CHECK (interne IN (0, 1)),
+                bilan VARCHAR(280)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS acceptation_aide_gamad (
+                proposition_reference TEXT PRIMARY KEY REFERENCES proposition_aide_gamad(reference) ON DELETE CASCADE,
+                acceptant_reference TEXT NOT NULL REFERENCES identite_inscrite(reference)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS commentaire_gamad (
                 reference TEXT PRIMARY KEY,
                 publication_reference TEXT NOT NULL REFERENCES publication_gamad(reference) ON DELETE CASCADE,
@@ -179,6 +233,13 @@ final class SchemaInscription
         $pdo->exec('CREATE INDEX IF NOT EXISTS notification_reseau_gamad_destinataire ON notification_reseau_gamad(destinataire_reference, cree_le, reference)');
 
         $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS contexte_notification_aide_gamad (
+                notification_reference TEXT PRIMARY KEY REFERENCES notification_reseau_gamad(reference) ON DELETE CASCADE,
+                proposition_reference TEXT NOT NULL
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS signalement_reseau_gamad (
                 reference TEXT PRIMARY KEY,
                 categorie TEXT NOT NULL CHECK (categorie IN ('publication', 'commentaire')),
@@ -223,6 +284,15 @@ final class SchemaInscription
             )
         SQL);
         $pdo->exec('CREATE INDEX IF NOT EXISTS projet_gamad_zumra ON projet_gamad(zumra_reference, accueil)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS emetteur_besoin_gamad (
+                besoin_reference TEXT PRIMARY KEY REFERENCES publication_gamad(reference) ON DELETE CASCADE,
+                zumra_reference TEXT REFERENCES zumra_gamad(reference),
+                projet_reference TEXT REFERENCES projet_gamad(reference),
+                CHECK ((zumra_reference IS NULL) <> (projet_reference IS NULL))
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS entreprise_gamad (
@@ -481,7 +551,7 @@ final class SchemaInscription
 
     private static function migrerPublications(\PDO $pdo): void
     {
-        if ($pdo->query('SELECT 1 FROM migration_registre_identites WHERE version = 15')->fetchColumn() !== false) {
+        if ($pdo->query('SELECT 1 FROM migration_registre_identites WHERE version >= 15')->fetchColumn() !== false) {
             return;
         }
 

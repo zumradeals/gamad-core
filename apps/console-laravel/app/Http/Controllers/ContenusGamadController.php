@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Application\Reseau\ContenusGamad;
+use App\Application\Reseau\ConversationAideGamad;
 use App\Application\Reseau\ModerationGamad;
+use App\Application\Reseau\PropositionsAideGamad;
+use App\Application\Reseau\ReferentielBesoinsGamad;
+use App\Support\Normalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -70,6 +74,38 @@ final class ContenusGamadController
         return response()->noContent();
     }
 
+    public function besoins(Request $request, ContenusGamad $contenus): JsonResponse
+    {
+        $filtres = $request->validate([
+            'etat' => ['nullable', 'in:open,in_progress,resolved,closed,tous'],
+            'q' => ['nullable', 'string', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            'emetteur' => ['nullable', 'in:personne,zumra,projet'],
+            'domaine' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::DOMAINES))],
+            'territoire' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::TERRITOIRES))],
+        ]);
+        $page = (int) ($filtres['page'] ?? 1);
+        $besoins = $contenus->besoins(
+            $request->session()->get('gamad_session'),
+            $filtres['etat'] ?? 'open',
+            Normalizer::key($filtres['q'] ?? ''),
+            $page,
+            $filtres['domaine'] ?? null,
+            $filtres['territoire'] ?? null,
+            $filtres['emetteur'] ?? null,
+        );
+
+        return response()->json($besoins + ['page' => $page])->header('Cache-Control', 'private, no-store');
+    }
+
+    public function referentielsBesoins(): JsonResponse
+    {
+        return response()->json([
+            'domaines' => ReferentielBesoinsGamad::DOMAINES,
+            'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
+        ]);
+    }
+
     public function besoin(Request $request, ContenusGamad $contenus, string $reference): JsonResponse
     {
         $besoin = $contenus->besoin($reference, $request->session()->get('gamad_session'));
@@ -81,10 +117,22 @@ final class ContenusGamadController
     public function publierBesoin(Request $request, ContenusGamad $contenus): JsonResponse
     {
         $donnees = $request->validate([
-            'visibilite' => ['required', 'in:public,members'],
+            'zumra' => ['nullable', 'prohibits:projet', 'regex:/^[a-f0-9]{24}$/D'],
+            'projet' => ['nullable', 'regex:/^[a-f0-9]{24}$/D'],
+            'visibilite' => ['required', 'in:public,members,zumra'],
             'contenu' => ['required', 'string', 'max:500'],
+            'domaine' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::DOMAINES))],
+            'territoire' => ['nullable', 'string', Rule::in(array_keys(ReferentielBesoinsGamad::TERRITOIRES))],
         ]);
-        $reference = $contenus->publier($this->sujet($request), ContenusGamad::TYPE_BESOIN, $donnees['visibilite'], $donnees['contenu']);
+        $reference = $contenus->publierBesoin(
+            $this->sujet($request),
+            $donnees['visibilite'],
+            $donnees['contenu'],
+            $donnees['domaine'] ?? null,
+            $donnees['territoire'] ?? null,
+            $donnees['zumra'] ?? null,
+            $donnees['projet'] ?? null,
+        );
         abort_if($reference === null, 403);
 
         return response()->json(['reference' => $reference, 'etat_besoin' => 'open'], 201)
@@ -96,6 +144,50 @@ final class ContenusGamadController
     {
         $donnees = $request->validate(['action' => ['required', 'in:resoudre,fermer']]);
         abort_unless($contenus->terminerBesoin($this->sujet($request), $reference, $donnees['action'] === 'resoudre'), 404);
+
+        return response()->noContent();
+    }
+
+    public function enregistrerBilanBesoin(Request $request, ContenusGamad $contenus, string $reference): Response
+    {
+        $donnees = $request->validate(['bilan' => ['present', 'nullable', 'string', 'max:280']]);
+        $contenus->enregistrerBilan($this->sujet($request), $reference, $donnees['bilan']);
+
+        return response()->noContent();
+    }
+
+    public function propositionsAide(Request $request, PropositionsAideGamad $aide, string $reference): JsonResponse
+    {
+        return response()->json($aide->lister($this->sujet($request), $reference))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function proposerAide(Request $request, PropositionsAideGamad $aide, string $reference): JsonResponse
+    {
+        $donnees = $request->validate(['message' => ['nullable', 'string', 'max:280']]);
+        $proposition = $aide->proposer($this->sujet($request), $reference, $donnees['message'] ?? '');
+
+        return response()->json(['reference' => $proposition], 201)->header('Cache-Control', 'private, no-store');
+    }
+
+    public function traiterAide(Request $request, PropositionsAideGamad $aide, string $reference, string $proposition): Response
+    {
+        $donnees = $request->validate(['action' => ['required', 'in:retirer,accepter,refuser']]);
+        $aide->traiter($this->sujet($request), $reference, $proposition, $donnees['action']);
+
+        return response()->noContent();
+    }
+
+    public function conversationAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): JsonResponse
+    {
+        return response()->json($conversation->lire($this->sujet($request), $reference, $proposition))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function envoyerMessageAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): Response
+    {
+        $donnees = $request->validate(['texte' => ['required', 'string', 'max:1000']]);
+        $conversation->envoyer($this->sujet($request), $reference, $proposition, $donnees['texte']);
 
         return response()->noContent();
     }

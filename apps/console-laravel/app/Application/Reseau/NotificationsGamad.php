@@ -14,24 +14,36 @@ final class NotificationsGamad
     {
     }
 
-    public static function ajouter(PDO $registre, string $destinataire, string $auteur, string $type): void
+    public static function ajouter(PDO $registre, string $destinataire, string $auteur, string $type, ?string $proposition = null): void
     {
+        $reference = bin2hex(random_bytes(12));
         $registre->prepare(
             'INSERT INTO notification_reseau_gamad (reference, destinataire_reference, auteur_reference, type, cree_le)
              VALUES (?, ?, ?, ?, ?)'
-        )->execute([bin2hex(random_bytes(12)), $destinataire, $auteur, $type, gmdate('c')]);
+        )->execute([$reference, $destinataire, $auteur, $type, gmdate('c')]);
+        if ($proposition !== null) {
+            $registre->prepare(
+                'INSERT INTO contexte_notification_aide_gamad (notification_reference, proposition_reference) VALUES (?, ?)'
+            )->execute([$reference, $proposition]);
+        }
     }
 
-    public function lister(string $sujet): array
+    public function lister(string $sujet, bool $avecAide = false): array
     {
         $registre = Magasin::ouvrir();
         abort_if($this->membres->lire($sujet, $registre) === null, 403);
+        $contexte = $avecAide
+            ? "(c.notification_reference IS NULL AND f.reference_publique IS NOT NULL)
+               OR (a.reference IS NOT NULL AND a.etat <> 'withdrawn')"
+            : 'c.notification_reference IS NULL AND f.reference_publique IS NOT NULL';
         $requete = $registre->prepare(
-            'SELECT n.*, i.libelle AS nom, f.reference_publique
+            "SELECT n.*, i.libelle AS nom, f.reference_publique, a.reference AS proposition_reference, a.besoin_reference
              FROM notification_reseau_gamad n JOIN identite_inscrite i ON i.reference = n.auteur_reference
-             JOIN fiche_annuaire_gamad f ON f.identite_reference = i.reference
-             WHERE n.destinataire_reference = ?
-             ORDER BY n.cree_le DESC, n.reference DESC LIMIT 100'
+             LEFT JOIN fiche_annuaire_gamad f ON f.identite_reference = i.reference
+             LEFT JOIN contexte_notification_aide_gamad c ON c.notification_reference = n.reference
+             LEFT JOIN proposition_aide_gamad a ON a.reference = c.proposition_reference
+             WHERE n.destinataire_reference = ? AND ({$contexte})
+             ORDER BY n.cree_le DESC, n.reference DESC LIMIT 100"
         );
         $requete->execute([$sujet]);
         $exclus = $this->blocages->exclus($registre, $sujet);
@@ -39,6 +51,17 @@ final class NotificationsGamad
         foreach ($requete->fetchAll(PDO::FETCH_ASSOC) as $notice) {
             if (!isset($exclus[$notice['auteur_reference']])
                 && $this->membres->lire($notice['auteur_reference'], $registre) !== null) {
+                if ($notice['proposition_reference'] !== null) {
+                    if ($notice['type'] === 'demande' && !EmetteurBesoinGamad::peutGerer($registre, $sujet, $notice['besoin_reference'])) {
+                        continue;
+                    }
+
+                    $notice['type'] = match ($notice['type']) {
+                        'demande' => 'aide_proposee',
+                        'acceptation' => 'aide_acceptee',
+                        'message' => 'message_aide',
+                    };
+                }
                 $resultat[] = $notice;
             }
         }

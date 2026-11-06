@@ -494,6 +494,7 @@ $verifier(
 );
 $besoinPrive = $requete('POST', '/besoins', [
     'visibilite' => 'members', 'contenu' => 'Besoin réservé aux membres.',
+    'domaine' => 'artisanat', 'territoire' => 'ci-bouake',
 ], cookies: $premierCookies);
 $uriBesoinPrive = '/besoins/'.($besoinPrive['corps']['reference'] ?? '');
 $besoinPublic = $requete('POST', '/besoins', [
@@ -515,6 +516,93 @@ $verifier(
         && $requete('PATCH', $uriBesoinPrive.'/etat', ['action' => 'fermer'], cookies: $premierCookies)['statut'] === 204
         && ($requete('GET', $uriBesoinPrive, cookies: $premierCookies)['corps']['etat_besoin'] ?? null) === 'closed',
     'l’auteur résout ou ferme son besoin une seule fois',
+);
+$besoinAide = $requete('POST', '/besoins', [
+    'visibilite' => 'public', 'contenu' => 'Besoin avec une proposition d’aide.',
+    'domaine' => 'artisanat', 'territoire' => 'ci-abidjan',
+], cookies: $premierCookies);
+$uriBesoinAide = '/besoins/'.($besoinAide['corps']['reference'] ?? '');
+$uriPropositions = $uriBesoinAide.'/propositions';
+$proposition = $requete('POST', $uriPropositions, ['message' => 'Je peux aider.'], cookies: $secondCookies);
+$uriProposition = $uriPropositions.'/'.($proposition['corps']['reference'] ?? '');
+$verifier(
+    $proposition['statut'] === 201
+        && $requete('POST', $uriPropositions, [], cookies: $premierCookies)['statut'] === 403
+        && $requete('POST', $uriPropositions, [], cookies: $secondCookies)['statut'] === 409
+        && ($requete('GET', $uriPropositions, cookies: $premierCookies)['corps'][0]['message'] ?? null) === 'Je peux aider.'
+        && $requete('PATCH', $uriProposition, ['action' => 'accepter'], cookies: $secondCookies)['statut'] === 404
+        && $requete('PATCH', $uriProposition, ['action' => 'retirer'], cookies: $secondCookies)['statut'] === 204,
+    'une proposition est unique, visible par l’auteur et retirable uniquement par son proposant',
+);
+$nouvelleAide = $requete('POST', $uriPropositions, [], cookies: $secondCookies);
+$uriNouvelleAide = $uriPropositions.'/'.($nouvelleAide['corps']['reference'] ?? '');
+$uriMessagesAide = $uriNouvelleAide.'/messages';
+$avantAcceptationAide = $requete('POST', $uriMessagesAide, ['texte' => 'Trop tôt'], cookies: $secondCookies);
+$verifier(
+    $nouvelleAide['statut'] === 201
+        && $requete('PATCH', $uriProposition, ['action' => 'accepter'], cookies: $premierCookies)['statut'] === 404
+        && $requete('PATCH', $uriNouvelleAide, ['action' => 'accepter'], cookies: $premierCookies)['statut'] === 204
+        && $requete('PATCH', $uriNouvelleAide, ['action' => 'retirer'], cookies: $secondCookies)['statut'] === 409
+        && ($requete('GET', $uriBesoinAide)['corps']['etat_besoin'] ?? null) === 'in_progress'
+        && $requete('POST', $uriBesoinPublic.'/propositions', [], cookies: $secondCookies)['statut'] === 409,
+    'une proposition acceptée fait passer le besoin en cours et les besoins clos refusent toute nouvelle proposition',
+);
+$messageAide = $requete('POST', $uriMessagesAide, ['texte' => 'Organisons cette aide.'], cookies: $secondCookies);
+$lectureAide = $requete('GET', $uriMessagesAide, cookies: $premierCookies);
+$lectureProposant = $requete('GET', $uriMessagesAide, cookies: $secondCookies);
+$verifier(
+    $avantAcceptationAide['statut'] === 404 && $messageAide['statut'] === 204
+        && $lectureAide['statut'] === 200 && count($lectureAide['corps']) === 1
+        && ($lectureAide['corps'][0]['texte'] ?? null) === 'Organisons cette aide.'
+        && ($lectureAide['corps'][0]['de_moi'] ?? null) === false
+        && ($lectureProposant['corps'][0]['de_moi'] ?? null) === true
+        && $requete('GET', $uriMessagesAide)['statut'] === 302
+        && $requete('GET', $uriBesoinPublic.'/propositions/'.basename($uriNouvelleAide).'/messages', cookies: $premierCookies)['statut'] === 404
+        && (int) $registreIdentites->query('SELECT COUNT(*) FROM relation_personnes_gamad')->fetchColumn() === 0,
+    'la conversation naît avec l’acceptation et reste propre à la proposition, sans créer de relation',
+);
+$cataloguePublic = $requete('GET', '/besoins?etat=tous');
+$catalogueMembre = $requete('GET', '/besoins?etat=closed&q=RESERVE', cookies: $secondCookies);
+$catalogueEnCours = $requete('GET', '/besoins?etat=in_progress&q=PROPOSITION');
+$verifier(
+    $cataloguePublic['statut'] === 200
+        && !in_array(basename($uriBesoinPrive), array_column($cataloguePublic['corps']['besoins'], 'reference'), true)
+        && ($catalogueMembre['corps']['besoins'][0]['reference'] ?? null) === basename($uriBesoinPrive)
+        && ($catalogueEnCours['corps']['besoins'][0]['reference'] ?? null) === basename($uriBesoinAide)
+        && ($requete('GET', '/besoins')['corps']['besoins'] ?? null) === []
+        && ($requete('GET', '/besoins?etat=tous&page=2')['corps']['besoins'] ?? null) === [],
+    'le catalogue filtre les besoins par état et par texte et respecte la visibilité avant pagination',
+);
+$referentielsBesoins = $requete('GET', '/besoins/referentiels');
+$catalogueClasse = $requete('GET', '/besoins?etat=tous&domaine=artisanat&territoire=ci-abidjan');
+$verifier(
+    ($referentielsBesoins['corps']['domaines']['artisanat'] ?? null) === 'Artisanat'
+        && ($referentielsBesoins['corps']['territoires']['ci-bouake'] ?? null) === 'Bouaké'
+        && array_column($catalogueClasse['corps']['besoins'] ?? [], 'reference') === [basename($uriBesoinAide)]
+        && ($requete('GET', $uriBesoinAide)['corps']['territoire'] ?? null) === 'ci-abidjan'
+        && ($requete('GET', '/besoins?etat=tous&domaine=artisanat&territoire=ci-bouake')['corps']['besoins'] ?? null) === []
+        && ($requete('GET', '/besoins?etat=tous&domaine=artisanat&territoire=ci-bouake', cookies: $secondCookies)['corps']['besoins'][0]['reference'] ?? null) === basename($uriBesoinPrive)
+        && $requete('GET', '/besoins?domaine=inconnu')['statut'] === 302
+        && $requete('POST', '/besoins', ['visibilite' => 'public', 'contenu' => 'Invalide', 'territoire' => 'inconnu'], cookies: $premierCookies)['statut'] === 302,
+    'le classement territorial et sectoriel utilise des codes de référence et conserve la visibilité',
+);
+$notificationsAide = $requete('GET', '/notifications/donnees', cookies: $premierCookies)['corps'];
+$notificationsProposant = $requete('GET', '/notifications/donnees', cookies: $secondCookies)['corps'];
+$typesAide = array_column($notificationsAide, 'type');
+$typesProposant = array_column($notificationsProposant, 'type');
+$acceptationAide = array_values(array_filter($notificationsProposant, static fn (array $notice): bool => $notice['type'] === 'aide_acceptee'))[0] ?? [];
+$lectureNoticeAide = '/notifications/'.($acceptationAide['reference'] ?? '').'/lire';
+$verifier(
+    count(array_keys($typesAide, 'aide_proposee', true)) === 1
+        && count(array_keys($typesAide, 'message_aide', true)) === 1
+        && !in_array('aide_acceptee', $typesAide, true)
+        && count(array_keys($typesProposant, 'aide_acceptee', true)) === 1
+        && ($acceptationAide['proposition_reference'] ?? null) === basename($uriNouvelleAide)
+        && ($acceptationAide['besoin_reference'] ?? null) === basename($uriBesoinAide)
+        && !isset($acceptationAide['auteur_reference'])
+        && $requete('POST', $lectureNoticeAide, cookies: $premierCookies)['statut'] === 404
+        && $requete('POST', $lectureNoticeAide, cookies: $secondCookies)['statut'] === 302,
+    'les notifications d’aide sont privées, contextualisées et sans doublon après un retrait et une nouvelle proposition',
 );
 $referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
 $referenceSecond->execute([$referenceTel]);
@@ -586,6 +674,11 @@ $verifier(
 $avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
 $blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
 $listeBlocages = $requete('GET', '/mon-profil/blocages', cookies: $secondCookies);
+$verifier(
+    $requete('GET', $uriMessagesAide, cookies: $premierCookies)['statut'] === 404
+        && $requete('POST', $uriMessagesAide, ['texte' => 'Après blocage'], cookies: $secondCookies)['statut'] === 404,
+    'le blocage ferme la lecture et l’envoi dans les deux sens',
+);
 $filBloque = $requete('GET', '/fil', cookies: $secondCookies);
 $verifier(
     $avantBlocage['statut'] === 200 && $blocage['statut'] === 302
@@ -664,7 +757,38 @@ $verifier(
         && str_contains($requete('GET', '/projets')['html'], $uriProjet),
     'la vitrine devient publique seulement après accueil accepté et publication par le porteur',
 );
+$besoinZumra = ['visibilite' => 'public', 'contenu' => 'Besoin de la ZUMRA.', 'zumra' => basename($uriZumra)];
+$besoinProjet = ['visibilite' => 'public', 'contenu' => 'Besoin du projet.', 'projet' => basename($uriProjet)];
+$publicationZumra = $requete('POST', '/besoins', $besoinZumra, cookies: $premierCookies);
+$publicationProjet = $requete('POST', '/besoins', $besoinProjet, cookies: $secondCookies);
+$referenceBesoinProjet = $publicationProjet['corps']['reference'] ?? '';
+$interneZumra = $requete('POST', '/besoins', array_replace($besoinZumra, ['visibilite' => 'zumra']), cookies: $premierCookies);
+$uriInterneZumra = '/besoins/'.($interneZumra['corps']['reference'] ?? '');
+$verifier(
+    $publicationZumra['statut'] === 201 && $publicationProjet['statut'] === 201
+        && $requete('POST', '/besoins', $besoinZumra, cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', '/besoins', $besoinProjet, cookies: $premierCookies)['statut'] === 404
+        && array_column($requete('GET', '/besoins?emetteur=zumra')['corps']['besoins'] ?? [], 'reference') === [$publicationZumra['corps']['reference']]
+        && array_column($requete('GET', '/besoins?emetteur=projet')['corps']['besoins'] ?? [], 'reference') === [$referenceBesoinProjet]
+        && ($requete('GET', '/besoins/'.$referenceBesoinProjet)['corps']['emetteur_reference'] ?? null) === basename($uriProjet)
+        && $requete('PATCH', '/besoins/'.$referenceBesoinProjet.'/etat', ['action' => 'fermer'], cookies: $premierCookies)['statut'] === 404,
+    'les besoins collectifs sont émis par les rôles autorisés et se filtrent par émetteur',
+);
+$verifier(
+    $interneZumra['statut'] === 201
+        && $requete('GET', $uriInterneZumra)['statut'] === 404
+        && $requete('GET', $uriInterneZumra, cookies: $secondCookies)['statut'] === 404
+        && $requete('GET', $uriInterneZumra, cookies: $premierCookies)['corps']['visibilite'] === 'zumra'
+        && $requete('POST', $uriInterneZumra.'/propositions', [], cookies: $secondCookies)['statut'] === 404,
+    'la visibilité interne ZUMRA écarte les visiteurs et les membres GAMAD extérieurs',
+);
 $requete('POST', $uriProjet.'/vitrine', ['action' => 'retirer'], cookies: $secondCookies);
+$verifier(
+    $requete('GET', '/besoins/'.$referenceBesoinProjet)['statut'] === 404
+        && ($requete('GET', '/besoins?emetteur=projet')['corps']['besoins'] ?? null) === []
+        && $requete('POST', '/besoins/'.$referenceBesoinProjet.'/propositions', [], cookies: $premierCookies)['statut'] === 404,
+    'le retrait de la vitrine ferme le besoin collectif et les nouvelles propositions',
+);
 $verifier($requete('GET', $uriProjet)['statut'] === 404, 'le retrait ferme immédiatement la vitrine');
 $adhesion = $requete('POST', $uriZumra.'/adhesion', ['action' => 'rejoindre'], cookies: $secondCookies);
 $acceptationAdhesion = $requete('POST', $uriZumra.'/membres', [
@@ -682,6 +806,7 @@ $interdictionDeleguer = $requete('POST', $uriZumra.'/responsabilites', [
     'cible' => $referenceTel, 'action' => 'revoquer',
 ], cookies: $secondCookies);
 $delegue = $requete('GET', $uriZumra, cookies: $secondCookies);
+$besoinDelegue = $requete('POST', '/besoins', $besoinZumra, cookies: $secondCookies);
 $retraitDelegation = $requete('POST', $uriZumra.'/responsabilites', [
     'cible' => $referenceTel, 'action' => 'revoquer',
 ], cookies: $premierCookies);
@@ -691,6 +816,27 @@ $verifier(
         && $retraitDelegation['statut'] === 302
         && !str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Demandes d’accueil'),
     'seul le fondateur délègue les droits de gestion et le retrait prend effet immédiatement',
+);
+$verifier(
+    $besoinDelegue['statut'] === 201
+        && $requete('PATCH', '/besoins/'.($besoinDelegue['corps']['reference'] ?? '').'/etat', ['action' => 'fermer'], cookies: $secondCookies)['statut'] === 404,
+    'la délégation autorise la publication pour la ZUMRA et sa révocation ferme les écritures',
+);
+$uriBesoinDelegue = '/besoins/'.($besoinDelegue['corps']['reference'] ?? '');
+$verifier(
+    $requete('GET', $uriInterneZumra, cookies: $secondCookies)['statut'] === 200
+        && $requete('PATCH', $uriBesoinDelegue.'/etat', ['action' => 'resoudre'], cookies: $premierCookies)['statut'] === 204
+        && $requete('PATCH', $uriBesoinDelegue.'/bilan', ['bilan' => 'Besoin résolu par la ZUMRA.'], cookies: $premierCookies)['statut'] === 204
+        && ($requete('GET', $uriBesoinDelegue)['corps']['bilan'] ?? null) === 'Besoin résolu par la ZUMRA.',
+    'le fondateur reprend le besoin après révocation et publie le bilan une fois le besoin résolu',
+);
+$uriBesoinZumra = '/besoins/'.$publicationZumra['corps']['reference'];
+$aideZumra = $requete('POST', $uriBesoinZumra.'/propositions', [], cookies: $secondCookies);
+$verifier(
+    $aideZumra['statut'] === 201
+        && $requete('PATCH', $uriBesoinZumra.'/etat', ['action' => 'fermer'], cookies: $premierCookies)['statut'] === 204
+        && ($requete('GET', $uriBesoinZumra.'/propositions', cookies: $secondCookies)['corps'][0]['etat'] ?? null) === 'declined',
+    'la clôture refuse les propositions encore en attente',
 );
 $uriEtapes = $uriProjet.'/etapes';
 $premiereEtape = $requete('POST', $uriEtapes, ['titre' => 'Préparation confidentielle'], cookies: $secondCookies);

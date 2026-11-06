@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Application\Reseau\MessagerieGamad;
 use App\Application\Reseau\ModerationGamad;
 use App\Application\Reseau\NotificationsGamad;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -32,6 +33,17 @@ final class InteractionsGamadController
     public function notifications(Request $request, NotificationsGamad $notifications): Response
     {
         return $this->page('notifications', ['notifications' => $notifications->lister($this->sujet($request))]);
+    }
+
+    public function notificationsDonnees(Request $request, NotificationsGamad $notifications): JsonResponse
+    {
+        $notices = array_map(static function (array $notice): array {
+            unset($notice['auteur_reference'], $notice['destinataire_reference']);
+
+            return $notice;
+        }, $notifications->lister($this->sujet($request), avecAide: true));
+
+        return response()->json($notices)->header('Cache-Control', 'private, no-store');
     }
 
     public function lireNotification(Request $request, NotificationsGamad $notifications, string $reference): RedirectResponse
