@@ -99,10 +99,20 @@ final class ResoudreCompteReseauCore
             foreach ($evenements as $evenement) {
                 // Une date ambiguë ou corrompue interdit toute résolution.
                 $date = (string) $evenement->date_effet;
-                if (! preg_match('/(?:Z|[+-][0-9]{2}:[0-9]{2})$/', $date)) {
+                if (preg_match('/^\\d{4}-\\d{2}-\\d{2}$/D', $date)) {
+                    // Le registre CTR-01 enregistre canoniquement des dates civiles.
+                    // Leur effet commence à 00:00 UTC le jour indiqué.
+                    $instant = DateTimeImmutable::createFromFormat(
+                        '!Y-m-d', $date, new DateTimeZone('UTC')
+                    );
+                    if ($instant === false || $instant->format('Y-m-d') !== $date) {
+                        return false;
+                    }
+                } elseif (preg_match('/(?:Z|[+-][0-9]{2}:[0-9]{2})$/', $date)) {
+                    $instant = new DateTimeImmutable($date);
+                } else {
                     return false;
                 }
-                $instant = new DateTimeImmutable($date);
                 if ($instant > $maintenant) {
                     continue;
                 }
