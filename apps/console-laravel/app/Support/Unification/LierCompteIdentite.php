@@ -22,6 +22,10 @@ final class LierCompteIdentite
             throw new DomainException('Liaison non autorisée');
         }
 
+        if (! VerifierContexteLiaison::registreDansTransactionLocale()) {
+            throw new DomainException('Registre Core hors du périmètre transactionnel');
+        }
+
         DB::transaction(function () use ($compte): void {
             $identite = DB::table('identite_inscrite')
                 ->where('reference', $compte->identiteReference)
