@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 14;
+    public const VERSION = 15;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -111,16 +111,7 @@ final class SchemaInscription
             )
         SQL);
 
-        $pdo->exec(<<<SQL
-            CREATE TABLE IF NOT EXISTS publication_gamad (
-                reference TEXT PRIMARY KEY,
-                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
-                type TEXT NOT NULL CHECK (type IN ('share', 'knowledge', 'personal_work')),
-                visibilite TEXT NOT NULL CHECK (visibilite IN ('public', 'members')),
-                contenu VARCHAR(500) NOT NULL CHECK (length(contenu) BETWEEN 1 AND 500),
-                cree_le TEXT NOT NULL
-            )
-        SQL);
+        self::migrerPublications($pdo);
         $pdo->exec('CREATE INDEX IF NOT EXISTS publication_gamad_fil ON publication_gamad(cree_le, reference)');
 
         $pdo->exec(<<<SQL
@@ -486,6 +477,76 @@ final class SchemaInscription
              )'
         );
         $st->execute([self::VERSION, date('c'), self::VERSION]);
+    }
+
+    private static function migrerPublications(\PDO $pdo): void
+    {
+        if ($pdo->query('SELECT 1 FROM migration_registre_identites WHERE version = 15')->fetchColumn() !== false) {
+            return;
+        }
+
+        $definition = <<<'SQL'
+            reference TEXT PRIMARY KEY,
+            auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+            type TEXT NOT NULL,
+            visibilite TEXT NOT NULL CHECK (visibilite IN ('public', 'members')),
+            contenu VARCHAR(500) NOT NULL CHECK (length(contenu) BETWEEN 1 AND 500),
+            cree_le TEXT NOT NULL,
+            etat_besoin TEXT,
+            CONSTRAINT publication_gamad_type_check CHECK (type IN ('share', 'knowledge', 'personal_work', 'need')),
+            CONSTRAINT publication_gamad_etat_besoin_check CHECK (
+                (type = 'need' AND etat_besoin IS NOT NULL AND etat_besoin IN ('open', 'in_progress', 'resolved', 'closed'))
+                OR (type <> 'need' AND etat_besoin IS NULL)
+            )
+        SQL;
+
+        if (self::driver($pdo) === 'pgsql') {
+            $pdo->beginTransaction();
+            try {
+                $pdo->query('SELECT pg_advisory_xact_lock(720113315)');
+                $pdo->exec("CREATE TABLE IF NOT EXISTS publication_gamad ({$definition})");
+                $pdo->exec('ALTER TABLE publication_gamad ADD COLUMN IF NOT EXISTS etat_besoin TEXT');
+                $pdo->exec('ALTER TABLE publication_gamad DROP CONSTRAINT IF EXISTS publication_gamad_type_check,
+                    DROP CONSTRAINT IF EXISTS publication_gamad_etat_besoin_check');
+                $pdo->exec("ALTER TABLE publication_gamad
+                    ADD CONSTRAINT publication_gamad_type_check CHECK (type IN ('share', 'knowledge', 'personal_work', 'need')),
+                    ADD CONSTRAINT publication_gamad_etat_besoin_check CHECK (
+                        (type = 'need' AND etat_besoin IS NOT NULL AND etat_besoin IN ('open', 'in_progress', 'resolved', 'closed'))
+                        OR (type <> 'need' AND etat_besoin IS NULL)
+                    )");
+                $pdo->commit();
+            } catch (\Throwable $erreur) {
+                $pdo->rollBack();
+                throw $erreur;
+            }
+
+            return;
+        }
+
+        $cles = (int) $pdo->query('PRAGMA foreign_keys')->fetchColumn();
+        $pdo->exec('PRAGMA foreign_keys = OFF');
+        try {
+            $pdo->exec('BEGIN IMMEDIATE');
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS publication_gamad ({$definition})");
+                $colonnes = array_column($pdo->query('PRAGMA table_info(publication_gamad)')->fetchAll(\PDO::FETCH_ASSOC), 'name');
+                if (!in_array('etat_besoin', $colonnes, true)) {
+                    $pdo->exec("CREATE TABLE publication_gamad_v15 ({$definition})");
+                    $pdo->exec('INSERT INTO publication_gamad_v15 (reference, auteur_reference, type, visibilite, contenu, cree_le)
+                        SELECT reference, auteur_reference, type, visibilite, contenu, cree_le FROM publication_gamad');
+                    $pdo->exec('DROP TABLE publication_gamad');
+                    $pdo->exec('ALTER TABLE publication_gamad_v15 RENAME TO publication_gamad');
+                }
+                $pdo->exec('COMMIT');
+            } catch (\Throwable $erreur) {
+                $pdo->exec('ROLLBACK');
+                throw $erreur;
+            }
+        } finally {
+            if ($cles === 1) {
+                $pdo->exec('PRAGMA foreign_keys = ON');
+            }
+        }
     }
 
     public static function presente(\PDO $pdo): bool

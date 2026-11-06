@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Application\Reseau\ContenusGamad;
 use App\Application\Reseau\ModerationGamad;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -28,7 +29,7 @@ final class ContenusGamadController
         $fiche = $contenus->publication($reference, $request->session()->get('gamad_session'));
         abort_if($fiche === null, 404);
 
-        return response()->view('reseau.contenus', $fiche + ['types' => ContenusGamad::TYPES, 'motifs' => ModerationGamad::MOTIFS])
+        return response()->view('reseau.contenus', $fiche + ['types' => ContenusGamad::TYPES + [ContenusGamad::TYPE_BESOIN => 'J’ai besoin'], 'motifs' => ModerationGamad::MOTIFS])
             ->header('Cache-Control', 'private, no-store');
     }
 
@@ -51,6 +52,36 @@ final class ContenusGamadController
         abort_unless($contenus->commenter($this->sujet($request), $reference, $donnees['contenu']), 404);
 
         return redirect()->route('publications.show', $reference);
+    }
+
+    public function besoin(Request $request, ContenusGamad $contenus, string $reference): JsonResponse
+    {
+        $besoin = $contenus->besoin($reference, $request->session()->get('gamad_session'));
+        abort_if($besoin === null, 404);
+
+        return response()->json($besoin)->header('Cache-Control', 'private, no-store');
+    }
+
+    public function publierBesoin(Request $request, ContenusGamad $contenus): JsonResponse
+    {
+        $donnees = $request->validate([
+            'visibilite' => ['required', 'in:public,members'],
+            'contenu' => ['required', 'string', 'max:500'],
+        ]);
+        $reference = $contenus->publier($this->sujet($request), ContenusGamad::TYPE_BESOIN, $donnees['visibilite'], $donnees['contenu']);
+        abort_if($reference === null, 403);
+
+        return response()->json(['reference' => $reference, 'etat_besoin' => 'open'], 201)
+            ->header('Location', route('besoins.show', $reference))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function terminerBesoin(Request $request, ContenusGamad $contenus, string $reference): Response
+    {
+        $donnees = $request->validate(['action' => ['required', 'in:resoudre,fermer']]);
+        abort_unless($contenus->terminerBesoin($this->sujet($request), $reference, $donnees['action'] === 'resoudre'), 404);
+
+        return response()->noContent();
     }
 
     private function sujet(Request $request): string
