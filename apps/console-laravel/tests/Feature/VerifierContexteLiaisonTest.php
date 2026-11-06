@@ -20,16 +20,9 @@ it('refuse une liaison sans session CTR-16 même si le client fournit une réfé
 });
 
 it('refuse une transaction répartie sur deux connexions PDO distinctes', function () {
-    // Configuration de test : gamad_identity possède une connexion dédiée.
-    $application = DB::connection()->getPdo();
-    $identite = DB::connection('gamad_identity')->getPdo();
-
-    if ($application !== $identite) {
-        expect(VerifierContexteLiaison::registreDansTransactionLocale())->toBeFalse();
-    } else {
-        // Même objet PDO ne suffit pas : les trois tables sont obligatoires.
-        expect(VerifierContexteLiaison::registreDansTransactionLocale())->toBeBool();
-    }
+    // Le registre est physiquement séparé par défaut en environnement de test.
+    // Une connexion absente ou inaccessible doit également produire un refus.
+    expect(VerifierContexteLiaison::registreDansTransactionLocale())->toBeFalse();
 });
 
 it('ne crée aucune liaison en vérifiant seulement le contexte', function () {
