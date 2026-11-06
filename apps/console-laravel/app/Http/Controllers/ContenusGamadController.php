@@ -192,6 +192,25 @@ final class ContenusGamadController
         return response()->noContent();
     }
 
+    public function favoris(Request $request, ContenusGamad $contenus): JsonResponse
+    {
+        return response()->json($contenus->favoris($this->sujet($request)))->header('Cache-Control', 'private, no-store');
+    }
+
+    public function ajouterFavori(Request $request, ContenusGamad $contenus, string $reference): Response
+    {
+        $contenus->modifierFavori($this->sujet($request), $reference, true);
+
+        return response()->noContent();
+    }
+
+    public function retirerFavori(Request $request, ContenusGamad $contenus, string $reference): Response
+    {
+        $contenus->modifierFavori($this->sujet($request), $reference, false);
+
+        return response()->noContent();
+    }
+
     private function sujet(Request $request): string
     {
         return (string) $request->attributes->get('gamad_entite');

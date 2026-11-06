@@ -129,6 +129,11 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::get('/notifications', [InteractionsGamadController::class, 'notifications'])->name('notifications');
     Route::post('/notifications/{reference}/lire', [InteractionsGamadController::class, 'lireNotification'])
         ->where('reference', '[a-f0-9]{24}')->name('notifications.lire');
+    Route::get('/mon-profil/favoris-publications', [ContenusGamadController::class, 'favoris'])->name('publications.favoris');
+    Route::put('/publications/{reference}/favori', [ContenusGamadController::class, 'ajouterFavori'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,favori-')->name('publications.favori.ajouter');
+    Route::delete('/publications/{reference}/favori', [ContenusGamadController::class, 'retirerFavori'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,favori-')->name('publications.favori.retirer');
     Route::post('/publications/{reference}/signalements/{commentaire?}', [InteractionsGamadController::class, 'signaler'])
         ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
         ->middleware('throttle:10,1,signalement-')->name('publications.signaler');

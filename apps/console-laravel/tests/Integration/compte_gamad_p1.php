@@ -671,9 +671,24 @@ $verifier(
     $requete('PATCH', $uriCommentaireModere, ['contenu' => 'Modification après masquage'], cookies: $premierCookies)['statut'] === 404,
     'le masquage d’une publication ferme aussi la modification des commentaires',
 );
+$uriFavoris = '/mon-profil/favoris-publications';
+$uriFavori = $uriPublication.'/favori';
+$verifier(
+    $requete('PUT', $uriFavori, cookies: $secondCookies)['statut'] === 204
+        && $requete('PUT', $uriFavori, cookies: $secondCookies)['statut'] === 204
+        && array_column($requete('GET', $uriFavoris, cookies: $secondCookies)['corps'], 'reference') === [basename($uriPublication)]
+        && $requete('GET', $uriFavoris, cookies: $premierCookies)['corps'] === [],
+    'un favori est privé et son ajout est idempotent',
+);
 $avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
 $blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
 $listeBlocages = $requete('GET', '/mon-profil/blocages', cookies: $secondCookies);
+$verifier(
+    $requete('GET', $uriFavoris, cookies: $secondCookies)['corps'] === []
+        && $requete('PUT', $uriFavori, cookies: $secondCookies)['statut'] === 404
+        && $requete('DELETE', $uriFavori, cookies: $secondCookies)['statut'] === 204,
+    'un blocage masque le favori et permet de le retirer sans rouvrir la publication',
+);
 $verifier(
     $requete('GET', $uriMessagesAide, cookies: $premierCookies)['statut'] === 404
         && $requete('POST', $uriMessagesAide, ['texte' => 'Après blocage'], cookies: $secondCookies)['statut'] === 404,
