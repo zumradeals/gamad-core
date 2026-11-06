@@ -85,6 +85,11 @@ final class BlocagesGamad
                  ON CONFLICT (auteur_reference, cible_reference) DO NOTHING'
             )->execute([$sujet, $cible]);
 
+            $registre->prepare(
+                'DELETE FROM suivi_personne_gamad WHERE (auteur_reference = ? AND cible_reference = ?)
+                 OR (auteur_reference = ? AND cible_reference = ?)'
+            )->execute([$sujet, $cible, $cible, $sujet]);
+
             return $registre->prepare(
                 "UPDATE relation_personnes_gamad SET etat = 'removed', note = NULL, revision = revision + 1, modifie_le = ?
                  WHERE premiere_reference = ? AND seconde_reference = ? AND etat IN ('pending', 'accepted')"

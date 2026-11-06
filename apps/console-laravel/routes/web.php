@@ -117,6 +117,9 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::get('/mon-profil/blocages', [BlocagesGamadController::class, 'index'])->name('blocages.index');
     Route::match(['POST', 'DELETE'], '/mon-profil/blocages/{reference}', [BlocagesGamadController::class, 'modifier'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,blocage-')->name('blocages.modifier');
+    Route::get('/mon-profil/suivis', [RelationsGamadController::class, 'suivis'])->name('relations.suivis');
+    Route::match(['PUT', 'DELETE'], '/personnes/{reference}/suivi', [RelationsGamadController::class, 'modifierSuivi'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,suivi-')->name('relations.suivi.modifier');
     Route::get('/relations', [RelationsGamadController::class, 'index'])->name('relations.index');
     Route::post('/relations/{reference}', [RelationsGamadController::class, 'demander'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,demande-relation-')->name('relations.demander');

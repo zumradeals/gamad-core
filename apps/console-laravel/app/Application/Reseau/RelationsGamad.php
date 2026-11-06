@@ -41,6 +41,52 @@ final class RelationsGamad
         }));
     }
 
+    public function suivis(string $sujet): array
+    {
+        $registre = Magasin::ouvrir();
+        abort_if($this->membres->lire($sujet, $registre) === null, 403);
+        $requete = $registre->prepare(
+            "SELECT s.cible_reference, f.reference_publique, s.cree_le
+             FROM suivi_personne_gamad s JOIN fiche_annuaire_gamad f ON f.identite_reference = s.cible_reference
+             WHERE s.auteur_reference = ? AND f.visibilite <> 'prive'
+             ORDER BY s.cree_le DESC, f.reference_publique DESC"
+        );
+        $requete->execute([$sujet]);
+        $exclus = $this->blocages->exclus($registre, $sujet);
+        $resultat = [];
+        foreach ($requete as $suivi) {
+            $cible = $suivi['cible_reference'];
+            $membre = isset($exclus[$cible]) ? null : $this->membres->lire($cible, $registre);
+            if ($membre !== null) {
+                $resultat[] = ['reference_publique' => $suivi['reference_publique'], 'nom' => $membre['nom'], 'cree_le' => $suivi['cree_le']];
+                if (count($resultat) === 100) {
+                    break;
+                }
+            }
+        }
+
+        return $resultat;
+    }
+
+    public function modifierSuivi(string $sujet, string $reference, bool $suivre): void
+    {
+        $this->avecPaire($sujet, $reference, function (PDO $registre, array $paire, array $fiche) use ($sujet, $suivre): void {
+            $cible = $fiche['identite_reference'];
+            if (!$suivre) {
+                $registre->prepare('DELETE FROM suivi_personne_gamad WHERE auteur_reference = ? AND cible_reference = ?')
+                    ->execute([$sujet, $cible]);
+
+                return;
+            }
+
+            $this->autoriser($registre, $sujet, $fiche);
+            $registre->prepare(
+                'INSERT INTO suivi_personne_gamad (auteur_reference, cible_reference, cree_le) VALUES (?, ?, ?)
+                 ON CONFLICT (auteur_reference, cible_reference) DO NOTHING'
+            )->execute([$sujet, $cible, gmdate('c')]);
+        });
+    }
+
     public function demander(string $sujet, string $reference, string $note): void
     {
         $note = Normalizer::multiline($note);

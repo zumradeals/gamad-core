@@ -693,6 +693,22 @@ $referenceSecond->closeCursor();
 $uriBlocage = '/mon-profil/blocages/'.$fichePublique;
 $relationVersPremier = '/relations/'.$fichePublique;
 $relationVersSecond = '/relations/'.basename($uriSecond);
+$uriSuivi = $uriFiche.'/suivi';
+$uriSuiviInverse = $uriSecond.'/suivi';
+$uriListeSuivis = '/mon-profil/suivis';
+$verifier(
+    $requete('PUT', $uriSuivi, cookies: $secondCookies)['statut'] === 204
+        && $requete('PUT', $uriSuivi, cookies: $secondCookies)['statut'] === 204
+        && array_column($requete('GET', $uriListeSuivis, cookies: $secondCookies)['corps'], 'reference_publique') === [$fichePublique]
+        && $requete('GET', $uriListeSuivis, cookies: $premierCookies)['corps'] === []
+        && $requete('PUT', $uriSuivi, cookies: $premierCookies)['statut'] === 404
+        && $requete('DELETE', $uriSuivi, cookies: $secondCookies)['statut'] === 204
+        && $requete('GET', $uriListeSuivis, cookies: $secondCookies)['corps'] === []
+        && $requete('PUT', $uriSuivi, cookies: $secondCookies)['statut'] === 204
+        && $requete('PUT', $uriSuiviInverse, cookies: $premierCookies)['statut'] === 204
+        && (int) $registreIdentites->query('SELECT COUNT(*) FROM relation_personnes_gamad')->fetchColumn() === 0,
+    'le suivi est unilatéral, privé, idempotent et distinct de la relation',
+);
 $demande = $requete('POST', $relationVersPremier, ['note' => 'Échangeons sur la rénovation.'], cookies: $secondCookies);
 $reception = $requete('GET', '/relations', cookies: $premierCookies);
 $duplicate = $requete('POST', $relationVersSecond, ['note' => 'Demande croisée'], cookies: $premierCookies);
@@ -765,6 +781,13 @@ $verifier(
 $avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
 $blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
 $listeBlocages = $requete('GET', '/mon-profil/blocages', cookies: $secondCookies);
+$verifier(
+    $requete('GET', $uriListeSuivis, cookies: $secondCookies)['corps'] === []
+        && $requete('GET', $uriListeSuivis, cookies: $premierCookies)['corps'] === []
+        && (int) $registreIdentites->query('SELECT COUNT(*) FROM suivi_personne_gamad')->fetchColumn() === 0
+        && $requete('PUT', $uriSuiviInverse, cookies: $premierCookies)['statut'] === 404,
+    'un blocage retire définitivement les deux suivis et empêche de suivre à nouveau',
+);
 $verifier(
     $requete('GET', $uriFavoris, cookies: $secondCookies)['corps'] === []
         && $requete('PUT', $uriFavori, cookies: $secondCookies)['statut'] === 404
