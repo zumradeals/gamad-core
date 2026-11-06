@@ -12,7 +12,10 @@
             <a class="marque" href="{{ route('reseau.accueil') }}">GAMAD</a>
             <nav aria-label="Réseau">
                 <a href="{{ route('fil') }}">Fil</a>
-                <a href="{{ route('personnes.index') }}">Annuaire</a>
+                <a href="{{ route('reseau.decouvrir') }}">Découvrir</a>
+                @unless (isset($publication))
+                    <a href="{{ route('reseau.agir') }}">Agir</a>
+                @endunless
                 <a href="{{ route('compte.profil') }}">Mon profil</a>
             </nav>
         </div>
@@ -46,12 +49,12 @@
             </section>
         @else
             <h1>Fil GAMAD</h1>
-            <form method="post" action="{{ route('publications.store') }}" class="formulaire-reseau">
+            <form id="publier" method="post" action="{{ route('publications.store') }}" class="formulaire-reseau">
                 @csrf
                 <label for="type">Type de publication</label>
                 <select id="type" name="type">
                     @foreach ($types as $valeur => $libelle)
-                        <option value="{{ $valeur }}" @selected(old('type') === $valeur)>{{ $libelle }}</option>
+                        <option value="{{ $valeur }}" @selected(old('type', $typeInitial) === $valeur)>{{ $libelle }}</option>
                     @endforeach
                 </select>
                 <label for="visibilite">Visibilité</label>

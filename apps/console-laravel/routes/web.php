@@ -43,6 +43,7 @@ use Illuminate\Support\Facades\Route;
  * elle partage le même cas d'usage que l'API v1.
  */
 Route::view('/', 'reseau.accueil')->name('reseau.accueil');
+Route::view('/decouvrir', 'reseau.decouvrir')->name('reseau.decouvrir');
 Route::view('/aide', 'reseau.aide')->name('reseau.aide');
 Route::get('/contact', [ContactGamadController::class, 'formulaire'])
     ->middleware('gamad.https')->name('reseau.contact');
@@ -123,6 +124,7 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::post('/publications/{reference}/signalements/{commentaire?}', [InteractionsGamadController::class, 'signaler'])
         ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
         ->middleware('throttle:10,1,signalement-')->name('publications.signaler');
+    Route::view('/agir', 'reseau.agir')->name('reseau.agir');
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
     Route::post('/fil', [ContenusGamadController::class, 'publier'])
         ->middleware('throttle:10,1,publication-')->name('publications.store');
