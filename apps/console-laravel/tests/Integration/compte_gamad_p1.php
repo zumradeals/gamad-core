@@ -458,6 +458,40 @@ $verifier(
 
 echo "\n";
 $connexionWeb = $requete('POST', '/connexion', ['entite' => $reference, 'secret' => $motDePasse]);
+$resolution->attacher($referenceTel, 'EMAIL', 'membre-blocage@example.test', [
+    'verifie' => true, 'source' => 'TEST', 'preuve' => 'TEST-EMAIL-BLOCAGE', 'producteur' => $satellite,
+]);
+$secondWeb = $requete('POST', '/connexion', ['entite' => $referenceTel, 'secret' => $motDePasseTel]);
+$secondCookies = $secondWeb['cookies'];
+$premierCookies = $connexionWeb['cookies'];
+$requete('PATCH', '/mon-profil', [
+    'bio' => 'Deuxième profil', 'visibilite' => 'public', 'apportees' => 'Rénovation',
+], cookies: $secondCookies);
+$referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
+$referenceSecond->execute([$referenceTel]);
+$uriSecond = '/personnes/'.$referenceSecond->fetchColumn();
+$referenceSecond->closeCursor();
+$uriBlocage = '/mon-profil/blocages/'.$fichePublique;
+$avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
+$blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
+$listeBlocages = $requete('GET', '/mon-profil/blocages', cookies: $secondCookies);
+$filBloque = $requete('GET', '/fil', cookies: $secondCookies);
+$verifier(
+    $avantBlocage['statut'] === 200 && $blocage['statut'] === 302
+        && str_contains($listeBlocages['html'], 'Personne Compte GAMAD')
+        && $filBloque['statut'] === 200 && !str_contains($filBloque['html'], $uriPublication)
+        && $requete('GET', $uriPublication, cookies: $secondCookies)['statut'] === 404
+        && $requete('GET', $uriFiche, cookies: $secondCookies)['statut'] === 404
+        && $requete('GET', $uriSecond, cookies: $premierCookies)['statut'] === 404
+        && $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Bloqué'], cookies: $secondCookies)['statut'] === 404,
+    'le blocage exclut réciproquement les profils et ferme le fil, les URL directes et les commentaires concernés',
+);
+$requete('DELETE', $uriBlocage, cookies: $secondCookies);
+$verifier(
+    $requete('GET', $uriPublication, cookies: $secondCookies)['statut'] === 200
+        && $requete('GET', $uriSecond, cookies: $premierCookies)['statut'] === 200,
+    'le déblocage rétablit la visibilité permise',
+);
 $cycle = $registreIdentites->prepare(
     'INSERT INTO evenement_cycle_identite
      (identite_reference, evenement_type, etat_avant, etat_apres, source, preuve_reference,

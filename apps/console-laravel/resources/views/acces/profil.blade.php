@@ -44,6 +44,7 @@
             <button class="button button--primary" type="submit">Enregistrer</button>
             <a href="{{ route('console.acces.index') }}">Mes moyens d’accès</a>
             <a href="{{ route('fil') }}">Ouvrir le fil GAMAD</a>
+            <a href="{{ route('blocages.index') }}">Personnes bloquées</a>
         </form>
     </section>
 </main>

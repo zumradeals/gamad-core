@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\AccesConsoleController;
 use App\Http\Controllers\AccesController;
 use App\Http\Controllers\AnnuaireGamadController;
+use App\Http\Controllers\BlocagesGamadController;
 use App\Http\Controllers\ContenusGamadController;
 use App\Http\Controllers\CompteReseauCoreController;
 use App\Http\Controllers\ProfilCompteGamadController;
@@ -44,6 +45,9 @@ Route::get('/personnes/{reference}', [AnnuaireGamadController::class, 'montrer']
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
 Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
+    Route::get('/mon-profil/blocages', [BlocagesGamadController::class, 'index'])->name('blocages.index');
+    Route::match(['POST', 'DELETE'], '/mon-profil/blocages/{reference}', [BlocagesGamadController::class, 'modifier'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,blocage-')->name('blocages.modifier');
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
     Route::post('/fil', [ContenusGamadController::class, 'publier'])
         ->middleware('throttle:10,1,publication-')->name('publications.store');

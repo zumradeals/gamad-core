@@ -33,6 +33,12 @@
                 @if ($profil['bio'])<p>{{ $profil['bio'] }}</p>@endif
                 @if ($profil['apportees'])<p><strong>Peut apporter</strong> {{ implode(', ', $profil['apportees']) }}</p>@endif
                 @if ($profil['recherchees'])<p><strong>Veut apprendre</strong> {{ implode(', ', $profil['recherchees']) }}</p>@endif
+                @if (($fiche ?? false) && $profil['peut_bloquer'])
+                    <form method="post" action="{{ route('blocages.modifier', $profil['reference_publique']) }}">
+                        @csrf
+                        <button class="bouton" type="submit">Bloquer cette personne</button>
+                    </form>
+                @endif
             </article>
         @empty
             <p>Aucun profil visible pour cette recherche.</p>

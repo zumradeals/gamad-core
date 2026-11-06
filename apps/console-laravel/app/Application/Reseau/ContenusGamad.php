@@ -18,7 +18,7 @@ final class ContenusGamad
         'personal_work' => 'Ma réalisation',
     ];
 
-    public function __construct(private MembreGamad $membres)
+    public function __construct(private MembreGamad $membres, private BlocagesGamad $blocages)
     {
     }
 
@@ -37,7 +37,7 @@ final class ContenusGamad
         $publications = $requete->fetchAll(PDO::FETCH_ASSOC);
 
         return [
-            'publications' => $this->affichables(array_slice($publications, 0, 20), $registre),
+            'publications' => $this->affichables(array_slice($publications, 0, 20), $registre, $this->blocages->exclus($registre, $sujet)),
             'page_suivante' => count($publications) > 20,
         ];
     }
@@ -45,8 +45,9 @@ final class ContenusGamad
     public function publication(string $reference, ?string $session): ?array
     {
         $registre = Magasin::ouvrir();
-        $membre = $this->membres->depuisSession($session, $registre) !== null;
-        $publication = $this->lirePublication($registre, $reference, $membre);
+        $membre = $this->membres->depuisSession($session, $registre);
+        $exclus = $this->blocages->exclus($registre, $membre['identite_reference'] ?? null);
+        $publication = $this->lirePublication($registre, $reference, $membre !== null, $exclus);
         if ($publication === null) {
             return null;
         }
@@ -58,8 +59,8 @@ final class ContenusGamad
 
         return [
             'publication' => $publication,
-            'commentaires' => $this->affichables($requete->fetchAll(PDO::FETCH_ASSOC), $registre),
-            'peut_commenter' => $membre,
+            'commentaires' => $this->affichables($requete->fetchAll(PDO::FETCH_ASSOC), $registre, $exclus),
+            'peut_commenter' => $membre !== null,
         ];
     }
 
@@ -82,7 +83,7 @@ final class ContenusGamad
     {
         $registre = Magasin::ouvrir();
         if ($this->membres->lire($sujet, $registre) === null
-            || $this->lirePublication($registre, $publication, true) === null) {
+            || $this->lirePublication($registre, $publication, true, $this->blocages->exclus($registre, $sujet)) === null) {
             return false;
         }
 
@@ -91,7 +92,7 @@ final class ContenusGamad
         )->execute([bin2hex(random_bytes(12)), $publication, $sujet, $this->texte($contenu), gmdate('c')]);
     }
 
-    private function lirePublication(PDO $registre, string $reference, bool $membre): ?array
+    private function lirePublication(PDO $registre, string $reference, bool $membre, array $exclus): ?array
     {
         $requete = $registre->prepare('SELECT * FROM publication_gamad WHERE reference = ?');
         $requete->execute([$reference]);
@@ -100,15 +101,18 @@ final class ContenusGamad
             return null;
         }
 
-        return $this->affichables([$publication], $registre)[0] ?? null;
+        return $this->affichables([$publication], $registre, $exclus)[0] ?? null;
     }
 
-    private function affichables(array $lignes, PDO $registre): array
+    private function affichables(array $lignes, PDO $registre, array $exclus): array
     {
         $resultat = [];
         $auteurs = [];
         foreach ($lignes as $ligne) {
             $reference = $ligne['auteur_reference'];
+            if (isset($exclus[$reference])) {
+                continue;
+            }
             if (!array_key_exists($reference, $auteurs)) {
                 $auteurs[$reference] = $this->membres->lire($reference, $registre);
             }

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Application\Comptes;
 
+use App\Application\Reseau\BlocagesGamad;
 use Gamad\RegistreIdentites\Magasin;
 use PDO;
 
 final class AnnuaireGamad
 {
-    public function __construct(private MembreGamad $membres)
+    public function __construct(private MembreGamad $membres, private BlocagesGamad $blocages)
     {
     }
 
@@ -27,7 +28,9 @@ final class AnnuaireGamad
     public function rechercher(?string $session, ?string $referencePublique = null): array
     {
         $registre = Magasin::ouvrir();
-        $membre = $this->membres->depuisSession($session, $registre) !== null;
+        $membre = $this->membres->depuisSession($session, $registre);
+        $sujet = $membre['identite_reference'] ?? null;
+        $exclus = $this->blocages->exclus($registre, $sujet);
         $visibilites = $membre ? "'public', 'members'" : "'public'";
         $sql = "SELECT * FROM fiche_annuaire_gamad WHERE visibilite IN ({$visibilites})";
         $parametres = [];
@@ -42,10 +45,14 @@ final class AnnuaireGamad
         $requete->execute($parametres);
         $profils = [];
         while ($fiche = $requete->fetch(PDO::FETCH_ASSOC)) {
+            if (isset($exclus[$fiche['identite_reference']])) {
+                continue;
+            }
             $compte = $this->membres->lire($fiche['identite_reference'], $registre);
             if ($compte !== null) {
                 $profils[] = [
                     'reference_publique' => $fiche['reference_publique'],
+                    'peut_bloquer' => $sujet !== null && $sujet !== $fiche['identite_reference'],
                     'nom' => $compte['nom'],
                     'bio' => $compte['bio'],
                     'apportees' => array_filter(explode("\n", $fiche['competences_apportees']), 'strlen'),
