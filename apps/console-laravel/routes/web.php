@@ -138,6 +138,11 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::patch('/besoins/{reference}/propositions/{proposition}', [ContenusGamadController::class, 'traiterAide'])
         ->where(['reference' => '[a-f0-9]{24}', 'proposition' => '[a-f0-9]{24}'])
         ->middleware('throttle:30,1,aide-traitement-')->name('besoins.propositions.traiter');
+    Route::get('/besoins/{reference}/propositions/{proposition}/messages', [ContenusGamadController::class, 'conversationAide'])
+        ->where(['reference' => '[a-f0-9]{24}', 'proposition' => '[a-f0-9]{24}'])->name('besoins.propositions.messages.index');
+    Route::post('/besoins/{reference}/propositions/{proposition}/messages', [ContenusGamadController::class, 'envoyerMessageAide'])
+        ->where(['reference' => '[a-f0-9]{24}', 'proposition' => '[a-f0-9]{24}'])
+        ->middleware('throttle:30,1,aide-messages-')->name('besoins.propositions.messages.store');
     Route::patch('/besoins/{reference}/etat', [ContenusGamadController::class, 'terminerBesoin'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,besoin-etat-')->name('besoins.etat');
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');

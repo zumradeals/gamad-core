@@ -534,6 +534,8 @@ $verifier(
 );
 $nouvelleAide = $requete('POST', $uriPropositions, [], cookies: $secondCookies);
 $uriNouvelleAide = $uriPropositions.'/'.($nouvelleAide['corps']['reference'] ?? '');
+$uriMessagesAide = $uriNouvelleAide.'/messages';
+$avantAcceptationAide = $requete('POST', $uriMessagesAide, ['texte' => 'Trop tôt'], cookies: $secondCookies);
 $verifier(
     $nouvelleAide['statut'] === 201
         && $requete('PATCH', $uriProposition, ['action' => 'accepter'], cookies: $premierCookies)['statut'] === 404
@@ -542,6 +544,20 @@ $verifier(
         && ($requete('GET', $uriBesoinAide)['corps']['etat_besoin'] ?? null) === 'in_progress'
         && $requete('POST', $uriBesoinPublic.'/propositions', [], cookies: $secondCookies)['statut'] === 409,
     'une proposition acceptée fait passer le besoin en cours et les besoins clos refusent toute nouvelle proposition',
+);
+$messageAide = $requete('POST', $uriMessagesAide, ['texte' => 'Organisons cette aide.'], cookies: $secondCookies);
+$lectureAide = $requete('GET', $uriMessagesAide, cookies: $premierCookies);
+$lectureProposant = $requete('GET', $uriMessagesAide, cookies: $secondCookies);
+$verifier(
+    $avantAcceptationAide['statut'] === 404 && $messageAide['statut'] === 204
+        && $lectureAide['statut'] === 200 && count($lectureAide['corps']) === 1
+        && ($lectureAide['corps'][0]['texte'] ?? null) === 'Organisons cette aide.'
+        && ($lectureAide['corps'][0]['de_moi'] ?? null) === false
+        && ($lectureProposant['corps'][0]['de_moi'] ?? null) === true
+        && $requete('GET', $uriMessagesAide)['statut'] === 302
+        && $requete('GET', $uriBesoinPublic.'/propositions/'.basename($uriNouvelleAide).'/messages', cookies: $premierCookies)['statut'] === 404
+        && (int) $registreIdentites->query('SELECT COUNT(*) FROM relation_personnes_gamad')->fetchColumn() === 0,
+    'la conversation naît avec l’acceptation et reste propre à la proposition, sans créer de relation',
 );
 $referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
 $referenceSecond->execute([$referenceTel]);
@@ -613,6 +629,11 @@ $verifier(
 $avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
 $blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
 $listeBlocages = $requete('GET', '/mon-profil/blocages', cookies: $secondCookies);
+$verifier(
+    $requete('GET', $uriMessagesAide, cookies: $premierCookies)['statut'] === 404
+        && $requete('POST', $uriMessagesAide, ['texte' => 'Après blocage'], cookies: $secondCookies)['statut'] === 404,
+    'le blocage ferme la lecture et l’envoi dans les deux sens',
+);
 $filBloque = $requete('GET', '/fil', cookies: $secondCookies);
 $verifier(
     $avantBlocage['statut'] === 200 && $blocage['statut'] === 302

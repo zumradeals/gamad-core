@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 16;
+    public const VERSION = 17;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -24,6 +24,7 @@ final class SchemaInscription
         'fiche_annuaire_gamad',
         'publication_gamad',
         'proposition_aide_gamad',
+        'message_aide_gamad',
         'commentaire_gamad',
         'blocage_gamad',
         'relation_personnes_gamad',
@@ -125,6 +126,17 @@ final class SchemaInscription
                 UNIQUE (besoin_reference, proposant_reference)
             )
         SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS message_aide_gamad (
+                reference TEXT PRIMARY KEY,
+                proposition_reference TEXT NOT NULL REFERENCES proposition_aide_gamad(reference) ON DELETE CASCADE,
+                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                texte VARCHAR(1000) NOT NULL CHECK (length(texte) BETWEEN 1 AND 1000),
+                cree_le TEXT NOT NULL
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS message_aide_gamad_conversation ON message_aide_gamad(proposition_reference, cree_le, reference)');
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS commentaire_gamad (
@@ -493,7 +505,7 @@ final class SchemaInscription
 
     private static function migrerPublications(\PDO $pdo): void
     {
-        if ($pdo->query('SELECT 1 FROM migration_registre_identites WHERE version IN (15, 16)')->fetchColumn() !== false) {
+        if ($pdo->query('SELECT 1 FROM migration_registre_identites WHERE version >= 15')->fetchColumn() !== false) {
             return;
         }
 

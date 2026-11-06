@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Application\Reseau\ContenusGamad;
+use App\Application\Reseau\ConversationAideGamad;
 use App\Application\Reseau\ModerationGamad;
 use App\Application\Reseau\PropositionsAideGamad;
 use Illuminate\Http\JsonResponse;
@@ -119,6 +120,20 @@ final class ContenusGamadController
     {
         $donnees = $request->validate(['action' => ['required', 'in:retirer,accepter,refuser']]);
         $aide->traiter($this->sujet($request), $reference, $proposition, $donnees['action']);
+
+        return response()->noContent();
+    }
+
+    public function conversationAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): JsonResponse
+    {
+        return response()->json($conversation->lire($this->sujet($request), $reference, $proposition))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function envoyerMessageAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): Response
+    {
+        $donnees = $request->validate(['texte' => ['required', 'string', 'max:1000']]);
+        $conversation->envoyer($this->sujet($request), $reference, $proposition, $donnees['texte']);
 
         return response()->noContent();
     }
