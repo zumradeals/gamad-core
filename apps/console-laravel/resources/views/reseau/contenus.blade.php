@@ -26,6 +26,9 @@
             <h1>{{ $types[$publication['type']] }}</h1>
             <p><strong>{{ $publication['auteur'] }}</strong></p>
             <p class="texte-reseau">{{ $publication['contenu'] }}</p>
+            @if ($publication['type'] === 'need' && $publication['emetteur'] === 'personne')
+                @include('reseau.actions-besoin')
+            @endif
             @if (session('signalement_envoye'))<p role="status">Signalement transmis.</p>@endif
             @if ($peut_commenter)@include('reseau.signalement')@endif
             <section aria-labelledby="commentaires">
