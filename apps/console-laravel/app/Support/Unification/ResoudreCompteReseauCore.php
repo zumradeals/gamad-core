@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Support\Unification;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Gamad\RegistreAcces\Ctr16;
 use Gamad\RegistreAcces\Magasin;
 use Illuminate\Http\Request;
@@ -67,15 +69,39 @@ final class ResoudreCompteReseauCore
     public static function identiteActive(string $reference): bool
     {
         try {
-            $etat = DB::table('evenement_cycle_identite')
+            $evenements = DB::table('evenement_cycle_identite')
                 ->where('identite_reference', $reference)
-                ->whereNotIn('evenement_type', ['RATTACHEMENT_PRODUIT', 'RETRAIT_PRODUIT'])
-                ->where('date_effet', '<=', now('UTC')->toIso8601String())
-                ->orderByDesc('date_effet')
-                ->orderByDesc('id')
-                ->value('etat_apres');
+                ->whereNotIn('evenement_type', [
+                    'RATTACHEMENT_PRODUIT', 'RETRAIT_PRODUIT',
+                    'RATTACHEMENT_ORGANISATION', 'RETRAIT_ORGANISATION',
+                ])
+                ->get(['id', 'date_effet', 'etat_apres']);
 
-            return in_array($etat, ['ACTIVE', 'VERIFIEE'], true);
+            $maintenant = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+            $dernierInstant = null;
+            $dernierId = -1;
+            $dernierEtat = null;
+
+            foreach ($evenements as $evenement) {
+                // Une date ambiguë ou corrompue interdit toute résolution.
+                $date = (string) $evenement->date_effet;
+                if (! preg_match('/(?:Z|[+-][0-9]{2}:[0-9]{2})$/', $date)) {
+                    return false;
+                }
+                $instant = new DateTimeImmutable($date);
+                if ($instant > $maintenant) {
+                    continue;
+                }
+                $id = (int) $evenement->id;
+                if ($dernierInstant === null || $instant > $dernierInstant
+                    || ($instant == $dernierInstant && $id > $dernierId)) {
+                    $dernierInstant = $instant;
+                    $dernierId = $id;
+                    $dernierEtat = $evenement->etat_apres;
+                }
+            }
+
+            return in_array($dernierEtat, ['ACTIVE', 'VERIFIEE'], true);
         } catch (Throwable) {
             return false;
         }
