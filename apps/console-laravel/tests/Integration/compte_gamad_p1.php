@@ -102,6 +102,10 @@ $console = $app->make(\Illuminate\Contracts\Console\Kernel::class);
 $console->call('core:politiques:bootstrap');
 $console->call('core:produits:bootstrap');
 $kernel = $app->make(Kernel::class);
+set_exception_handler(static function (Throwable $exception): never {
+    fwrite(STDERR, (string) $exception . PHP_EOL);
+    exit(1);
+});
 
 $echecs = 0;
 $verifier = static function (bool $ok, string $libelle) use (&$echecs): void {
@@ -138,6 +142,7 @@ $requete = static function (
     $corps = json_decode((string) $response->getContent(), true);
     $resultat = [
         'statut' => $response->getStatusCode(),
+        'html' => (string) $response->getContent(),
         'cookies' => array_column(array_map(
             static fn ($cookie): array => [$cookie->getName(), $cookie->getValue()],
             $response->headers->getCookies(),
@@ -266,9 +271,37 @@ $verifier(
         && ($compteReseau['corps']['compte'] ?? null) === [
             'identite_reference' => $reference,
             'nom' => 'Personne Compte GAMAD',
+            'bio' => null,
         ],
     'Réseau lit directement le compte et son nom Core avec la session du navigateur',
 );
+$cookies = $connexionWeb['cookies'];
+$profil = $requete('GET', '/mon-profil', cookies: $cookies);
+$verifier(
+    $profil['statut'] === 200 && str_contains($profil['html'], 'Ma présentation'),
+    'le formulaire du profil Core est accessible avec la même session',
+);
+$modifierProfil = $requete('PATCH', '/mon-profil', [
+    'bio' => 'Je partage mon expérience en rénovation.',
+    'identite_reference' => $autorite,
+], cookies: $cookies);
+$verifier(
+    $modifierProfil['statut'] === 302
+        && ($requete('GET', '/reseau/mon-compte', cookies: $cookies)['corps']['compte']['bio'] ?? null)
+            === 'Je partage mon expérience en rénovation.'
+        && $registreIdentites->query('SELECT COUNT(*) FROM profil_compte_gamad')->fetchColumn() === 1,
+    'l’écriture Core alimente Réseau et ignore le sujet fourni par le client',
+);
+$profilLong = $requete('PATCH', '/mon-profil', ['bio' => str_repeat('é', 281)], cookies: $cookies);
+$verifier(
+    $profilLong['statut'] === 302
+        && ($requete('GET', '/reseau/mon-compte', cookies: $cookies)['corps']['compte']['bio'] ?? null)
+            === 'Je partage mon expérience en rénovation.',
+    'la limite historique de 280 caractères est appliquée',
+);
+$requete('PATCH', '/mon-profil', ['bio' => ''], cookies: $cookies);
+$profilEfface = $requete('GET', '/reseau/mon-compte', cookies: $cookies)['corps']['compte'];
+$verifier(array_key_exists('bio', $profilEfface) && $profilEfface['bio'] === null, 'la présentation peut être effacée');
 $jetonWeb = $app['session']->driver()->get('gamad_session');
 if (is_string($jetonWeb)) {
     $ctr16->revoquerSession($jetonWeb);
@@ -383,6 +416,24 @@ $verifier(
     !$base->getSchemaBuilder()->hasTable('archive_reseau_comptes_identites')
         && $base->table('reseau_comptes_identites')->where($ligne)->exists(),
     'le retour arrière restaure la table et ses lignes',
+);
+
+$archivage->up();
+$retrait = require $migrations . '2026_11_06_000003_retirer_comptes_laravel_historiques.php';
+try {
+    $retrait->up();
+    $verifier(false, 'le retrait doit refuser un stockage historique non vide');
+} catch (RuntimeException) {
+    $verifier($base->table('archive_reseau_comptes_identites')->where($ligne)->exists(), 'le retrait refuse un stockage historique non vide');
+}
+$base->table('archive_reseau_comptes_identites')->delete();
+$base->table('users')->delete();
+$retrait->up();
+$schema = $base->getSchemaBuilder();
+$verifier(
+    !$schema->hasTable('users') && !$schema->hasTable('password_reset_tokens')
+        && !$schema->hasTable('archive_reseau_comptes_identites') && $schema->hasTable('sessions'),
+    'une installation neuve ne conserve que le transport HTTP, sans tables de comptes Laravel',
 );
 
 if ($echecs === 0) {

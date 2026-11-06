@@ -14,12 +14,13 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 2;
+    public const VERSION = 3;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
         'compteur_reference_identite',
         'identite_inscrite',
+        'profil_compte_gamad',
         'identifiant_resolution',
         'evenement_cycle_identite',
         'evenement_assurance_identite',
@@ -67,6 +68,13 @@ final class SchemaInscription
                 preuve_reference      TEXT NOT NULL,
                 classification        TEXT NOT NULL,
                 date_creation         TEXT NOT NULL
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS profil_compte_gamad (
+                identite_reference TEXT PRIMARY KEY REFERENCES identite_inscrite(reference) ON DELETE CASCADE,
+                bio VARCHAR(280) CHECK (length(bio) <= 280)
             )
         SQL);
 

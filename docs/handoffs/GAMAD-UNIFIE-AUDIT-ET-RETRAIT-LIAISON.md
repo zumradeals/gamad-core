@@ -20,8 +20,16 @@ La [décision propriétaire](GAMAD-UNIFIE-VISION-ET-REPRISE-2026-11-06.md) s'app
 
 La migration renomme la table de liaison historique. Elle conserve ses lignes, ses contraintes et les lignes historiques de `users`. Son retour arrière restaure le nom initial. Le modèle, le fournisseur Laravel et le seeder de démonstration ne peuvent plus exploiter ces comptes dans Core. La migration d'archive concerne le stockage Laravel de `gamad-core`, à identifier avant toute exécution.
 
+## Suite sur installation neuve
+
+Le 6 novembre 2026, le propriétaire a confirmé que les deux dépôts sont hors production et qu’aucune donnée historique n’est à reprendre. La migration de retrait des tables Laravel exige qu’elles soient vides. Le transport HTTP conserve sa table de sessions sans fournisseur de comptes Laravel.
+
+Le parcours personnel de présentation issu de Réseau est désormais servi par le Core. La biographie, limitée à 280 caractères et normalisée comme dans le parcours source, est éditable via `/mon-profil`. Elle est stockée dans le registre persistant, par référence canonique et sans identifiant de compte supplémentaire. Réseau relit la même donnée via `/reseau/mon-compte`.
+
+Les autres champs et parcours du profil source, ainsi que les autres fonctionnalités Réseau, restent à transférer. La présentation reste personnelle tant que la publication du profil et ses règles de visibilité n’ont pas été reprises.
+
 ## Conditions de transfert restantes
 
-1. Inventorier les données et relations réelles de la source Réseau sur une copie isolée. Valider les correspondances avec les preuves disponibles et isoler les cas ambigus avant toute réécriture des références.
-2. Transférer les données de compte et leurs règles dans le Core. Reprendre les opérations de lecture et de modification de profil, vérification, suspension, habilitation et fermeture avec leurs contraintes existantes. Préserver les références des contenus et opérations historiques.
+1. Inventorier les relations du schéma source et créer le schéma cible sur une base vide. Les relations de compte des fonctionnalités reprises doivent référencer directement la personne canonique.
+2. Transférer les données de compte et leurs règles dans le Core. Reprendre les opérations de lecture et de modification de profil, vérification, suspension, habilitation et fermeture avec leurs contraintes existantes. Utiliser les références Core pour les nouveaux contenus et opérations.
 3. Raccorder les routes et écritures métier à ces contrats et qualifier les parcours transférés en base avec des jeux de données issus du schéma historique. Préparer une bascule contrôlée et un retour arrière à partir d'un état vérifié.
