@@ -1,8 +1,11 @@
 <?php
 
 use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+
+uses(RefreshDatabase::class);
 
 it('crée la liaison persistante sans importer de comptes historiques', function () {
     expect(Schema::hasTable('reseau_comptes_identites'))->toBeTrue();
