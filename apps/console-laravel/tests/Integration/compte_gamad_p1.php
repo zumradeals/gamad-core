@@ -609,6 +609,44 @@ $verifier(
         && str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Membre de la ZUMRA'),
     'la demande d’adhésion devient effective après décision du fondateur',
 );
+$delegation = $requete('POST', $uriZumra.'/responsabilites', [
+    'cible' => $referenceTel, 'action' => 'nommer',
+], cookies: $premierCookies);
+$interdictionDeleguer = $requete('POST', $uriZumra.'/responsabilites', [
+    'cible' => $referenceTel, 'action' => 'revoquer',
+], cookies: $secondCookies);
+$delegue = $requete('GET', $uriZumra, cookies: $secondCookies);
+$retraitDelegation = $requete('POST', $uriZumra.'/responsabilites', [
+    'cible' => $referenceTel, 'action' => 'revoquer',
+], cookies: $premierCookies);
+$verifier(
+    $delegation['statut'] === 302 && $interdictionDeleguer['statut'] === 404
+        && str_contains($delegue['html'], 'Demandes d’accueil')
+        && $retraitDelegation['statut'] === 302
+        && !str_contains($requete('GET', $uriZumra, cookies: $secondCookies)['html'], 'Demandes d’accueil'),
+    'seul le fondateur délègue les droits de gestion et le retrait prend effet immédiatement',
+);
+$uriEtapes = $uriProjet.'/etapes';
+$premiereEtape = $requete('POST', $uriEtapes, ['titre' => 'Préparation confidentielle'], cookies: $secondCookies);
+$deuxiemeEtape = $requete('POST', $uriEtapes, ['titre' => 'Validation confidentielle'], cookies: $secondCookies);
+$referenceEtape = $registreIdentites->prepare('SELECT reference FROM etape_projet_gamad WHERE projet_reference = ? AND position = 2');
+$referenceEtape->execute([basename($uriProjet)]);
+$uriEtape = $uriEtapes.'/'.$referenceEtape->fetchColumn();
+$referenceEtape->closeCursor();
+$deplacementEtape = $requete('POST', $uriEtape, ['action' => 'monter'], cookies: $secondCookies);
+$renommageEtape = $requete('POST', $uriEtape, [
+    'action' => 'enregistrer', 'titre' => 'Vérification confidentielle', 'etat' => 'done',
+], cookies: $secondCookies);
+$etapesPrivees = $requete('GET', $uriProjet, cookies: $secondCookies);
+$verifier(
+    $premiereEtape['statut'] === 302 && $deuxiemeEtape['statut'] === 302
+        && $deplacementEtape['statut'] === 302 && $renommageEtape['statut'] === 302
+        && str_contains($etapesPrivees['html'], 'Vérification confidentielle')
+        && strpos($etapesPrivees['html'], 'Vérification confidentielle') < strpos($etapesPrivees['html'], 'Préparation confidentielle')
+        && $requete('POST', $uriEtape, ['action' => 'retirer'], cookies: $premierCookies)['statut'] === 404
+        && $requete('GET', $uriProjet)['statut'] === 404,
+    'le porteur ordonne ses étapes, change leur état et garde leurs titres privés',
+);
 $invitationProjet = $requete('POST', $uriProjet.'/invitations', ['profil' => $fichePublique], cookies: $secondCookies);
 $avantEquipe = $requete('GET', $uriProjet, cookies: $premierCookies);
 $acceptationEquipe = $requete('POST', $uriProjet.'/equipe', ['action' => 'accepter'], cookies: $premierCookies);
@@ -620,6 +658,12 @@ $verifier(
         && $acceptationEquipe['statut'] === 302 && str_contains($apresEquipe['html'], 'Dossier réservé au porteur.')
         && $retraitEquipe['statut'] === 302 && $requete('GET', $uriProjet, cookies: $premierCookies)['statut'] === 404,
     'seul un collaborateur qui a accepté son invitation accède au dossier et le retrait ferme cet accès',
+);
+$suppressionEtape = $requete('POST', $uriEtape, ['action' => 'retirer'], cookies: $secondCookies);
+$verifier(
+    $suppressionEtape['statut'] === 302
+        && !str_contains($requete('GET', $uriProjet, cookies: $secondCookies)['html'], 'Vérification confidentielle'),
+    'le porteur peut retirer une étape',
 );
 $cheminRccm = tempnam(sys_get_temp_dir(), 'gamad-rccm-');
 file_put_contents($cheminRccm, "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n%%EOF");

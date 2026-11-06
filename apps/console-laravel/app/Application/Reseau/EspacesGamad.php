@@ -46,7 +46,8 @@ final class EspacesGamad
         }
 
         $sujet = $this->membres->depuisSession($session, $registre)['identite_reference'] ?? null;
-        $responsable = $sujet === $zumra['fondateur_reference'];
+        $fondateur = $sujet === $zumra['fondateur_reference'];
+        $responsable = $fondateur || MembresEspacesGamad::estDelegue($registre, $reference, $sujet);
         $demandes = [];
         if ($responsable) {
             // Le responsable reçoit uniquement le titre et la demande, sans accès au dossier.
@@ -61,8 +62,11 @@ final class EspacesGamad
         $adhesion->execute([$reference, $sujet]);
 
         return ['zumra' => $zumra, 'responsable' => $responsable, 'demandes' => $demandes,
-            'connecte' => $sujet !== null, 'adhesion' => $adhesion->fetchColumn(),
-            'membres' => $responsable ? MembresEspacesGamad::liste($registre, $reference, true) : []];
+            'fondateur' => $fondateur, 'connecte' => $sujet !== null, 'adhesion' => $adhesion->fetchColumn(),
+            'membres' => $responsable ? array_map(
+                fn (array $membre): array => $membre + ['delegue' => MembresEspacesGamad::estDelegue($registre, $reference, $membre['membre_reference'])],
+                MembresEspacesGamad::liste($registre, $reference, true),
+            ) : []];
     }
 
     public function projets(?string $session): array
@@ -119,7 +123,8 @@ final class EspacesGamad
         $sujet = $this->membres->depuisSession($session, $registre)['identite_reference'] ?? null;
         if ($sujet === $projet['porteur_reference']) {
             return $projet + ['prive' => true, 'porteur' => true,
-                'equipe' => MembresEspacesGamad::liste($registre, $reference, false)];
+                'equipe' => MembresEspacesGamad::liste($registre, $reference, false),
+                'etapes' => EtapesProjetGamad::lister($registre, $reference)];
         }
         $equipe = $registre->prepare('SELECT etat FROM equipe_projet_gamad WHERE espace_reference = ? AND membre_reference = ?');
         $equipe->execute([$reference, $sujet]);
@@ -128,7 +133,7 @@ final class EspacesGamad
             return null;
         }
         if ($etat === 'accepted') {
-            return $projet + ['prive' => true, 'porteur' => false];
+            return $projet + ['prive' => true, 'porteur' => false, 'etapes' => EtapesProjetGamad::lister($registre, $reference)];
         }
         if ($etat === 'pending') {
             return ['reference' => $reference, 'titre' => $projet['titre'], 'invitation' => true, 'prive' => false];
@@ -146,7 +151,8 @@ final class EspacesGamad
         $registre = Magasin::ouvrir();
         $this->exigerMembre($registre, $sujet);
         $fiche = $this->chercherZumra($registre, $zumra);
-        abort_unless($fiche !== null && $sujet === $fiche['fondateur_reference'], 404);
+        abort_unless($fiche !== null && ($sujet === $fiche['fondateur_reference']
+            || MembresEspacesGamad::estDelegue($registre, $zumra, $sujet)), 404);
 
         $requete = $registre->prepare(
             "UPDATE projet_gamad SET accueil = ? WHERE reference = ? AND zumra_reference = ? AND accueil = 'en_attente'"

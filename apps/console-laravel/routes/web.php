@@ -82,10 +82,15 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
         ->where('reference', '[a-f0-9]{24}')->name('projets.vitrine');
     Route::post('/zumra/{reference}/adhesion', [EspacesGamadController::class, 'adhesion'])
         ->where('reference', '[a-f0-9]{24}')->name('zumras.adhesion');
+    Route::post('/zumra/{reference}/responsabilites', [EspacesGamadController::class, 'deleguer'])
+        ->where('reference', '[a-f0-9]{24}')->name('zumras.deleguer');
     Route::post('/zumra/{reference}/membres', [EspacesGamadController::class, 'membreZumra'])
         ->where('reference', '[a-f0-9]{24}')->name('zumras.membres');
     Route::post('/projets/{reference}/invitations', [EspacesGamadController::class, 'inviter'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,invitation-projet-')->name('projets.inviter');
+    Route::post('/projets/{reference}/etapes/{etape?}', [EspacesGamadController::class, 'etape'])
+        ->where(['reference' => '[a-f0-9]{24}', 'etape' => '[a-f0-9]{24}'])
+        ->middleware('throttle:30,1,etapes-projet-')->name('projets.etapes');
     Route::post('/projets/{reference}/equipe', [EspacesGamadController::class, 'membreProjet'])
         ->where('reference', '[a-f0-9]{24}')->name('projets.equipe');
     Route::get('/mon-profil/blocages', [BlocagesGamadController::class, 'index'])->name('blocages.index');

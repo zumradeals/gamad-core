@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 10;
+    public const VERSION = 11;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -32,10 +32,12 @@ final class SchemaInscription
         'masquage_reseau_gamad',
         'zumra_gamad',
         'projet_gamad',
+        'etape_projet_gamad',
         'entreprise_gamad',
         'opportunite_gamad',
         'candidature_gamad',
         'adhesion_zumra_gamad',
+        'responsabilite_zumra_gamad',
         'equipe_projet_gamad',
         'identifiant_resolution',
         'evenement_cycle_identite',
@@ -278,6 +280,27 @@ final class SchemaInscription
                 membre_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
                 etat TEXT NOT NULL CHECK (etat IN ('pending', 'accepted')),
                 PRIMARY KEY (espace_reference, membre_reference)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS etape_projet_gamad (
+                reference TEXT PRIMARY KEY,
+                projet_reference TEXT NOT NULL REFERENCES projet_gamad(reference) ON DELETE CASCADE,
+                titre VARCHAR(80) NOT NULL,
+                etat TEXT NOT NULL CHECK (etat IN ('todo', 'in_progress', 'done')),
+                position INTEGER NOT NULL CHECK (position >= 0),
+                UNIQUE (projet_reference, position)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS responsabilite_zumra_gamad (
+                espace_reference TEXT NOT NULL,
+                membre_reference TEXT NOT NULL,
+                PRIMARY KEY (espace_reference, membre_reference),
+                FOREIGN KEY (espace_reference, membre_reference)
+                    REFERENCES adhesion_zumra_gamad(espace_reference, membre_reference) ON DELETE CASCADE
             )
         SQL);
 

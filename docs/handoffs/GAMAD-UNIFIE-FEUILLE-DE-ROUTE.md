@@ -46,4 +46,6 @@ Le fondateur traite les adhésions. Le porteur invite, puis seul l’invité acc
 
 L’entreprise soumet un justificatif RCCM réservé aux autorités admises dans la console Core. Après vérification, son propriétaire peut publier et clôturer une opportunité. Une candidature textuelle reste lisible par le candidat et par le propriétaire. La suspension retire l’entreprise et ses opportunités des écrans publics.
 
-La parité des espaces métier reste à vérifier et à compléter avec les écrans source, dont les étapes et contributions de projet, les rôles délégués et modes d’adhésion des ZUMRA, les dossiers d’entreprise complémentaires et les modes avancés de gestion des opportunités.
+Le porteur peut créer, réordonner et modifier les étapes de son projet. Les collaborateurs acceptés peuvent les consulter dans le dossier privé. Le fondateur d’une ZUMRA peut déléguer le traitement des adhésions et des demandes d’accueil à un membre accepté. Le retrait de l’adhésion ou de la délégation supprime ces droits.
+
+La parité des espaces métier reste à vérifier et à compléter avec les écrans source, dont les contributions de projet, les modes d’adhésion des ZUMRA, les dossiers d’entreprise complémentaires et les modes avancés de gestion des opportunités.

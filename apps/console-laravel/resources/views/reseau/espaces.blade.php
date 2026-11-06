@@ -27,7 +27,7 @@
         @case('zumra')
             <h1>{{ $zumra['nom'] }}</h1>
             <p class="texte-reseau">{{ $zumra['presentation'] }}</p>
-            @if ($connecte && !$responsable)
+            @if ($connecte && !$fondateur)
                 <form method="post" action="{{ route('zumras.adhesion', $zumra['reference']) }}">
                     @csrf
                     @if ($adhesion)
@@ -61,10 +61,19 @@
                         @if ($membre['etat'] === 'pending')
                             <button class="bouton" name="action" value="accepter">Accepter l’adhésion</button>
                             <button class="bouton" name="action" value="refuser">Refuser</button>
-                        @else
+                        @elseif ($fondateur || !$membre['delegue'])
                             <button class="bouton" name="action" value="retirer">Retirer le membre</button>
                         @endif
                     </form>
+                    @if ($fondateur && $membre['etat'] === 'accepted')
+                        <form method="post" action="{{ route('zumras.deleguer', $zumra['reference']) }}">
+                            @csrf
+                            <input type="hidden" name="cible" value="{{ $membre['membre_reference'] }}">
+                            <button class="bouton" name="action" value="{{ $membre['delegue'] ? 'revoquer' : 'nommer' }}">
+                                {{ $membre['delegue'] ? 'Retirer la responsabilité' : 'Nommer responsable' }}
+                            </button>
+                        </form>
+                    @endif
                 @endforeach
             @endif
             @break
@@ -82,6 +91,39 @@
             @if ($projet['prive'])
                 <h2>Dossier privé</h2>
                 <p class="texte-reseau">{{ $projet['dossier'] }}</p>
+                <section aria-labelledby="etapes-projet">
+                    <h2 id="etapes-projet">Étapes du projet</h2>
+                    @foreach ($projet['etapes'] as $etape)
+                        @if ($projet['porteur'])
+                            <form class="formulaire-reseau" method="post" action="{{ route('projets.etapes', [$projet['reference'], $etape['reference']]) }}">
+                                @csrf
+                                <label for="titre-{{ $etape['reference'] }}">Étape {{ $etape['position'] }}</label>
+                                <input id="titre-{{ $etape['reference'] }}" name="titre" value="{{ $etape['titre'] }}" maxlength="80" required>
+                                <select name="etat" aria-label="État de l’étape">
+                                    @foreach ($etatsEtape as $valeur => $libelle)
+                                        <option value="{{ $valeur }}" @selected($etape['etat'] === $valeur)>{{ $libelle }}</option>
+                                    @endforeach
+                                </select>
+                                <div>
+                                    <button class="bouton" name="action" value="enregistrer">Enregistrer</button>
+                                    @unless ($loop->first)<button class="bouton" name="action" value="monter">Monter</button>@endunless
+                                    @unless ($loop->last)<button class="bouton" name="action" value="descendre">Descendre</button>@endunless
+                                    <button class="bouton" name="action" value="retirer">Retirer</button>
+                                </div>
+                            </form>
+                        @else
+                            <p>{{ $etape['position'] }}. {{ $etape['titre'] }} · {{ $etatsEtape[$etape['etat']] }}</p>
+                        @endif
+                    @endforeach
+                    @if ($projet['porteur'])
+                        <form class="formulaire-reseau" method="post" action="{{ route('projets.etapes', $projet['reference']) }}">
+                            @csrf
+                            <label for="nouvelle-etape">Nouvelle étape</label>
+                            <input id="nouvelle-etape" name="titre" maxlength="80" required>
+                            <button class="bouton" type="submit">Ajouter l’étape</button>
+                        </form>
+                    @endif
+                </section>
                 <p>Accueil par la ZUMRA
                     {{ ['en_attente' => 'En attente', 'accepte' => 'Accepté', 'refuse' => 'Refusé'][$projet['accueil']] }}
                 </p>
