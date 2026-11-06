@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Application\Comptes\AnnuaireGamad;
+use App\Application\Comptes\ExperiencesProfilGamad;
 use App\Application\Comptes\LireCompteGamad;
 use App\Application\Comptes\ModifierProfilGamad;
 use App\Application\Reseau\ReferentielBesoinsGamad;
@@ -26,6 +27,7 @@ final class ProfilCompteGamadController
             'fiche' => $annuaire->fichePersonnelle($compte['identite_reference']),
             'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
             'domaines' => ReferentielBesoinsGamad::DOMAINES,
+            'typesExperience' => ExperiencesProfilGamad::TYPES,
         ])
             ->header('Cache-Control', 'no-store');
     }
@@ -56,5 +58,25 @@ final class ProfilCompteGamadController
         ), 403);
 
         return redirect()->route('compte.profil')->with('profil_enregistre', true);
+    }
+
+    public function enregistrerExperience(Request $request, ExperiencesProfilGamad $experiences, ?string $reference = null): RedirectResponse
+    {
+        $donnees = $request->validate([
+            'titre' => ['required', 'string', 'max:100'],
+            'type' => ['required', Rule::in(array_keys(ExperiencesProfilGamad::TYPES))],
+            'periode' => ['nullable', 'string', 'max:80'],
+            'description' => ['nullable', 'string', 'max:500'],
+        ]);
+        $experiences->enregistrer((string) $request->attributes->get('gamad_entite'), $reference, $donnees);
+
+        return redirect()->route('compte.profil');
+    }
+
+    public function retirerExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse
+    {
+        $experiences->retirer((string) $request->attributes->get('gamad_entite'), $reference);
+
+        return redirect()->route('compte.profil');
     }
 }

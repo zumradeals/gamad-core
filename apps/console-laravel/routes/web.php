@@ -685,6 +685,12 @@ Route::middleware('gamad.session')->group(function (): void {
 Route::middleware('gamad.session:reseau')->group(function (): void {
     Route::get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])->name('reseau.compte.core');
     Route::get('/mon-profil', [ProfilCompteGamadController::class, 'montrer'])->name('compte.profil');
+    Route::post('/mon-profil/experiences', [ProfilCompteGamadController::class, 'enregistrerExperience'])
+        ->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.ajouter');
+    Route::patch('/mon-profil/experiences/{reference}', [ProfilCompteGamadController::class, 'enregistrerExperience'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.modifier');
+    Route::delete('/mon-profil/experiences/{reference}', [ProfilCompteGamadController::class, 'retirerExperience'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.retirer');
     Route::patch('/mon-profil', [ProfilCompteGamadController::class, 'modifier'])
         ->middleware('throttle:20,1,profil-')->name('compte.profil.modifier');
 });

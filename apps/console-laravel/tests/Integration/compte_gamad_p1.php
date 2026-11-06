@@ -362,6 +362,18 @@ $verifier($requete('GET', $uriFiche)['statut'] === 404, 'rendre la fiche privée
 $requete('PATCH', '/mon-profil', [
     'bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité',
 ], cookies: $cookies);
+$experience = ['titre' => 'Chantier solaire déclaré', 'type' => 'professional', 'periode' => '2025', 'description' => 'Installation de panneaux.'];
+$creationExperience = $requete('POST', '/mon-profil/experiences', $experience, cookies: $cookies);
+$referenceExperience = $registreIdentites->query('SELECT reference FROM experience_profil_gamad')->fetchColumn();
+$uriExperience = '/mon-profil/experiences/'.$referenceExperience;
+$verifier(
+    $creationExperience['statut'] === 302 && is_string($referenceExperience)
+        && str_contains($requete('GET', $uriFiche)['html'], 'Chantier solaire déclaré')
+        && $requete('PATCH', $uriExperience, array_replace($experience, ['titre' => 'Installation solaire déclarée']), cookies: $cookies)['statut'] === 302
+        && str_contains($requete('GET', $uriFiche)['html'], 'Installation solaire déclarée')
+        && !str_contains($requete('GET', '/personnes')['html'], 'Installation solaire déclarée'),
+    'le membre ajoute et modifie une expérience qui apparaît uniquement dans sa fiche',
+);
 $annuaireFiltre = '/personnes?territoire=ci-bouake&domaine=artisanat&competence=apportees&q=electricite';
 $ficheStructuree = $requete('GET', $uriFiche);
 $verifier(
@@ -375,7 +387,9 @@ $verifier(
 $requete('PATCH', '/mon-profil', ['bio' => 'Profil pour annuaire', 'visibilite' => 'members', 'apportees' => 'Électricité'], cookies: $cookies);
 $verifier(
     !str_contains($requete('GET', $annuaireFiltre)['html'], 'Technicien solaire')
-        && str_contains($requete('GET', $annuaireFiltre, cookies: $cookies)['html'], 'Technicien solaire'),
+        && str_contains($requete('GET', $annuaireFiltre, cookies: $cookies)['html'], 'Technicien solaire')
+        && $requete('GET', $uriFiche)['statut'] === 404
+        && str_contains($requete('GET', $uriFiche, cookies: $cookies)['html'], 'Installation solaire déclarée'),
     'les filtres respectent l’audience du profil et une ancienne mise à jour conserve les détails structurés',
 );
 $requete('PATCH', '/mon-profil', ['bio' => 'Profil pour annuaire', 'visibilite' => 'public', 'apportees' => 'Électricité'], cookies: $cookies);
@@ -704,6 +718,12 @@ $verifier(
         && in_array('reponse_acceptee', array_column($requete('GET', '/notifications/donnees', cookies: $secondCookies)['corps'], 'type'), true)
         && in_array('message_reponse', array_column($requete('GET', '/notifications/donnees', cookies: $premierCookies)['corps'], 'type'), true),
     'seule la réponse acceptée ouvre une conversation privée et les notifications sont contextualisées',
+);
+$verifier(
+    $requete('DELETE', $uriExperience, cookies: $secondCookies)['statut'] === 404
+        && $requete('DELETE', $uriExperience, cookies: $premierCookies)['statut'] === 302
+        && !str_contains($requete('GET', $uriFiche)['html'], 'Installation solaire déclarée'),
+    'seul le propriétaire peut retirer une expérience',
 );
 $referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
 $referenceSecond->execute([$referenceTel]);

@@ -27,7 +27,10 @@ final class AnnuaireGamad
         $fiche = $requete->fetch(PDO::FETCH_ASSOC);
         $requete->closeCursor();
 
-        return $fiche === false ? [] : $fiche + ['domaines' => $this->domaines($registre, $identite)];
+        return $fiche === false ? [] : $fiche + [
+            'domaines' => $this->domaines($registre, $identite),
+            'experiences' => ExperiencesProfilGamad::lister($registre, $identite),
+        ];
     }
 
     public function rechercher(?string $session, ?string $referencePublique = null, ?string $territoire = null, ?string $domaine = null): array
@@ -72,6 +75,7 @@ final class AnnuaireGamad
                     'introduction' => $fiche['introduction'],
                     'territoire' => $fiche['territoire'],
                     'domaines' => $this->domaines($registre, $fiche['identite_reference']),
+                    'experiences' => $referencePublique === null ? [] : ExperiencesProfilGamad::lister($registre, $fiche['identite_reference']),
                     'apportees' => array_filter(explode("\n", $fiche['competences_apportees']), 'strlen'),
                     'recherchees' => array_filter(explode("\n", $fiche['competences_recherchees']), 'strlen'),
                 ];

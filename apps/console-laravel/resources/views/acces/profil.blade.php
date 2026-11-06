@@ -70,6 +70,28 @@
             <a href="{{ route('blocages.index') }}">Personnes bloquées</a>
             <a href="{{ route('relations.index') }}">Mes relations</a>
         </form>
+        @if ($fiche !== [])
+            <section aria-labelledby="experiences">
+                <h2 id="experiences">Mes expériences déclarées</h2>
+                @foreach ($fiche['experiences'] as $experience)
+                    <details @if (old('experience_formulaire') === $experience['reference']) open @endif>
+                        <summary>{{ $experience['titre'] }}</summary>
+                        @include('acces.experience-profil', ['experience' => $experience])
+                        <form method="post" action="{{ route('compte.profil.experiences.retirer', $experience['reference']) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button class="button" type="submit">Retirer l’expérience</button>
+                        </form>
+                    </details>
+                @endforeach
+                @if (count($fiche['experiences']) < 10)
+                    <details @if (old('experience_formulaire') === 'nouvelle') open @endif>
+                        <summary>Ajouter une expérience</summary>
+                        @include('acces.experience-profil', ['experience' => null])
+                    </details>
+                @endif
+            </section>
+        @endif
     </section>
 </main>
 </body>

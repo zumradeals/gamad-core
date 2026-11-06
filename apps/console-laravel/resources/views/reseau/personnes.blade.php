@@ -59,6 +59,16 @@
                 @if ($profil['bio'])<p>{{ $profil['bio'] }}</p>@endif
                 @if ($profil['apportees'])<p><strong>Peut apporter</strong> {{ implode(', ', $profil['apportees']) }}</p>@endif
                 @if ($profil['recherchees'])<p><strong>Veut apprendre</strong> {{ implode(', ', $profil['recherchees']) }}</p>@endif
+                @if (($fiche ?? false) && $profil['experiences'] !== [])
+                    <section aria-labelledby="experiences-declarees">
+                        <h2 id="experiences-declarees">Expériences déclarées</h2>
+                        @foreach ($profil['experiences'] as $experience)
+                            <h3>{{ $experience['titre'] }}</h3>
+                            <p>{{ $typesExperience[$experience['type']] }} @if ($experience['periode'] !== '') · {{ $experience['periode'] }} @endif</p>
+                            @if ($experience['description'] !== '')<p class="texte-reseau">{{ $experience['description'] }}</p>@endif
+                        @endforeach
+                    </section>
+                @endif
                 @if (($fiche ?? false) && $profil['peut_bloquer'])
                     <form method="post" class="formulaire-reseau" action="{{ route('relations.demander', $profil['reference_publique']) }}">
                         @csrf

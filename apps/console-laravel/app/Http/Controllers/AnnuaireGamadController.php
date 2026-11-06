@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Application\Comptes\AnnuaireGamad;
+use App\Application\Comptes\ExperiencesProfilGamad;
 use App\Application\Reseau\ReferentielBesoinsGamad;
 use App\Support\Normalizer;
 use Illuminate\Http\Request;
@@ -52,6 +53,7 @@ final class AnnuaireGamadController
 
         return response()->view('reseau.personnes', [
             'profils' => [$profil], 'fiche' => true,
+            'typesExperience' => ExperiencesProfilGamad::TYPES,
             'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
             'domaines' => ReferentielBesoinsGamad::DOMAINES,
         ])
