@@ -44,8 +44,24 @@ final class ResoudreCompteReseauCore
                 ->where('identite_inscrite.provisoire', 0)
                 ->first(['reseau_comptes_identites.user_id', 'reseau_comptes_identites.identite_reference']);
 
-            return $lien === null ? null
-                : CompteReseauUnifie::creer((string) $lien->user_id, $lien->identite_reference);
+            if ($lien === null) {
+                return null;
+            }
+
+            // L'inscription est immuable : seul le journal de cycle dit si
+            // l'identité est encore utilisable. Absence d'événement = refus.
+            $dernierCycle = DB::table('evenement_cycle_identite')
+                ->where('identite_reference', $identite)
+                ->whereNotIn('evenement_type', ['RATTACHEMENT_PRODUIT', 'RETRAIT_PRODUIT'])
+                ->orderByDesc('date_effet')
+                ->orderByDesc('id')
+                ->value('etat_apres');
+
+            if (! in_array($dernierCycle, ['ACTIVE', 'VERIFIEE'], true)) {
+                return null;
+            }
+
+            return CompteReseauUnifie::creer((string) $lien->user_id, $lien->identite_reference);
         } catch (Throwable) {
             return null;
         }
