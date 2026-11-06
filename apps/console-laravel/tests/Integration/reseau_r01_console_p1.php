@@ -100,9 +100,9 @@ $verifier($essai('AUT-GAMAD-001') === 403, 'politique suspendue : refus');
 $commande = file_get_contents($application.'/app/Console/Commands/AccorderAccesConsoleCommand.php');
 $verifier(
     str_contains($commande, "core:console:accorder-acces-administratif")
-        && str_contains($commande, "'sujet_reference' => $acteur")
+        && str_contains($commande, "'sujet_reference' => \$acteur")
         && str_contains($commande, "'action_reference' => self::ACTION")
-        && str_contains($commande, "'attendu' => 'REFUSÉ'")
+        && str_contains($commande, "'attendu' => 'REFUSE'")
         && str_contains($commande, "->simulerVersion(")
         && str_contains($commande, "->activerVersion("),
     'admission administrative explicite, cible unique et simulation avant activation',

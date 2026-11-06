@@ -74,6 +74,8 @@ Le Core porte les responsabilités communes : identité, authentification, autor
 
 Chaque satellite conserve son compte produit local, ses données métier détaillées, ses transactions, ses abonnements, ses quotas, ses interfaces et ses règles économiques.
 
+GAMAD Réseau est une fonctionnalité intégrée de GAMAD. Ses comptes, données métier des comptes, authentifications et autorisations relèvent exclusivement du Core, conformément à la [passation GAMAD unifié](docs/handoffs/GAMAD-UNIFIE-VISION-ET-REPRISE-2026-11-06.md).
+
 Le Core peut utiliser des signaux autorisés pour une finalité explicite. Il ne devient pas une base universelle regroupant tous les dossiers métier.
 
 ## 7. Matching
