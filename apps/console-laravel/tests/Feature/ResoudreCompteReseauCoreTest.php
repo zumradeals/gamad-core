@@ -32,3 +32,41 @@ it('ne cree jamais de liaison lors de la resolution', function () {
 
     expect(DB::table('reseau_comptes_identites')->count())->toBe(0);
 });
+
+it('refuse une identite sans journal de cycle', function () {
+    expect(ResoudreCompteReseauCore::identiteActive('PER-ABSENT'))->toBeFalse();
+});
+
+it('accepte un cycle actif et refuse une revocation posterieure', function () {
+    \Illuminate\Support\Facades\Schema::create('evenement_cycle_identite', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $table->id();
+        $table->string('identite_reference');
+        $table->string('evenement_type');
+        $table->string('etat_apres');
+        $table->string('date_effet');
+    });
+
+    DB::table('evenement_cycle_identite')->insert([
+        'identite_reference' => 'PER-001',
+        'evenement_type' => 'ACTIVATION',
+        'etat_apres' => 'ACTIVE',
+        'date_effet' => now()->subDays(2)->toIso8601String(),
+    ]);
+    expect(ResoudreCompteReseauCore::identiteActive('PER-001'))->toBeTrue();
+
+    DB::table('evenement_cycle_identite')->insert([
+        'identite_reference' => 'PER-001',
+        'evenement_type' => 'REVOCATION',
+        'etat_apres' => 'REVOQUEE',
+        'date_effet' => now()->subDay()->toIso8601String(),
+    ]);
+    expect(ResoudreCompteReseauCore::identiteActive('PER-001'))->toBeFalse();
+
+    DB::table('evenement_cycle_identite')->insert([
+        'identite_reference' => 'PER-001',
+        'evenement_type' => 'ACTIVATION',
+        'etat_apres' => 'ACTIVE',
+        'date_effet' => now()->addDay()->toIso8601String(),
+    ]);
+    expect(ResoudreCompteReseauCore::identiteActive('PER-001'))->toBeFalse();
+});
