@@ -77,6 +77,27 @@
                     <details @if (old('experience_formulaire') === $experience['reference']) open @endif>
                         <summary>{{ $experience['titre'] }}</summary>
                         @include('acces.experience-profil', ['experience' => $experience])
+                        @if ($realisations !== [])
+                            <form method="post" action="{{ route('compte.profil.experiences.preuve.lier', $experience['reference']) }}">
+                                @csrf
+                                @method('PUT')
+                                <label for="preuve-{{ $experience['reference'] }}">Réalisation personnelle à joindre</label>
+                                <select class="input" id="preuve-{{ $experience['reference'] }}" name="publication" required>
+                                    <option value="">Choisir une réalisation</option>
+                                    @foreach ($realisations as $realisation)
+                                        <option value="{{ $realisation['reference'] }}" @selected($experience['preuve'] === $realisation['reference'])>{{ \Illuminate\Support\Str::limit($realisation['contenu'], 100) }}</option>
+                                    @endforeach
+                                </select>
+                                <button class="button" type="submit">Joindre la réalisation</button>
+                            </form>
+                        @endif
+                        @if ($experience['preuve_liee'])
+                            <form method="post" action="{{ route('compte.profil.experiences.preuve.retirer', $experience['reference']) }}">
+                                @csrf
+                                @method('DELETE')
+                                <button class="button" type="submit">Retirer la réalisation jointe</button>
+                            </form>
+                        @endif
                         <form method="post" action="{{ route('compte.profil.experiences.retirer', $experience['reference']) }}">
                             @csrf
                             @method('DELETE')

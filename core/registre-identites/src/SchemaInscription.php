@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 28;
+    public const VERSION = 29;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -25,6 +25,7 @@ final class SchemaInscription
         'details_annuaire_gamad',
         'domaine_annuaire_gamad',
         'experience_profil_gamad',
+        'preuve_experience_profil_gamad',
         'publication_gamad',
         'favori_publication_gamad',
         'classement_besoin_gamad',
@@ -157,6 +158,13 @@ final class SchemaInscription
 
         self::migrerPublications($pdo);
         $pdo->exec('CREATE INDEX IF NOT EXISTS publication_gamad_fil ON publication_gamad(cree_le, reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS preuve_experience_profil_gamad (
+                experience_reference TEXT PRIMARY KEY REFERENCES experience_profil_gamad(reference) ON DELETE CASCADE,
+                publication_reference TEXT NOT NULL REFERENCES publication_gamad(reference) ON DELETE CASCADE
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS favori_publication_gamad (

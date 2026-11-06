@@ -16,7 +16,7 @@ use Illuminate\Validation\Rule;
 
 final class ProfilCompteGamadController
 {
-    public function montrer(Request $request, LireCompteGamad $lecture, AnnuaireGamad $annuaire): Response
+    public function montrer(Request $request, LireCompteGamad $lecture, AnnuaireGamad $annuaire, ExperiencesProfilGamad $experiences): Response
     {
         $compte = $lecture->executer((string) $request->attributes->get('gamad_entite'));
         abort_if($compte === null, 403);
@@ -28,6 +28,7 @@ final class ProfilCompteGamadController
             'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
             'domaines' => ReferentielBesoinsGamad::DOMAINES,
             'typesExperience' => ExperiencesProfilGamad::TYPES,
+            'realisations' => $experiences->realisations($compte['identite_reference']),
         ])
             ->header('Cache-Control', 'no-store');
     }
@@ -76,6 +77,21 @@ final class ProfilCompteGamadController
     public function retirerExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse
     {
         $experiences->retirer((string) $request->attributes->get('gamad_entite'), $reference);
+
+        return redirect()->route('compte.profil');
+    }
+
+    public function lierPreuveExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse
+    {
+        $donnees = $request->validate(['publication' => ['required', 'regex:/^[a-f0-9]{24}$/D']]);
+        $experiences->lierPreuve((string) $request->attributes->get('gamad_entite'), $reference, $donnees['publication']);
+
+        return redirect()->route('compte.profil');
+    }
+
+    public function retirerPreuveExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse
+    {
+        $experiences->retirerPreuve((string) $request->attributes->get('gamad_entite'), $reference);
 
         return redirect()->route('compte.profil');
     }

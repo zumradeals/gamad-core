@@ -29,7 +29,7 @@ final class AnnuaireGamad
 
         return $fiche === false ? [] : $fiche + [
             'domaines' => $this->domaines($registre, $identite),
-            'experiences' => ExperiencesProfilGamad::lister($registre, $identite),
+            'experiences' => ExperiencesProfilGamad::lister($registre, $identite, gestion: true),
         ];
     }
 
@@ -75,7 +75,7 @@ final class AnnuaireGamad
                     'introduction' => $fiche['introduction'],
                     'territoire' => $fiche['territoire'],
                     'domaines' => $this->domaines($registre, $fiche['identite_reference']),
-                    'experiences' => $referencePublique === null ? [] : ExperiencesProfilGamad::lister($registre, $fiche['identite_reference']),
+                    'experiences' => $referencePublique === null ? [] : ExperiencesProfilGamad::lister($registre, $fiche['identite_reference'], $membre !== null),
                     'apportees' => array_filter(explode("\n", $fiche['competences_apportees']), 'strlen'),
                     'recherchees' => array_filter(explode("\n", $fiche['competences_recherchees']), 'strlen'),
                 ];

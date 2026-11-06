@@ -66,6 +66,9 @@
                             <h3>{{ $experience['titre'] }}</h3>
                             <p>{{ $typesExperience[$experience['type']] }} @if ($experience['periode'] !== '') · {{ $experience['periode'] }} @endif</p>
                             @if ($experience['description'] !== '')<p class="texte-reseau">{{ $experience['description'] }}</p>@endif
+                            @if ($experience['preuve'])
+                                <p><a href="{{ route('publications.show', $experience['preuve']) }}">Voir la réalisation jointe</a></p>
+                            @endif
                         @endforeach
                     </section>
                 @endif

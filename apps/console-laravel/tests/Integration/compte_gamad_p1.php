@@ -435,6 +435,19 @@ $verifier(
         && str_contains($requete('GET', '/fil', cookies: $cookies)['html'], $uriOffre),
     'le fil et la fiche prennent en charge souhait d’apprendre et offre d’aide avec leur audience',
 );
+$realisationPreuve = $requete('POST', '/fil', [
+    'type' => 'personal_work', 'visibilite' => 'members', 'contenu' => 'Réalisation jointe à mon expérience.',
+], cookies: $cookies);
+$uriRealisationPreuve = parse_url($realisationPreuve['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$uriPreuveExperience = $uriExperience.'/preuve';
+$verifier(
+    $realisationPreuve['statut'] === 302
+        && $requete('PUT', $uriPreuveExperience, ['publication' => basename($uriOffre)], cookies: $cookies)['statut'] === 404
+        && $requete('PUT', $uriPreuveExperience, ['publication' => basename($uriRealisationPreuve)], cookies: $cookies)['statut'] === 302
+        && !str_contains($requete('GET', $uriFiche)['html'], $uriRealisationPreuve)
+        && str_contains($requete('GET', $uriFiche, cookies: $cookies)['html'], $uriRealisationPreuve),
+    'la preuve est une réalisation personnelle et suit sa propre audience dans le profil',
+);
 $visiteurCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Visiteur']);
 $membreCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Merci pour ce partage.'], cookies: $cookies);
 $ficheCommentee = $requete('GET', $uriPublication);
@@ -720,7 +733,11 @@ $verifier(
     'seule la réponse acceptée ouvre une conversation privée et les notifications sont contextualisées',
 );
 $verifier(
-    $requete('DELETE', $uriExperience, cookies: $secondCookies)['statut'] === 404
+    $requete('PUT', $uriPreuveExperience, ['publication' => basename($uriRealisationPreuve)], cookies: $secondCookies)['statut'] === 404
+        && $requete('DELETE', $uriPreuveExperience, cookies: $secondCookies)['statut'] === 404
+        && $requete('DELETE', $uriPreuveExperience, cookies: $premierCookies)['statut'] === 302
+        && !str_contains($requete('GET', $uriFiche, cookies: $secondCookies)['html'], $uriRealisationPreuve)
+        && $requete('DELETE', $uriExperience, cookies: $secondCookies)['statut'] === 404
         && $requete('DELETE', $uriExperience, cookies: $premierCookies)['statut'] === 302
         && !str_contains($requete('GET', $uriFiche)['html'], 'Installation solaire déclarée'),
     'seul le propriétaire peut retirer une expérience',

@@ -691,6 +691,10 @@ Route::middleware('gamad.session:reseau')->group(function (): void {
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.modifier');
     Route::delete('/mon-profil/experiences/{reference}', [ProfilCompteGamadController::class, 'retirerExperience'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.retirer');
+    Route::put('/mon-profil/experiences/{reference}/preuve', [ProfilCompteGamadController::class, 'lierPreuveExperience'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.preuve.lier');
+    Route::delete('/mon-profil/experiences/{reference}/preuve', [ProfilCompteGamadController::class, 'retirerPreuveExperience'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.preuve.retirer');
     Route::patch('/mon-profil', [ProfilCompteGamadController::class, 'modifier'])
         ->middleware('throttle:20,1,profil-')->name('compte.profil.modifier');
 });
