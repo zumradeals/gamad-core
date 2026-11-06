@@ -34,14 +34,34 @@
                     <form method="post" action="{{ route('publications.commenter', $publication['reference']) }}" class="formulaire-reseau">
                         @csrf
                         <label for="contenu">Votre commentaire</label>
-                        <textarea name="contenu" id="contenu" maxlength="500" rows="3" required>{{ old('contenu') }}</textarea>
+                        <textarea name="contenu" id="contenu" maxlength="500" rows="3" required>{{ old('parent') === null ? old('contenu') : '' }}</textarea>
                         <button class="bouton accent" type="submit">Commenter</button>
                     </form>
                 @endif
                 @forelse ($commentaires as $commentaire)
-                    <article>
-                        <strong>{{ $commentaire['auteur'] }}</strong><p class="texte-reseau">{{ $commentaire['contenu'] }}</p>
-                        @if ($peut_commenter)@include('reseau.signalement', ['cibleCommentaire' => $commentaire['reference']])@endif
+                    <article id="commentaire-{{ $commentaire['reference'] }}">
+                        @include('reseau.commentaire', ['ligne' => $commentaire])
+                        @if ($peut_commenter && $commentaire['retire_le'] === null)
+                            <details @if (old('parent') === $commentaire['reference']) open @endif>
+                                <summary>Répondre</summary>
+                                <form method="post" action="{{ route('publications.commenter', $publication['reference']) }}" class="formulaire-reseau">
+                                    @csrf
+                                    <input type="hidden" name="parent" value="{{ $commentaire['reference'] }}">
+                                    <label for="reponse-{{ $commentaire['reference'] }}">Votre réponse</label>
+                                    <textarea name="contenu" id="reponse-{{ $commentaire['reference'] }}" maxlength="500" rows="3" required>{{ old('parent') === $commentaire['reference'] ? old('contenu') : '' }}</textarea>
+                                    <button class="bouton accent" type="submit">Envoyer la réponse</button>
+                                </form>
+                            </details>
+                        @endif
+                        @isset ($reponses[$commentaire['reference']])
+                            <ul aria-label="Réponses au commentaire">
+                                @foreach ($reponses[$commentaire['reference']] as $reponse)
+                                    <li id="commentaire-{{ $reponse['reference'] }}">
+                                        @include('reseau.commentaire', ['ligne' => $reponse])
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endisset
                     </article>
                 @empty
                     <p>Aucun commentaire.</p>

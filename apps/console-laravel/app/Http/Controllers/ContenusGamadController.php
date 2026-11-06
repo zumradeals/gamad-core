@@ -41,7 +41,9 @@ final class ContenusGamadController
         $fiche = $contenus->publication($reference, $request->session()->get('gamad_session'));
         abort_if($fiche === null, 404);
 
-        $fiche['commentaires'] = array_filter($fiche['commentaires'], static fn (array $commentaire): bool => $commentaire['parent_reference'] === null && $commentaire['retire_le'] === null);
+        $racines = array_filter($fiche['commentaires'], static fn (array $commentaire): bool => $commentaire['parent_reference'] === null);
+        $fiche['reponses'] = collect($fiche['commentaires'])->whereNotNull('parent_reference')->groupBy('parent_reference');
+        $fiche['commentaires'] = $racines;
 
         return response()->view('reseau.contenus', $fiche + ['types' => ContenusGamad::TYPES + [ContenusGamad::TYPE_BESOIN => 'J’ai besoin'], 'motifs' => ModerationGamad::MOTIFS])
             ->header('Cache-Control', 'private, no-store');

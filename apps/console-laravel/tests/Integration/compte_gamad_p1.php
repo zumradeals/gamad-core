@@ -528,6 +528,7 @@ $verifier(
 $retraitTiers = $requete('DELETE', $uriModificationCommentaire, cookies: $secondCookies);
 $retraitAuteur = $requete('DELETE', $uriModificationCommentaire, cookies: $premierCookies);
 $filApresRetrait = $requete('GET', $uriCommentaires);
+$ficheApresRetrait = $requete('GET', $uriPublication, cookies: $secondCookies);
 $parReference = array_column($filApresRetrait['corps'], null, 'reference');
 $texteRetire = $registreIdentites->prepare('SELECT contenu FROM commentaire_gamad WHERE reference = ?');
 $texteRetire->execute([$parentCommentaire]);
@@ -537,6 +538,10 @@ $verifier(
     $retraitTiers['statut'] === 404 && $retraitAuteur['statut'] === 204
         && isset($parReference[$parentCommentaire]['retire_le'])
         && $parReference[$parentCommentaire]['contenu'] === null
+        && $ficheApresRetrait['statut'] === 200
+        && preg_match('/<article id="commentaire-'.$parentCommentaire.'">.*?Commentaire retiré\..*?<ul[^>]*>.*?Une réponse au commentaire\..*?<\/article>/s', $ficheApresRetrait['html']) === 1
+        && !str_contains($ficheApresRetrait['html'], 'Commentaire corrigé.')
+        && !str_contains($ficheApresRetrait['html'], 'name="parent" value="'.$parentCommentaire.'"')
         && $contenuRetire === 'Commentaire retiré.'
         && ($parReference[$reponsesCommentaire[0]['reference']]['contenu'] ?? null) === 'Une réponse au commentaire.'
         && $requete('PATCH', $uriModificationCommentaire, ['contenu' => 'Rétablir.'], cookies: $premierCookies)['statut'] === 404

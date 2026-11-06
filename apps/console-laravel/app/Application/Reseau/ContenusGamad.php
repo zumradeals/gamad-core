@@ -67,7 +67,10 @@ final class ContenusGamad
                    SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'commentaire'
                    AND (m.cible_reference = c.reference OR m.cible_reference = r.parent_reference)
                )
-             ORDER BY c.cree_le DESC, c.reference DESC"
+             ORDER BY COALESCE(parent.cree_le, c.cree_le) DESC,
+                      COALESCE(r.parent_reference, c.reference) DESC,
+                      CASE WHEN r.parent_reference IS NULL THEN 0 ELSE 1 END,
+                      c.cree_le, c.reference"
         );
         $requete->execute([$reference]);
 
