@@ -1638,3 +1638,49 @@ textarea:focus-visible {
         transition-duration: .01ms !important;
     }
 }
+
+.verification-grid,
+.verification-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.verification-fields {
+    margin-block: 14px;
+}
+
+.verification-grid .input,
+.verification-grid .select {
+    width: 100%;
+    min-width: 0;
+}
+
+.auth-shell.auth-shell--verification {
+    width: min(100%, 560px);
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.auth-shell--verification .auth-form-panel {
+    padding: clamp(22px, 5vw, 54px);
+}
+
+.verification-resend {
+    border-top: 1px solid var(--gamad-line);
+    margin-top: 24px;
+    padding-top: 24px;
+}
+
+@media (max-width: 1100px) {
+    .verification-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .verification-fields {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+}

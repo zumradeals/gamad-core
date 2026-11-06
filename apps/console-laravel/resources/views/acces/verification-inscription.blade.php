@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ asset('css/gamad-core.css') }}">
 </head>
 <body class="auth-page">
-<main class="auth-shell">
+<main class="auth-shell auth-shell--verification">
     <section class="auth-form-panel">
         <div class="auth-form">
             <h1>Vérifier mon adresse e-mail</h1>
@@ -21,7 +21,7 @@
                 </div>
                 <button class="button button--primary" type="submit">Vérifier mon adresse</button>
             </form>
-            <form action="{{ route('inscription.renvoyer') }}" method="post">
+            <form class="verification-resend" action="{{ route('inscription.renvoyer') }}" method="post">
                 @csrf
                 <div class="field">
                     <label for="destination">Adresse e-mail utilisée à l’inscription</label>

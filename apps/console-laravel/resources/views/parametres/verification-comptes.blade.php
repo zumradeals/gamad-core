@@ -51,8 +51,8 @@
 <form method="POST" action="{{ route('console.parametres.verification.update') }}" style="margin-top:20px">
     @csrf
 
-    <div class="dashboard-grid">
-        <section class="card span-6">
+    <div class="verification-grid">
+        <section class="card">
             <div class="card__header">
                 <div>
                     <p class="eyebrow">Canal 1</p>
@@ -68,46 +68,46 @@
                 <input type="hidden" name="email_driver" value="smtp">
 
                 <label class="field-label" for="email_host">Serveur SMTP</label>
-                <input class="field-input" id="email_host" name="email_host" value="{{ old('email_host', $email['host'] ?? '') }}" placeholder="smtp.votre-fournisseur.com">
+                <input class="input" id="email_host" name="email_host" value="{{ old('email_host', $email['host'] ?? '') }}" placeholder="smtp.votre-fournisseur.com">
 
-                <div class="form-grid" style="margin-top:14px">
+                <div class="verification-fields">
                     <div>
                         <label class="field-label" for="email_port">Port</label>
-                        <input class="field-input" type="number" id="email_port" name="email_port" value="{{ old('email_port', $email['port'] ?? 587) }}" min="1" max="65535">
+                        <input class="input" type="number" id="email_port" name="email_port" value="{{ old('email_port', $email['port'] ?? 587) }}" min="1" max="65535">
                     </div>
                     <div>
                         <label class="field-label" for="email_scheme">Sécurité</label>
-                        <select class="field-input" id="email_scheme" name="email_scheme">
+                        <select class="select" id="email_scheme" name="email_scheme">
                             <option value="smtp" @selected(old('email_scheme', $email['scheme'] ?? 'smtp') === 'smtp')>SMTP avec chiffrement automatique (recommandé)</option>
                             <option value="smtps" @selected(old('email_scheme', $email['scheme'] ?? 'smtp') === 'smtps')>SMTPS direct</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="form-grid" style="margin-top:14px">
+                <div class="verification-fields">
                     <div>
                         <label class="field-label" for="email_username">Utilisateur SMTP</label>
-                        <input class="field-input" id="email_username" name="email_username" autocomplete="off" value="{{ old('email_username', $email['username'] ?? '') }}">
+                        <input class="input" id="email_username" name="email_username" autocomplete="off" value="{{ old('email_username', $email['username'] ?? '') }}">
                     </div>
                     <div>
                         <label class="field-label" for="email_password">Mot de passe SMTP</label>
-                        <input class="field-input" type="password" id="email_password" name="email_password" autocomplete="new-password" placeholder="{{ ($email['password_present'] ?? false) ? 'Déjà enregistré — laisser vide pour conserver' : 'Mot de passe ou clé SMTP' }}">
+                        <input class="input" type="password" id="email_password" name="email_password" autocomplete="new-password" placeholder="{{ ($email['password_present'] ?? false) ? 'Déjà enregistré — laisser vide pour conserver' : 'Mot de passe ou clé SMTP' }}">
                     </div>
                 </div>
 
-                <div class="form-grid" style="margin-top:14px">
+                <div class="verification-fields">
                     <div>
                         <label class="field-label" for="email_from_address">Adresse d’envoi</label>
-                        <input class="field-input" type="email" id="email_from_address" name="email_from_address" value="{{ old('email_from_address', $email['from_address'] ?? '') }}" placeholder="no-reply@dgafrique.com">
+                        <input class="input" type="email" id="email_from_address" name="email_from_address" value="{{ old('email_from_address', $email['from_address'] ?? '') }}" placeholder="no-reply@dgafrique.com">
                     </div>
                     <div>
                         <label class="field-label" for="email_from_name">Nom d’envoi</label>
-                        <input class="field-input" id="email_from_name" name="email_from_name" value="{{ old('email_from_name', $email['from_name'] ?? 'GAMAD') }}">
+                        <input class="input" id="email_from_name" name="email_from_name" value="{{ old('email_from_name', $email['from_name'] ?? 'GAMAD') }}">
                     </div>
                 </div>
 
                 <label class="field-label" for="email_subject" style="margin-top:14px">Objet du message</label>
-                <input class="field-input" id="email_subject" name="email_subject" value="{{ old('email_subject', $email['subject'] ?? 'Votre code de vérification GAMAD') }}">
+                <input class="input" id="email_subject" name="email_subject" value="{{ old('email_subject', $email['subject'] ?? 'Votre code de vérification GAMAD') }}">
 
                 <p class="field-help" style="margin-top:12px">
                     Le mot de passe SMTP est chiffré avec la clé de l’application et n’est jamais affiché après enregistrement.
@@ -115,7 +115,7 @@
             </div>
         </section>
 
-        <section class="card span-6">
+        <section class="card">
             <div class="card__header">
                 <div>
                     <p class="eyebrow">Canal 2</p>
@@ -129,19 +129,19 @@
                 </label>
 
                 <label class="field-label" for="sms_relay_url">Adresse HTTPS du relais SMS</label>
-                <input class="field-input" type="url" id="sms_relay_url" name="sms_relay_url" value="{{ old('sms_relay_url', $sms['relay_url'] ?? '') }}" placeholder="https://sms.votre-service.com/send">
+                <input class="input" type="url" id="sms_relay_url" name="sms_relay_url" value="{{ old('sms_relay_url', $sms['relay_url'] ?? '') }}" placeholder="https://sms.votre-service.com/send">
 
                 <label class="field-label" for="sms_relay_token" style="margin-top:14px">Jeton du relais</label>
-                <input class="field-input" type="password" id="sms_relay_token" name="sms_relay_token" autocomplete="new-password" placeholder="{{ ($sms['token_present'] ?? false) ? 'Déjà enregistré — laisser vide pour conserver' : 'Jeton secret du relais SMS' }}">
+                <input class="input" type="password" id="sms_relay_token" name="sms_relay_token" autocomplete="new-password" placeholder="{{ ($sms['token_present'] ?? false) ? 'Déjà enregistré — laisser vide pour conserver' : 'Jeton secret du relais SMS' }}">
 
-                <div class="form-grid" style="margin-top:14px">
+                <div class="verification-fields">
                     <div>
                         <label class="field-label" for="sms_sender">Nom expéditeur</label>
-                        <input class="field-input" id="sms_sender" name="sms_sender" value="{{ old('sms_sender', $sms['sender'] ?? 'GAMAD') }}" maxlength="32">
+                        <input class="input" id="sms_sender" name="sms_sender" value="{{ old('sms_sender', $sms['sender'] ?? 'GAMAD') }}" maxlength="32">
                     </div>
                     <div>
                         <label class="field-label" for="sms_timeout">Délai maximum (secondes)</label>
-                        <input class="field-input" type="number" id="sms_timeout" name="sms_timeout" value="{{ old('sms_timeout', $sms['timeout'] ?? 8) }}" min="2" max="15">
+                        <input class="input" type="number" id="sms_timeout" name="sms_timeout" value="{{ old('sms_timeout', $sms['timeout'] ?? 8) }}" min="2" max="15">
                     </div>
                 </div>
 
@@ -157,26 +157,26 @@
     </div>
 </form>
 
-<div class="dashboard-grid" style="margin-top:20px">
-    <section class="card span-6">
+<div class="verification-grid" style="margin-top:20px">
+    <section class="card">
         <div class="card__header"><h2 class="card__title">Tester l’email</h2></div>
         <div class="card__body">
             <form method="POST" action="{{ route('console.parametres.verification.test-email') }}">
                 @csrf
                 <label class="field-label" for="destination_email">Adresse qui recevra le test</label>
-                <input class="field-input" type="email" id="destination_email" name="destination_email" placeholder="vous@exemple.com" required>
+                <input class="input" type="email" id="destination_email" name="destination_email" placeholder="vous@exemple.com" required>
                 <button class="button" type="submit" style="margin-top:14px">Envoyer un email de test</button>
             </form>
         </div>
     </section>
 
-    <section class="card span-6">
+    <section class="card">
         <div class="card__header"><h2 class="card__title">Tester le SMS</h2></div>
         <div class="card__body">
             <form method="POST" action="{{ route('console.parametres.verification.test-sms') }}">
                 @csrf
                 <label class="field-label" for="destination_sms">Numéro international</label>
-                <input class="field-input" id="destination_sms" name="destination_sms" placeholder="+2250700000000" required>
+                <input class="input" id="destination_sms" name="destination_sms" placeholder="+2250700000000" required>
                 <button class="button" type="submit" style="margin-top:14px">Envoyer un SMS de test</button>
             </form>
         </div>
