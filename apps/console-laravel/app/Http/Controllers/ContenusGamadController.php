@@ -123,8 +123,8 @@ final class ContenusGamadController
     public function referentielsBesoins(): JsonResponse
     {
         return response()->json([
-            'domaines' => ReferentielBesoinsGamad::DOMAINES,
-            'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
+            'domaines' => ReferentielBesoinsGamad::libelles('domaines'),
+            'territoires' => ReferentielBesoinsGamad::libelles('territoires'),
         ]);
     }
 

@@ -10,7 +10,7 @@ Périmètre comparé le 6 novembre 2026. Le [dépôt Réseau source](https://git
 
 Les réglages du module Réseau relèvent de la console GAMAD Core. Le point d’entrée est `/console/reseau/parametres`, derrière les habilitations de la console. Les réglages transversaux renvoient à leurs capacités Core existantes. Les préférences du membre restent dans son espace personnel.
 
-La page de départ présente la continuité, les politiques et les référentiels en lecture seule. L’édition des référentiels, l’identité visuelle, les modes d’ouverture, les textes publics et les réglages de courriel restent à reprendre dans le Core, avec les habilitations et la traçabilité propres à chaque action.
+La console donne accès à la continuité et aux politiques. Le renommage des domaines et des localités conserve les codes existants et inscrit chaque changement avec son auteur dans le registre Core. L’ajout et la désactivation d’entrées, l’identité visuelle, les modes d’ouverture, les textes publics et les réglages de courriel restent à reprendre dans le Core, avec les habilitations et la traçabilité propres à chaque action.
 
 ## Règles à récupérer
 

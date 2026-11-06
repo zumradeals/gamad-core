@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 31;
+    public const VERSION = 32;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -29,6 +29,7 @@ final class SchemaInscription
         'attestation_realisation_gamad',
         'suspension_attestation_gamad',
         'evenement_moderation_attestation_gamad',
+        'renommage_reference_reseau_gamad',
         'publication_gamad',
         'favori_publication_gamad',
         'classement_besoin_gamad',
@@ -324,6 +325,19 @@ final class SchemaInscription
                 PRIMARY KEY (attestation_reference, revision)
             )
         SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS renommage_reference_reseau_gamad (
+                id $id,
+                liste TEXT NOT NULL CHECK (liste IN ('domaines', 'territoires')),
+                code TEXT NOT NULL,
+                libelle VARCHAR(120) NOT NULL,
+                acteur_reference TEXT NOT NULL,
+                cree_le TEXT NOT NULL
+            )
+        SQL);
+        $pdo->exec('CREATE INDEX IF NOT EXISTS renommage_reference_reseau_liste_code
+            ON renommage_reference_reseau_gamad (liste, code, id)');
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS message_reseau_gamad (

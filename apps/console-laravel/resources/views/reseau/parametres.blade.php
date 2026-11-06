@@ -19,18 +19,24 @@
 
     <section class="card" aria-labelledby="listes-reference">
         <h2 id="listes-reference">Listes de référence</h2>
-        <p>Consultation des listes utilisées par les besoins et l’annuaire.</p>
-        <details>
-            <summary>Domaines ({{ count($domaines) }})</summary>
-            <ul>
-                @foreach ($domaines as $libelle)<li>{{ $libelle }}</li>@endforeach
-            </ul>
-        </details>
-        <details>
-            <summary>Localités ({{ count($territoires) }})</summary>
-            <ul>
-                @foreach ($territoires as $libelle)<li>{{ $libelle }}</li>@endforeach
-            </ul>
-        </details>
+        <p>Le renommage conserve les codes utilisés par les profils et les besoins.</p>
+        @if (session('reference_renommee'))<p role="status">Libellé enregistré.</p>@endif
+        @error('libelle')<p role="alert">{{ $message }}</p>@enderror
+        @foreach (['domaines' => ['Domaines', $domaines], 'territoires' => ['Localités', $territoires]] as $liste => [$titre, $entrees])
+            <details>
+                <summary>{{ $titre }} ({{ count($entrees) }})</summary>
+                <ul>
+                    @foreach ($entrees as $code => $libelle)
+                        <li>
+                            <form method="post" action="{{ route('reseau.parametres.renommer', [$liste, $code]) }}">
+                                @csrf
+                                <label>{{ $code }} <input name="libelle" value="{{ $libelle }}" required maxlength="120"></label>
+                                <button type="submit">Renommer</button>
+                            </form>
+                        </li>
+                    @endforeach
+                </ul>
+            </details>
+        @endforeach
     </section>
 @endsection
