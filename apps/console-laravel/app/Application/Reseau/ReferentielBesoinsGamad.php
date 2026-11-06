@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application\Reseau;
 
+use Gamad\RegistreIdentites\Magasin;
+
 /** Référentiels initiaux repris des seeders DomainSeeder et TerritorySeeder du Réseau (D-068, D-069). */
 final class ReferentielBesoinsGamad
 {
@@ -75,4 +77,40 @@ final class ReferentielBesoinsGamad
         'ci-man' => 'Man',
         'ci-seguela' => 'Séguéla',
     ];
+
+    public static function libelles(string $liste): array
+    {
+        $libelles = self::initiaux($liste);
+        $requete = Magasin::ouvrir()->prepare(
+            'SELECT code, libelle FROM renommage_reference_reseau_gamad
+             WHERE liste = ? AND id IN (
+                 SELECT MAX(id) FROM renommage_reference_reseau_gamad WHERE liste = ? GROUP BY code
+             )'
+        );
+        $requete->execute([$liste, $liste]);
+
+        return array_replace($libelles, $requete->fetchAll(\PDO::FETCH_KEY_PAIR));
+    }
+
+    public static function renommer(string $liste, string $code, string $libelle, string $acteur): void
+    {
+        if (!isset(self::initiaux($liste)[$code])) {
+            throw new \InvalidArgumentException('Référence inconnue.');
+        }
+
+        $requete = Magasin::ouvrir()->prepare(
+            'INSERT INTO renommage_reference_reseau_gamad (liste, code, libelle, acteur_reference, cree_le)
+             VALUES (?, ?, ?, ?, ?)'
+        );
+        $requete->execute([$liste, $code, $libelle, $acteur, gmdate('c')]);
+    }
+
+    private static function initiaux(string $liste): array
+    {
+        return match ($liste) {
+            'domaines' => self::DOMAINES,
+            'territoires' => self::TERRITOIRES,
+            default => throw new \InvalidArgumentException('Liste inconnue.'),
+        };
+    }
 }

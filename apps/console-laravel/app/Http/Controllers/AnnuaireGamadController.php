@@ -40,8 +40,8 @@ final class AnnuaireGamadController
         return response()->view('reseau.personnes', [
             'profils' => $profils,
             'filtres' => $saisie,
-            'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
-            'domaines' => ReferentielBesoinsGamad::DOMAINES,
+            'territoires' => ReferentielBesoinsGamad::libelles('territoires'),
+            'domaines' => ReferentielBesoinsGamad::libelles('domaines'),
         ])
             ->header('Cache-Control', 'private, no-store');
     }
@@ -54,8 +54,8 @@ final class AnnuaireGamadController
         return response()->view('reseau.personnes', [
             'profils' => [$profil], 'fiche' => true,
             'typesExperience' => ExperiencesProfilGamad::TYPES,
-            'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
-            'domaines' => ReferentielBesoinsGamad::DOMAINES,
+            'territoires' => ReferentielBesoinsGamad::libelles('territoires'),
+            'domaines' => ReferentielBesoinsGamad::libelles('domaines'),
         ])
             ->header('Cache-Control', 'private, no-store');
     }

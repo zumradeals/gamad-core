@@ -1230,6 +1230,28 @@ $verifier(
         && !str_contains($administrationReseau['html'], $messageContact['message']),
     'le tableau Réseau est réservé à la console, relie les trois files et ne présente que les compteurs',
 );
+$uriParametresReseau = '/console/reseau/parametres';
+$parametresReseau = $requete('GET', $uriParametresReseau, cookies: $admin['cookies']);
+$verifier(
+    str_contains($administrationReseau['html'], $uriParametresReseau)
+        && $requete('GET', $uriParametresReseau)['statut'] === 302
+        && $requete('GET', $uriParametresReseau, cookies: $secondCookies)['statut'] === 403
+        && $parametresReseau['statut'] === 200
+        && str_contains($parametresReseau['html'], '/continuite')
+        && str_contains($parametresReseau['html'], 'Artisanat'),
+    'les paramètres du Réseau sont accessibles depuis la console aux seules personnes habilitées',
+);
+$uriRenommage = $uriParametresReseau.'/domaines/artisanat';
+$nouveauLibelle = ['libelle' => 'Métiers de l’artisanat'];
+$verifier(
+    $requete('POST', $uriRenommage, $nouveauLibelle, cookies: $secondCookies)['statut'] === 403
+        && $requete('POST', $uriRenommage, $nouveauLibelle, cookies: $admin['cookies'])['statut'] === 302
+        && $requete('POST', $uriParametresReseau.'/domaines/inconnu', $nouveauLibelle, cookies: $admin['cookies'])['statut'] === 404
+        && (int) $registreIdentites->query("SELECT COUNT(*) FROM renommage_reference_reseau_gamad
+            WHERE liste = 'domaines' AND code = 'artisanat' AND acteur_reference <> ''")->fetchColumn() === 1
+        && str_contains($requete('GET', '/personnes?domaine=artisanat')['html'], 'Métiers de l’artisanat'),
+    'le Core journalise le renommage autorisé et l’annuaire conserve le code de filtre',
+);
 $contactConsole = $requete('GET', $uriContact, cookies: $admin['cookies']);
 $verifier(
     $contactPublic['statut'] === 200 && $contactRobot['statut'] === 302 && $contactEnvoye['statut'] === 302

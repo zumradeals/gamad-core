@@ -198,6 +198,9 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
 
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     Route::get('/console/reseau', [AdministrationReseauGamadController::class, 'index'])->name('reseau.administration');
+    Route::get('/console/reseau/parametres', [AdministrationReseauGamadController::class, 'parametres'])->name('reseau.parametres');
+    Route::post('/console/reseau/parametres/{liste}/{code}', [AdministrationReseauGamadController::class, 'renommerReference'])
+        ->whereIn('liste', ['domaines', 'territoires'])->name('reseau.parametres.renommer');
     Route::get('/console/contact', [ContactGamadController::class, 'liste'])->name('reseau.contact.console');
     Route::get('/console/contact/{reference}', [ContactGamadController::class, 'ouvrir'])
         ->where('reference', '[a-f0-9]{24}')->name('reseau.contact.ouvrir');

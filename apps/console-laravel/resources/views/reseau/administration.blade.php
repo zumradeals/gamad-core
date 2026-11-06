@@ -6,6 +6,7 @@
     <header class="page-header">
         <h1 class="page-title">Administration du Réseau</h1>
         <p class="page-subtitle">Consulter les demandes en attente et accéder aux écrans de traitement.</p>
+        <a class="button" href="{{ route('reseau.parametres') }}">Paramètres du Réseau</a>
     </header>
 
     @foreach ($rubriques as $rubrique)

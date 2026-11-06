@@ -25,8 +25,8 @@ final class ProfilCompteGamadController
             'compte' => $compte,
             'bioMax' => ModifierProfilGamad::BIO_MAX,
             'fiche' => $annuaire->fichePersonnelle($compte['identite_reference']),
-            'territoires' => ReferentielBesoinsGamad::TERRITOIRES,
-            'domaines' => ReferentielBesoinsGamad::DOMAINES,
+            'territoires' => ReferentielBesoinsGamad::libelles('territoires'),
+            'domaines' => ReferentielBesoinsGamad::libelles('domaines'),
             'typesExperience' => ExperiencesProfilGamad::TYPES,
             'realisations' => $experiences->realisations($compte['identite_reference']),
         ])
