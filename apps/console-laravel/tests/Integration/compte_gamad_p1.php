@@ -595,6 +595,15 @@ $verifier(
         && $requete('POST', $uriPublication.'/signalements/'.$parentCommentaire, ['motif' => 'spam'], cookies: $secondCookies)['statut'] === 404,
     'seul l’auteur retire son commentaire, le texte est effacé et les réponses restent consultables',
 );
+$besoinDepuisFil = $requete('POST', '/fil', [
+    'type' => 'need', 'visibilite' => 'members', 'contenu' => 'Besoin publié depuis le fil',
+], cookies: $premierCookies);
+$verifier(
+    $besoinDepuisFil['statut'] === 302
+        && str_contains($requete('GET', '/fil?type=need', cookies: $secondCookies)['html'], 'Besoin publié depuis le fil')
+        && !str_contains($requete('GET', '/besoins?etat=tous')['html'], 'Besoin publié depuis le fil'),
+    'le formulaire du fil publie un besoin personnel visible seulement des membres',
+);
 $besoinPrive = $requete('POST', '/besoins', [
     'visibilite' => 'members', 'contenu' => 'Besoin réservé aux membres.',
     'domaine' => 'artisanat', 'territoire' => 'ci-bouake',

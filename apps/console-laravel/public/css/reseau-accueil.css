@@ -86,3 +86,8 @@ summary { cursor: pointer; font-weight: 700; }
     .reseau-recherche label { grid-column: 1 / -1; }
     .reseau-acces-intro, .reseau-portrait { display: none; }
 }
+
+.reseau-fil .conteneur { width: min(1440px, calc(100% - 2rem)); }
+.reseau-fil main .texte-reseau { max-width: 70ch; overflow-wrap: anywhere; }
+.navigation-fil { display: flex; flex-wrap: wrap; gap: 1rem; margin-block-end: 1.5rem; }
+.navigation-fil [aria-current="page"] { font-weight: 700; text-decoration-thickness: .15em; }
