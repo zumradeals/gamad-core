@@ -7,66 +7,61 @@
     <title>GAMAD — Le réseau social d’action</title>
     <link rel="stylesheet" href="{{ asset('css/reseau-accueil.css') }}">
 </head>
-<body class="reseau-public">
-    @include('reseau.navigation-publique')
-
-    <main>
-        <section class="conteneur hero" aria-labelledby="accroche">
-            <div>
+<body class="reseau-public gamad-home">
+@include('reseau.navigation-publique')
+<main>
+    <section class="gamad-hero" aria-labelledby="accroche">
+        <div class="conteneur gamad-hero-inner">
+            <div class="gamad-hero-copy">
                 <p class="etiquette">Le réseau social d’action</p>
-                <h1 id="accroche">Des personnes qui inspirent. <span>De nouvelles possibilités.</span></h1>
-                <p>Sur GAMAD, découvrez des personnes, apprenez de leurs expériences, créez des liens et avancez à votre rythme.</p>
+                <h1 id="accroche">Des personnes, des compétences et des opportunités concrètes <span>pour agir ensemble.</span></h1>
+                <p>GAMAD est le réseau d’action des personnes, des entreprises et des initiatives qui créent de la valeur en Afrique.</p>
                 <div class="reseau-actions">
-                    <a class="bouton accent" href="{{ route('personnes.index') }}">Découvrir les personnes</a>
-                    <a class="bouton" href="{{ route('inscription.formulaire') }}">Créer un compte</a>
+                    <a class="bouton accent" href="{{ route('inscription.formulaire') }}">Créer un compte gratuitement</a>
+                    <a class="bouton" href="#comment">Découvrir GAMAD</a>
                 </div>
+                <p class="gamad-hero-values">✓ Échanger &nbsp; ✓ Collaborer &nbsp; ✓ Apprendre &nbsp; ✓ Réaliser</p>
             </div>
-            <figure>
-                <img src="{{ asset('images/gamad-accueil-hero.webp') }}" alt="Quatre personnes échangent autour d’un ordinateur." width="510" height="280" fetchpriority="high">
-                <figcaption>
-                    <strong>Une rencontre peut ouvrir de nouvelles possibilités.</strong>
-                    <span>Un savoir partagé, un besoin exprimé, une relation qui commence.</span>
-                </figcaption>
-            </figure>
+            <figure><img src="{{ asset('images/gamad-accueil-hero.webp') }}" alt="Des personnes collaborent autour d’un ordinateur" width="510" height="280" fetchpriority="high"></figure>
+        </div>
+    </section>
+    <section class="gamad-pillars" aria-label="Découvrir les univers GAMAD">
+        <div class="conteneur gamad-pillars-grid">
+            <a href="{{ route('personnes.index') }}"><span class="gamad-pillar-icon">♙</span><strong>Personnes</strong><small>Valorisez votre savoir-faire et vos expériences.</small></a>
+            <div><span class="gamad-pillar-icon">▦</span><strong>Entreprises</strong><small>Découvrez des talents, partenaires et solutions.</small></div>
+            <div><span class="gamad-pillar-icon">◎</span><strong>Opportunités</strong><small>Des projets, missions et collaborations.</small></div>
+            <div><span class="gamad-pillar-icon">✧</span><strong>ZUMRA</strong><small>Des initiatives à impact pour nos communautés.</small></div>
+        </div>
+    </section>
+    <section class="conteneur gamad-how" id="comment" aria-labelledby="comment-titre">
+        <div class="gamad-how-visual"><img src="{{ asset('images/gamad-accueil-hero.webp') }}" alt="GAMAD relie les personnes et les initiatives" loading="lazy"></div>
+        <div>
+            <h2 id="comment-titre">Comment ça marche ?</h2>
+            <p>Un réseau simple, utile et ouvert à tous.</p>
+            <ol class="gamad-steps">
+                <li><span>1</span><div><strong>Créez votre compte</strong><p>Rejoignez la communauté GAMAD en quelques minutes.</p></div></li>
+                <li><span>2</span><div><strong>Présentez vos compétences</strong><p>Dites ce que vous pouvez apporter et ce que vous souhaitez apprendre.</p></div></li>
+                <li><span>3</span><div><strong>Échangez et agissez</strong><p>Entrez en relation, collaborez et donnez vie à vos projets.</p></div></li>
+            </ol>
+        </div>
+    </section>
+    @php
+        $stats = collect(config('gamad_public.statistics', []))->filter(fn ($stat) => !empty($stat['visible']) && isset($stat['value']) && is_numeric($stat['value']));
+    @endphp
+    @if ($stats->isNotEmpty())
+        <section class="conteneur gamad-statistics" aria-label="GAMAD en chiffres">
+            @foreach ($stats as $stat)
+                <div><strong>{{ number_format((float) $stat['value'], 0, ',', ' ') }}</strong><span>{{ $stat['label'] }}</span></div>
+            @endforeach
         </section>
-
-        <section class="reseau-recherche">
-            <form class="conteneur" method="get" action="{{ route('personnes.index') }}">
-                <label for="recherche-personnes">Que souhaitez-vous découvrir ?</label>
-                <input id="recherche-personnes" name="q" type="search" maxlength="100" placeholder="Un nom ou une compétence">
-                <button class="bouton accent" type="submit">Rechercher</button>
-            </form>
-        </section>
-
-        <section class="conteneur section" id="comment" aria-labelledby="comment-titre">
-            <h2 id="comment-titre">Découvrez, connectez-vous, grandissez</h2>
-            <p>Un parcours simple, sans obligation. Chacun avance à son rythme.</p>
-            <div class="etapes">
-                <article><h3>Explorer</h3><p>Découvrez des personnes, des idées et des expériences inspirantes.</p></article>
-                <article><h3>Se connecter</h3><p>Suivez les profils qui vous intéressent et échangez en toute confiance.</p></article>
-                <article><h3>Grandir</h3><p>Apprenez, partagez et agissez quand vous le souhaitez.</p></article>
-            </div>
-        </section>
-
-        <section class="conteneur section" id="confiance" aria-labelledby="confiance-titre">
-            <div class="confiance">
-                <div>
-                    <h2 id="confiance-titre">Des relations qui se construisent avec confiance.</h2>
-                    <p>Vous choisissez ce que vous partagez, qui vous suivez et les personnes avec qui vous échangez.</p>
-                </div>
-                <ul>
-                    <li><strong>Votre parcours vous appartient.</strong> Partagez les compétences et expériences que vous souhaitez rendre visibles.</li>
-                    <li><strong>Vous choisissez votre visibilité.</strong> Gérez la visibilité de votre fiche dans l’annuaire.</li>
-                    <li><strong>L’action reste un choix.</strong> Découvrez les communautés et participez à votre rythme.</li>
-                </ul>
-            </div>
-        </section>
-        <section class="conteneur section reseau-invitation">
-            <h2>Votre place existe déjà sur GAMAD.</h2>
-            <p>Commencez par découvrir. La suite viendra naturellement.</p>
-            <a class="bouton accent" href="{{ route('inscription.formulaire') }}">Créer un compte</a>
-        </section>
-    </main>
-    @include('reseau.pied-public')
+    @endif
+    <section class="conteneur gamad-join">
+        <div><h2>Rejoignez une communauté qui construit <span>des solutions africaines.</span></h2>
+            <p>Partagez vos idées, vos compétences et vos initiatives avec des personnes qui avancent comme vous.</p></div>
+        <div class="gamad-join-actions"><a class="bouton accent" href="{{ route('inscription.formulaire') }}">Créer mon compte maintenant</a>
+            <a href="#comment">En savoir plus sur GAMAD</a></div>
+    </section>
+</main>
+@include('reseau.pied-public')
 </body>
 </html>
