@@ -705,6 +705,7 @@ try {
         'nom' => 'Entreprise de qualification', 'pays' => 'CI', 'immatriculation' => 'CI TEST 001', 'secteur' => 'Rénovation',
     ], cookies: $premierCookies, fichiersRequete: [
         'rccm' => new \Illuminate\Http\UploadedFile($cheminRccm, 'rccm.pdf', 'application/pdf', null, true),
+        'dfe' => new \Illuminate\Http\UploadedFile($cheminRccm, 'dfe.pdf', 'application/pdf', null, true),
     ]);
 } finally {
     unlink($cheminRccm);
@@ -720,7 +721,34 @@ $verifier(
         && str_starts_with($requete('GET', $uriRevue.'/justificatif', cookies: $admin['cookies'])['html'], '%PDF-'),
     'le justificatif est réservé à la console et une entreprise non vérifiée ne publie pas',
 );
-$verificationEntreprise = $requete('POST', $uriRevue, ['action' => 'verified'], cookies: $admin['cookies']);
+$dfePrivee = $requete('GET', $uriRevue.'/justificatif/dfe', cookies: $secondCookies);
+$dfeConsole = $requete('GET', $uriRevue.'/justificatif/dfe', cookies: $admin['cookies']);
+$decisionRefus = $requete('POST', $uriRevue, ['action' => 'declined', 'revision' => 0], cookies: $admin['cookies']);
+$dossierRefuse = $requete('GET', $uriEntreprise, cookies: $premierCookies);
+$cheminCorrection = tempnam(sys_get_temp_dir(), 'gamad-rccm-correction-');
+$correction = "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n% Correction\n%%EOF";
+file_put_contents($cheminCorrection, $correction);
+try {
+    $fichiersCorrection = [
+        'rccm' => new \Illuminate\Http\UploadedFile($cheminCorrection, 'rccm.pdf', 'application/pdf', null, true),
+        'idu' => new \Illuminate\Http\UploadedFile($cheminCorrection, 'idu.pdf', 'application/pdf', null, true),
+    ];
+    $renvoiTiers = $requete('POST', $uriEntreprise.'/resoumettre', cookies: $secondCookies, fichiersRequete: $fichiersCorrection);
+    $renvoiProprietaire = $requete('POST', $uriEntreprise.'/resoumettre', cookies: $premierCookies, fichiersRequete: $fichiersCorrection);
+} finally {
+    unlink($cheminCorrection);
+}
+$verifier(
+    $dfePrivee['statut'] === 403 && str_starts_with($dfeConsole['html'], '%PDF-')
+        && $decisionRefus['statut'] === 302 && str_contains($dossierRefuse['html'], 'Soumettre à nouveau')
+        && $renvoiTiers['statut'] === 404 && $renvoiProprietaire['statut'] === 302
+        && $requete('GET', $uriRevue.'/justificatif', cookies: $admin['cookies'])['html'] === $correction
+        && $requete('GET', $uriRevue.'/justificatif/idu', cookies: $admin['cookies'])['html'] === $correction,
+    'les pièces complémentaires sont privées et seul le propriétaire peut corriger un dossier refusé',
+);
+$decisionPerimee = $requete('POST', $uriRevue, ['action' => 'verified', 'revision' => 0], cookies: $admin['cookies']);
+$verifier($decisionPerimee['statut'] === 409, 'une décision sur un ancien dossier est refusée après correction');
+$verificationEntreprise = $requete('POST', $uriRevue, ['action' => 'verified', 'revision' => 1], cookies: $admin['cookies']);
 $publicationOffre = $requete('POST', $uriEntreprise.'/opportunites', $offre, cookies: $premierCookies);
 $uriOffre = parse_url($publicationOffre['location'] ?? '', PHP_URL_PATH) ?: '/opportunite-manquante';
 $candidature = ['message' => 'Candidature privée de qualification.'];
@@ -738,9 +766,32 @@ $verifier(
         && str_contains($requete('GET', $uriOffre)['html'], 'Clôturée'),
     'la clôture maintient la fiche visible et ferme les candidatures',
 );
-$requete('POST', $uriRevue, ['action' => 'suspended'], cookies: $admin['cookies']);
+$requete('POST', $uriRevue, ['action' => 'suspended', 'revision' => 1], cookies: $admin['cookies']);
 $verifier($requete('GET', $uriEntreprise)['statut'] === 404 && $requete('GET', $uriOffre)['statut'] === 404,
     'la suspension Core de l’entreprise retire ses opportunités publiques');
+$messageContact = ['nom' => 'Contact de test', 'email' => 'contact-test@example.test', 'sujet' => 'account',
+    'message' => 'Message privé destiné à la console Core.'];
+$contactPublic = $requete('GET', '/contact');
+$contactRobot = $requete('POST', '/contact', $messageContact + ['website' => 'robot']);
+$contactEnvoye = $requete('POST', '/contact', $messageContact);
+$contactStocke = $registreIdentites->query('SELECT reference FROM contact_reseau_gamad');
+$referencesContact = $contactStocke->fetchAll(PDO::FETCH_COLUMN);
+$uriContact = '/console/contact/'.($referencesContact[0] ?? 'manquant');
+$contactInterdit = $requete('GET', $uriContact, cookies: $secondCookies);
+$contactConsole = $requete('GET', $uriContact, cookies: $admin['cookies']);
+$verifier(
+    $contactPublic['statut'] === 200 && $contactRobot['statut'] === 302 && $contactEnvoye['statut'] === 302
+        && count($referencesContact) === 1 && $contactInterdit['statut'] === 403
+        && $contactConsole['statut'] === 200 && str_contains($contactConsole['html'], $messageContact['message']),
+    'le contact est public, le piège écarte le robot et seule la console lit le message',
+);
+$requete('POST', $uriContact, ['action' => 'traiter'], cookies: $admin['cookies']);
+$statutContact = $registreIdentites->query('SELECT etat FROM contact_reseau_gamad')->fetchColumn();
+$requete('POST', $uriContact, ['action' => 'supprimer'], cookies: $admin['cookies']);
+$verifier(
+    $statutContact === 'handled' && $requete('GET', $uriContact, cookies: $admin['cookies'])['statut'] === 404,
+    'la console traite puis supprime le message',
+);
 $cycle = $registreIdentites->prepare(
     'INSERT INTO evenement_cycle_identite
      (identite_reference, evenement_type, etat_avant, etat_apres, source, preuve_reference,

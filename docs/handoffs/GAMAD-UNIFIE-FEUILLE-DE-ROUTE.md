@@ -51,3 +51,19 @@ Le porteur peut créer, réordonner et modifier les étapes de son projet. Les c
 Les responsables d’une ZUMRA peuvent choisir une adhésion ouverte ou sur validation. Le mode sur validation demeure le défaut des ZUMRA existantes. Un membre peut proposer son aide depuis une vitrine publiée, puis retirer sa demande en attente. Seul le porteur peut accepter ou refuser. L’acceptation ouvre le dossier au nouveau collaborateur.
 
 La parité des espaces métier reste à compléter avec les écrans source, dont le suivi des contributions et leurs notifications, les dossiers d’entreprise complémentaires et les modes avancés de gestion des opportunités.
+
+## Écrans publics et premiers parcours
+
+| Périmètre | Parcours présents dans Core | Écarts avec la source |
+| --- | --- | --- |
+| Entrée publique et compte | Accueil, aide, Contact, inscription, vérification et renvoi du code, connexion | Accueil et aide repris en partie, textes publics selon leur état d’adoption, parcours de récupération source |
+| Profil et contenus | Profil personnel, annuaire et fiche, fil, publication textuelle, commentaire simple | Photo, territoires et domaines, Carrefour Besoins, écrans Agir, types et pièces jointes restants, édition et réponses aux commentaires |
+| Interactions | Relations, blocage, conversation entre membres en relation, notifications internes et modération des contenus | Mon espace complet, enregistrements, attestations et écrans spécialisés de modération |
+
+Les écrans présents sont servis par les routes du Core. La présence d’une route ou une CI verte ne vaut pas parité avec l’écran et les parcours du dépôt source.
+
+## Pièces du dossier d’entreprise
+
+Le dossier accepte le RCCM et, en complément, la DFE et l’IDU. La console seule télécharge les justificatifs. Après un refus, le propriétaire peut soumettre à nouveau les pièces corrigées. Une ancienne décision de console ne peut pas s’appliquer à la version resoumise.
+
+Le formulaire Contact est accessible sans compte. Les messages sont consultables et traitables depuis la console Core. Les lectures et les actions sont journalisées sans recopier le contenu ni l’adresse e-mail. La purge des messages de plus de douze mois s’exécute lors de l’envoi ou de la consultation.

@@ -15,7 +15,7 @@
     </header>
     <main class="conteneur section">
         <h1>Aide</h1>
-        <p>Des réponses courtes aux questions les plus fréquentes.</p>
+        <p>Des réponses courtes aux questions les plus fréquentes. <a href="{{ route('reseau.contact') }}">Écrivez-nous</a>.</p>
 
         <section aria-labelledby="aide-compte" class="section">
             <h2 id="aide-compte">Mon compte</h2>

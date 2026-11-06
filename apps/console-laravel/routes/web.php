@@ -7,6 +7,7 @@ use App\Http\Controllers\AccesController;
 use App\Http\Controllers\AnnuaireGamadController;
 use App\Http\Controllers\BlocagesGamadController;
 use App\Http\Controllers\ContenusGamadController;
+use App\Http\Controllers\ContactGamadController;
 use App\Http\Controllers\CompteReseauCoreController;
 use App\Http\Controllers\ProfilCompteGamadController;
 use App\Http\Controllers\ContinuiteConsoleController;
@@ -42,6 +43,10 @@ use Illuminate\Support\Facades\Route;
  */
 Route::view('/', 'reseau.accueil')->name('reseau.accueil');
 Route::view('/aide', 'reseau.aide')->name('reseau.aide');
+Route::get('/contact', [ContactGamadController::class, 'formulaire'])
+    ->middleware('gamad.https')->name('reseau.contact');
+Route::post('/contact', [ContactGamadController::class, 'envoyer'])
+    ->middleware(['gamad.https', 'throttle:15,1,contact-'])->name('reseau.contact.envoyer');
 Route::get('/personnes', [AnnuaireGamadController::class, 'index'])->name('personnes.index');
 Route::get('/personnes/{reference}', [AnnuaireGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('personnes.show');
@@ -64,6 +69,8 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
     Route::get('/entreprises/creer', [EntreprisesGamadController::class, 'formulaire'])->name('entreprises.create');
     Route::post('/entreprises', [EntreprisesGamadController::class, 'soumettre'])
         ->middleware('throttle:5,1,entreprise-')->name('entreprises.store');
+    Route::post('/entreprises/{reference}/resoumettre', [EntreprisesGamadController::class, 'resoumettre'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:5,1,entreprise-')->name('entreprises.resoumettre');
     Route::post('/entreprises/{reference}/opportunites', [EntreprisesGamadController::class, 'publier'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:10,1,opportunite-')->name('opportunites.store');
     Route::post('/opportunites/{reference}/candidatures', [EntreprisesGamadController::class, 'candidater'])
@@ -123,9 +130,14 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
 });
 
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
+    Route::get('/console/contact', [ContactGamadController::class, 'liste'])->name('reseau.contact.console');
+    Route::get('/console/contact/{reference}', [ContactGamadController::class, 'ouvrir'])
+        ->where('reference', '[a-f0-9]{24}')->name('reseau.contact.ouvrir');
+    Route::post('/console/contact/{reference}', [ContactGamadController::class, 'traiter'])
+        ->where('reference', '[a-f0-9]{24}')->name('reseau.contact.traiter');
     Route::get('/console/entreprises', [EntreprisesGamadController::class, 'revue'])->name('entreprises.revue');
-    Route::get('/console/entreprises/{reference}/justificatif', [EntreprisesGamadController::class, 'justificatif'])
-        ->where('reference', '[a-f0-9]{24}')->name('entreprises.justificatif');
+    Route::get('/console/entreprises/{reference}/justificatif/{type?}', [EntreprisesGamadController::class, 'justificatif'])
+        ->where(['reference' => '[a-f0-9]{24}', 'type' => 'rccm|dfe|idu'])->name('entreprises.justificatif');
     Route::post('/console/entreprises/{reference}', [EntreprisesGamadController::class, 'decider'])
         ->where('reference', '[a-f0-9]{24}')->name('entreprises.decider');
     Route::get('/console/moderation-reseau', [InteractionsGamadController::class, 'moderation'])->name('reseau.moderation');

@@ -46,6 +46,7 @@
                 Modération du Réseau
             </a>
             <a class="nav__link" href="{{ route('entreprises.revue') }}">Vérification des entreprises</a>
+            <a class="nav__link" href="{{ route('reseau.contact.console') }}">Messages de contact</a>
 
             <span class="nav__label">Organisation de GAMAD</span>
             <a class="nav__link"

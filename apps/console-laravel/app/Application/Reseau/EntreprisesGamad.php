@@ -45,52 +45,107 @@ final class EntreprisesGamad
             'opportunites' => $requete->fetchAll()];
     }
 
-    public function soumettre(string $sujet, array $donnees, string $justificatif): string
+    public function soumettre(string $sujet, array $donnees, array $documents): string
     {
         $registre = Magasin::ouvrir();
         $this->exigerMembre($registre, $sujet);
         $reference = bin2hex(random_bytes(12));
-        $requete = $registre->prepare(
-            "INSERT INTO entreprise_gamad (reference, proprietaire_reference, nom, pays, immatriculation, secteur, justificatif, etat)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending') ON CONFLICT (pays, immatriculation) DO NOTHING"
-        );
-        $requete->execute([
-            $reference, $sujet, $donnees['nom'], strtoupper($donnees['pays']),
-            mb_strtoupper(preg_replace('/\s+/u', '', $donnees['immatriculation'])),
-            $donnees['secteur'], base64_encode($justificatif),
-        ]);
-        abort_if($requete->rowCount() === 0, 409, 'Cette immatriculation est déjà utilisée.');
+        $this->transaction($registre, function () use ($registre, $reference, $sujet, $donnees, $documents): void {
+            $requete = $registre->prepare(
+                "INSERT INTO entreprise_gamad (reference, proprietaire_reference, nom, pays, immatriculation, secteur, justificatif, etat)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'pending') ON CONFLICT (pays, immatriculation) DO NOTHING"
+            );
+            $requete->execute([
+                $reference, $sujet, $donnees['nom'], strtoupper($donnees['pays']),
+                mb_strtoupper(preg_replace('/\s+/u', '', $donnees['immatriculation'])),
+                $donnees['secteur'], base64_encode($documents['rccm']),
+            ]);
+            abort_if($requete->rowCount() === 0, 409, 'Cette immatriculation est déjà utilisée.');
+            $this->enregistrerDocuments($registre, $reference, $documents);
+        });
 
         return $reference;
+    }
+
+    public function resoumettre(string $sujet, string $reference, array $documents): void
+    {
+        $registre = Magasin::ouvrir();
+        $this->exigerMembre($registre, $sujet);
+        $this->transaction($registre, function () use ($registre, $sujet, $reference, $documents): void {
+            $requete = $registre->prepare(
+                "UPDATE entreprise_gamad SET justificatif = ?, etat = 'pending', decision_par = NULL, decision_le = NULL
+                 WHERE reference = ? AND proprietaire_reference = ? AND etat = 'declined'"
+            );
+            $requete->execute([base64_encode($documents['rccm']), $reference, $sujet]);
+            abort_if($requete->rowCount() === 0, 404);
+            $registre->prepare(
+                'INSERT INTO revision_entreprise_gamad (entreprise_reference, revision) VALUES (?, 1)
+                 ON CONFLICT (entreprise_reference) DO UPDATE SET revision = revision_entreprise_gamad.revision + 1'
+            )->execute([$reference]);
+            $this->enregistrerDocuments($registre, $reference, $documents);
+        });
+    }
+
+    private function enregistrerDocuments(PDO $registre, string $reference, array $documents): void
+    {
+        $requete = $registre->prepare(
+            'INSERT INTO document_entreprise_gamad (entreprise_reference, type_document, contenu) VALUES (?, ?, ?)
+             ON CONFLICT (entreprise_reference, type_document) DO UPDATE SET contenu = excluded.contenu'
+        );
+        foreach (['dfe', 'idu'] as $type) {
+            if (isset($documents[$type])) {
+                $requete->execute([$reference, $type, base64_encode($documents[$type])]);
+            }
+        }
+    }
+
+    private function transaction(PDO $registre, callable $operation): void
+    {
+        $registre->beginTransaction();
+        try {
+            $operation();
+            $registre->commit();
+        } catch (\Throwable $exception) {
+            $registre->rollBack();
+            throw $exception;
+        }
     }
 
     public function revue(): array
     {
         return Magasin::ouvrir()->query(
-            "SELECT reference, nom, pays, immatriculation, secteur, etat FROM entreprise_gamad
+            "SELECT reference, nom, pays, immatriculation, secteur, etat,
+             CASE WHEN EXISTS (SELECT 1 FROM document_entreprise_gamad d WHERE d.entreprise_reference = e.reference AND d.type_document = 'dfe') THEN 1 ELSE 0 END AS dfe,
+             CASE WHEN EXISTS (SELECT 1 FROM document_entreprise_gamad d WHERE d.entreprise_reference = e.reference AND d.type_document = 'idu') THEN 1 ELSE 0 END AS idu,
+             COALESCE((SELECT revision FROM revision_entreprise_gamad r WHERE r.entreprise_reference = e.reference), 0) AS revision
+             FROM entreprise_gamad e
              WHERE etat IN ('pending', 'verified') ORDER BY nom LIMIT 100"
         )->fetchAll();
     }
 
-    public function justificatif(string $reference): string
+    public function justificatif(string $reference, string $type): string
     {
-        $requete = Magasin::ouvrir()->prepare('SELECT justificatif FROM entreprise_gamad WHERE reference = ?');
-        $requete->execute([$reference]);
+        $registre = Magasin::ouvrir();
+        $requete = $registre->prepare($type === 'rccm'
+            ? 'SELECT justificatif FROM entreprise_gamad WHERE reference = ?'
+            : 'SELECT contenu FROM document_entreprise_gamad WHERE entreprise_reference = ? AND type_document = ?');
+        $requete->execute($type === 'rccm' ? [$reference] : [$reference, $type]);
         $contenu = $requete->fetchColumn();
         abort_unless(is_string($contenu), 404);
 
         return base64_decode($contenu);
     }
 
-    public function decider(string $acteur, string $reference, string $action): void
+    public function decider(string $acteur, string $reference, string $action, int $revision): void
     {
         $registre = Magasin::ouvrir();
         $entreprise = $this->entreprise($registre, $reference);
         abort_if($entreprise === null || $entreprise['proprietaire_reference'] === $acteur, 404);
         $requete = $registre->prepare(
-            'UPDATE entreprise_gamad SET etat = ?, decision_par = ?, decision_le = ? WHERE reference = ? AND etat = ?'
+            'UPDATE entreprise_gamad SET etat = ?, decision_par = ?, decision_le = ? WHERE reference = ? AND etat = ?
+             AND COALESCE((SELECT revision FROM revision_entreprise_gamad WHERE entreprise_reference = entreprise_gamad.reference), 0) = CAST(? AS INTEGER)'
         );
-        $requete->execute([$action, $acteur, gmdate('c'), $reference, $action === 'suspended' ? 'verified' : 'pending']);
+        $requete->execute([$action, $acteur, gmdate('c'), $reference, $action === 'suspended' ? 'verified' : 'pending', $revision]);
         abort_if($requete->rowCount() === 0, 409);
     }
 

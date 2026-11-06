@@ -36,12 +36,39 @@ final class EntreprisesGamadController
             'pays' => ['required', 'regex:/^[A-Za-z]{2}$/D'],
             'immatriculation' => ['required', 'string', 'min:3', 'max:100'],
             'secteur' => ['required', 'string', 'min:2', 'max:120'],
-            'rccm' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            ...$this->reglesDocuments(),
         ]);
 
-        $reference = $service->soumettre($this->sujet($request), $donnees, $donnees['rccm']->get());
+        $reference = $service->soumettre($this->sujet($request), $donnees, $this->documents($donnees));
 
         return redirect()->route('entreprises.show', $reference);
+    }
+
+    public function resoumettre(Request $request, EntreprisesGamad $service, string $reference): RedirectResponse
+    {
+        $donnees = $request->validate($this->reglesDocuments());
+        $service->resoumettre($this->sujet($request), $reference, $this->documents($donnees));
+
+        return redirect()->route('entreprises.show', $reference);
+    }
+
+    private function reglesDocuments(): array
+    {
+        $fichier = ['file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'];
+
+        return ['rccm' => ['required', ...$fichier], 'dfe' => ['nullable', ...$fichier], 'idu' => ['nullable', ...$fichier]];
+    }
+
+    private function documents(array $donnees): array
+    {
+        $documents = [];
+        foreach (['rccm', 'dfe', 'idu'] as $type) {
+            if (isset($donnees[$type])) {
+                $documents[$type] = $donnees[$type]->get();
+            }
+        }
+
+        return $documents;
     }
 
     public function revue(EntreprisesGamad $service): Response
@@ -49,20 +76,20 @@ final class EntreprisesGamadController
         return $this->page('revue', ['entreprises' => $service->revue()]);
     }
 
-    public function justificatif(EntreprisesGamad $service, string $reference): Response
+    public function justificatif(EntreprisesGamad $service, string $reference, string $type = 'rccm'): Response
     {
-        return response($service->justificatif($reference), 200, [
+        return response($service->justificatif($reference, $type), 200, [
             'Cache-Control' => 'private, no-store',
             'Content-Type' => 'application/octet-stream',
-            'Content-Disposition' => 'attachment; filename="justificatif-rccm"',
+            'Content-Disposition' => 'attachment; filename="justificatif-'.$type.'"',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 
     public function decider(Request $request, EntreprisesGamad $service, string $reference): RedirectResponse
     {
-        $donnees = $request->validate(['action' => ['required', 'in:verified,declined,suspended']]);
-        $service->decider($this->sujet($request), $reference, $donnees['action']);
+        $donnees = $request->validate(['action' => ['required', 'in:verified,declined,suspended'], 'revision' => ['required', 'integer', 'min:0']]);
+        $service->decider($this->sujet($request), $reference, $donnees['action'], (int) $donnees['revision']);
 
         return redirect()->route('entreprises.revue');
     }
