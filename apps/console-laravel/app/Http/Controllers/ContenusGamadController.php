@@ -41,6 +41,8 @@ final class ContenusGamadController
         $fiche = $contenus->publication($reference, $request->session()->get('gamad_session'));
         abort_if($fiche === null, 404);
 
+        $fiche['commentaires'] = array_filter($fiche['commentaires'], static fn (array $commentaire): bool => $commentaire['parent_reference'] === null);
+
         return response()->view('reseau.contenus', $fiche + ['types' => ContenusGamad::TYPES + [ContenusGamad::TYPE_BESOIN => 'J’ai besoin'], 'motifs' => ModerationGamad::MOTIFS])
             ->header('Cache-Control', 'private, no-store');
     }
@@ -58,10 +60,21 @@ final class ContenusGamadController
         return redirect()->route('publications.show', $reference);
     }
 
+    public function commentaires(Request $request, ContenusGamad $contenus, string $reference): JsonResponse
+    {
+        $fiche = $contenus->publication($reference, $request->session()->get('gamad_session'));
+        abort_if($fiche === null, 404);
+
+        return response()->json($fiche['commentaires'])->header('Cache-Control', 'private, no-store');
+    }
+
     public function commenter(Request $request, ContenusGamad $contenus, string $reference): RedirectResponse
     {
-        $donnees = $request->validate(['contenu' => ['required', 'string', 'max:500']]);
-        abort_unless($contenus->commenter($this->sujet($request), $reference, $donnees['contenu']), 404);
+        $donnees = $request->validate([
+            'contenu' => ['required', 'string', 'max:500'],
+            'parent' => ['nullable', 'regex:/^[a-f0-9]{24}$/D'],
+        ]);
+        abort_unless($contenus->commenter($this->sujet($request), $reference, $donnees['contenu'], $donnees['parent'] ?? null), 404);
 
         return redirect()->route('publications.show', $reference);
     }

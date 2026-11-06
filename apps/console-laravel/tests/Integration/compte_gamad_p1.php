@@ -509,6 +509,22 @@ $verifier(
         && str_contains($requete('GET', $uriPublication)['html'], 'Commentaire corrigé.'),
     'seul l’auteur Core peut corriger son commentaire sur la publication correspondante',
 );
+$parentCommentaire = basename($uriModificationCommentaire);
+$uriCommentaires = $uriPublication.'/commentaires';
+$reponseCommentaire = $requete('POST', $uriCommentaires, [
+    'parent' => $parentCommentaire, 'contenu' => 'Une réponse au commentaire.',
+], cookies: $secondCookies);
+$commentairesPublics = $requete('GET', $uriCommentaires);
+$reponsesCommentaire = array_values(array_filter($commentairesPublics['corps'], static fn (array $ligne): bool => $ligne['parent_reference'] !== null));
+$verifier(
+    $reponseCommentaire['statut'] === 302 && $commentairesPublics['statut'] === 200
+        && ($reponsesCommentaire[0]['parent_reference'] ?? null) === $parentCommentaire
+        && ($reponsesCommentaire[0]['contenu'] ?? null) === 'Une réponse au commentaire.'
+        && $requete('POST', $uriCommentaires, ['parent' => $reponsesCommentaire[0]['reference'] ?? '', 'contenu' => 'Trop profond.'], cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', $uriPrivee.'/commentaires', ['parent' => $parentCommentaire, 'contenu' => 'Mauvais fil.'], cookies: $secondCookies)['statut'] === 404
+        && $requete('GET', $uriPrivee.'/commentaires')['statut'] === 404,
+    'les réponses restent dans leur discussion, sur un seul niveau et dans l’audience de la publication',
+);
 $besoinPrive = $requete('POST', '/besoins', [
     'visibilite' => 'members', 'contenu' => 'Besoin réservé aux membres.',
     'domaine' => 'artisanat', 'territoire' => 'ci-bouake',

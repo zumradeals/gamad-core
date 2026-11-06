@@ -57,13 +57,35 @@ final class ContenusGamad
         }
 
         $requete = $registre->prepare(
-            "SELECT c.* FROM commentaire_gamad c WHERE publication_reference = ? AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'commentaire' AND m.cible_reference = c.reference) ORDER BY cree_le DESC, reference DESC LIMIT 50"
+            "SELECT c.*, r.parent_reference, parent.auteur_reference AS auteur_parent
+             FROM commentaire_gamad c
+             LEFT JOIN reponse_commentaire_gamad r ON r.reponse_reference = c.reference
+             LEFT JOIN commentaire_gamad parent ON parent.reference = r.parent_reference
+             WHERE c.publication_reference = ?
+               AND NOT EXISTS (
+                   SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'commentaire'
+                   AND (m.cible_reference = c.reference OR m.cible_reference = r.parent_reference)
+               )
+             ORDER BY c.cree_le DESC, c.reference DESC"
         );
         $requete->execute([$reference]);
 
+        $commentaires = [];
+        foreach ($this->parcourirAffichables($requete, $registre, $exclus) as $commentaire) {
+            $parent = $commentaire['auteur_parent'];
+            if ($parent !== null && (isset($exclus[$parent]) || $this->membres->lire($parent, $registre) === null)) {
+                continue;
+            }
+            unset($commentaire['auteur_parent']);
+            $commentaires[] = $commentaire;
+            if (count($commentaires) === 50) {
+                break;
+            }
+        }
+
         return [
             'publication' => $publication,
-            'commentaires' => $this->affichables($requete->fetchAll(PDO::FETCH_ASSOC), $registre, $exclus),
+            'commentaires' => $commentaires,
             'peut_commenter' => $membre !== null,
         ];
     }
@@ -227,17 +249,43 @@ final class ContenusGamad
         });
     }
 
-    public function commenter(string $sujet, string $publication, string $contenu): bool
+    public function commenter(string $sujet, string $publication, string $contenu, ?string $parent = null): bool
     {
         $registre = Magasin::ouvrir();
+        $exclus = $this->blocages->exclus($registre, $sujet);
         if ($this->membres->lire($sujet, $registre) === null
-            || $this->lirePublication($registre, $publication, $sujet, $this->blocages->exclus($registre, $sujet)) === null) {
+            || $this->lirePublication($registre, $publication, $sujet, $exclus) === null) {
             return false;
         }
 
-        return $registre->prepare(
-            'INSERT INTO commentaire_gamad (reference, publication_reference, auteur_reference, contenu, cree_le) VALUES (?, ?, ?, ?, ?)'
-        )->execute([bin2hex(random_bytes(12)), $publication, $sujet, $this->texte($contenu), gmdate('c')]);
+        $reference = bin2hex(random_bytes(12));
+        $contenu = $this->texte($contenu);
+        return PaireGamad::verrouiller($registre, 'commentaire', $publication, function () use ($registre, $reference, $sujet, $publication, $contenu, $parent, $exclus): bool {
+            if ($parent !== null) {
+                $requete = $registre->prepare(
+                    "SELECT c.auteur_reference FROM commentaire_gamad c
+                     WHERE c.reference = ? AND c.publication_reference = ?
+                       AND NOT EXISTS (SELECT 1 FROM reponse_commentaire_gamad r WHERE r.reponse_reference = c.reference)
+                       AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'commentaire' AND m.cible_reference = c.reference)"
+                );
+                $requete->execute([$parent, $publication]);
+                $auteur = $requete->fetchColumn();
+                $requete->closeCursor();
+                if (!is_string($auteur) || isset($exclus[$auteur]) || $this->membres->lire($auteur, $registre) === null) {
+                    return false;
+                }
+            }
+
+            $registre->prepare(
+                'INSERT INTO commentaire_gamad (reference, publication_reference, auteur_reference, contenu, cree_le) VALUES (?, ?, ?, ?, ?)'
+            )->execute([$reference, $publication, $sujet, $contenu, gmdate('c')]);
+            if ($parent !== null) {
+                $registre->prepare('INSERT INTO reponse_commentaire_gamad (reponse_reference, parent_reference) VALUES (?, ?)')
+                    ->execute([$reference, $parent]);
+            }
+
+            return true;
+        });
     }
 
     public function modifierCommentaire(string $sujet, string $publication, string $commentaire, string $contenu): void

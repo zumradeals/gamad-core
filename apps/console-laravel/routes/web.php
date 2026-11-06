@@ -69,6 +69,8 @@ Route::get('/besoins', [ContenusGamadController::class, 'besoins'])->name('besoi
 Route::get('/besoins/referentiels', [ContenusGamadController::class, 'referentielsBesoins'])->name('besoins.referentiels');
 Route::get('/besoins/{reference}', [ContenusGamadController::class, 'besoin'])
     ->where('reference', '[a-f0-9]{24}')->name('besoins.show');
+Route::get('/publications/{reference}/commentaires', [ContenusGamadController::class, 'commentaires'])
+    ->where('reference', '[a-f0-9]{24}')->name('publications.commentaires.index');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
 Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): void {

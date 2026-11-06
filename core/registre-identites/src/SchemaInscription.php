@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 23;
+    public const VERSION = 24;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -31,6 +31,7 @@ final class SchemaInscription
         'proposition_aide_gamad',
         'message_aide_gamad',
         'commentaire_gamad',
+        'reponse_commentaire_gamad',
         'blocage_gamad',
         'relation_personnes_gamad',
         'message_reseau_gamad',
@@ -188,6 +189,14 @@ final class SchemaInscription
             )
         SQL);
         $pdo->exec('CREATE INDEX IF NOT EXISTS commentaire_gamad_publication ON commentaire_gamad(publication_reference, cree_le, reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS reponse_commentaire_gamad (
+                reponse_reference TEXT PRIMARY KEY REFERENCES commentaire_gamad(reference) ON DELETE CASCADE,
+                parent_reference TEXT NOT NULL REFERENCES commentaire_gamad(reference) ON DELETE CASCADE,
+                CHECK (reponse_reference <> parent_reference)
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS blocage_gamad (
