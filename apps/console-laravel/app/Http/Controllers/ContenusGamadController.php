@@ -158,14 +158,14 @@ final class ContenusGamadController
 
     public function propositionsAide(Request $request, PropositionsAideGamad $aide, string $reference): JsonResponse
     {
-        return response()->json($aide->lister($this->sujet($request), $reference))
+        return response()->json($aide->lister($this->sujet($request), $reference, $request->routeIs('publications.reponses.*')))
             ->header('Cache-Control', 'private, no-store');
     }
 
     public function proposerAide(Request $request, PropositionsAideGamad $aide, string $reference): JsonResponse
     {
         $donnees = $request->validate(['message' => ['nullable', 'string', 'max:280']]);
-        $proposition = $aide->proposer($this->sujet($request), $reference, $donnees['message'] ?? '');
+        $proposition = $aide->proposer($this->sujet($request), $reference, $donnees['message'] ?? '', $request->routeIs('publications.reponses.*'));
 
         return response()->json(['reference' => $proposition], 201)->header('Cache-Control', 'private, no-store');
     }
@@ -173,21 +173,21 @@ final class ContenusGamadController
     public function traiterAide(Request $request, PropositionsAideGamad $aide, string $reference, string $proposition): Response
     {
         $donnees = $request->validate(['action' => ['required', 'in:retirer,accepter,refuser']]);
-        $aide->traiter($this->sujet($request), $reference, $proposition, $donnees['action']);
+        $aide->traiter($this->sujet($request), $reference, $proposition, $donnees['action'], $request->routeIs('publications.reponses.*'));
 
         return response()->noContent();
     }
 
     public function conversationAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): JsonResponse
     {
-        return response()->json($conversation->lire($this->sujet($request), $reference, $proposition))
+        return response()->json($conversation->lire($this->sujet($request), $reference, $proposition, $request->routeIs('publications.reponses.*')))
             ->header('Cache-Control', 'private, no-store');
     }
 
     public function envoyerMessageAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): Response
     {
         $donnees = $request->validate(['texte' => ['required', 'string', 'max:1000']]);
-        $conversation->envoyer($this->sujet($request), $reference, $proposition, $donnees['texte']);
+        $conversation->envoyer($this->sujet($request), $reference, $proposition, $donnees['texte'], $request->routeIs('publications.reponses.*'));
 
         return response()->noContent();
     }

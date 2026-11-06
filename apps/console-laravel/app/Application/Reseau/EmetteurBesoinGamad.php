@@ -51,7 +51,7 @@ final class EmetteurBesoinGamad
         $jointures = self::JOINTURES;
         $requete = $registre->prepare(
             "SELECT p.auteur_reference, e.zumra_reference, e.projet_reference, z.fondateur_reference, pr.porteur_reference
-             FROM publication_gamad p {$jointures} WHERE p.reference = ? AND p.type = 'need'"
+             FROM publication_gamad p {$jointures} WHERE p.reference = ? AND p.type IN ('need', 'learning_wish', 'offer')"
         );
         $requete->execute([$besoin]);
         $publication = $requete->fetch();

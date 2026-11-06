@@ -37,11 +37,12 @@ final class NotificationsGamad
                OR (a.reference IS NOT NULL AND a.etat <> 'withdrawn')"
             : 'c.notification_reference IS NULL AND f.reference_publique IS NOT NULL';
         $requete = $registre->prepare(
-            "SELECT n.*, i.libelle AS nom, f.reference_publique, a.reference AS proposition_reference, a.besoin_reference
+            "SELECT n.*, i.libelle AS nom, f.reference_publique, a.reference AS proposition_reference, a.besoin_reference, p.type AS type_publication
              FROM notification_reseau_gamad n JOIN identite_inscrite i ON i.reference = n.auteur_reference
              LEFT JOIN fiche_annuaire_gamad f ON f.identite_reference = i.reference
              LEFT JOIN contexte_notification_aide_gamad c ON c.notification_reference = n.reference
              LEFT JOIN proposition_aide_gamad a ON a.reference = c.proposition_reference
+             LEFT JOIN publication_gamad p ON p.reference = a.besoin_reference
              WHERE n.destinataire_reference = ? AND ({$contexte})
              ORDER BY n.cree_le DESC, n.reference DESC LIMIT 100"
         );
@@ -56,6 +57,17 @@ final class NotificationsGamad
                         continue;
                     }
 
+                    if (in_array($notice['type_publication'], PropositionsAideGamad::TYPES_FIL, true)) {
+                        $notice['publication_reference'] = $notice['besoin_reference'];
+                        unset($notice['besoin_reference']);
+                        $notice['type'] = match ($notice['type']) {
+                            'demande' => 'reponse_proposee',
+                            'acceptation' => 'reponse_acceptee',
+                            'message' => 'message_reponse',
+                        };
+                        $resultat[] = $notice;
+                        continue;
+                    }
                     $notice['type'] = match ($notice['type']) {
                         'demande' => 'aide_proposee',
                         'acceptation' => 'aide_acceptee',

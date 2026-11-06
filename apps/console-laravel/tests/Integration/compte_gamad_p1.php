@@ -621,6 +621,31 @@ $verifier(
         && $requete('POST', $lectureNoticeAide, cookies: $secondCookies)['statut'] === 302,
     'les notifications d’aide sont privées, contextualisées et sans doublon après un retrait et une nouvelle proposition',
 );
+$uriReponsesSouhait = $uriSouhait.'/reponses';
+$uriReponsesOffre = $uriOffre.'/reponses';
+$accompagnement = $requete('POST', $uriReponsesSouhait, ['message' => 'Je peux vous accompagner.'], cookies: $secondCookies);
+$interet = $requete('POST', $uriReponsesOffre, [], cookies: $secondCookies);
+$uriAccompagnement = $uriReponsesSouhait.'/'.($accompagnement['corps']['reference'] ?? '');
+$uriInteret = $uriReponsesOffre.'/'.($interet['corps']['reference'] ?? '');
+$verifier(
+    $accompagnement['statut'] === 201 && $interet['statut'] === 201
+        && $requete('POST', $uriReponsesSouhait, [], cookies: $secondCookies)['statut'] === 409
+        && $requete('POST', $uriPublication.'/reponses', [], cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', '/besoins/'.basename($uriOffre).'/propositions', [], cookies: $secondCookies)['statut'] === 404
+        && $requete('PATCH', $uriAccompagnement, ['action' => 'accepter'], cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', $uriAccompagnement.'/messages', ['texte' => 'Trop tôt.'], cookies: $secondCookies)['statut'] === 404
+        && $requete('PATCH', $uriAccompagnement, ['action' => 'accepter'], cookies: $premierCookies)['statut'] === 204
+        && $requete('PATCH', $uriInteret, ['action' => 'refuser'], cookies: $premierCookies)['statut'] === 204,
+    'les deux réponses du fil sont uniques et l’auteur décide sans modifier le cycle des besoins',
+);
+$verifier(
+    $requete('POST', $uriAccompagnement.'/messages', ['texte' => 'Préparons la séance.'], cookies: $secondCookies)['statut'] === 204
+        && ($requete('GET', $uriAccompagnement.'/messages', cookies: $premierCookies)['corps'][0]['texte'] ?? null) === 'Préparons la séance.'
+        && $requete('GET', $uriInteret.'/messages', cookies: $secondCookies)['statut'] === 404
+        && in_array('reponse_acceptee', array_column($requete('GET', '/notifications/donnees', cookies: $secondCookies)['corps'], 'type'), true)
+        && in_array('message_reponse', array_column($requete('GET', '/notifications/donnees', cookies: $premierCookies)['corps'], 'type'), true),
+    'seule la réponse acceptée ouvre une conversation privée et les notifications sont contextualisées',
+);
 $referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
 $referenceSecond->execute([$referenceTel]);
 $uriSecond = '/personnes/'.$referenceSecond->fetchColumn();
