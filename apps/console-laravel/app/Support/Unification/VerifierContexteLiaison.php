@@ -109,6 +109,11 @@ final class VerifierContexteLiaison
                     return false;
                 }
             } elseif (($configApplication['driver'] ?? null) === 'sqlite') {
+                // Deux connexions SQLite en mémoire ne partagent pas un registre.
+                if (($configApplication['database'] ?? null) === ':memory:'
+                    && $application->getPdo() !== $registre->getPdo()) {
+                    return false;
+                }
                 if (($configApplication['database'] ?? null) !== ($configRegistre['database'] ?? null)) {
                     return false;
                 }
