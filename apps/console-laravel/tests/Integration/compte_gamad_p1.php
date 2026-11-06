@@ -492,6 +492,30 @@ $verifier(
         && str_contains($requete('GET', $uriPublication)['html'], 'Commentaire corrigé.'),
     'seul l’auteur Core peut corriger son commentaire sur la publication correspondante',
 );
+$besoinPrive = $requete('POST', '/besoins', [
+    'visibilite' => 'members', 'contenu' => 'Besoin réservé aux membres.',
+], cookies: $premierCookies);
+$uriBesoinPrive = '/besoins/'.($besoinPrive['corps']['reference'] ?? '');
+$besoinPublic = $requete('POST', '/besoins', [
+    'visibilite' => 'public', 'contenu' => 'Besoin ouvert au public.', 'auteur_reference' => $referenceTel,
+], cookies: $premierCookies);
+$uriBesoinPublic = '/besoins/'.($besoinPublic['corps']['reference'] ?? '');
+$verifier(
+    $besoinPrive['statut'] === 201 && $besoinPublic['statut'] === 201
+        && $requete('GET', $uriBesoinPrive)['statut'] === 404
+        && ($requete('GET', $uriBesoinPrive, cookies: $secondCookies)['corps']['etat_besoin'] ?? null) === 'open'
+        && ($requete('GET', $uriBesoinPublic)['corps']['auteur'] ?? null) === 'Personne Compte GAMAD'
+        && $requete('PATCH', $uriBesoinPublic.'/etat', ['action' => 'resoudre'], cookies: $secondCookies)['statut'] === 404,
+    'un besoin naît ouvert sous l’identité Core de la session et respecte son audience',
+);
+$verifier(
+    $requete('PATCH', $uriBesoinPublic.'/etat', ['action' => 'resoudre'], cookies: $premierCookies)['statut'] === 204
+        && $requete('PATCH', $uriBesoinPublic.'/etat', ['action' => 'fermer'], cookies: $premierCookies)['statut'] === 404
+        && ($requete('GET', $uriBesoinPublic)['corps']['etat_besoin'] ?? null) === 'resolved'
+        && $requete('PATCH', $uriBesoinPrive.'/etat', ['action' => 'fermer'], cookies: $premierCookies)['statut'] === 204
+        && ($requete('GET', $uriBesoinPrive, cookies: $premierCookies)['corps']['etat_besoin'] ?? null) === 'closed',
+    'l’auteur résout ou ferme son besoin une seule fois',
+);
 $referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
 $referenceSecond->execute([$referenceTel]);
 $uriSecond = '/personnes/'.$referenceSecond->fetchColumn();

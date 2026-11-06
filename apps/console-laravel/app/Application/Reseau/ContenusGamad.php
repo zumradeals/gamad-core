@@ -18,6 +18,8 @@ final class ContenusGamad
         'personal_work' => 'Ma réalisation',
     ];
 
+    public const TYPE_BESOIN = 'need';
+
     public function __construct(private MembreGamad $membres, private BlocagesGamad $blocages)
     {
     }
@@ -30,7 +32,7 @@ final class ContenusGamad
         }
 
         $requete = $registre->prepare(
-            "SELECT p.* FROM publication_gamad p WHERE NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference) ORDER BY cree_le DESC, reference DESC LIMIT 21 OFFSET ?"
+            "SELECT p.* FROM publication_gamad p WHERE p.type <> 'need' AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference) ORDER BY cree_le DESC, reference DESC LIMIT 21 OFFSET ?"
         );
         $requete->bindValue(1, ($page - 1) * 20, PDO::PARAM_INT);
         $requete->execute();
@@ -73,10 +75,36 @@ final class ContenusGamad
 
         $reference = bin2hex(random_bytes(12));
         $registre->prepare(
-            'INSERT INTO publication_gamad (reference, auteur_reference, type, visibilite, contenu, cree_le) VALUES (?, ?, ?, ?, ?, ?)'
-        )->execute([$reference, $sujet, $type, $visibilite, $this->texte($contenu), gmdate('c')]);
+            'INSERT INTO publication_gamad (reference, auteur_reference, type, visibilite, contenu, cree_le, etat_besoin) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        )->execute([$reference, $sujet, $type, $visibilite, $this->texte($contenu), gmdate('c'), $type === self::TYPE_BESOIN ? 'open' : null]);
 
         return $reference;
+    }
+
+    public function besoin(string $reference, ?string $session): ?array
+    {
+        $registre = Magasin::ouvrir();
+        $membre = $this->membres->depuisSession($session, $registre);
+        $exclus = $this->blocages->exclus($registre, $membre['identite_reference'] ?? null);
+        $publication = $this->lirePublication($registre, $reference, $membre !== null, $exclus);
+
+        return ($publication['type'] ?? null) === self::TYPE_BESOIN ? $publication : null;
+    }
+
+    public function terminerBesoin(string $sujet, string $reference, bool $resolu): bool
+    {
+        $registre = Magasin::ouvrir();
+        abort_if($this->membres->lire($sujet, $registre) === null, 403);
+
+        $requete = $registre->prepare(
+            "UPDATE publication_gamad SET etat_besoin = ?
+             WHERE reference = ? AND auteur_reference = ? AND type = 'need'
+               AND etat_besoin IN ('open', 'in_progress')
+               AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad WHERE categorie = 'publication' AND cible_reference = ?)"
+        );
+        $requete->execute([$resolu ? 'resolved' : 'closed', $reference, $sujet, $reference]);
+
+        return $requete->rowCount() === 1;
     }
 
     public function commenter(string $sujet, string $publication, string $contenu): bool

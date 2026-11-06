@@ -65,6 +65,8 @@ Route::get('/zumra/{reference}', [EspacesGamadController::class, 'zumra'])
 Route::get('/projets', [EspacesGamadController::class, 'projets'])->name('projets.index');
 Route::get('/projets/{reference}', [EspacesGamadController::class, 'projet'])
     ->where('reference', '[a-f0-9]{24}')->name('projets.show');
+Route::get('/besoins/{reference}', [ContenusGamadController::class, 'besoin'])
+    ->where('reference', '[a-f0-9]{24}')->name('besoins.show');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
 Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): void {
@@ -127,6 +129,10 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
         ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
         ->middleware('throttle:10,1,signalement-')->name('publications.signaler');
     Route::view('/agir', 'reseau.agir')->name('reseau.agir');
+    Route::post('/besoins', [ContenusGamadController::class, 'publierBesoin'])
+        ->middleware('throttle:10,1,besoin-')->name('besoins.store');
+    Route::patch('/besoins/{reference}/etat', [ContenusGamadController::class, 'terminerBesoin'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,besoin-etat-')->name('besoins.etat');
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
     Route::post('/fil', [ContenusGamadController::class, 'publier'])
         ->middleware('throttle:10,1,publication-')->name('publications.store');
