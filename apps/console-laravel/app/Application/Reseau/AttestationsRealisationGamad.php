@@ -67,10 +67,14 @@ final class AttestationsRealisationGamad
         $registre = Magasin::ouvrir();
         abort_if($this->membres->lire($sujet, $registre) === null, 403);
         $requete = $registre->prepare(
-            'SELECT reference, publication_reference, affirmation, realise_le, etat, revision, role,
+            "SELECT reference, publication_reference, affirmation, realise_le,
+                    CASE WHEN suspension.attestation_reference IS NOT NULL THEN 'revoked' ELSE etat END AS etat,
+                    revision, role, suspension.motif AS motif_moderation, suspension.recours, suspension.recours_clos,
                     CASE WHEN attestant_reference = ? THEN 1 ELSE 0 END AS a_confirmer
-             FROM attestation_realisation_gamad WHERE auteur_reference = ? OR attestant_reference = ?
-             ORDER BY modifie_le DESC, reference DESC LIMIT 100'
+             FROM attestation_realisation_gamad a
+             LEFT JOIN suspension_attestation_gamad suspension ON suspension.attestation_reference = a.reference
+             WHERE auteur_reference = ? OR attestant_reference = ?
+             ORDER BY modifie_le DESC, reference DESC LIMIT 100"
         );
         $requete->execute([$sujet, $sujet, $sujet]);
 
@@ -91,7 +95,8 @@ final class AttestationsRealisationGamad
         abort_unless(is_string($publication), 404);
 
         PaireGamad::verrouiller($registre, 'attestation', $publication, function () use ($registre, $sujet, $reference, $revision, $action, $role, $consentement): void {
-            $requete = $registre->prepare('SELECT * FROM attestation_realisation_gamad WHERE reference = ?');
+            $requete = $registre->prepare('SELECT a.* FROM attestation_realisation_gamad a WHERE reference = ?
+                 AND NOT EXISTS (SELECT 1 FROM suspension_attestation_gamad s WHERE s.attestation_reference = a.reference)');
             $requete->execute([$reference]);
             $ligne = $requete->fetch();
             $requete->closeCursor();
@@ -135,6 +140,7 @@ final class AttestationsRealisationGamad
              JOIN fiche_annuaire_gamad f ON f.identite_reference = a.attestant_reference
              JOIN fiche_annuaire_gamad auteur ON auteur.identite_reference = a.auteur_reference
              WHERE a.publication_reference = ? AND a.etat = 'confirmed'
+               AND NOT EXISTS (SELECT 1 FROM suspension_attestation_gamad s WHERE s.attestation_reference = a.reference)
                AND f.visibilite IN ({$visibilites}) AND auteur.visibilite IN ({$visibilites})
              ORDER BY a.modifie_le DESC, a.reference DESC"
         );

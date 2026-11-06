@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 30;
+    public const VERSION = 31;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -27,6 +27,8 @@ final class SchemaInscription
         'experience_profil_gamad',
         'preuve_experience_profil_gamad',
         'attestation_realisation_gamad',
+        'suspension_attestation_gamad',
+        'evenement_moderation_attestation_gamad',
         'publication_gamad',
         'favori_publication_gamad',
         'classement_besoin_gamad',
@@ -300,6 +302,26 @@ final class SchemaInscription
                 modifie_le BIGINT NOT NULL,
                 UNIQUE (publication_reference, attestant_reference),
                 CHECK (auteur_reference <> attestant_reference)
+            )
+        SQL);
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS suspension_attestation_gamad (
+                attestation_reference TEXT PRIMARY KEY REFERENCES attestation_realisation_gamad(reference) ON DELETE CASCADE,
+                motif VARCHAR(500) NOT NULL,
+                recours VARCHAR(500),
+                recours_clos INTEGER NOT NULL DEFAULT 0 CHECK (recours_clos IN (0, 1))
+            )
+        SQL);
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS evenement_moderation_attestation_gamad (
+                attestation_reference TEXT NOT NULL REFERENCES attestation_realisation_gamad(reference) ON DELETE CASCADE,
+                revision INTEGER NOT NULL,
+                acteur_reference TEXT NOT NULL,
+                action TEXT NOT NULL CHECK (action IN ('revoquer', 'contester', 'reexaminer', 'rejeter')),
+                motif VARCHAR(500) NOT NULL,
+                cree_le TEXT NOT NULL,
+                PRIMARY KEY (attestation_reference, revision)
             )
         SQL);
 

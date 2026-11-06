@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Application\Reseau\AttestationsRealisationGamad;
 use App\Application\Reseau\ContenusGamad;
+use App\Application\Reseau\ModerationAttestationsGamad;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -47,6 +48,31 @@ final class AttestationsRealisationController
     {
         return response()->json($attestations->publiques($reference, $request->session()->get('gamad_session'), $contenus))
             ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function contester(Request $request, ModerationAttestationsGamad $moderation, string $reference): Response
+    {
+        $donnees = $request->validate(['revision' => ['required', 'integer', 'min:1'], 'motif' => ['required', 'string', 'max:500']]);
+        $moderation->contester($this->sujet($request), $reference, (int) $donnees['revision'], $donnees['motif']);
+
+        return response()->noContent();
+    }
+
+    public function moderation(ModerationAttestationsGamad $moderation): JsonResponse
+    {
+        return response()->json($moderation->lister())->header('Cache-Control', 'private, no-store');
+    }
+
+    public function moderer(Request $request, ModerationAttestationsGamad $moderation, string $reference): Response
+    {
+        $donnees = $request->validate([
+            'revision' => ['required', 'integer', 'min:1'],
+            'action' => ['required', 'in:revoquer,reexaminer,rejeter'],
+            'motif' => ['required', 'string', 'max:500'],
+        ]);
+        $moderation->decider($this->sujet($request), $reference, (int) $donnees['revision'], $donnees['action'], $donnees['motif']);
+
+        return response()->noContent();
     }
 
     private function sujet(Request $request): string

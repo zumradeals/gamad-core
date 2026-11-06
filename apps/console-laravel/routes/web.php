@@ -140,6 +140,8 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::get('/mon-profil/attestations', [AttestationsRealisationController::class, 'index'])->name('compte.attestations.index');
     Route::post('/publications/{reference}/attestations', [AttestationsRealisationController::class, 'demander'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:5,60,attestation-demande-')->name('publications.attestations.demander');
+    Route::post('/mon-profil/attestations/{reference}/recours', [AttestationsRealisationController::class, 'contester'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:10,1,attestation-recours-')->name('compte.attestations.recours');
     Route::patch('/mon-profil/attestations/{reference}', [AttestationsRealisationController::class, 'decider'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,attestation-decision-')->name('compte.attestations.decider');
     Route::get('/mon-profil/favoris-publications', [ContenusGamadController::class, 'favoris'])->name('publications.favoris');
@@ -206,6 +208,9 @@ Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
         ->where(['reference' => '[a-f0-9]{24}', 'type' => 'rccm|dfe|idu'])->name('entreprises.justificatif');
     Route::post('/console/entreprises/{reference}', [EntreprisesGamadController::class, 'decider'])
         ->where('reference', '[a-f0-9]{24}')->name('entreprises.decider');
+    Route::get('/console/moderation-attestations', [AttestationsRealisationController::class, 'moderation'])->name('reseau.attestations.moderation');
+    Route::patch('/console/moderation-attestations/{reference}', [AttestationsRealisationController::class, 'moderer'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,attestation-moderation-')->name('reseau.attestations.moderer');
     Route::get('/console/moderation-reseau', [InteractionsGamadController::class, 'moderation'])->name('reseau.moderation');
     Route::post('/console/moderation-reseau/{reference}', [InteractionsGamadController::class, 'traiter'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,moderation-reseau-')->name('reseau.moderation.traiter');

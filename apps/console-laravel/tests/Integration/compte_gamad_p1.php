@@ -801,10 +801,8 @@ $ctr01->inscrireEvenementAssurance($referenceTel, 'A2', 'TEST-ATTEST-A2-REVISE',
 $verifier(
     $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === []
         && $requete('PATCH', $uriDecisionAttestation, array_replace($decisionAttestation, ['revision' => 2]), cookies: $secondCookies)['statut'] === 204
-        && count($requete('GET', $uriAttestations, cookies: $premierCookies)['corps']) === 1
-        && $requete('PATCH', $uriDecisionAttestation, ['action' => 'retirer', 'revision' => 3], cookies: $premierCookies)['statut'] === 204
-        && $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === [],
-    'une révision d’assurance suspend l’affichage et le retrait du consentement masque l’attestation',
+        && count($requete('GET', $uriAttestations, cookies: $premierCookies)['corps']) === 1,
+    'une révision d’assurance suspend l’affichage jusqu’au renouvellement du consentement',
 );
 $conversation = '/conversations/'.$fichePublique;
 $conversationInverse = '/conversations/'.basename($uriSecond);
@@ -840,6 +838,33 @@ $admission = $console->call('core:console:accorder-acces-administratif');
 $secretModeration = 'Secret-moderation-GAMAD-2026';
 $ctr16->inscrireAuthentificateur($autorite, $secretModeration);
 $admin = $requete('POST', '/connexion', ['entite' => $autorite, 'secret' => $secretModeration]);
+$fileAttestations = '/console/moderation-attestations';
+$uriModerationAttestation = $fileAttestations.'/'.basename($uriDecisionAttestation);
+$revocationAttestation = ['action' => 'revoquer', 'revision' => 3, 'motif' => 'Vérification complémentaire nécessaire.'];
+$verifier(
+    $requete('GET', $fileAttestations, cookies: $premierCookies)['statut'] === 403
+        && $requete('PATCH', $uriModerationAttestation, $revocationAttestation, cookies: $premierCookies)['statut'] === 403
+        && $requete('PATCH', $uriModerationAttestation, $revocationAttestation, cookies: $admin['cookies'])['statut'] === 204
+        && $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === []
+        && ($requete('GET', '/mon-profil/attestations', cookies: $secondCookies)['corps'][0]['etat'] ?? null) === 'revoked',
+    'la révocation relève de la console et retire immédiatement l’attestation de la publication',
+);
+$reexamenAttestation = ['action' => 'reexaminer', 'revision' => 4, 'motif' => 'Le recours justifie un réexamen.'];
+$recoursAttestation = ['revision' => 4, 'motif' => 'Je demande de revoir la décision.'];
+$verifier(
+    $requete('PATCH', $uriModerationAttestation, $reexamenAttestation, cookies: $admin['cookies'])['statut'] === 409
+        && $requete('POST', $uriDecisionAttestation.'/recours', $recoursAttestation, cookies: $admin['cookies'])['statut'] === 404
+        && $requete('POST', $uriDecisionAttestation.'/recours', $recoursAttestation, cookies: $secondCookies)['statut'] === 204
+        && ($requete('GET', $fileAttestations, cookies: $admin['cookies'])['corps'][0]['recours'] ?? null) === $recoursAttestation['motif']
+        && $requete('PATCH', $uriModerationAttestation, array_replace($reexamenAttestation, ['revision' => 5]), cookies: $admin['cookies'])['statut'] === 204
+        && $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === []
+        && $requete('PATCH', $uriDecisionAttestation, array_replace($decisionAttestation, ['revision' => 6]), cookies: $secondCookies)['statut'] === 204
+        && count($requete('GET', $uriAttestations, cookies: $premierCookies)['corps']) === 1
+        && $requete('PATCH', $uriDecisionAttestation, ['action' => 'retirer', 'revision' => 7], cookies: $premierCookies)['statut'] === 204
+        && $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === []
+        && $registreIdentites->query('SELECT COUNT(*) FROM evenement_moderation_attestation_gamad')->fetchColumn() === 3,
+    'le recours d’un participant ouvre un réexamen journalisé et exige un nouveau consentement avant publication',
+);
 $ecranModeration = $requete('GET', '/console/moderation-reseau', cookies: $admin['cookies']);
 $decision = $requete('POST', $uriDecision, ['action' => 'masquer'], cookies: $admin['cookies']);
 $verifier(
