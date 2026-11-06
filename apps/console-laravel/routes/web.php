@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccesConsoleController;
 use App\Http\Controllers\AccesController;
+use App\Http\Controllers\AttestationsRealisationController;
 use App\Http\Controllers\AdministrationReseauGamadController;
 use App\Http\Controllers\AnnuaireGamadController;
 use App\Http\Controllers\BlocagesGamadController;
@@ -71,6 +72,8 @@ Route::get('/besoins/{reference}', [ContenusGamadController::class, 'besoin'])
     ->where('reference', '[a-f0-9]{24}')->name('besoins.show');
 Route::get('/publications/{reference}/commentaires', [ContenusGamadController::class, 'commentaires'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.commentaires.index');
+Route::get('/publications/{reference}/attestations', [AttestationsRealisationController::class, 'publiques'])
+    ->where('reference', '[a-f0-9]{24}')->name('publications.attestations.index');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
 Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): void {
@@ -134,6 +137,11 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::get('/notifications', [InteractionsGamadController::class, 'notifications'])->name('notifications');
     Route::post('/notifications/{reference}/lire', [InteractionsGamadController::class, 'lireNotification'])
         ->where('reference', '[a-f0-9]{24}')->name('notifications.lire');
+    Route::get('/mon-profil/attestations', [AttestationsRealisationController::class, 'index'])->name('compte.attestations.index');
+    Route::post('/publications/{reference}/attestations', [AttestationsRealisationController::class, 'demander'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:5,60,attestation-demande-')->name('publications.attestations.demander');
+    Route::patch('/mon-profil/attestations/{reference}', [AttestationsRealisationController::class, 'decider'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,attestation-decision-')->name('compte.attestations.decider');
     Route::get('/mon-profil/favoris-publications', [ContenusGamadController::class, 'favoris'])->name('publications.favoris');
     Route::put('/publications/{reference}/favori', [ContenusGamadController::class, 'ajouterFavori'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,favori-')->name('publications.favori.ajouter');

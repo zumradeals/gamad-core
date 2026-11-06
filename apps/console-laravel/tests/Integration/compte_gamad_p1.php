@@ -779,6 +779,33 @@ $verifier(
         && str_contains($etatRelation['html'], 'En relation'),
     'une demande est unique par paire, seul le destinataire l’accepte et une décision périmée est refusée',
 );
+$uriAttestations = $uriRealisationPreuve.'/attestations';
+$demandeAttestation = ['profil' => basename($uriSecond), 'affirmation' => 'J’ai participé à cette installation.', 'realise_le' => '2025-05-01'];
+$attestantFaible = $requete('POST', $uriAttestations, $demandeAttestation, cookies: $premierCookies);
+$ctr01->inscrireEvenementAssurance($referenceTel, 'A2', 'TEST-ATTEST-A2', 'TEST');
+$attestation = $requete('POST', $uriAttestations, $demandeAttestation, cookies: $premierCookies);
+$uriDecisionAttestation = '/mon-profil/attestations/'.($attestation['corps']['reference'] ?? '');
+$decisionAttestation = ['action' => 'confirmer', 'revision' => 1, 'role' => 'colleague', 'consentement' => true];
+$verifier(
+    $attestantFaible['statut'] === 403 && $attestation['statut'] === 201
+        && ($requete('GET', '/mon-profil/attestations', cookies: $secondCookies)['corps'][0]['etat'] ?? null) === 'pending'
+        && $requete('PATCH', $uriDecisionAttestation, $decisionAttestation, cookies: $premierCookies)['statut'] === 404
+        && $requete('PATCH', $uriDecisionAttestation, array_diff_key($decisionAttestation, ['consentement' => true]), cookies: $secondCookies)['statut'] === 302
+        && $requete('PATCH', $uriDecisionAttestation, $decisionAttestation, cookies: $secondCookies)['statut'] === 204
+        && $requete('PATCH', $uriDecisionAttestation, $decisionAttestation, cookies: $secondCookies)['statut'] === 409
+        && $requete('GET', $uriAttestations)['statut'] === 404
+        && ($requete('GET', $uriAttestations, cookies: $premierCookies)['corps'][0]['role'] ?? null) === 'colleague',
+    'l’attestation exige une relation acceptée, l’assurance Core et le consentement explicite du tiers',
+);
+$ctr01->inscrireEvenementAssurance($referenceTel, 'A2', 'TEST-ATTEST-A2-REVISE', 'TEST');
+$verifier(
+    $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === []
+        && $requete('PATCH', $uriDecisionAttestation, array_replace($decisionAttestation, ['revision' => 2]), cookies: $secondCookies)['statut'] === 204
+        && count($requete('GET', $uriAttestations, cookies: $premierCookies)['corps']) === 1
+        && $requete('PATCH', $uriDecisionAttestation, ['action' => 'retirer', 'revision' => 3], cookies: $premierCookies)['statut'] === 204
+        && $requete('GET', $uriAttestations, cookies: $premierCookies)['corps'] === [],
+    'une révision d’assurance suspend l’affichage et le retrait du consentement masque l’attestation',
+);
 $conversation = '/conversations/'.$fichePublique;
 $conversationInverse = '/conversations/'.basename($uriSecond);
 $envoi = $requete('POST', $conversation, ['texte' => 'Message privé de test'], cookies: $secondCookies);

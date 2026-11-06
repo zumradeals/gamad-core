@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 29;
+    public const VERSION = 30;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -26,6 +26,7 @@ final class SchemaInscription
         'domaine_annuaire_gamad',
         'experience_profil_gamad',
         'preuve_experience_profil_gamad',
+        'attestation_realisation_gamad',
         'publication_gamad',
         'favori_publication_gamad',
         'classement_besoin_gamad',
@@ -283,6 +284,24 @@ final class SchemaInscription
             )
         SQL);
         $pdo->exec('CREATE INDEX IF NOT EXISTS relation_personnes_gamad_seconde ON relation_personnes_gamad(seconde_reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS attestation_realisation_gamad (
+                reference TEXT PRIMARY KEY,
+                publication_reference TEXT NOT NULL REFERENCES publication_gamad(reference) ON DELETE CASCADE,
+                auteur_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                attestant_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                affirmation VARCHAR(280) NOT NULL,
+                realise_le TEXT NOT NULL,
+                etat TEXT NOT NULL CHECK (etat IN ('pending', 'confirmed', 'declined', 'withdrawn')),
+                role TEXT CHECK (role IN ('client', 'colleague', 'witness')),
+                assurance_evenement BIGINT,
+                revision INTEGER NOT NULL CHECK (revision > 0),
+                modifie_le BIGINT NOT NULL,
+                UNIQUE (publication_reference, attestant_reference),
+                CHECK (auteur_reference <> attestant_reference)
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS message_reseau_gamad (
