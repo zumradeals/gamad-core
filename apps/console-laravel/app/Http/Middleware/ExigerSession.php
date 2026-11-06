@@ -20,12 +20,15 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class ExigerSession
 {
-    public function handle(Request $request, Closure $suivant): Response
+    public function handle(Request $request, Closure $suivant, ?string $espace = null): Response
     {
         $reference = $request->session()->get('gamad_session');
 
+        $reseau = $espace === 'reseau';
+        $formulaire = $reseau ? 'reseau.connexion' : 'acces.formulaire';
+
         if (!is_string($reference)) {
-            return redirect()->guest(route('acces.formulaire'));
+            return $reseau ? $this->redirigerReseau($request) : redirect()->guest(route($formulaire));
         }
 
         $verdict = (new Ctr16(Magasin::connecter()))->verifierSession($reference);
@@ -34,7 +37,7 @@ final class ExigerSession
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('acces.formulaire')
+            return ($reseau ? $this->redirigerReseau($request) : redirect()->route($formulaire))
                 ->withErrors(['entite' => 'Session close : ' . ($verdict['motif'] ?? 'invalide') . '.']);
         }
 
@@ -42,5 +45,14 @@ final class ExigerSession
         $request->attributes->set('gamad_assurance', $verdict['assurance']);
 
         return $suivant($request);
+    }
+
+    private function redirigerReseau(Request $request): Response
+    {
+        if ($request->isMethod('GET')) {
+            $request->session()->put('reseau.url.intended', '/' . ltrim($request->getRequestUri(), '/'));
+        }
+
+        return redirect()->route('reseau.connexion');
     }
 }

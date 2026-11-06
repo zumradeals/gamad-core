@@ -36,3 +36,9 @@ summary { cursor: pointer; font-weight: 700; }
 .formulaire-reseau textarea, .formulaire-reseau select { font: inherit; }
 .formulaire-reseau .bouton { justify-self: start; }
 .texte-reseau { white-space: pre-wrap; overflow-wrap: anywhere; }
+.formulaire-reseau input {
+    font: inherit;
+    padding: .65rem .8rem;
+    border: 1px solid #bac8d3;
+    border-radius: .65rem;
+}

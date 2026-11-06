@@ -66,7 +66,7 @@ Route::get('/projets/{reference}', [EspacesGamadController::class, 'projet'])
     ->where('reference', '[a-f0-9]{24}')->name('projets.show');
 Route::get('/publications/{reference}', [ContenusGamadController::class, 'montrer'])
     ->where('reference', '[a-f0-9]{24}')->name('publications.show');
-Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
+Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): void {
     Route::get('/entreprises/creer', [EntreprisesGamadController::class, 'formulaire'])->name('entreprises.create');
     Route::post('/entreprises', [EntreprisesGamadController::class, 'soumettre'])
         ->middleware('throttle:5,1,entreprise-')->name('entreprises.store');
@@ -626,7 +626,7 @@ Route::middleware('gamad.session')->group(function (): void {
 });
 
 // Acces Réseau : session Core requise, sans privilege de console.
-Route::middleware('gamad.session')->group(function (): void {
+Route::middleware('gamad.session:reseau')->group(function (): void {
     Route::get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])->name('reseau.compte.core');
     Route::get('/mon-profil', [ProfilCompteGamadController::class, 'montrer'])->name('compte.profil');
     Route::patch('/mon-profil', [ProfilCompteGamadController::class, 'modifier'])
@@ -666,6 +666,12 @@ Route::middleware('gamad.https')->group(function (): void {
         ->middleware('throttle:10,1')->name('inscription.verifier');
     Route::post('/inscription/verification/renvoi', [InscriptionGamadController::class, 'renvoyer'])
         ->middleware('throttle:5,1')->name('inscription.renvoyer');
+});
+
+Route::middleware('gamad.https')->group(function (): void {
+    Route::view('/reseau/connexion', 'reseau.connexion')->name('reseau.connexion');
+    Route::post('/reseau/connexion', [AccesController::class, 'connecterReseau'])
+        ->middleware('throttle:10,1')->name('reseau.connecter');
 });
 
 // Accès au compte et à la console (CAP-CORE-005).

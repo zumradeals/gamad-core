@@ -276,15 +276,20 @@ $verifier(
 );
 
 // Le navigateur utilise la même personne canonique et la vraie session CTR-16.
-$verifier($requete('GET', '/reseau/mon-compte')['statut'] === 302, 'Réseau exige une session Core');
-$connexionWeb = $requete('POST', '/connexion', [
+$invitationConnexion = $requete('GET', '/reseau/mon-compte');
+$verifier(
+    $invitationConnexion['statut'] === 302
+        && str_ends_with($invitationConnexion['location'] ?? '', '/reseau/connexion'),
+    'Réseau exige une session Core et présente sa propre connexion',
+);
+$connexionWeb = $requete('POST', '/reseau/connexion', [
     'entite' => 'personne.test+satellite@example.test',
-    'mode' => 'identifiant',
     'secret' => $motDePasse,
-]);
+], cookies: $invitationConnexion['cookies']);
 $compteReseau = $requete('GET', '/reseau/mon-compte', cookies: $connexionWeb['cookies']);
 $verifier(
     $connexionWeb['statut'] === 302
+        && str_ends_with($connexionWeb['location'] ?? '', '/reseau/mon-compte')
         && $compteReseau['statut'] === 200
         && ($compteReseau['corps']['compte'] ?? null) === [
             'identite_reference' => $reference,

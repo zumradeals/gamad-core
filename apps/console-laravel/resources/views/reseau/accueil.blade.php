@@ -21,7 +21,7 @@
                 <a href="{{ route('entreprises.index') }}">Entreprises</a>
                 <a href="{{ route('opportunites.index') }}">Opportunités</a>
             </nav>
-            <a class="bouton" href="{{ route('acces.formulaire') }}">Se connecter</a>
+            <a class="bouton" href="{{ route('reseau.connexion') }}">Se connecter</a>
         </div>
     </header>
 
