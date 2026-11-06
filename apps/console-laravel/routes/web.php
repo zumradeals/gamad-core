@@ -131,6 +131,13 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::view('/agir', 'reseau.agir')->name('reseau.agir');
     Route::post('/besoins', [ContenusGamadController::class, 'publierBesoin'])
         ->middleware('throttle:10,1,besoin-')->name('besoins.store');
+    Route::get('/besoins/{reference}/propositions', [ContenusGamadController::class, 'propositionsAide'])
+        ->where('reference', '[a-f0-9]{24}')->name('besoins.propositions.index');
+    Route::post('/besoins/{reference}/propositions', [ContenusGamadController::class, 'proposerAide'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:15,60,aide-')->name('besoins.propositions.store');
+    Route::patch('/besoins/{reference}/propositions/{proposition}', [ContenusGamadController::class, 'traiterAide'])
+        ->where(['reference' => '[a-f0-9]{24}', 'proposition' => '[a-f0-9]{24}'])
+        ->middleware('throttle:30,1,aide-traitement-')->name('besoins.propositions.traiter');
     Route::patch('/besoins/{reference}/etat', [ContenusGamadController::class, 'terminerBesoin'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,besoin-etat-')->name('besoins.etat');
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');

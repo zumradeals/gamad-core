@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Application\Reseau\ContenusGamad;
 use App\Application\Reseau\ModerationGamad;
+use App\Application\Reseau\PropositionsAideGamad;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -96,6 +97,28 @@ final class ContenusGamadController
     {
         $donnees = $request->validate(['action' => ['required', 'in:resoudre,fermer']]);
         abort_unless($contenus->terminerBesoin($this->sujet($request), $reference, $donnees['action'] === 'resoudre'), 404);
+
+        return response()->noContent();
+    }
+
+    public function propositionsAide(Request $request, PropositionsAideGamad $aide, string $reference): JsonResponse
+    {
+        return response()->json($aide->lister($this->sujet($request), $reference))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function proposerAide(Request $request, PropositionsAideGamad $aide, string $reference): JsonResponse
+    {
+        $donnees = $request->validate(['message' => ['nullable', 'string', 'max:280']]);
+        $proposition = $aide->proposer($this->sujet($request), $reference, $donnees['message'] ?? '');
+
+        return response()->json(['reference' => $proposition], 201)->header('Cache-Control', 'private, no-store');
+    }
+
+    public function traiterAide(Request $request, PropositionsAideGamad $aide, string $reference, string $proposition): Response
+    {
+        $donnees = $request->validate(['action' => ['required', 'in:retirer,accepter,refuser']]);
+        $aide->traiter($this->sujet($request), $reference, $proposition, $donnees['action']);
 
         return response()->noContent();
     }

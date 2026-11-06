@@ -516,6 +516,33 @@ $verifier(
         && ($requete('GET', $uriBesoinPrive, cookies: $premierCookies)['corps']['etat_besoin'] ?? null) === 'closed',
     'l’auteur résout ou ferme son besoin une seule fois',
 );
+$besoinAide = $requete('POST', '/besoins', [
+    'visibilite' => 'public', 'contenu' => 'Besoin avec une proposition d’aide.',
+], cookies: $premierCookies);
+$uriBesoinAide = '/besoins/'.($besoinAide['corps']['reference'] ?? '');
+$uriPropositions = $uriBesoinAide.'/propositions';
+$proposition = $requete('POST', $uriPropositions, ['message' => 'Je peux aider.'], cookies: $secondCookies);
+$uriProposition = $uriPropositions.'/'.($proposition['corps']['reference'] ?? '');
+$verifier(
+    $proposition['statut'] === 201
+        && $requete('POST', $uriPropositions, [], cookies: $premierCookies)['statut'] === 403
+        && $requete('POST', $uriPropositions, [], cookies: $secondCookies)['statut'] === 409
+        && ($requete('GET', $uriPropositions, cookies: $premierCookies)['corps'][0]['message'] ?? null) === 'Je peux aider.'
+        && $requete('PATCH', $uriProposition, ['action' => 'accepter'], cookies: $secondCookies)['statut'] === 404
+        && $requete('PATCH', $uriProposition, ['action' => 'retirer'], cookies: $secondCookies)['statut'] === 204,
+    'une proposition est unique, visible par l’auteur et retirable uniquement par son proposant',
+);
+$nouvelleAide = $requete('POST', $uriPropositions, [], cookies: $secondCookies);
+$uriNouvelleAide = $uriPropositions.'/'.($nouvelleAide['corps']['reference'] ?? '');
+$verifier(
+    $nouvelleAide['statut'] === 201
+        && $requete('PATCH', $uriProposition, ['action' => 'accepter'], cookies: $premierCookies)['statut'] === 404
+        && $requete('PATCH', $uriNouvelleAide, ['action' => 'accepter'], cookies: $premierCookies)['statut'] === 204
+        && $requete('PATCH', $uriNouvelleAide, ['action' => 'retirer'], cookies: $secondCookies)['statut'] === 409
+        && ($requete('GET', $uriBesoinAide)['corps']['etat_besoin'] ?? null) === 'in_progress'
+        && $requete('POST', $uriBesoinPublic.'/propositions', [], cookies: $secondCookies)['statut'] === 409,
+    'une proposition acceptée fait passer le besoin en cours et les besoins clos refusent toute nouvelle proposition',
+);
 $referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
 $referenceSecond->execute([$referenceTel]);
 $uriSecond = '/personnes/'.$referenceSecond->fetchColumn();
