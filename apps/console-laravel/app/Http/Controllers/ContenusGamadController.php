@@ -44,10 +44,18 @@ final class ContenusGamadController
             ->header('Cache-Control', 'private, no-store');
     }
 
-    public function montrer(Request $request, ContenusGamad $contenus, string $reference): Response
+    public function montrer(Request $request, ContenusGamad $contenus, string $reference, PropositionsAideGamad $aide): Response
     {
         $fiche = $contenus->publication($reference, $request->session()->get('gamad_session'));
         abort_if($fiche === null, 404);
+
+        $fiche['propositions'] = [];
+        if ($fiche['publication']['type'] === ContenusGamad::TYPE_BESOIN
+            && $fiche['publication']['emetteur'] === 'personne' && $fiche['peut_commenter']) {
+            $fiche['propositions'] = $aide->lister($fiche['sujet_besoin'], $reference);
+        }
+
+        unset($fiche['sujet_besoin']);
 
         $racines = array_filter($fiche['commentaires'], static fn (array $commentaire): bool => $commentaire['parent_reference'] === null);
         $fiche['reponses'] = collect($fiche['commentaires'])->whereNotNull('parent_reference')->groupBy('parent_reference');
@@ -173,10 +181,14 @@ final class ContenusGamadController
             ->header('Cache-Control', 'private, no-store');
     }
 
-    public function terminerBesoin(Request $request, ContenusGamad $contenus, string $reference): Response
+    public function terminerBesoin(Request $request, ContenusGamad $contenus, string $reference): Response|RedirectResponse
     {
         $donnees = $request->validate(['action' => ['required', 'in:resoudre,fermer']]);
         abort_unless($contenus->terminerBesoin($this->sujet($request), $reference, $donnees['action'] === 'resoudre'), 404);
+
+        if ($this->ecranBesoin($request)) {
+            return redirect()->route('publications.show', $reference);
+        }
 
         return response()->noContent();
     }
@@ -195,32 +207,49 @@ final class ContenusGamadController
             ->header('Cache-Control', 'private, no-store');
     }
 
-    public function proposerAide(Request $request, PropositionsAideGamad $aide, string $reference): JsonResponse
+    public function proposerAide(Request $request, PropositionsAideGamad $aide, string $reference): JsonResponse|RedirectResponse
     {
         $donnees = $request->validate(['message' => ['nullable', 'string', 'max:280']]);
         $proposition = $aide->proposer($this->sujet($request), $reference, $donnees['message'] ?? '', $request->routeIs('publications.reponses.*'));
 
+        if ($this->ecranBesoin($request)) {
+            return redirect()->route('publications.show', $reference);
+        }
+
         return response()->json(['reference' => $proposition], 201)->header('Cache-Control', 'private, no-store');
     }
 
-    public function traiterAide(Request $request, PropositionsAideGamad $aide, string $reference, string $proposition): Response
+    public function traiterAide(Request $request, PropositionsAideGamad $aide, string $reference, string $proposition): Response|RedirectResponse
     {
         $donnees = $request->validate(['action' => ['required', 'in:retirer,accepter,refuser']]);
         $aide->traiter($this->sujet($request), $reference, $proposition, $donnees['action'], $request->routeIs('publications.reponses.*'));
 
+        if ($this->ecranBesoin($request)) {
+            return redirect()->route('publications.show', $reference);
+        }
+
         return response()->noContent();
     }
 
-    public function conversationAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): JsonResponse
+    public function conversationAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): JsonResponse|Response
     {
-        return response()->json($conversation->lire($this->sujet($request), $reference, $proposition, $request->routeIs('publications.reponses.*')))
-            ->header('Cache-Control', 'private, no-store');
+        $messages = $conversation->lire($this->sujet($request), $reference, $proposition, $request->routeIs('publications.reponses.*'));
+        if ($this->ecranBesoin($request)) {
+            return response()->view('reseau.conversation-besoin', compact('reference', 'proposition', 'messages'))
+                ->header('Cache-Control', 'private, no-store')->header('Vary', 'Accept');
+        }
+
+        return response()->json($messages)->header('Cache-Control', 'private, no-store')->header('Vary', 'Accept');
     }
 
-    public function envoyerMessageAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): Response
+    public function envoyerMessageAide(Request $request, ConversationAideGamad $conversation, string $reference, string $proposition): Response|RedirectResponse
     {
         $donnees = $request->validate(['texte' => ['required', 'string', 'max:1000']]);
         $conversation->envoyer($this->sujet($request), $reference, $proposition, $donnees['texte'], $request->routeIs('publications.reponses.*'));
+
+        if ($this->ecranBesoin($request)) {
+            return redirect()->route('besoins.propositions.messages.index', [$reference, $proposition]);
+        }
 
         return response()->noContent();
     }
@@ -242,6 +271,12 @@ final class ContenusGamadController
         $contenus->modifierFavori($this->sujet($request), $reference, false);
 
         return response()->noContent();
+    }
+
+    private function ecranBesoin(Request $request): bool
+    {
+        return $request->routeIs('besoins.*')
+            && $request->prefers(['application/json', 'text/html']) === 'text/html';
     }
 
     private function sujet(Request $request): string

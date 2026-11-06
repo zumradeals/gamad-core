@@ -94,6 +94,9 @@ final class ContenusGamad
             'publication' => $publication,
             'commentaires' => $commentaires,
             'peut_commenter' => $membre !== null,
+            'sujet_besoin' => $membre['identite_reference'] ?? null,
+            'gere_besoin' => $publication['type'] === self::TYPE_BESOIN && $membre !== null
+                && EmetteurBesoinGamad::peutGerer($registre, $membre['identite_reference'], $reference),
         ];
     }
 

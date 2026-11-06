@@ -122,10 +122,11 @@ $requete = static function (
     ?string $jeton = null,
     array $cookies = [],
     array $fichiersRequete = [],
+    bool $navigateur = false,
 ) use ($kernel): array {
     $serveur = [
-        'HTTP_ACCEPT' => 'application/json',
-        'CONTENT_TYPE' => $fichiersRequete === [] ? 'application/json' : 'multipart/form-data',
+        'HTTP_ACCEPT' => $navigateur ? 'text/html' : 'application/json',
+        'CONTENT_TYPE' => $navigateur ? 'application/x-www-form-urlencoded' : ($fichiersRequete === [] ? 'application/json' : 'multipart/form-data'),
     ];
     if ($jeton !== null) {
         $serveur['HTTP_AUTHORIZATION'] = 'Bearer ' . $jeton;
@@ -133,11 +134,11 @@ $requete = static function (
     $request = Request::create(
         $uri,
         $methode,
-        $fichiersRequete === [] ? [] : ($json ?? []),
+        !$navigateur && $fichiersRequete === [] ? [] : ($json ?? []),
         $cookies,
         $fichiersRequete,
         $serveur,
-        $json === null || $fichiersRequete !== [] ? null : json_encode($json, JSON_THROW_ON_ERROR),
+        $navigateur || $json === null || $fichiersRequete !== [] ? null : json_encode($json, JSON_THROW_ON_ERROR),
     );
     $app = app();
     if ($app->resolved('session')) {
@@ -715,6 +716,25 @@ $verifier(
         && $requete('POST', $lectureNoticeAide, cookies: $premierCookies)['statut'] === 404
         && $requete('POST', $lectureNoticeAide, cookies: $secondCookies)['statut'] === 302,
     'les notifications d’aide sont privées, contextualisées et sans doublon après un retrait et une nouvelle proposition',
+);
+$ficheFil = $besoinDepuisFil['location'];
+$referenceFil = basename($ficheFil);
+$propositionsFil = '/besoins/'.$referenceFil.'/propositions';
+$verifier(
+    str_contains($requete('GET', $ficheFil, cookies: $secondCookies, navigateur: true)['html'], 'Proposer mon aide')
+        && $requete('POST', $propositionsFil, ['message' => 'Un coup de main.'], cookies: $secondCookies, navigateur: true)['statut'] === 302,
+    'le navigateur peut proposer son aide depuis la fiche du besoin',
+);
+$aideFil = $requete('GET', $propositionsFil, cookies: $premierCookies)['corps'][0]['reference'];
+$verifier(
+    str_contains($requete('GET', $ficheFil, cookies: $premierCookies, navigateur: true)['html'], 'Accepter l’aide')
+        && $requete('POST', $propositionsFil.'/'.$aideFil, ['_method' => 'PATCH', 'action' => 'accepter'], cookies: $premierCookies, navigateur: true)['statut'] === 302
+        && str_contains($requete('GET', $ficheFil, cookies: $secondCookies, navigateur: true)['html'], 'Ouvrir l’échange privé')
+        && $requete('POST', $propositionsFil.'/'.$aideFil.'/messages', ['texte' => 'Organisons le rendez-vous.'], cookies: $secondCookies, navigateur: true)['statut'] === 302
+        && str_contains($requete('GET', $propositionsFil.'/'.$aideFil.'/messages', cookies: $premierCookies, navigateur: true)['html'], 'Organisons le rendez-vous.')
+        && $requete('POST', '/besoins/'.$referenceFil.'/etat', ['_method' => 'PATCH', 'action' => 'resoudre'], cookies: $premierCookies, navigateur: true)['statut'] === 302
+        && str_contains($requete('GET', $ficheFil, cookies: $secondCookies, navigateur: true)['html'], 'État du besoin · Résolu'),
+    'les formulaires permettent d’accepter, échanger et résoudre le besoin',
 );
 $uriReponsesSouhait = $uriSouhait.'/reponses';
 $uriReponsesOffre = $uriOffre.'/reponses';
