@@ -16,6 +16,8 @@ final class ContenusGamad
         'share' => 'Je partage',
         'knowledge' => 'Je partage un savoir',
         'personal_work' => 'Ma réalisation',
+        'learning_wish' => 'Je veux apprendre',
+        'offer' => 'Je propose mon aide',
     ];
 
     public const TYPE_BESOIN = 'need';
@@ -252,6 +254,49 @@ final class ContenusGamad
         );
         $requete->execute([$this->texte($contenu), $commentaire, $publication, $sujet, $commentaire, $publication]);
         abort_if($requete->rowCount() === 0, 404);
+    }
+
+    public function favoris(string $sujet): array
+    {
+        $registre = Magasin::ouvrir();
+        abort_if($this->membres->lire($sujet, $registre) === null, 403);
+        $requete = $registre->prepare(
+            "SELECT p.* FROM favori_publication_gamad f JOIN publication_gamad p ON p.reference = f.publication_reference
+             WHERE f.membre_reference = ?
+               AND NOT EXISTS (SELECT 1 FROM emetteur_besoin_gamad e WHERE e.besoin_reference = p.reference)
+               AND NOT EXISTS (SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = p.reference)
+             ORDER BY f.cree_le DESC, f.publication_reference DESC"
+        );
+        $requete->execute([$sujet]);
+        $exclus = $this->blocages->exclus($registre, $sujet);
+        $favoris = [];
+        foreach ($this->parcourirAffichables($requete, $registre, $exclus) as $publication) {
+            $favoris[] = $publication;
+            if (count($favoris) === 100) {
+                break;
+            }
+        }
+
+        return $favoris;
+    }
+
+    public function modifierFavori(string $sujet, string $reference, bool $ajouter): void
+    {
+        $registre = Magasin::ouvrir();
+        abort_if($this->membres->lire($sujet, $registre) === null, 403);
+        if (!$ajouter) {
+            $registre->prepare('DELETE FROM favori_publication_gamad WHERE membre_reference = ? AND publication_reference = ?')
+                ->execute([$sujet, $reference]);
+
+            return;
+        }
+
+        $publication = $this->lirePublication($registre, $reference, $sujet, $this->blocages->exclus($registre, $sujet));
+        abort_if($publication === null || $publication['emetteur'] !== 'personne', 404);
+        $registre->prepare(
+            'INSERT INTO favori_publication_gamad (membre_reference, publication_reference, cree_le)
+             VALUES (?, ?, ?) ON CONFLICT (membre_reference, publication_reference) DO NOTHING'
+        )->execute([$sujet, $reference, gmdate('c')]);
     }
 
     private function lirePublication(PDO $registre, string $reference, ?string $sujet, array $exclus): ?array

@@ -385,6 +385,23 @@ $verifier(
         && !str_contains($fichePublication['html'], $reference),
     'le fil et la fiche lisent le même contenu Core, échappent le HTML et utilisent l’auteur de la session',
 );
+$souhait = $requete('POST', '/fil', [
+    'type' => 'learning_wish', 'visibilite' => 'members', 'contenu' => 'Apprendre à installer des panneaux solaires.',
+], cookies: $cookies);
+$offre = $requete('POST', '/fil', [
+    'type' => 'offer', 'visibilite' => 'public', 'contenu' => 'Proposer un accompagnement en électricité.',
+], cookies: $cookies);
+$uriSouhait = parse_url($souhait['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$uriOffre = parse_url($offre['location'] ?? '', PHP_URL_PATH) ?: '/publication-manquante';
+$lectureOffre = $requete('GET', $uriOffre);
+$verifier(
+    $souhait['statut'] === 302 && $offre['statut'] === 302
+        && $requete('GET', $uriSouhait)['statut'] === 404
+        && str_contains($requete('GET', $uriSouhait, cookies: $cookies)['html'], 'Je veux apprendre')
+        && $lectureOffre['statut'] === 200 && str_contains($lectureOffre['html'], 'Je propose mon aide')
+        && str_contains($requete('GET', '/fil', cookies: $cookies)['html'], $uriOffre),
+    'le fil et la fiche prennent en charge souhait d’apprendre et offre d’aide avec leur audience',
+);
 $visiteurCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Visiteur']);
 $membreCommentaire = $requete('POST', $uriPublication.'/commentaires', ['contenu' => 'Merci pour ce partage.'], cookies: $cookies);
 $ficheCommentee = $requete('GET', $uriPublication);
@@ -604,6 +621,31 @@ $verifier(
         && $requete('POST', $lectureNoticeAide, cookies: $secondCookies)['statut'] === 302,
     'les notifications d’aide sont privées, contextualisées et sans doublon après un retrait et une nouvelle proposition',
 );
+$uriReponsesSouhait = $uriSouhait.'/reponses';
+$uriReponsesOffre = $uriOffre.'/reponses';
+$accompagnement = $requete('POST', $uriReponsesSouhait, ['message' => 'Je peux vous accompagner.'], cookies: $secondCookies);
+$interet = $requete('POST', $uriReponsesOffre, [], cookies: $secondCookies);
+$uriAccompagnement = $uriReponsesSouhait.'/'.($accompagnement['corps']['reference'] ?? '');
+$uriInteret = $uriReponsesOffre.'/'.($interet['corps']['reference'] ?? '');
+$verifier(
+    $accompagnement['statut'] === 201 && $interet['statut'] === 201
+        && $requete('POST', $uriReponsesSouhait, [], cookies: $secondCookies)['statut'] === 409
+        && $requete('POST', $uriPublication.'/reponses', [], cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', '/besoins/'.basename($uriOffre).'/propositions', [], cookies: $secondCookies)['statut'] === 404
+        && $requete('PATCH', $uriAccompagnement, ['action' => 'accepter'], cookies: $secondCookies)['statut'] === 404
+        && $requete('POST', $uriAccompagnement.'/messages', ['texte' => 'Trop tôt.'], cookies: $secondCookies)['statut'] === 404
+        && $requete('PATCH', $uriAccompagnement, ['action' => 'accepter'], cookies: $premierCookies)['statut'] === 204
+        && $requete('PATCH', $uriInteret, ['action' => 'refuser'], cookies: $premierCookies)['statut'] === 204,
+    'les deux réponses du fil sont uniques et l’auteur décide sans modifier le cycle des besoins',
+);
+$verifier(
+    $requete('POST', $uriAccompagnement.'/messages', ['texte' => 'Préparons la séance.'], cookies: $secondCookies)['statut'] === 204
+        && ($requete('GET', $uriAccompagnement.'/messages', cookies: $premierCookies)['corps'][0]['texte'] ?? null) === 'Préparons la séance.'
+        && $requete('GET', $uriInteret.'/messages', cookies: $secondCookies)['statut'] === 404
+        && in_array('reponse_acceptee', array_column($requete('GET', '/notifications/donnees', cookies: $secondCookies)['corps'], 'type'), true)
+        && in_array('message_reponse', array_column($requete('GET', '/notifications/donnees', cookies: $premierCookies)['corps'], 'type'), true),
+    'seule la réponse acceptée ouvre une conversation privée et les notifications sont contextualisées',
+);
 $referenceSecond = $registreIdentites->prepare('SELECT reference_publique FROM fiche_annuaire_gamad WHERE identite_reference = ?');
 $referenceSecond->execute([$referenceTel]);
 $uriSecond = '/personnes/'.$referenceSecond->fetchColumn();
@@ -671,9 +713,24 @@ $verifier(
     $requete('PATCH', $uriCommentaireModere, ['contenu' => 'Modification après masquage'], cookies: $premierCookies)['statut'] === 404,
     'le masquage d’une publication ferme aussi la modification des commentaires',
 );
+$uriFavoris = '/mon-profil/favoris-publications';
+$uriFavori = $uriPublication.'/favori';
+$verifier(
+    $requete('PUT', $uriFavori, cookies: $secondCookies)['statut'] === 204
+        && $requete('PUT', $uriFavori, cookies: $secondCookies)['statut'] === 204
+        && array_column($requete('GET', $uriFavoris, cookies: $secondCookies)['corps'], 'reference') === [basename($uriPublication)]
+        && $requete('GET', $uriFavoris, cookies: $premierCookies)['corps'] === [],
+    'un favori est privé et son ajout est idempotent',
+);
 $avantBlocage = $requete('GET', $uriPublication, cookies: $secondCookies);
 $blocage = $requete('POST', $uriBlocage, cookies: $secondCookies);
 $listeBlocages = $requete('GET', '/mon-profil/blocages', cookies: $secondCookies);
+$verifier(
+    $requete('GET', $uriFavoris, cookies: $secondCookies)['corps'] === []
+        && $requete('PUT', $uriFavori, cookies: $secondCookies)['statut'] === 404
+        && $requete('DELETE', $uriFavori, cookies: $secondCookies)['statut'] === 204,
+    'un blocage masque le favori et permet de le retirer sans rouvrir la publication',
+);
 $verifier(
     $requete('GET', $uriMessagesAide, cookies: $premierCookies)['statut'] === 404
         && $requete('POST', $uriMessagesAide, ['texte' => 'Après blocage'], cookies: $secondCookies)['statut'] === 404,

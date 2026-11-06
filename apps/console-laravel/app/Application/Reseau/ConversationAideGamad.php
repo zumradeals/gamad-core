@@ -16,10 +16,10 @@ final class ConversationAideGamad
     {
     }
 
-    public function lire(string $sujet, string $besoin, string $proposition): array
+    public function lire(string $sujet, string $besoin, string $proposition, bool $fil = false): array
     {
         $registre = Magasin::ouvrir();
-        $cible = $this->interlocuteur($registre, $sujet, $besoin, $proposition);
+        $cible = $this->interlocuteur($registre, $sujet, $besoin, $proposition, $fil);
         $this->autoriser($registre, $sujet, $cible);
         $requete = $registre->prepare(
             'SELECT reference, auteur_reference, texte, cree_le FROM message_aide_gamad
@@ -35,7 +35,7 @@ final class ConversationAideGamad
         ], $requete->fetchAll()));
     }
 
-    public function envoyer(string $sujet, string $besoin, string $proposition, string $texte): void
+    public function envoyer(string $sujet, string $besoin, string $proposition, string $texte, bool $fil = false): void
     {
         $texte = Normalizer::multiline($texte);
         if ($texte === '' || mb_strlen($texte) > 1000) {
@@ -43,7 +43,7 @@ final class ConversationAideGamad
         }
 
         $registre = Magasin::ouvrir();
-        $cible = $this->interlocuteur($registre, $sujet, $besoin, $proposition);
+        $cible = $this->interlocuteur($registre, $sujet, $besoin, $proposition, $fil);
         PaireGamad::verrouiller($registre, $sujet, $cible, function () use ($registre, $sujet, $cible, $proposition, $texte): void {
             $this->autoriser($registre, $sujet, $cible);
             $registre->prepare(
@@ -54,10 +54,10 @@ final class ConversationAideGamad
         });
     }
 
-    private function interlocuteur(PDO $registre, string $sujet, string $besoin, string $proposition): string
+    private function interlocuteur(PDO $registre, string $sujet, string $besoin, string $proposition, bool $fil): string
     {
         $requete = $registre->prepare(
-            "SELECT COALESCE(d.acceptant_reference, p.auteur_reference) AS auteur_reference, a.proposant_reference
+            "SELECT COALESCE(d.acceptant_reference, p.auteur_reference) AS auteur_reference, a.proposant_reference, p.type
              FROM proposition_aide_gamad a JOIN publication_gamad p ON p.reference = a.besoin_reference
              LEFT JOIN acceptation_aide_gamad d ON d.proposition_reference = a.reference
              WHERE a.reference = ? AND a.besoin_reference = ? AND a.etat = 'accepted'
@@ -66,7 +66,8 @@ final class ConversationAideGamad
         $requete->execute([$proposition, $besoin, $sujet, $sujet]);
         $participants = $requete->fetch();
         $requete->closeCursor();
-        abort_if($participants === false, 404);
+        $types = $fil ? PropositionsAideGamad::TYPES_FIL : [ContenusGamad::TYPE_BESOIN];
+        abort_if($participants === false || !in_array($participants['type'], $types, true), 404);
 
         return $participants['auteur_reference'] === $sujet
             ? $participants['proposant_reference']

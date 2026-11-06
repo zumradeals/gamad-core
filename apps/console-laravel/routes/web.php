@@ -129,6 +129,11 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::get('/notifications', [InteractionsGamadController::class, 'notifications'])->name('notifications');
     Route::post('/notifications/{reference}/lire', [InteractionsGamadController::class, 'lireNotification'])
         ->where('reference', '[a-f0-9]{24}')->name('notifications.lire');
+    Route::get('/mon-profil/favoris-publications', [ContenusGamadController::class, 'favoris'])->name('publications.favoris');
+    Route::put('/publications/{reference}/favori', [ContenusGamadController::class, 'ajouterFavori'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,favori-')->name('publications.favori.ajouter');
+    Route::delete('/publications/{reference}/favori', [ContenusGamadController::class, 'retirerFavori'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,1,favori-')->name('publications.favori.retirer');
     Route::post('/publications/{reference}/signalements/{commentaire?}', [InteractionsGamadController::class, 'signaler'])
         ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
         ->middleware('throttle:10,1,signalement-')->name('publications.signaler');
@@ -147,6 +152,18 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::post('/besoins/{reference}/propositions/{proposition}/messages', [ContenusGamadController::class, 'envoyerMessageAide'])
         ->where(['reference' => '[a-f0-9]{24}', 'proposition' => '[a-f0-9]{24}'])
         ->middleware('throttle:30,1,aide-messages-')->name('besoins.propositions.messages.store');
+    Route::get('/publications/{reference}/reponses', [ContenusGamadController::class, 'propositionsAide'])
+        ->where('reference', '[a-f0-9]{24}')->name('publications.reponses.index');
+    Route::post('/publications/{reference}/reponses', [ContenusGamadController::class, 'proposerAide'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:15,60,aide-')->name('publications.reponses.store');
+    Route::patch('/publications/{reference}/reponses/{proposition}', [ContenusGamadController::class, 'traiterAide'])
+        ->where(['reference' => '[a-f0-9]{24}', 'proposition' => '[a-f0-9]{24}'])
+        ->middleware('throttle:30,1,aide-traitement-')->name('publications.reponses.traiter');
+    Route::get('/publications/{reference}/reponses/{proposition}/messages', [ContenusGamadController::class, 'conversationAide'])
+        ->where(['reference' => '[a-f0-9]{24}', 'proposition' => '[a-f0-9]{24}'])->name('publications.reponses.messages.index');
+    Route::post('/publications/{reference}/reponses/{proposition}/messages', [ContenusGamadController::class, 'envoyerMessageAide'])
+        ->where(['reference' => '[a-f0-9]{24}', 'proposition' => '[a-f0-9]{24}'])
+        ->middleware('throttle:30,1,aide-messages-')->name('publications.reponses.messages.store');
     Route::patch('/besoins/{reference}/bilan', [ContenusGamadController::class, 'enregistrerBilanBesoin'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,besoin-bilan-')->name('besoins.bilan');
     Route::patch('/besoins/{reference}/etat', [ContenusGamadController::class, 'terminerBesoin'])

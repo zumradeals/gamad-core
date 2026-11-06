@@ -14,7 +14,7 @@ namespace Gamad\RegistreIdentites;
  */
 final class SchemaInscription
 {
-    public const VERSION = 21;
+    public const VERSION = 23;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
@@ -23,6 +23,7 @@ final class SchemaInscription
         'profil_compte_gamad',
         'fiche_annuaire_gamad',
         'publication_gamad',
+        'favori_publication_gamad',
         'classement_besoin_gamad',
         'emetteur_besoin_gamad',
         'suivi_besoin_gamad',
@@ -120,6 +121,15 @@ final class SchemaInscription
 
         self::migrerPublications($pdo);
         $pdo->exec('CREATE INDEX IF NOT EXISTS publication_gamad_fil ON publication_gamad(cree_le, reference)');
+
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS favori_publication_gamad (
+                membre_reference TEXT NOT NULL REFERENCES identite_inscrite(reference),
+                publication_reference TEXT NOT NULL REFERENCES publication_gamad(reference) ON DELETE CASCADE,
+                cree_le TEXT NOT NULL,
+                PRIMARY KEY (membre_reference, publication_reference)
+            )
+        SQL);
 
         $pdo->exec(<<<SQL
             CREATE TABLE IF NOT EXISTS classement_besoin_gamad (
@@ -551,7 +561,7 @@ final class SchemaInscription
 
     private static function migrerPublications(\PDO $pdo): void
     {
-        if ($pdo->query('SELECT 1 FROM migration_registre_identites WHERE version >= 15')->fetchColumn() !== false) {
+        if ($pdo->query('SELECT 1 FROM migration_registre_identites WHERE version >= 23')->fetchColumn() !== false) {
             return;
         }
 
@@ -563,7 +573,7 @@ final class SchemaInscription
             contenu VARCHAR(500) NOT NULL CHECK (length(contenu) BETWEEN 1 AND 500),
             cree_le TEXT NOT NULL,
             etat_besoin TEXT,
-            CONSTRAINT publication_gamad_type_check CHECK (type IN ('share', 'knowledge', 'personal_work', 'need')),
+            CONSTRAINT publication_gamad_type_check CHECK (type IN ('share', 'knowledge', 'personal_work', 'need', 'learning_wish', 'offer')),
             CONSTRAINT publication_gamad_etat_besoin_check CHECK (
                 (type = 'need' AND etat_besoin IS NOT NULL AND etat_besoin IN ('open', 'in_progress', 'resolved', 'closed'))
                 OR (type <> 'need' AND etat_besoin IS NULL)
@@ -579,7 +589,7 @@ final class SchemaInscription
                 $pdo->exec('ALTER TABLE publication_gamad DROP CONSTRAINT IF EXISTS publication_gamad_type_check,
                     DROP CONSTRAINT IF EXISTS publication_gamad_etat_besoin_check');
                 $pdo->exec("ALTER TABLE publication_gamad
-                    ADD CONSTRAINT publication_gamad_type_check CHECK (type IN ('share', 'knowledge', 'personal_work', 'need')),
+                    ADD CONSTRAINT publication_gamad_type_check CHECK (type IN ('share', 'knowledge', 'personal_work', 'need', 'learning_wish', 'offer')),
                     ADD CONSTRAINT publication_gamad_etat_besoin_check CHECK (
                         (type = 'need' AND etat_besoin IS NOT NULL AND etat_besoin IN ('open', 'in_progress', 'resolved', 'closed'))
                         OR (type <> 'need' AND etat_besoin IS NULL)
@@ -599,13 +609,15 @@ final class SchemaInscription
             $pdo->exec('BEGIN IMMEDIATE');
             try {
                 $pdo->exec("CREATE TABLE IF NOT EXISTS publication_gamad ({$definition})");
-                $colonnes = array_column($pdo->query('PRAGMA table_info(publication_gamad)')->fetchAll(\PDO::FETCH_ASSOC), 'name');
-                if (!in_array('etat_besoin', $colonnes, true)) {
-                    $pdo->exec("CREATE TABLE publication_gamad_v15 ({$definition})");
-                    $pdo->exec('INSERT INTO publication_gamad_v15 (reference, auteur_reference, type, visibilite, contenu, cree_le)
-                        SELECT reference, auteur_reference, type, visibilite, contenu, cree_le FROM publication_gamad');
+                $ddl = $pdo->query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'publication_gamad'")->fetchColumn();
+                if (!str_contains((string) $ddl, "'learning_wish'")) {
+                    $colonnes = array_column($pdo->query('PRAGMA table_info(publication_gamad)')->fetchAll(\PDO::FETCH_ASSOC), 'name');
+                    $etat = in_array('etat_besoin', $colonnes, true) ? 'etat_besoin' : 'NULL';
+                    $pdo->exec("CREATE TABLE publication_gamad_v23 ({$definition})");
+                    $pdo->exec("INSERT INTO publication_gamad_v23 (reference, auteur_reference, type, visibilite, contenu, cree_le, etat_besoin)
+                        SELECT reference, auteur_reference, type, visibilite, contenu, cree_le, {$etat} FROM publication_gamad");
                     $pdo->exec('DROP TABLE publication_gamad');
-                    $pdo->exec('ALTER TABLE publication_gamad_v15 RENAME TO publication_gamad');
+                    $pdo->exec('ALTER TABLE publication_gamad_v23 RENAME TO publication_gamad');
                 }
                 $pdo->exec('COMMIT');
             } catch (\Throwable $erreur) {
