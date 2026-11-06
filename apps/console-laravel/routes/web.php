@@ -81,6 +81,8 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
     Route::get('/zumra/nouvelle', [EspacesGamadController::class, 'nouvelleZumra'])->name('zumras.create');
     Route::post('/zumra', [EspacesGamadController::class, 'creerZumra'])
         ->middleware('throttle:10,1,zumra-')->name('zumras.store');
+    Route::patch('/projets/{reference}', [EspacesGamadController::class, 'modifierProjet'])
+        ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,projet-modification-')->name('projets.modifier');
     Route::get('/projets/nouveau', [EspacesGamadController::class, 'nouveauProjet'])->name('projets.create');
     Route::post('/projets', [EspacesGamadController::class, 'creerProjet'])
         ->middleware('throttle:10,1,projet-')->name('projets.store');
@@ -126,6 +128,9 @@ Route::middleware(['gamad.https', 'gamad.session'])->group(function (): void {
     Route::get('/fil', [ContenusGamadController::class, 'fil'])->name('fil');
     Route::post('/fil', [ContenusGamadController::class, 'publier'])
         ->middleware('throttle:10,1,publication-')->name('publications.store');
+    Route::patch('/publications/{reference}/commentaires/{commentaire}', [ContenusGamadController::class, 'modifierCommentaire'])
+        ->where(['reference' => '[a-f0-9]{24}', 'commentaire' => '[a-f0-9]{24}'])
+        ->middleware('throttle:30,60,commentaire-modification-')->name('publications.commentaires.modifier');
     Route::post('/publications/{reference}/commentaires', [ContenusGamadController::class, 'commenter'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,60,commentaire-')->name('publications.commenter');
 });

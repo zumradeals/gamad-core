@@ -73,6 +73,17 @@ final class EspacesGamadController
         return redirect()->route('projets.show', $reference);
     }
 
+    public function modifierProjet(Request $request, EspacesGamad $espaces, string $reference): Response
+    {
+        $donnees = $request->validate([
+            'titre' => ['required', 'string', 'max:120'],
+            'dossier' => ['required', 'string', 'max:4000'],
+        ]);
+        $espaces->modifierProjet($this->sujet($request), $reference, $donnees['titre'], $donnees['dossier']);
+
+        return response()->noContent();
+    }
+
     public function accueil(Request $request, EspacesGamad $espaces, string $reference, string $projet): RedirectResponse
     {
         $donnees = $request->validate(['decision' => ['required', 'in:accepter,refuser']]);
