@@ -43,7 +43,8 @@ use Illuminate\Support\Facades\Route;
  * Core. La seule écriture web est l'inscription gouvernée d'une identité ;
  * elle partage le même cas d'usage que l'API v1.
  */
-Route::view('/', 'reseau.accueil')->name('reseau.accueil');
+Route::group(['gamad_application' => 'gamad.reseau'], function (): void {
+Route::get('/', \App\Http\Controllers\AccueilApplicationController::class)->name('reseau.accueil');
 Route::view('/decouvrir', 'reseau.decouvrir')->name('reseau.decouvrir');
 Route::view('/aide', 'reseau.aide')->name('reseau.aide');
 Route::get('/contact', [ContactGamadController::class, 'formulaire'])
@@ -195,6 +196,8 @@ Route::middleware(['gamad.https', 'gamad.session:reseau'])->group(function (): v
     Route::post('/publications/{reference}/commentaires', [ContenusGamadController::class, 'commenter'])
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:30,60,commentaire-')->name('publications.commenter');
 });
+
+}); // Routes publiques et personnelles de Réseau.
 
 Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
     Route::get('/console/reseau', [AdministrationReseauGamadController::class, 'index'])->name('reseau.administration');
@@ -680,6 +683,7 @@ Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
 });
 
 // Gestion personnelle des moyens d'accès : session requise, pas de mandat administratif.
+Route::group(['gamad_application' => 'gamad.reseau'], function (): void {
 Route::middleware('gamad.session')->group(function (): void {
     // CAP-CORE-005 — moyens d'accès personnels. Le sujet vient de la session ;
     // on ne gère jamais l'accès d'autrui.
@@ -697,7 +701,10 @@ Route::middleware('gamad.session')->group(function (): void {
 
 });
 
+});
+
 // Acces Réseau : session Core requise, sans privilege de console.
+Route::group(['gamad_application' => 'gamad.reseau'], function (): void {
 Route::middleware('gamad.session:reseau')->group(function (): void {
     Route::get('/reseau/mon-compte', [CompteReseauCoreController::class, 'montrer'])->name('reseau.compte.core');
     Route::get('/espace', [ProfilCompteGamadController::class, 'espace'])->name('reseau.espace');
@@ -714,6 +721,8 @@ Route::middleware('gamad.session:reseau')->group(function (): void {
         ->where('reference', '[a-f0-9]{24}')->middleware('throttle:20,1,experience-profil-')->name('compte.profil.experiences.preuve.retirer');
     Route::patch('/mon-profil', [ProfilCompteGamadController::class, 'modifier'])
         ->middleware('throttle:20,1,profil-')->name('compte.profil.modifier');
+});
+
 });
 
 // Le reste de la console demeure strictement administratif.
@@ -740,6 +749,7 @@ Route::middleware(['gamad.session', 'gamad.console'])->group(function (): void {
 });
 
 // Inscription personnelle. Le navigateur ne choisit ni le produit ni le sujet du défi.
+Route::group(['gamad_application' => 'gamad.reseau'], function (): void {
 Route::middleware('gamad.https')->group(function (): void {
     Route::get('/inscription', [InscriptionGamadController::class, 'formulaire'])->name('inscription.formulaire');
     Route::post('/inscription', [InscriptionGamadController::class, 'inscrire'])
@@ -757,11 +767,14 @@ Route::middleware('gamad.https')->group(function (): void {
         ->middleware('throttle:10,1')->name('reseau.connecter');
 });
 
+});
+
 // Accès au compte et à la console (CAP-CORE-005).
 Route::get('/connexion', [AccesController::class, 'formulaire'])->name('acces.formulaire');
 Route::post('/connexion', [AccesController::class, 'connecter'])
     ->middleware('throttle:10,1')
     ->name('acces.connecter');
+Route::group(['gamad_application' => 'gamad.reseau'], function (): void {
 Route::post('/deconnexion', [AccesController::class, 'deconnecter'])->name('acces.deconnecter');
 
 Route::middleware('gamad.https')->group(function (): void {
@@ -780,3 +793,5 @@ Route::middleware('gamad.https')->group(function (): void {
         ->middleware('throttle:10,1')
         ->name('passkeys.authentifier');
 });
+
+}); // Moyens de connexion Core utilisables depuis Réseau.

@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - main
+      - feature/core-internal-applications-contract
+      - feature/core-http-multidomain-routing
   workflow_dispatch:
 
 permissions:

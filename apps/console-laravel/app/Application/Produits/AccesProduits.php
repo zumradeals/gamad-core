@@ -212,6 +212,12 @@ final class AccesProduits
             PolitiqueProduits::ACTION_MODIFIER, $reference, $acteur, $correlation,
             'APPLICATION_INTERNE_DECLAREE',
             static function (RegistreProduits $registre, array $dossier) use ($reference): array {
+                $institutionnel = (string) config('gamad_domains.institutional_host', '');
+                if ($institutionnel !== '' && ($dossier['domaine_public'] ?? null) !== null
+                    && \Gamad\RegistreProduits\ContratApplicationInterne::domaine($dossier['domaine_public'])
+                        === \Gamad\RegistreProduits\ContratApplicationInterne::domaine($institutionnel)) {
+                    return ['refus' => 'DOMAINE_INSTITUTIONNEL_RESERVE', 'detail' => 'Le domaine de la console ne peut pas être applicatif'];
+                }
                 if (!ApplicationsInstallees::accepte($dossier)) {
                     return ['refus' => 'APPLICATION_NON_INSTALLEE', 'detail' => 'Routes et capacités doivent correspondre au code livré'];
                 }

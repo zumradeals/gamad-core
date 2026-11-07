@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trimStrings(except: ['mot_de_passe', 'mot_de_passe_confirmation', 'secret']);
         $middleware->trustProxies(at: env('TRUSTED_PROXIES'));
+        $middleware->replace(\Illuminate\Http\Middleware\TrustProxies::class, \App\Http\Middleware\ProxysApplicatifs::class);
+        $middleware->prepend(\App\Http\Middleware\ValiderHoteApplication::class);
+        $middleware->append(\App\Http\Middleware\ResoudreDomaineApplication::class);
+        $middleware->prependToGroup('web', \App\Http\Middleware\ExigerFrontiereApplication::class);
         $middleware->alias([
             'throttle' => \App\Http\Middleware\GamadThrottleRequests::class,
             'gamad.session' => \App\Http\Middleware\ExigerSession::class,
