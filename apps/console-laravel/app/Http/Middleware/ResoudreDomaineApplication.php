@@ -64,9 +64,7 @@ final class ResoudreDomaineApplication
         $accueil = $application['route_accueil'];
         // En l'absence de contrat explicite de route publique, ne jamais
         // rendre une route Core ou une route d'une autre application.
-        if ($request->is('/') && $request->isMethod('GET')) {
-            return redirect()->route($accueil, [], 302);
-        }
+        // La route d'accueil est déjà résolue par Laravel : pas de redirection.
         if ($nom !== $accueil) {
             abort(404, 'Route indisponible sur ce domaine');
         }
