@@ -61,14 +61,14 @@ final class ContratApplicationInterne
         $domaines = [];
         foreach ($declarations as $declaration) {
             $application = self::valider($declaration);
-            foreach (['identifiant' => &$identifiants, 'domaine_public' => &$domaines] as $cle => &$valeurs) {
-                $valeur = $application[$cle];
-                if (isset($valeurs[$valeur])) {
-                    throw new InvalidArgumentException("Collision de {$cle} : {$valeur}");
-                }
-                $valeurs[$valeur] = true;
+            if (isset($identifiants[$application['identifiant']])) {
+                throw new InvalidArgumentException('Identifiant applicatif déjà déclaré');
             }
-            unset($valeurs);
+            if (isset($domaines[$application['domaine_public']])) {
+                throw new InvalidArgumentException('Domaine public déjà déclaré');
+            }
+            $identifiants[$application['identifiant']] = true;
+            $domaines[$application['domaine_public']] = true;
         }
     }
 }
