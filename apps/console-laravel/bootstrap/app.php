@@ -27,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash(['mot_de_passe', 'mot_de_passe_confirmation', 'secret', 'code']);
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*')
+                || ($request->boolean('_espace') && $request->expectsJson()
+                    && ($request->is('mon-profil', 'mon-profil/experiences*', 'fil'))),
         );
     })->create();

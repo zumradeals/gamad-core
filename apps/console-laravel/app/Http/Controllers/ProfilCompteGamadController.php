@@ -10,23 +10,55 @@ use App\Application\Comptes\LireCompteGamad;
 use App\Application\Comptes\ModifierProfilGamad;
 use App\Application\Reseau\ReferentielBesoinsGamad;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
+use App\Application\Reseau\ContenusGamad;
+use App\Application\Reseau\RelationsGamad;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 
 final class ProfilCompteGamadController
 {
-    public function espace(Request $request, LireCompteGamad $lecture, AnnuaireGamad $annuaire, ExperiencesProfilGamad $experiences): Response
+    public function espace(Request $request, LireCompteGamad $lecture, AnnuaireGamad $annuaire, ExperiencesProfilGamad $experiences, ContenusGamad $contenus, RelationsGamad $relations): Response
     {
         $compte = $lecture->executer((string) $request->attributes->get('gamad_entite'));
         abort_if($compte === null, 403);
+
+        $fiche = $annuaire->fichePersonnelle($compte['identite_reference']);
+        $realisations = $experiences->realisations($compte['identite_reference']);
+        $capacites = array_values(array_filter(explode("\n", $fiche['competences_apportees'] ?? '')));
+        $criteres = [
+            'Présentation' => filled($compte['bio']),
+            'Localité' => filled($fiche['territoire'] ?? null),
+            'Capacités apportées' => $capacites !== [],
+            'Domaines d’action' => ($fiche['domaines'] ?? []) !== [],
+            'Expériences' => ($fiche['experiences'] ?? []) !== [],
+        ];
 
         return response()->view('reseau.mon-espace', [
             'compte' => $compte,
             'fiche' => $annuaire->fichePersonnelle($compte['identite_reference']),
             'territoires' => ReferentielBesoinsGamad::libelles('territoires'),
-            'realisations' => array_slice($experiences->realisations($compte['identite_reference']), 0, 3),
+            'realisations' => $realisations,
+            'domaines' => ReferentielBesoinsGamad::libelles('domaines'),
+            'bioMax' => ModifierProfilGamad::BIO_MAX,
+            'typesExperience' => ExperiencesProfilGamad::TYPES,
+            'typesPublication' => ContenusGamad::TYPES,
+            'capacites' => $capacites,
+            'criteres' => $criteres,
+            'completude' => (int) (count(array_filter($criteres)) * 100 / count($criteres)),
+            'activite' => $contenus->personnelles($compte['identite_reference']),
+            'relations' => $relations->lister($compte['identite_reference']),
         ])->header('Cache-Control', 'private, no-store');
+    }
+
+    private function reponse(Request $request): RedirectResponse|JsonResponse
+    {
+        if ($request->boolean('_espace') && $request->expectsJson()) {
+            return response()->json(['enregistre' => true])->header('Cache-Control', 'private, no-store');
+        }
+
+        return redirect()->route($request->boolean('_espace') ? 'reseau.espace' : 'compte.profil')->with('profil_enregistre', true);
     }
 
     public function montrer(Request $request, LireCompteGamad $lecture, AnnuaireGamad $annuaire, ExperiencesProfilGamad $experiences): Response
@@ -46,7 +78,7 @@ final class ProfilCompteGamadController
             ->header('Cache-Control', 'no-store');
     }
 
-    public function modifier(Request $request, ModifierProfilGamad $modification): RedirectResponse
+    public function modifier(Request $request, ModifierProfilGamad $modification): RedirectResponse|JsonResponse
     {
         $donnees = $request->validate([
             'visibilite' => ['sometimes', 'required', 'in:prive,public,members'],
@@ -71,10 +103,10 @@ final class ProfilCompteGamadController
             isset($donnees['visibilite']) ? $donnees : null,
         ), 403);
 
-        return redirect()->route('compte.profil')->with('profil_enregistre', true);
+        return $this->reponse($request);
     }
 
-    public function enregistrerExperience(Request $request, ExperiencesProfilGamad $experiences, ?string $reference = null): RedirectResponse
+    public function enregistrerExperience(Request $request, ExperiencesProfilGamad $experiences, ?string $reference = null): RedirectResponse|JsonResponse
     {
         $donnees = $request->validate([
             'titre' => ['required', 'string', 'max:100'],
@@ -84,28 +116,28 @@ final class ProfilCompteGamadController
         ]);
         $experiences->enregistrer((string) $request->attributes->get('gamad_entite'), $reference, $donnees);
 
-        return redirect()->route('compte.profil');
+        return $this->reponse($request);
     }
 
-    public function retirerExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse
+    public function retirerExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse|JsonResponse
     {
         $experiences->retirer((string) $request->attributes->get('gamad_entite'), $reference);
 
-        return redirect()->route('compte.profil');
+        return $this->reponse($request);
     }
 
-    public function lierPreuveExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse
+    public function lierPreuveExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse|JsonResponse
     {
         $donnees = $request->validate(['publication' => ['required', 'regex:/^[a-f0-9]{24}$/D']]);
         $experiences->lierPreuve((string) $request->attributes->get('gamad_entite'), $reference, $donnees['publication']);
 
-        return redirect()->route('compte.profil');
+        return $this->reponse($request);
     }
 
-    public function retirerPreuveExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse
+    public function retirerPreuveExperience(Request $request, ExperiencesProfilGamad $experiences, string $reference): RedirectResponse|JsonResponse
     {
         $experiences->retirerPreuve((string) $request->attributes->get('gamad_entite'), $reference);
 
-        return redirect()->route('compte.profil');
+        return $this->reponse($request);
     }
 }

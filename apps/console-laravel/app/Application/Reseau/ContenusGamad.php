@@ -26,6 +26,22 @@ final class ContenusGamad
     {
     }
 
+    /** Lecture privée des publications personnelles, sans contenu masqué par la modération. */
+    public function personnelles(string $sujet): array
+    {
+        $registre = Magasin::ouvrir();
+        abort_if($this->membres->lire($sujet, $registre) === null, 403);
+        $filtre = "auteur_reference = ? AND type <> 'need' AND NOT EXISTS (
+            SELECT 1 FROM masquage_reseau_gamad m WHERE m.categorie = 'publication' AND m.cible_reference = publication_gamad.reference)";
+        $total = $registre->prepare("SELECT COUNT(*) FROM publication_gamad WHERE {$filtre}");
+        $total->execute([$sujet]);
+        $nombre = (int) $total->fetchColumn();
+        $requete = $registre->prepare("SELECT reference, type, contenu, visibilite, cree_le FROM publication_gamad WHERE {$filtre} ORDER BY cree_le DESC, reference DESC LIMIT 20");
+        $requete->execute([$sujet]);
+
+        return ['total' => $nombre, 'publications' => $requete->fetchAll(PDO::FETCH_ASSOC)];
+    }
+
     public function fil(string $sujet, int $page): ?array
     {
         $registre = Magasin::ouvrir();
