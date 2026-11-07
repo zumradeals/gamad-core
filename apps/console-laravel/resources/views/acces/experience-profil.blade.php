@@ -1,5 +1,6 @@
 @php($id = $experience['reference'] ?? 'nouvelle')
-<form class="auth-form" method="post" action="{{ isset($experience) ? route('compte.profil.experiences.modifier', $id) : route('compte.profil.experiences.ajouter') }}">
+<form @if ($dansEspace ?? false) data-async @endif class="auth-form" method="post" action="{{ isset($experience) ? route('compte.profil.experiences.modifier', $id) : route('compte.profil.experiences.ajouter') }}">
+    @if ($dansEspace ?? false)<input type="hidden" name="_espace" value="1"><div class="espace-erreurs" role="alert" tabindex="-1"></div>@endif
     @csrf
     @isset($experience) @method('PATCH') @endisset
     <input type="hidden" name="experience_formulaire" value="{{ $id }}">

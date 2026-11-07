@@ -65,7 +65,7 @@ final class ContenusGamadController
             ->header('Cache-Control', 'private, no-store');
     }
 
-    public function publier(Request $request, ContenusGamad $contenus): RedirectResponse
+    public function publier(Request $request, ContenusGamad $contenus): RedirectResponse|JsonResponse
     {
         $donnees = $request->validate([
             'type' => ['required', Rule::in([...array_keys(ContenusGamad::TYPES), ContenusGamad::TYPE_BESOIN])],
@@ -78,7 +78,11 @@ final class ContenusGamadController
             : $contenus->publier($sujet, $donnees['type'], $donnees['visibilite'], $donnees['contenu']);
         abort_if($reference === null, 403);
 
-        return redirect()->route('publications.show', $reference);
+        if ($request->boolean('_espace') && $request->expectsJson()) {
+            return response()->json(['enregistre' => true], 201)->header('Cache-Control', 'private, no-store');
+        }
+
+        return redirect()->route($request->boolean('_espace') ? 'reseau.espace' : 'publications.show', $request->boolean('_espace') ? [] : [$reference]);
     }
 
     public function commentaires(Request $request, ContenusGamad $contenus, string $reference): JsonResponse

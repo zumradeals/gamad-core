@@ -346,10 +346,31 @@ $espace = $requete('GET', '/espace', cookies: $cookies);
 $verifier(
     $requete('GET', '/espace')['statut'] === 302 && $espace['statut'] === 200
         && str_contains($espace['html'], 'Électricité') && str_contains($espace['html'], 'Rénovation')
-        && str_contains($espace['html'], 'Bouaké') && str_contains($espace['html'], $uriFiche)
+        && str_contains($espace['html'], 'Bouaké') && str_contains($espace['html'], 'edition-profil')
         && !str_contains($espace['html'], $email),
     'Mon Espace affiche les données du compte connecté sans exposer son e-mail',
 );
+// Le même contrat reçoit les formulaires contextuels ; aucune identité n'est choisie côté client.
+$editionEspace = [
+    '_espace' => '1', 'bio' => 'Présentation contextuelle', 'visibilite' => 'members',
+    'titre' => 'Artisan', 'introduction' => '<script>alert(1)</script>',
+    'territoire' => 'ci-bouake', 'domaines_present' => '1', 'domaines' => ['artisanat'],
+    'apportees' => "Électricité\nRénovation", 'recherchees' => 'Apprentissage',
+];
+$edition = $requete('PATCH', '/mon-profil', $editionEspace, cookies: $cookies);
+$apresEdition = $requete('GET', '/espace', cookies: $cookies);
+$verifier($edition['statut'] === 200 && ($edition['corps']['enregistre'] ?? false)
+    && str_contains($apresEdition['html'], 'Présentation contextuelle')
+    && str_contains($apresEdition['html'], '&lt;script&gt;alert(1)&lt;/script&gt;')
+    && !str_contains($apresEdition['html'], '<script>alert(1)</script>'),
+    'Mon Espace enregistre par JSON et relit les données persistées avec échappement HTML');
+$invalide = $requete('PATCH', '/mon-profil', array_replace($editionEspace, ['apportees' => str_repeat('a', 61)]), cookies: $cookies);
+$verifier($invalide['statut'] === 422 && isset($invalide['corps']['errors']['competences'])
+    && str_contains($requete('GET', '/espace', cookies: $cookies)['html'], 'Rénovation'),
+    'la validation métier refuse une capacité invalide sans écraser le profil');
+$verifier($requete('PATCH', '/mon-profil', $editionEspace)['statut'] !== 200,
+    'la sauvegarde contextuelle exige une session Core');
+$requete('PATCH', '/mon-profil', array_replace($editionEspace, ['apportees' => 'Électricité', 'introduction' => 'Installation et dépannage.', 'titre' => 'Technicien solaire', 'domaines' => ['artisanat', 'construction-et-industries'], 'recherchees' => 'Rénovation']), cookies: $cookies);
 $visiteur = $requete('GET', $uriFiche);
 $membre = $requete('GET', '/personnes?q=electricite', cookies: $cookies);
 $verifier(
