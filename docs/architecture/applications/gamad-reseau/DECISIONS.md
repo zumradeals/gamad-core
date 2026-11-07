@@ -20,3 +20,13 @@
 
 ## Attention
 L'acceptation d'une maquette ne vaut pas acceptation d'un mécanisme métier non discuté. Toute IA intervenante doit vérifier ce registre avant d'implémenter.
+
+
+## Validations complémentaires — série des maquettes
+- **Le Fil** : maquette validée ; continuité avec Mon Espace, colonne gauche profil/navigation, fil central, colonne droite de découvertes ; publication libre possible, sans « J'aime ».
+- **Agir dans le Fil** : fenêtre contextuelle **sans quitter le Fil** ; choix d'intention, puis formulaire intuitif adéquat ; possibilité d'annuler sans engagement. Les actions doivent être pertinentes pour la publication.
+- **Mon profil public** : maquette validée ; mettre en valeur expériences, savoir-faire, réalisations, contributions, objectifs ; diplômes non exclusifs.
+- **Entrée Connexion/Inscription** : maquette validée ; aucune page d'accueil publique marketing pour Réseau ; formulaire et présentation de la vision sur la même page ; identité Core uniquement. Connexions sociales illustratives non approuvées.
+- **Carrefour Personnes** : quatrième écran prioritaire ; maquette à concevoir et valider.
+- **Accès public** : l'option A de découverte des contenus explicitement publics reste compatible avec l'absence d'accueil marketing ; parcours d'accès direct à préciser.
+- Les fichiers d'images seront déposés manuellement par le commanditaire dans `assets/`. Ne pas affirmer leur présence avant vérification.
