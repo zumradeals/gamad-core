@@ -21,3 +21,14 @@ Statut : plan documentaire validé pour Mon Espace ; les autres écrans restent 
 - Comparer les parcours à l'existant du dépôt avant toute demande de développement.
 - Conserver les captures historiques comme références de vision, sans les considérer comme un contrat de code.
 - Travail en PR documentaire séparée ; aucune fusion ou déploiement sans instruction.
+
+
+## Avancement des maquettes
+- Mon Espace : **validée** ; image à déposer dans assets.
+- Le Fil : **validée** ; image à déposer dans assets.
+- Fenêtre Agir sur une publication : **validée comme comportement de conception** ; image à déposer dans assets.
+- Mon profil public : **validée** ; image à déposer dans assets.
+- Connexion/inscription : **validée** ; image à déposer dans assets.
+- Carrefour Personnes : **prochaine maquette, validation en attente**.
+
+La série de maquettes ne remplace pas la cartographie des parcours ni les contrats de données et de permissions. Ne pas implémenter automatiquement les éléments purement illustratifs.
