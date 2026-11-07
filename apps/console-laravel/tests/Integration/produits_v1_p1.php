@@ -251,6 +251,7 @@ $verifier(
 );
 
 require __DIR__.'/applications_internes_scenarios.php';
+require __DIR__.'/multidomaine_scenarios.php';
 
 // Audit : le parcours est chaîné, sans secret.
 $integrite = (new Journal(JournalMagasin::ouvrir()))->verifierIntegrite();

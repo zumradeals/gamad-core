@@ -174,7 +174,8 @@ final class AccesController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/connexion');
+        return $request->attributes->has('gamad_application')
+            ? redirect()->route('reseau.connexion') : redirect('/connexion');
     }
 
     private function cleLimite(Request $request, string $entite): string

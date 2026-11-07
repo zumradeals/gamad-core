@@ -108,7 +108,7 @@ final class PasskeyController
         return response()->json([
             'statut' => 'PASSKEY_ENROLEE',
             'reference' => $reference,
-            'redirection' => route('acces.formulaire'),
+            'redirection' => route($request->attributes->has('gamad_application') ? 'reseau.connexion' : 'acces.formulaire'),
         ], 201);
     }
 

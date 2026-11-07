@@ -1,9 +1,8 @@
 <?php
 
-declare(strict_types=1);
-
-// Le domaine institutionnel doit être défini par l'exploitant avant activation.
-// Aucune liste de domaines applicatifs n'est dupliquée ici : CAP-CORE-011 décide.
+// Activation explicite : aucun domaine ni produit opérationnel n'est inventé.
 return [
-    'institutional_host' => strtolower(trim((string) env('GAMAD_INSTITUTIONAL_HOST', ''))),
+    'enabled' => (bool) env('GAMAD_MULTIDOMAIN_ENABLED', false),
+    'institutional_host' => env('GAMAD_INSTITUTIONAL_HOST', ''),
+    'trusted_proxies' => array_values(array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))))),
 ];
