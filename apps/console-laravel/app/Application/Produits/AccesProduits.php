@@ -46,11 +46,12 @@ final class AccesProduits
 
         try {
             $environnements = $this->registre()->resoudreEnvironnements($reference);
+            $application = $this->registre()->resoudreApplication($reference);
         } catch (\Throwable) {
             return $this->socleIndisponible();
         }
 
-        return ['statut' => 200, 'corps' => ['produit' => $produit, 'environnements' => $environnements]];
+        return ['statut' => 200, 'corps' => ['produit' => $produit, 'environnements' => $environnements, 'application' => $application]];
     }
 
     /** @return array{statut:int,corps:array<string,mixed>} */
@@ -204,6 +205,50 @@ final class AccesProduits
         );
     }
 
+    /** Même décision et même journal que la modification des métadonnées du produit. */
+    public function declarerApplication(string $reference, array $donnees, string $acteur, ?string $correlation = null): array
+    {
+        return $this->executer(
+            PolitiqueProduits::ACTION_MODIFIER, $reference, $acteur, $correlation,
+            'APPLICATION_INTERNE_DECLAREE',
+            static function (RegistreProduits $registre, array $dossier) use ($reference): array {
+                if (!ApplicationsInstallees::accepte($dossier)) {
+                    return ['refus' => 'APPLICATION_NON_INSTALLEE', 'detail' => 'Routes et capacités doivent correspondre au code livré'];
+                }
+
+                return $registre->declarerApplication($reference, $dossier);
+            },
+            $donnees, 200,
+        );
+    }
+
+    /** Liens permis seulement ; une déclaration de capacité n'accorde aucun droit. */
+    public function navigationApplication(string $reference, string $acteur): array
+    {
+        try {
+            $registre = $this->registre();
+            $application = $registre->resoudreApplication($reference);
+            $produit = $registre->resoudreProduit($reference);
+            $etat = $registre->resoudreEtat($reference, gmdate('Y-m-d'));
+            if ($application === null || !ApplicationsInstallees::accepte($application)
+                || ($produit['type_produit'] ?? null) !== 'APPLICATION_INTERNE' || ($etat['etat'] ?? null) !== 'ACTIF') {
+                return ['statut' => 404, 'corps' => ['erreur' => 'APPLICATION_INDISPONIBLE']];
+            }
+            $autorisation = new Ctr03(PolitiquesMagasin::connecter());
+            $liens = [];
+            foreach ($application['capacites'] as $capacite) {
+                $action = ApplicationsInstallees::action($application['identifiant'], $capacite);
+                if (($autorisation->autoriser($acteur, $action, $reference)['decision'] ?? null) === 'PERMIS') {
+                    $liens[$capacite] = ApplicationsInstallees::CATALOGUE[$application['identifiant']]['capacites'][$capacite];
+                }
+            }
+
+            return ['statut' => 200, 'corps' => ['produit_reference' => $reference, 'liens' => $liens]];
+        } catch (\Throwable) {
+            return $this->socleIndisponible();
+        }
+    }
+
     // ------------------------------------------------------------------
     // Internes
 
@@ -301,7 +346,7 @@ final class AccesProduits
 
             $statut = match ($resultat['refus']) {
                 'PRODUIT_INCONNU', 'IDENTITE_INCONNUE' => 404,
-                'REFERENCE_DEJA_UTILISEE', 'IDENTITE_DEJA_LIEE', 'AUDIENCE_DEJA_UTILISEE' => 409,
+                'REFERENCE_DEJA_UTILISEE', 'IDENTITE_DEJA_LIEE', 'AUDIENCE_DEJA_UTILISEE', 'APPLICATION_COLLISION', 'REVISION_CONFLICTUELLE' => 409,
                 default => 422,
             };
 

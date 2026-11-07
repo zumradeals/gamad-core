@@ -48,6 +48,10 @@ jobs:
             garde: core/registre-politiques/tests/politiques_p3.php
           - capacite: CAP-CORE-009 (contrats)
             garde: core/registre-contrats/tests/contrats_p3.php
+          - capacite: CAP-CORE-011 (contrat application interne)
+            garde: core/registre-produits/tests/contrat_application_interne_p1.php
+          - capacite: CAP-CORE-011 (stockage applications)
+            garde: core/registre-produits/tests/applications_stockage_p1.php
           - capacite: CAP-CORE-011 (produits)
             garde: core/registre-produits/tests/produits_p3.php
           - capacite: CAP-CORE-010 (vocabulaire)

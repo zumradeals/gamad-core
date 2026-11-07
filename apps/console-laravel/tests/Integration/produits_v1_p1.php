@@ -250,6 +250,8 @@ $verifier(
     'le retrait est irréversible ; la fiche reste lisible et sa référence n’est jamais réutilisable',
 );
 
+require __DIR__.'/applications_internes_scenarios.php';
+
 // Audit : le parcours est chaîné, sans secret.
 $integrite = (new Journal(JournalMagasin::ouvrir()))->verifierIntegrite();
 $journalPdo = new PDO('sqlite:' . $fichiers['journal']);

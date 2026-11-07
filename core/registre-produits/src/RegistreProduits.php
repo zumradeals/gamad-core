@@ -128,7 +128,7 @@ final class RegistreProduits
     {
         return array_values(array_filter(
             $this->listerProduits(),
-            static fn (array $p): bool => $p['etat'] === 'ACTIF' && $p['federation_autorisee'] === true,
+            static fn (array $p): bool => $p['etat'] === 'ACTIF' && $p['type_produit'] !== 'APPLICATION_INTERNE' && $p['federation_autorisee'] === true,
         ));
     }
 
@@ -203,6 +203,9 @@ final class RegistreProduits
         if ($produit['etat'] !== 'ACTIF') {
             return ['utilisable' => false, 'motif' => 'PRODUIT_NON_ACTIF', 'produit' => $produit];
         }
+        if ($produit['type_produit'] === 'APPLICATION_INTERNE') {
+            return ['utilisable' => false, 'motif' => 'APPLICATION_NON_FEDEREE', 'produit' => $produit];
+        }
         if ($produit['federation_autorisee'] !== true) {
             return ['utilisable' => false, 'motif' => 'FEDERATION_NON_AUTORISEE', 'produit' => $produit];
         }
@@ -214,6 +217,103 @@ final class RegistreProduits
         }
 
         return ['utilisable' => true, 'motif' => 'SATISFAITE', 'produit' => $produit];
+    }
+
+    /** Métadonnées applicatives ; le nom et le cycle restent ceux du produit. */
+    public function resoudreApplication(string $reference): ?array
+    {
+        $st = $this->magasin->prepare('SELECT * FROM produit_application WHERE produit_reference = ?');
+        $st->execute([$reference]);
+        $application = $st->fetch();
+        if ($application === false) {
+            return null;
+        }
+        $application['revision'] = (int) $application['revision'];
+        $application['capacites'] = json_decode($application['capacites_json'], true, 512, JSON_THROW_ON_ERROR);
+        unset($application['capacites_json']);
+
+        return $application;
+    }
+
+    /** Résolution exacte, sans DNS, sans cookie partagé, sans repli vers une autre application. */
+    public function resoudreApplicationParDomaine(string $domaine): ?array
+    {
+        try {
+            $domaine = ContratApplicationInterne::domaine($domaine);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+        $st = $this->magasin->prepare('SELECT produit_reference FROM produit_application WHERE domaine_public = ?');
+        $st->execute([$domaine]);
+        $reference = $st->fetchColumn();
+        if ($reference === false) {
+            return null;
+        }
+        $produit = $this->resoudreProduit($reference);
+        $etat = $this->resoudreEtat($reference, gmdate('Y-m-d'));
+        if ($produit === null || $produit['type_produit'] !== 'APPLICATION_INTERNE' || ($etat['etat'] ?? null) !== 'ACTIF') {
+            return null;
+        }
+
+        return $this->resoudreApplication($reference);
+    }
+
+    public function declarerApplication(string $reference, array $dossier): array
+    {
+        $g = $this->controlerGouvernance($dossier);
+        if (isset($g['refus'])) {
+            return $g;
+        }
+        try {
+            $declaration = ContratApplicationInterne::valider(array_replace($dossier, ['produit_reference' => $reference]));
+        } catch (\InvalidArgumentException $e) {
+            return $this->refus('DECLARATION_INVALIDE', $e->getMessage());
+        }
+        if (!isset($dossier['revision']) || !is_int($dossier['revision']) || $dossier['revision'] < 0) {
+            return $this->refus('REVISION_INVALIDE', 'Révision attendue obligatoire (0 pour la première déclaration)');
+        }
+        try {
+            return $this->transaction(function () use ($reference, $dossier, $declaration): array {
+                // Sérialise déclaration et modification du type du même produit.
+                $this->magasin->prepare('UPDATE produit SET modifie_le = modifie_le WHERE reference = ?')->execute([$reference]);
+                $produit = $this->resoudreProduit($reference);
+                if ($produit === null) {
+                    return $this->refus('PRODUIT_INCONNU', 'Produit absent de CAP-CORE-011');
+                }
+                if ($produit['type_produit'] !== 'APPLICATION_INTERNE' || $produit['federation_autorisee']) {
+                    return $this->refus('TYPE_INCOMPATIBLE', 'Une application intégrée doit être APPLICATION_INTERNE et non fédérée');
+                }
+                if ($produit['etat'] === 'RETIRE') {
+                    return $this->refus('ETAT_INCOMPATIBLE', 'Produit retiré');
+                }
+                $avant = $this->resoudreApplication($reference);
+                if (($avant['revision'] ?? 0) !== $dossier['revision']) {
+                    return $this->refus('REVISION_CONFLICTUELLE', 'Relire la déclaration avant modification');
+                }
+                if ($avant !== null && $avant['identifiant'] !== $declaration['identifiant']) {
+                    return $this->refus('CHAMP_IMMUABLE', 'Identifiant applicatif immuable');
+                }
+                $revision = $dossier['revision'] + 1;
+                $this->magasin->prepare(
+                    'INSERT INTO produit_application (produit_reference, identifiant, domaine_public, route_accueil, route_console, capacites_json, revision)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)
+                     ON CONFLICT (produit_reference) DO UPDATE SET domaine_public = excluded.domaine_public,
+                         route_accueil = excluded.route_accueil, route_console = excluded.route_console,
+                         capacites_json = excluded.capacites_json, revision = excluded.revision'
+                )->execute([$reference, $declaration['identifiant'], $declaration['domaine_public'], $declaration['route_accueil'], $declaration['route_console'], json_encode($declaration['capacites'], JSON_THROW_ON_ERROR), $revision]);
+                $this->magasin->prepare(
+                    'INSERT INTO produit_application_revision (produit_reference, revision, declaration_json, producteur, politique, source, preuve, cree_le)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+                )->execute([$reference, $revision, json_encode($declaration, JSON_THROW_ON_ERROR), $dossier['producteur'], $dossier['politique'], $dossier['source'], $dossier['preuve'], gmdate('c')]);
+
+                return $this->resoudreApplication($reference);
+            });
+        } catch (\PDOException $e) {
+            if (in_array((string) $e->getCode(), ['23000', '23505'], true)) {
+                return $this->refus('APPLICATION_COLLISION', 'Domaine ou identifiant applicatif déjà réservé');
+            }
+            throw $e;
+        }
     }
 
     // ------------------------------------------------------------------
@@ -323,7 +423,15 @@ final class RegistreProduits
         $valeurs[] = gmdate('c');
         $valeurs[] = $reference;
 
-        return $this->transaction(function () use ($champs, $valeurs, $reference): array {
+        return $this->transaction(function () use ($champs, $valeurs, $reference, $dossier): array {
+            $this->magasin->prepare('UPDATE produit SET modifie_le = modifie_le WHERE reference = ?')->execute([$reference]);
+            $courant = $this->ligneProduit($reference);
+            $type = $dossier['type_produit'] ?? $courant['type_produit'];
+            $federe = (bool) ($dossier['federation_autorisee'] ?? $courant['federation_autorisee']);
+            if (($type === 'APPLICATION_INTERNE' && $federe)
+                || ($this->resoudreApplication($reference) !== null && $type !== 'APPLICATION_INTERNE')) {
+                return $this->refus('TYPE_INCOMPATIBLE', 'Une application intégrée ne devient pas un satellite fédéré');
+            }
             $this->magasin->prepare(
                 'UPDATE produit SET ' . implode(', ', $champs) . ' WHERE reference = ?'
             )->execute($valeurs);
