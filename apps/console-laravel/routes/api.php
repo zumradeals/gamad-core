@@ -78,6 +78,9 @@ Route::prefix('v1')->middleware('gamad.https')->group(function (): void {
             ->middleware('throttle:20,1');
         Route::post('/produits/{reference}/retrait', [ProduitController::class, 'retirer'])
             ->middleware('throttle:20,1');
+        Route::put('/produits/{reference}/application', [ProduitController::class, 'declarerApplication'])
+            ->middleware('throttle:20,1,application-produit-');
+        Route::get('/produits/{reference}/application/navigation', [ProduitController::class, 'navigationApplication']);
         Route::get('/produits/{reference}/environnements', [ProduitController::class, 'environnements']);
         Route::post('/produits/{reference}/environnements', [ProduitController::class, 'declarerEnvironnement'])
             ->middleware('throttle:20,1');

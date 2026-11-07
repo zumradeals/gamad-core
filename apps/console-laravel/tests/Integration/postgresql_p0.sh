@@ -52,6 +52,10 @@ for base in gamad_index gamad_access gamad_identity gamad_products gamad_sources
     "$postgres_bin/createdb" --host=127.0.0.1 --port="$port" --username=postgres "$base"
 done
 
+GAMAD_TEST_PG_DSN="pgsql:host=127.0.0.1;port=${port};dbname=gamad_products" \
+GAMAD_TEST_PG_USER=postgres \
+    php "$racine/core/registre-produits/tests/applications_stockage_p1.php"
+
 cache_prefix="$temp/laravel"
 environnement=(
     "APP_ENV=production"

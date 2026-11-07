@@ -105,6 +105,31 @@ final class ProduitController
         return response()->json($execution['corps'], $execution['statut']);
     }
 
+    public function declarerApplication(Request $request, AccesProduits $acces, string $reference): JsonResponse
+    {
+        $donnees = $request->validate([
+            'identifiant' => ['required', 'string', 'max:48'],
+            'domaine_public' => ['present', 'nullable', 'string', 'max:254'],
+            'route_accueil' => ['required', 'string', 'max:120'],
+            'route_console' => ['required', 'string', 'max:120'],
+            'capacites' => ['present', 'array', 'max:40'],
+            'capacites.*' => ['required', 'string', 'distinct', 'max:48'],
+            'revision' => ['required', 'integer', 'min:0'],
+        ]);
+        $donnees['revision'] = (int) $donnees['revision'];
+        $execution = $acces->declarerApplication($reference, $donnees,
+            (string) $request->attributes->get('gamad_entite'), $request->attributes->get('gamad_correlation'));
+
+        return response()->json($execution['corps'], $execution['statut'])->header('Cache-Control', 'private, no-store');
+    }
+
+    public function navigationApplication(Request $request, AccesProduits $acces, string $reference): JsonResponse
+    {
+        $execution = $acces->navigationApplication($reference, (string) $request->attributes->get('gamad_entite'));
+
+        return response()->json($execution['corps'], $execution['statut'])->header('Cache-Control', 'private, no-store');
+    }
+
     public function environnements(Request $request, AccesProduits $acces, string $reference): JsonResponse
     {
         $execution = $acces->resoudre($reference, (string) $request->attributes->get('gamad_entite'));

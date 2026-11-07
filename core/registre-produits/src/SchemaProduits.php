@@ -15,13 +15,15 @@ namespace Gamad\RegistreProduits;
  */
 final class SchemaProduits
 {
-    public const VERSION = 1;
+    public const VERSION = 2;
 
     /** Tables de données persistantes, hors table de migration. */
     public const TABLES = [
         'produit',
         'produit_cycle',
         'produit_environnement',
+        'produit_application',
+        'produit_application_revision',
     ];
 
     public static function migrer(\PDO $pdo): void
@@ -116,6 +118,32 @@ final class SchemaProduits
             'CREATE INDEX IF NOT EXISTS produit_environnement_audience
              ON produit_environnement(audience_federation)'
         );
+
+        // Extension 1:1 du produit canonique ; aucune copie de nom/identité/cycle.
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS produit_application (
+                produit_reference TEXT PRIMARY KEY REFERENCES produit(reference),
+                identifiant TEXT NOT NULL UNIQUE CHECK (identifiant = lower(identifiant)),
+                domaine_public TEXT UNIQUE CHECK (domaine_public IS NULL OR domaine_public = lower(domaine_public)),
+                route_accueil TEXT NOT NULL,
+                route_console TEXT NOT NULL,
+                capacites_json TEXT NOT NULL,
+                revision INTEGER NOT NULL CHECK (revision >= 1)
+            )
+        SQL);
+        $pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS produit_application_revision (
+                produit_reference TEXT NOT NULL REFERENCES produit(reference),
+                revision INTEGER NOT NULL,
+                declaration_json TEXT NOT NULL,
+                producteur TEXT NOT NULL,
+                politique TEXT NOT NULL,
+                source TEXT NOT NULL,
+                preuve TEXT NOT NULL,
+                cree_le TEXT NOT NULL,
+                PRIMARY KEY (produit_reference, revision)
+            )
+        SQL);
 
         $st = $pdo->prepare(
             'INSERT INTO migration_registre_produits(version,appliquee_le)

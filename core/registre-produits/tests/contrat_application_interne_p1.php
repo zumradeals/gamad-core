@@ -12,6 +12,7 @@ $travel = [
     'nom' => 'GAMAD Travel',
     'domaine_public' => 'gamadtravel.com',
     'route_console' => 'console.travel.index',
+    'route_accueil' => 'travel.accueil',
     'capacites' => ['sejours', 'reservations'],
 ];
 $couture = [
@@ -20,6 +21,7 @@ $couture = [
     'nom' => 'GAMAD Couture',
     'domaine_public' => 'gamadcouture.com',
     'route_console' => 'console.couture.index',
+    'route_accueil' => 'couture.accueil',
     'capacites' => ['commandes'],
 ];
 
@@ -40,3 +42,15 @@ $attenduRefus(static fn () => ContratApplicationInterne::valider(array_replace($
 $attenduRefus(static fn () => ContratApplicationInterne::valider(array_replace($travel, ['route_console' => '../admin'])));
 $attenduRefus(static fn () => ContratApplicationInterne::valider(array_replace($travel, ['capacites' => ['valid', '../invalid']])));
 echo "OK — contrat applicatif interne : validation et collisions.\n";
+
+foreach (['localhost', '127.0.0.1', 'foo.local', 'a.test', 'a.invalid', 'a.example', 'example.com', 'a.example.org', 'a.onion', '*.gamad.com', 'gamad.com:443', 'gamad.com/path', 'gamad.com..', 'a..com', 'xn--caf-dma.com', 'café.com', 'user@gamad.com'] as $domaine) {
+    $attenduRefus(static fn () => ContratApplicationInterne::domaine($domaine));
+}
+if (ContratApplicationInterne::domaine(' GAMADTRAVEL.COM. ') !== 'gamadtravel.com') {
+    throw new RuntimeException('Normalisation DNS incorrecte');
+}
+ContratApplicationInterne::verifierUnicite([
+    array_replace($travel, ['domaine_public' => null]),
+    array_replace($couture, ['domaine_public' => null]),
+]);
+echo "OK — domaines stricts, normalisation et applications sans domaine.\n";
